@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLMario Cartbench v0.29 Global Pipes</title>
+<style>
+:root{--bg:#141820;--panel:#1f2630;--panel2:#28313d;--text:#e8f0f2;--muted:#9eacb8;--accent:#70d9ff;--warn:#ffcf6e;--good:#85e89d;--bad:#ff7b72;--line:#3b4655}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;overflow:hidden} button,input,select,textarea{font:inherit} #app{height:100vh;display:grid;grid-template-columns:1fr 380px;grid-template-rows:48px 1fr} header{grid-column:1/3;background:#10141b;border-bottom:1px solid #303948;display:flex;align-items:center;gap:10px;padding:8px 10px} header b{font-size:16px;color:#fff} header .pill{border:1px solid #425063;background:#1a212b;color:var(--muted);border-radius:999px;padding:3px 8px;white-space:nowrap} #canvasWrap{position:relative;overflow:hidden;background:#050607;touch-action:none} canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none} #side{background:var(--panel);border-left:1px solid #303948;overflow:auto;padding:10px} .box{background:var(--panel2);border:1px solid #394659;border-radius:10px;padding:10px;margin-bottom:10px} .box h3{margin:0 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#c9d6df}.row{display:flex;gap:6px;align-items:center;margin:6px 0;flex-wrap:wrap} button{background:#344154;color:var(--text);border:1px solid #4b5a70;border-radius:8px;padding:6px 8px;cursor:pointer} button:hover{background:#40506a} button.active{background:#176984;border-color:#66d9ff;color:#fff;box-shadow:0 0 0 2px rgba(112,217,255,.18) inset} button.danger{border-color:#7b3434;background:#503030} button.good{border-color:#36764a;background:#2d513b} button.small{padding:3px 6px;font-size:12px} input[type=file]{width:100%;color:var(--muted)} input[type=number],input[type=text],select{background:#121720;color:var(--text);border:1px solid #3f4d60;border-radius:7px;padding:5px 6px;min-width:0} input[type=number]{width:76px} label{color:var(--muted);font-size:12px} textarea{width:100%;height:230px;background:#10151d;color:#e8f0f2;border:1px solid #425063;border-radius:8px;padding:8px;font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;tab-size:2} #status{color:var(--muted)} #status.good{color:var(--good)} #status.bad{color:var(--bad)}.statgrid{display:grid;grid-template-columns:1fr auto;gap:3px 8px;color:var(--muted)} .statgrid span:nth-child(even){color:#d5e1e8}.legend{display:grid;grid-template-columns:16px 1fr;gap:4px 6px;color:var(--muted);font-size:12px}.sw{width:14px;height:14px;border-radius:3px;border:1px solid rgba(255,255,255,.25)} #hint{position:absolute;left:10px;bottom:10px;background:rgba(11,15,20,.72);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:7px 10px;color:#dce9ee;font-size:12px;pointer-events:none;max-width:80%}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.muted{color:var(--muted)}.warn{color:var(--warn)} .sep{height:1px;background:#3a4657;margin:9px 0}.sunroof #app{grid-template-columns:1fr 0px}.sunroof #side{display:none}.sunroof header{background:#eafaff;color:#102132}.sunroof header b{color:#102132}.sunroof header .pill{background:#fff;border-color:#9ed8ef;color:#254055}.sunroof #canvasWrap{background:#050607}.sunroof button#sunroof{background:#f5db79;color:#352400;border-color:#d6a72e}.rowTools{display:none}.rowTools.on{display:block}.wide{width:100%} label.check{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted)} .mini{font-size:12px;color:var(--muted)}
+
+.filterGrid{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin:6px 0}.filterGrid label{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px}.propGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.propGrid label{display:flex;flex-direction:column;gap:2px}.propGrid input{width:100%}.kbd{border:1px solid #536174;background:#17202a;border-radius:5px;padding:0 4px;color:#d8e7ee;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px}.moonNote{color:#b9f3ff}.thinrow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.thinrow button{width:100%}
+
+.spacer{flex:1}.statusPill{max-width:24vw;overflow:hidden;text-overflow:ellipsis}.cartIdentity{display:flex;align-items:center;gap:6px;max-width:52vw;min-width:300px}.fileNamePill{font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#c7d7e2;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:left}#cartTitleInput{width:250px;max-width:24vw;padding:2px 6px;border-radius:999px;border:1px solid #405066;background:#101722;color:#eaf6fb}#cartTitleInput:disabled{opacity:.5}#cartTitleInput:focus{outline:2px solid rgba(112,217,255,.24);border-color:#70d9ff}.sunroof #cartTitleInput{background:#fff;color:#102132;border-color:#9ed8ef}.sunroof .fileNamePill{color:#36566a}#rowGutter{position:absolute;left:0;top:0;bottom:0;width:190px;pointer-events:none;z-index:3;background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,.06) 78%,rgba(0,0,0,0));overflow:hidden}.rowChip{position:absolute;left:8px;max-width:174px;border:1px solid rgba(220,220,220,.32);border-radius:8px;padding:3px 7px;background:rgba(12,12,12,.82);color:#eeeeee;font-size:11px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,.35)}.rowChip .muted{color:#c8c8c8}.rowChip.switch{background:rgba(38,36,28,.86);color:#eeeecc;border-color:rgba(210,205,165,.45)}.rowChip.seam{background:rgba(28,28,28,.84);color:#dddddd}.sunroof #rowGutter{background:linear-gradient(90deg,rgba(255,255,255,.26),rgba(255,255,255,.06) 78%,rgba(255,255,255,0))}.sunroof .rowChip{background:rgba(255,255,255,.82);color:#163040;border-color:rgba(25,90,120,.24)}.sunroof .rowChip.switch{background:rgba(255,245,182,.88);color:#4c3600}#hudStatus{position:absolute;left:204px;top:10px;z-index:6;background:rgba(10,18,26,.82);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:7px 10px;color:#eaffff;font-size:12px;pointer-events:none;max-width:60%;box-shadow:0 4px 14px rgba(0,0,0,.18);opacity:0;transform:translateY(-5px);transition:opacity .35s ease,transform .35s ease}#hudStatus.show{opacity:1;transform:translateY(0)}#hudStatus.good{border-color:rgba(133,232,157,.48)}#hudStatus.bad{border-color:rgba(255,123,114,.62);color:#ffe3e1}#dropOverlay{position:absolute;inset:70px;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed rgba(255,255,255,.65);border-radius:20px;background:rgba(10,18,26,.34);color:#fff;text-align:center;font-size:18px;pointer-events:none}#dropOverlay span{font-size:13px;color:#d8ecf5}.loaded #dropOverlay{display:none}.draggingFile #dropOverlay{display:flex;background:rgba(16,105,144,.42);border-color:#baf2ff}dialog{background:#1f2630;color:var(--text);border:1px solid #55657b;border-radius:14px;max-width:720px;width:min(720px,92vw);box-shadow:0 18px 70px rgba(0,0,0,.55)}dialog::backdrop{background:rgba(0,0,0,.45)}.aboutBox h2{margin:0 0 8px}.aboutBox textarea{height:190px}.changelog{background:#10151d;border:1px solid #3f4d60;border-radius:8px;padding:8px;margin:8px 0;color:#cfe4ed;font-size:12px;line-height:1.45}.sunroof button#sideToggle{background:#f5db79;color:#352400;border-color:#d6a72e}.sunroof #hudStatus{background:rgba(255,255,255,.86);color:#173040;border-color:rgba(25,90,120,.25)}
+
+.behaviorLine{border:1px solid #3f4d60;background:#111923;border-radius:8px;padding:7px 8px;margin:6px 0;color:#d9e9ef}.behaviorLine b{color:#fff}.behaviorLine .solid{color:#85e89d}.behaviorLine .visual{color:#ffcf6e}.behaviorLine .own{color:#70d9ff}.checkGrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px}.checkGrid label{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px}.checkGrid input{margin:0}.todoLine{color:#ffcf6e}
+.pathJson{height:170px}.pathTools input[type=text]{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}.pathPick{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}.pathInfo{font-size:12px;color:var(--muted)}.pathInfo.warn{color:var(--warn)}.pathInfo.good{color:var(--good)}
+
+
+/* v0.18 Box Templates Moonbench: dark editor canvas, collision-aware terrain cards, theme-aware info/reward box insertion */
+.sideTabs{position:sticky;top:0;z-index:5;background:linear-gradient(#1f2630,#1a2029);padding:0 0 8px 0;margin-bottom:8px;border-bottom:1px solid #303948;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.sideTabs button{font-size:12px;padding:6px 4px;border-radius:9px;background:#202936;color:#aebcca}
+.sideTabs button.active{background:#176984;color:#fff;border-color:#66d9ff}
+.sideHint{font-size:12px;color:var(--muted);margin:-2px 0 8px 0;padding:0 2px}
+.panel{display:none}.sideMode-select .panel.select,.sideMode-palette .panel.palette,.sideMode-rows .panel.rows,.sideMode-doctor .panel.doctor,.sideMode-theme .panel.theme,.sideMode-cart .panel.cart,.panel.always{display:block}
+body:not(.loaded) .needsCart{opacity:.58}
+.paletteTop{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin:6px 0}
+.catTabs{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0}.catTabs button{font-size:11px;padding:4px 6px}.catTabs button.active{background:#176984;border-color:#66d9ff;color:white}
+.paletteGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:7px;max-height:52vh;overflow:auto;padding:2px 2px 8px 2px;scrollbar-width:thin}
+.assetCard{position:relative;background:#151b24;border:1px solid #3e4b5d;border-radius:10px;min-height:112px;padding:6px;cursor:grab;display:flex;flex-direction:column;gap:5px;overflow:hidden}.assetCard:hover{border-color:#70d9ff;background:#1d2733}.assetCard:active{cursor:grabbing}.assetCard.dragging{opacity:.55;transform:scale(.98)}.assetCard.active{border-color:#70d9ff;box-shadow:0 0 0 2px rgba(112,217,255,.22) inset;background:#1b3040}.assetCard .thumb{height:48px;border-radius:7px;background:#0e131a;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(255,255,255,.08)}.assetCard img{max-width:100%;max-height:100%;image-rendering:auto}.assetCard .name{font-size:11px;line-height:1.15;color:#e9f4fa;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.assetCard .badges{display:flex;gap:3px;flex-wrap:wrap;margin-top:auto}.badge{font-size:9px;letter-spacing:.03em;border-radius:999px;padding:1px 4px;background:#2c3748;color:#c6d3dd;border:1px solid rgba(255,255,255,.08)}.badge.solid{background:#174b2d;color:#a9f7bd}.badge.visual{background:#3d344b;color:#e0ccff}.badge.warn{background:#574018;color:#ffe2a3}.badge.slope{background:#25561f;color:#caffb4}.badge.block{background:#42315d;color:#e8d4ff}.shapeIcon{width:56px;height:32px;border:2px solid rgba(0,0,0,.35);background:#7bc96f;box-shadow:inset 0 8px rgba(255,255,255,.22)}.shapeIcon.slopeUp{width:60px;height:40px;background:linear-gradient(to top right, transparent 48%, #7bc96f 50%);border:0;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6))}.shapeIcon.slopeDown{width:60px;height:40px;background:linear-gradient(to top left, transparent 48%, #7bc96f 50%);border:0;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6))}.shapeIcon.block{width:36px;height:36px;background:#b084ff}.shapeIcon.coin{width:28px;height:28px;border-radius:50%;background:#ffd84b}.shapeIcon.enemy{width:42px;height:28px;border-radius:12px 12px 5px 5px;background:#e86f6f}.shapeIcon.portal{width:34px;height:48px;border:4px solid #70d9ff;border-radius:50%;background:transparent}.shapeIcon.pipe{width:42px;height:48px;background:#33b45a;border:2px solid #12672e;border-radius:6px 6px 2px 2px;box-shadow:inset 0 9px rgba(255,255,255,.24)}.shapeIcon.sign{width:46px;height:32px;background:#c69c6d}.activeBrushBox{border:1px solid #405168;background:#121820;border-radius:9px;padding:7px;margin:6px 0;color:#c9d7df;font-size:12px}.activeBrushBox b{color:#fff}.legacyInsert{margin-top:8px}.legacyInsert summary{cursor:pointer;color:#aebcca;font-size:12px}.legacyInsert select{margin-top:6px}.modeMini{font-size:12px;color:var(--muted);margin-top:6px}.compactBox .row{margin:4px 0}.selectQuick{display:grid;grid-template-columns:1fr 1fr;gap:5px}.selectQuick button{font-size:12px}.doctorWarn{font-size:12px;color:var(--warn)}
+
+
+.terrainMapTools{border-top:1px solid #394659;margin-top:7px;padding-top:7px}.terrainMapTools input{width:70px}.behaviorLine .solid{color:var(--good)}.behaviorLine .visual{color:#e0ccff}.behaviorLine .mapped{color:#9ee8ff}.assetCard[data-cat="terrain"] .thumb,.assetCard[data-cat="slopes"] .thumb{background:#102018}
+
+.docModeBox{border:1px solid var(--line);border-radius:10px;padding:8px;background:#111820;margin-top:6px}.docModeBox b{color:var(--accent)}.docModeTheme b{color:var(--good)}.docModeMap b{color:var(--warn)}.docModeCart b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <b>LLMario Cartbench v0.27 Row Background Boundarybench</b>
+  <span class="pill cartIdentity" id="cartIdentity"><span id="fileNamePill" class="fileNamePill">no file</span><input id="cartTitleInput" type="text" value="" placeholder="internal cart title" disabled></span>
+  <span class="pill" id="viewInfo">zoom 100%</span>
+  <span class="pill statusPill" id="topStatus">ready for cart</span>
+  <span class="spacer"></span>
+  <button id="aboutBtn" class="small">About</button>
+  <button id="sideToggle" class="small">☀ Sunroof</button>
+</header>
+<div id="canvasWrap"><canvas id="map"></canvas><div id="rowGutter"></div><div id="hudStatus">Drop a cart/theme/map here or use the file picker.</div><div id="dropOverlay"><b>Drop LLMario theme/map/cart here</b><span>.llmtheme.txt / .llmmap.txt / legacy .llmcart.txt</span></div><div id="hint">Wheel zooms · drag empty space pans · Multi: left-drag selected boxes moves group · right-click / long-tap deselects</div></div>
+<aside id="side" class="sideMode-palette">
+  <div class="sideTabs" id="sideTabs">
+    <button data-mode="palette" class="active">Palette</button>
+    <button data-mode="select">Select</button>
+    <button data-mode="rows">Rows</button>
+    <button data-mode="theme">Theme</button>
+    <button data-mode="doctor">Doctor</button>
+    <button data-mode="cart">Files</button>
+  </div>
+  <div class="sideHint" id="sideHint">Pick a visual card, then use Stamp mode or Insert buttons.</div>
+
+  <div class="box panel always compactBox">
+    <h3>Session</h3>
+    <div class="row"><button id="fit">Fit level</button><button id="exportMap" class="good">Save map (.llmmap only)</button><button id="undo">↶ Undo</button><button id="redo">↷ Redo</button></div>
+    <div class="row"><label>editor bg</label><select id="bgViewMode"><option value="game">game view</option><option value="dim">dim game bg</option><option value="black">black/off</option></select></div>
+    <div class="row"><label>map bg</label><select id="mapBgMode"><option value="all">sky all rows</option><option value="surface-underground">top sky / lower black</option></select></div>
+    <div class="mini">Background display is an editor view setting; Save map still saves only thin placement JSON.</div>
+    <div id="docModeBox" class="docModeBox mini"><b>Source boundary:</b> theme and map are separate documents.</div>
+    <div id="status">Load a theme and a map separately, or load a legacy cart.</div>
+  </div>
+
+  <div class="box panel palette needsCart">
+    <h3>Visual Palette</h3>
+    <div class="paletteTop"><input id="paletteSearch" type="text" class="wide" placeholder="search visible cards"><button id="stampMode" class="small">Stamp mode</button></div>
+    <div class="catTabs" id="paletteCats">
+      <button data-cat="all" class="active">All</button><button data-cat="terrain">Terrain</button><button data-cat="slopes">Slopes</button><button data-cat="blocks">Blocks</button><button data-cat="decor">Decor</button><button data-cat="items">Items</button><button data-cat="enemies">Enemies</button><button data-cat="system">System</button>
+    </div>
+    <div id="activeBrush" class="activeBrushBox">No brush selected yet.</div>
+    <div id="paletteGrid" class="paletteGrid"></div>
+    <div class="row"><button id="insertMouse">Insert at mouse</button><button id="insertCenter">Insert at center</button></div>
+    <details class="legacyInsert"><summary>Text fallback list</summary><select id="insertKind" class="wide"><option value="coin">Coin</option></select></details>
+    <div class="mini" id="insertInfo">Load a cart to build a visual shelf from cartridge recipes and assets.</div>
+  </div>
+
+  <div class="box panel theme">
+    <h3>Theme — view only</h3>
+    <div id="themeInfo" class="mini">No theme loaded.</div>
+    <div class="sep"></div>
+    <div class="mini">Cartographer uses theme truth for palette/collision meaning, but does not edit or save themes here. Use Truthbench for collision-shape edits.</div>
+  </div>
+
+  <div class="box panel select needsCart">
+    <h3>Select / Move</h3>
+    <div class="row"><button id="multi">Multi-select</button><button id="clearSel" class="small">Clear</button><button id="selectVisible" class="small">Select visible</button></div>
+    <div class="mini">Existing map interaction is unchanged: wheel zoom, empty-space pan, click select, multi left-drag selected boxes moves the group.</div>
+    <div class="row"><button id="selectSame" class="small">Same kind</button><button id="focusSel" class="small">Focus selected</button><button id="copySel" class="small">Copy</button><button id="pasteMouse" class="small">Paste mouse</button></div>
+    <div class="sep"></div>
+    <div class="row"><label>snap</label><select id="snapMode"><option value="0">free</option><option value="1">1 px</option><option value="4">4 px</option><option value="8" selected>8 px</option><option value="16">16 px</option><option value="21">21 px</option><option value="32">32 px</option><option value="42">42 block</option><option value="64">64 tile</option></select><button id="snapNow" class="small">Snap selected</button></div>
+    <div class="row"><label>nudge</label><input id="step" type="number" value="4" min="1" max="256"><button class="small" id="snap42">42</button><button class="small" id="snap64">64</button></div>
+  </div>
+
+  <div class="box panel select needsCart">
+    <h3>View Filter</h3>
+    <div class="row"><input id="filterText" class="wide" type="text" placeholder="filter label/path/image/type"></div>
+    <div class="filterGrid" id="kindFilters">
+      <label><input type="checkbox" class="kindFilter" data-kind="platform" checked> platform</label>
+      <label><input type="checkbox" class="kindFilter" data-kind="block" checked> block</label>
+      <label><input type="checkbox" class="kindFilter" data-kind="coin" checked> coin/star</label>
+      <label><input type="checkbox" class="kindFilter" data-kind="enemy" checked> enemy</label>
+      <label><input type="checkbox" class="kindFilter" data-kind="sign" checked> sign</label>
+      <label><input type="checkbox" class="kindFilter" data-kind="portal" checked> portal/player</label>
+      <label><input type="checkbox" class="kindFilter" data-kind="scenery" checked> scenery</label>
+      <label><input type="checkbox" class="kindFilter" data-kind="star" checked> stars</label>
+    </div>
+    <div class="row"><label>row</label><select id="filterRow"><option value="">all rows</option></select><button id="filterClear" class="small">Clear</button></div>
+    <div class="mini" id="filterInfo">showing all objects</div>
+  </div>
+
+  <div class="box panel select rows needsCart">
+    <h3>Selected Object</h3>
+    <div id="selInfo" class="muted">nothing selected</div>
+    <div id="rowTools" class="rowTools">
+      <div class="row"><label>row</label><select id="rowPick"></select></div>
+      <div class="row"><button class="small" id="rowFromY">Row from Y</button><button class="small" id="rowClear">Clear row</button></div>
+    </div>
+    <div id="propTools" class="rowTools">
+      <div class="propGrid">
+        <label>x<input id="propX" type="number" step="1"></label>
+        <label>y<input id="propY" type="number" step="1"></label>
+        <label>w<input id="propW" type="number" step="1"></label>
+        <label>h<input id="propH" type="number" step="1"></label>
+      </div>
+      <div class="row"><button id="propApply" class="small">Apply rect</button><button id="pasteCenter" class="small">Paste center</button></div>
+    </div>
+    <div id="collisionTools" class="rowTools">
+      <div id="collisionInfo" class="behaviorLine">collision: unknown</div>
+      <div class="row"><button id="makeSolid" class="small good">Make solid</button><button id="makeVisual" class="small">Make visual-only</button></div>
+      <div class="mini warn">Theme collision truth is not edited here. Use Truthbench for picture + collision-shape edits.</div>
+    </div>
+    <div id="stackTools" class="rowTools">
+      <div id="stackInfo" class="behaviorLine">stack: unknown</div>
+      <div class="thinrow"><button id="layerBack" class="small">Behind terrain</button><button id="layerFront" class="small">Front decor</button><button id="layerForeground" class="small">Over player</button></div>
+      <div class="thinrow"><button id="orderBack" class="small">Back one</button><button id="orderForward" class="small">Forward one</button></div>
+    </div>
+    <div id="bustTools" class="rowTools">
+      <div class="checkGrid">
+        <label><input id="bustableToggle" type="checkbox"> bustable</label>
+        <label><input id="requiresBigToggle" type="checkbox"> requires big</label>
+        <label><input id="bustPayloadToggle" type="checkbox"> bust payload</label>
+      </div>
+      <div class="mini">Reward/payload boxes stay protected unless bust payload is explicitly enabled.</div>
+    </div>
+    <div class="row"><button id="up">↑</button></div>
+    <div class="row"><button id="left">←</button><button id="down">↓</button><button id="right">→</button></div>
+    <div class="row"><button id="dup">Duplicate</button><button id="del" class="danger">Delete</button></div>
+  </div>
+
+  <div class="box panel select needsCart">
+    <h3>Align / Arrange</h3>
+    <div class="thinrow"><button id="alignL" class="small">Left</button><button id="alignCX" class="small">Center X</button><button id="alignR" class="small">Right</button></div>
+    <div class="thinrow"><button id="alignT" class="small">Top</button><button id="alignCY" class="small">Center Y</button><button id="alignB" class="small">Bottom</button></div>
+    <div class="thinrow"><button id="distX" class="small">Distribute X</button><button id="distY" class="small">Distribute Y</button><button id="floorRow" class="small">Drop to row floor</button></div>
+    <div class="mini"><span class="kbd">Ctrl+Z</span>/<span class="kbd">Ctrl+Y</span> undo/redo · <span class="kbd">M</span> multi · <span class="kbd">I</span> insert center</div>
+  </div>
+
+  <div class="box panel rows needsCart">
+    <h3>Rows</h3>
+    <div class="row"><label>row</label><select id="rowManagePick" class="wide"><option value="">no rows</option></select></div>
+    <div class="propGrid">
+      <label>id<input id="rowId" type="text"></label>
+      <label>cameraY<input id="rowY" type="number" step="1"></label>
+      <label>viewH<input id="rowH" type="number" step="1"></label>
+      <label>down seam<input id="rowFloor" type="number" step="1" disabled></label>
+    </div>
+    <div class="row"><button id="rowAdd" class="small">Add below</button><button id="rowApply" class="small">Apply row</button><button id="rowRepair" class="small good">Repair camera</button><button id="rowDelete" class="small danger">Delete row</button></div>
+    <div class="mini">Rows are camera stops. cameraY is what the game follows; the gutter stays unchanged.</div>
+  </div>
+
+  <div class="box panel doctor pathTools needsCart">
+    <h3>Cartridge Doctor</h3>
+    <div class="doctorWarn">Advanced escape hatch. Great for recipes.scene.flowers and global config; terrible as the main steering wheel.</div>
+    <div class="row"><input id="pathFilter" type="text" class="wide" placeholder="filter paths: recipes.scene.flowers, rowCamera, placement..."></div>
+    <div class="row"><select id="pathPick" class="wide pathPick"><option value="">cart root</option></select></div>
+    <div class="row"><input id="pathInput" type="text" class="wide" placeholder="path, e.g. recipes.scene.flowers"></div>
+    <textarea id="pathJson" class="pathJson" spellcheck="false" placeholder="Pick or type a cartridge path to inspect/edit JSON. Unknown paths can be created by typing a path and applying JSON."></textarea>
+    <div class="row"><button id="pathLoad" class="small">Load path</button><button id="pathApply" class="small good">Apply path JSON</button><button id="pathDelete" class="small danger">Delete path</button></div>
+    <div id="pathInfo" class="pathInfo">Searchable map of non-object global config, recipes, scene recipes, policies, row camera settings, and other cartridge pockets.</div>
+  </div>
+
+  <div class="box panel doctor needsCart">
+    <h3>Raw selected JSON</h3>
+    <textarea id="json" spellcheck="false" placeholder="Select one object to edit JSON. Multi-select shows a summary here."></textarea>
+    <div class="row"><button id="apply">Apply JSON</button></div>
+    <div class="muted">v0.18 Box Templates Moonbench keeps the dark editor canvas and uses fuller theme-aware info/reward box templates when inserting blocks.</div>
+  </div>
+
+  <div class="box panel cart">
+    <h3>Files</h3>
+    <div class="mini">Theme and map are separate loaded documents. Normal saving writes only a thin map file.</div>
+    <input id="file" type="file" accept=".txt,.llmcart,.llmtheme,.llmmap,.json,.htmlz">
+    <div class="row"><button id="loadThemeBtn">Load Theme</button><button id="loadMapBtn">Load Map</button><button id="loadAnyBtn">Load Legacy/Any</button></div>
+    <input id="themeFile" type="file" accept=".txt,.llmtheme,.json" style="display:none">
+    <input id="mapFile" type="file" accept=".txt,.llmmap,.json" style="display:none">
+    <div class="row"><button id="sound">♫ hum</button><button id="sunroof">☀ sunroof</button><button id="aboutBtn2">About / notes</button></div>
+    <div class="row"><button id="saveLocal">Store local</button><button id="loadLocal">Restore</button></div>
+    <details class="legacyInsert"><summary>Legacy sealed-cart packaging</summary>
+      <div class="mini warn">This creates an all-in-one .llmcart bundle. It is not map saving.</div>
+      <div class="row"><button id="export">Export sealed cart</button></div>
+      <label class="check"><input id="humanEdit" type="checkbox" checked> sealed-cart export as human-edited / disable auto-cleanup</label>
+    </details>
+  </div>
+
+  <div class="box panel cart needsCart">
+    <h3>Counts</h3>
+    <div class="statgrid" id="counts"><span>objects</span><span>0</span></div>
+    <div class="sep"></div>
+    <div class="legend"><span class="sw" style="background:#7bc96f"></span><span>platform / slope</span><span class="sw" style="background:#ffd84b"></span><span>coin / star</span><span class="sw" style="background:#e86f6f"></span><span>enemy</span><span class="sw" style="background:#b084ff"></span><span>box / sign / portal</span><span class="sw" style="background:#70d9ff"></span><span>selected</span></div>
+  </div>
+</aside>
+</div>
+<dialog id="aboutDialog">
+  <form method="dialog" class="aboutBox">
+    <h2>Cartbench Theme Truth Boundarybench</h2>
+    <p class="mini">A one-file workbench for LLMario maps using separate theme packs. Theme truth is view-only here; use Truthbench for theme collision edits.</p>
+    <div class="changelog">
+      <b>v0.18</b> box template pass: selected labels use bright text on dark canvas; info/reward box inserts now include skin, usedStyle, messages, payload, and oneShot/default-used behavior instead of stub JSON.<br>
+      <b>v0.17</b> darkbench pass: black editor canvas, dim grey grid/row guides, brighter gutter labels, and amber helper-hitbox overlays.<br>
+      <b>v0.16</b> alpha mapper pass: known jungle_pack/brown_tile ground pieces stay promoted; simple transparent PNG silhouettes are classified as flat/slope/top-strip where possible; overhang ledges use visual art plus a top collision strip.<br>
+      <b>v0.15</b> ground promotion pass: corrected built-in terrain names to jungle_pack_* and brown_tile_*; these known ground-piece cards now insert with collision, while manual Terrain Mapper remains for future fixes.<br>
+      <b>v0.13</b> palette drag + safer collision pass: visual cards can be dragged directly onto the map; Make solid no longer blindly turns decor into generic platform objects; visual-only scenery can instead get a separate collision hitbox helper.<br>
+      <b>v0.12</b> visual palette pass: contextual sidebar tabs, image/card shelf, stamp mode, and Doctor panel separation from everyday map building.<br>
+      <b>v0.11</b> Cartographer pass: searchable cartridge map/path editor exposes globals like recipes.scene.flowers, rowCamera, placement/cartPolicy, and unknown pockets; platform/slope inserts also prefer matching in-cart solid templates before raw recipes.<br>
+      <b>v0.10</b> collision-aware insert pass: platform/slope recipes now insert as solid platform JSON with type/style/skin, image assets are labeled visual-only, clone menu clutter removed, selected objects show collision role, and floating blocks expose bustable / requiresBig / bustPayload toggles.<br>
+      <b>v0.9</b> row labels moved into a fixed left gutter, header shows filename plus editable internal cart title, and HUD events now fade instead of becoming duplicate permanent status.<br>
+      <b>v0.8</b> row editor now treats rows as camera stops: writes cameraY, previews down-switch seams, repairs rowCamera defaults, and expands world.height so the camera can actually pan.<br>
+      <b>v0.7</b> multi-drag fix, drag/drop load, generated insert catalog, row add/delete, pinned row labels, sunroof return button, About notes.<br>
+      <b>v0.6</b> undo/redo, filters, focus, clipboard paste, rect inspector, align/distribute tools, local store/restore.<br>
+      <b>v0.5</b> row lanes, seams, gap markers, snap, insert, multi-select, raw JSON editor.<br>
+      <span class="todoLine"><b>Next issue TODO</b> simple visual stack controls: Back / Forward for selected objects.</span>
+    </div>
+    <label class="mini">Future-self notes</label>
+    <textarea id="aboutNotes" spellcheck="false" placeholder="Notes for future editing passes..."></textarea>
+    <div class="row"><button id="saveAbout" type="button" class="good">Save notes</button><button value="cancel">Close</button></div>
+  </form>
+</dialog>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('map'), ctx=canvas.getContext('2d');
+function byId(id){return document.getElementById(id)}
+const els={file:byId('file'),status:byId('status'),topStatus:byId('topStatus'),hudStatus:byId('hudStatus'),dropOverlay:byId('dropOverlay'),fileNamePill:byId('fileNamePill'),titleInput:byId('cartTitleInput'),rowGutter:byId('rowGutter'),view:byId('viewInfo'),counts:byId('counts'),selInfo:byId('selInfo'),json:byId('json'),step:byId('step'),rowTools:byId('rowTools'),rowPick:byId('rowPick'),propTools:byId('propTools'),humanEdit:byId('humanEdit'),snapMode:byId('snapMode'),multi:byId('multi'),insertKind:byId('insertKind'),insertInfo:byId('insertInfo'),filterText:byId('filterText'),filterRow:byId('filterRow'),filterInfo:byId('filterInfo'),rowManagePick:byId('rowManagePick'),rowId:byId('rowId'),rowY:byId('rowY'),rowH:byId('rowH'),rowFloor:byId('rowFloor'),sideToggle:byId('sideToggle'),aboutDialog:byId('aboutDialog'),aboutNotes:byId('aboutNotes'),collisionTools:byId('collisionTools'),collisionInfo:byId('collisionInfo'),bustTools:byId('bustTools'),bustableToggle:byId('bustableToggle'),requiresBigToggle:byId('requiresBigToggle'),bustPayloadToggle:byId('bustPayloadToggle'),pathFilter:byId('pathFilter'),pathPick:byId('pathPick'),pathInput:byId('pathInput'),pathJson:byId('pathJson'),pathInfo:byId('pathInfo'),side:byId('side'),sideTabs:byId('sideTabs'),sideHint:byId('sideHint'),paletteSearch:byId('paletteSearch'),paletteGrid:byId('paletteGrid'),paletteCats:byId('paletteCats'),activeBrush:byId('activeBrush'),stampMode:byId('stampMode'),terrainMapTools:byId('terrainMapTools'),terrainMapKind:byId('terrainMapKind'),terrainMapW:byId('terrainMapW'),terrainMapH:byId('terrainMapH'),terrainMapInfo:byId('terrainMapInfo'),docModeBox:byId('docModeBox'),themeInfo:byId('themeInfo'),themeFile:byId('themeFile'),mapFile:byId('mapFile'),loadThemeBtn:byId('loadThemeBtn'),loadMapBtn:byId('loadMapBtn'),loadAnyBtn:byId('loadAnyBtn'),exportMap:byId('exportMap'),stackTools:byId('stackTools'),stackInfo:byId('stackInfo'),bgViewMode:byId('bgViewMode'),mapBgMode:byId('mapBgMode')};
+let cart=null,fileName='cart.llmcart.txt',images={},objects=[],selected=null,selection=[],drag=null,multiMode=false,lastMouseWorld={x:80,y:320};
+let docMode='empty',themePack=null,mapDoc=null,themeFileName='',mapFileName='';
+let history=[],future=[],restoring=false,clip=null;
+let paletteCat='all',stampMode=false;
+let editorBgMode=localStorage.getItem('llmario_cartbench_bg_view_mode')||'game';
+let view={x:0,y:0,z:1};
+const colors={platform:'#7bc96f',slope:'#9be27a',coin:'#ffd84b',star:'#fff69b',enemy:'#e86f6f',block:'#b084ff',sign:'#c69c6d',portal:'#7ae0ff',scenery:'#77b8ff',player:'#ffffff',select:'#70d9ff'};
+const knownPaths=new Set();
+let toastTimer=null,titleEditing=false;
+function visibleCountSafe(){try{return cart?visibleObjects().length:0}catch(e){return objects.length}}
+function filtersActiveSafe(){try{return cart&&objects.length&&visibleObjects().length!==objects.length}catch(e){return false}}
+function updateTopStatus(){
+  if(!els.topStatus)return;
+  const bits=[];
+  if(!cart)bits.push('ready for source');
+  else{
+    bits.push(docMode==='theme'?'THEME PACK':docMode==='map'?'MAP':docMode==='cart'?'SEALED CART':'SOURCE');
+    if(stampMode)bits.push('stamp ON');
+    if(multiMode)bits.push('multi ON');
+    if(selection.length)bits.push(selection.length+' selected');
+    if(filtersActiveSafe())bits.push('filters ON '+visibleCountSafe()+'/'+objects.length);
+    const rows=rowsList().length;if(rows>1)bits.push(rows+' rows');
+    if(!bits.length)bits.push('ready');
+  }
+  els.topStatus.textContent=bits.join(' · ');
+  els.topStatus.className='pill statusPill '+(multiMode?'good':'');
+}
+function flashHud(msg,cls='',ms=1900){
+  if(!els.hudStatus||!msg)return;
+  clearTimeout(toastTimer);
+  els.hudStatus.textContent=msg;
+  els.hudStatus.className=(cls?cls+' ':'')+'show';
+  toastTimer=setTimeout(()=>{if(els.hudStatus)els.hudStatus.className=cls||''},ms);
+}
+function setStatus(s,cls='',opts={}){
+  const msg=String(s||'');
+  if(els.status){els.status.textContent=msg;els.status.className=cls}
+  updateTopStatus();
+  if(!opts.quiet)flashHud(msg,cls,opts.ms||1900);
+}
+
+function setSideMode(mode){
+  mode=mode||'select';
+  if(!els.side)return;
+  els.side.className='sideMode-'+mode;
+  if(els.sideTabs)els.sideTabs.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  const hints={palette:'Pick a visual card. Stamp mode lets canvas clicks place it; normal map controls stay unchanged.',select:'Move, multi-select, filter, copy/paste, align, and inspect selected objects.',rows:'Edit camera rows and row assignment. The left gutter display stays exactly as-is.',theme:'View the loaded theme pack. This tab is intentionally read-only in Cartographer.',doctor:'Advanced map/raw JSON escape hatch. Use when the GUI does not expose a pocket yet.',cart:'Load theme/map/legacy files. Save Map is thin; sealed-cart export is legacy packaging.'};
+  if(els.sideHint)els.sideHint.textContent=hints[mode]||'';
+}
+function setStampMode(on){
+  stampMode=!!on;
+  if(els.stampMode)els.stampMode.classList.toggle('active',stampMode);
+  if(els.stampMode)els.stampMode.textContent=stampMode?'Stamp ON':'Stamp mode';
+  updateTopStatus();
+  setStatus(stampMode?'stamp mode on: click canvas to place active palette card':'stamp mode off','good',{ms:1400});
+}
+function updateCartIdentity(){
+  if(els.fileNamePill)els.fileNamePill.textContent=cart?fileName:'no file';
+  if(els.titleInput){
+    els.titleInput.disabled=!cart;
+    els.titleInput.value=cart?(cart.title||''):'';
+    els.titleInput.placeholder=cart?'map title':'map title';
+  }
+  updateDocModeBox();
+  updateTopStatus();
+}
+
+function docModeLabel(){return docMode==='theme'?'Theme loaded / view-only':docMode==='map'?'Map editing':docMode==='cart'?'Legacy sealed cart loaded':'No source loaded'}
+function themeName(){return themeFileName||(themePack&&(themePack.id||themePack.title))||'(no theme loaded)'}
+function mapName(){return mapFileName||(mapDoc&&(mapDoc.id||mapDoc.title))||'(no map loaded)'}
+function updateThemeInfo(){
+  if(!els.themeInfo)return;
+  if(!themePack){els.themeInfo.innerHTML='No theme loaded.';return;}
+  const imgs=themePack.assets&&themePack.assets.images?Object.keys(themePack.assets.images).length:0;
+  const pd=placeablesDict(themePack), place=countDictish(pd);
+  const td=truthAssetsDict(themePack), truthCount=countDictish(td);
+  const truth=themePack.themeTruth||themePack.collisionTruth||themePack.assetTruth||themePack.truth||themePack.assetCatalog||truthCount>0;
+  els.themeInfo.innerHTML='<b>'+escapeHtml(themeName())+'</b><br>id: '+escapeHtml(themePack.id||'(none)')+'<br>images: '+imgs+' · placeables: '+place+'<br>truth data: '+(truth?'present':'not obvious')+(truthCount?(' · '+truthCount+' assets'):'')+'<br><br><span class="muted">View-only here. No Save Theme button exists in Cartographer.</span>';
+}
+function updateDocModeBox(){
+  if(!els.docModeBox)return;
+  const cls=docMode==='theme'?'docModeTheme':docMode==='map'?'docModeMap':docMode==='cart'?'docModeCart':'';
+  els.docModeBox.className='docModeBox mini '+cls;
+  if(!cart){els.docModeBox.innerHTML='<b>Source boundary:</b> theme and map are separate documents.<br>Load a theme, then load or create a map.';updateThemeInfo();return;}
+  const imgCount=themePack&&themePack.assets&&themePack.assets.images?Object.keys(themePack.assets.images).length:0;
+  let extra='';
+  if(docMode==='theme')extra='Theme is view-only here. Load/create a map to edit placement; use Truthbench for theme edits.';
+  else if(docMode==='map')extra='Editing map placement/value JSON only. Theme is referenced, not merged into the map.';
+  else extra='Legacy sealed source loaded for compatibility. Save Map writes a thin map; theme editing stays outside Cartographer.';
+  els.docModeBox.innerHTML='<b>'+escapeHtml(docModeLabel())+'</b><br>Theme: '+escapeHtml(themeName())+' · images '+imgCount+'<br>Map: '+escapeHtml(mapName())+'<br>'+extra;
+  updateThemeInfo();
+}
+function titleInputLive(){
+  if(!cart||!els.titleInput)return;
+  if(!titleEditing){saveUndo('title edit');titleEditing=true;}
+  const v=els.titleInput.value.trim();
+  if(v)cart.title=v;else delete cart.title;
+}
+function titleInputCommit(){
+  if(!cart)return;
+  titleEditing=false;
+  updateCartIdentity();
+  setStatus('title updated: '+(cart.title||'(untitled)'),'good');
+}
+function num(v,d=0){v=Number(v);return Number.isFinite(v)?v:d}
+function hasNum(v){return Number.isFinite(Number(v))}
+function plain(o){return o&&typeof o==='object'&&!Array.isArray(o)}
+function pathKey(p){return p.join('.')}
+function stripMeta(o){return JSON.parse(JSON.stringify(o,(k,v)=>String(k).startsWith('__')?undefined:v))}
+function countDictish(v){if(Array.isArray(v))return v.length;if(plain(v))return Object.keys(v).length;return 0}
+function dictFromArrayish(v){
+  if(plain(v))return v;
+  const out={};
+  if(Array.isArray(v))v.forEach((e,i)=>{if(plain(e)){const id=e.id||e.image||e.key||e.name||('item_'+i);out[id]=e}});
+  return out;
+}
+function placeablesDict(src){return src?dictFromArrayish(src.placeables):{}}
+function truthAssetsDict(src){
+  if(!src)return {};
+  if(plain(src.assetTruth)&&plain(src.assetTruth.assets))return src.assetTruth.assets;
+  if(plain(src.themeTruth)&&plain(src.themeTruth.assets))return src.themeTruth.assets;
+  if(plain(src.collisionTruth)&&plain(src.collisionTruth.assets))return src.collisionTruth.assets;
+  if(plain(src.truth)&&plain(src.truth.assets))return src.truth.assets;
+  return {};
+}
+function assetKeyAliases(key){
+  const s=String(key||'');
+  const out=[s];
+  const m=s.match(/^(.*?_)(0*)(\d+)$/);
+  if(m){
+    const n=String(Number(m[3]));
+    out.push(m[1]+n);
+    out.push(m[1]+n.padStart(2,'0'));
+    out.push(m[1]+n.padStart(3,'0'));
+  }
+  return Array.from(new Set(out.filter(Boolean)));
+}
+function dictAssetLookup(d,key){
+  if(!plain(d))return null;
+  for(const k of assetKeyAliases(key))if(plain(d[k]))return d[k];
+  return null;
+}
+function themeEntryForAsset(key){
+  if(!key)return null;
+  const sources=[themePack,cart].filter(Boolean);
+  for(const src of sources){const hit=dictAssetLookup(placeablesDict(src),key);if(hit)return hit;}
+  for(const src of sources){const hit=dictAssetLookup(truthAssetsDict(src),key);if(hit)return hit;}
+  return null;
+}
+function collisionFromEntry(e){return plain(e)&&(plain(e.collision)?e.collision:(plain(e.collisionShape)?e.collisionShape:null))||null}
+function collisionKind(c){return String((plain(c)&&(c.kind||c.type))||'none')}
+function collisionIsNone(c){const k=collisionKind(c).toLowerCase();return !c||k==='none'||k==='visual'||k==='decor'||k==='background'}
+function defaultSizeFromEntry(e,key){
+  const d=plain(e&&e.defaultSize)?e.defaultSize:{};
+  const img=imageDimsForKey(key);
+  return {w:num(d.w||d.width,img.w||64),h:num(d.h||d.height,img.h||64)};
+}
+function themeMapForAsset(key){
+  const e=themeEntryForAsset(key);if(!e)return null;
+  const c=collisionFromEntry(e);if(collisionIsNone(c))return null;
+  const d=defaultSizeFromEntry(e,key),k=collisionKind(c).toLowerCase();
+  let type='ground',kind='spriteSolid';
+  if(k==='climb'||k==='climbzone'||k==='ladder'||k==='vine'||k==='climbable'){type='climb';kind='climbable'}
+  else if(k.includes('slopeup'))type='slopeUp';else if(k.includes('slopedown'))type='slopeDown';else if(k.includes('slope')||k==='line')type='slope';else if(k.includes('top'))type='topStrip';else type='ground';
+  return {kind,collision:stripMeta(c),w:num(c.w,d.w),h:num(c.h,d.h),visualW:d.w,visualH:d.h,type,placeAs:e.placeAs||'sprite',source:'theme truth'};
+}
+function paletteBadgeForMap(map){
+  const k=collisionKind(map&&map.collision).toLowerCase(),t=String((map&&map.type)||'').toLowerCase();
+  if(k==='climb'||k==='climbzone'||k==='ladder'||k==='vine'||k==='climbable'||t==='climb'||t==='ladder'||t==='vine')return 'CLIMB';
+  if(k.includes('top')||t.includes('top'))return 'TOP';
+  if(k.includes('slope')||k==='line'||t.includes('slope'))return 'SLOPE';
+  return 'TERRAIN';
+}
+function sceneryCollisionMap(it){
+  const o=it&&it.obj||{};
+  if(o.solid===true||plain(o.collision))return {kind:'spriteSolid',collision:o.collision||{kind:'rect'},source:o.collision?'instance collision':'instance solid'};
+  const key=visualImageFor(it);return key?themeMapForAsset(key):null;
+}
+function sceneryCollisionSummary(it){
+  const m=sceneryCollisionMap(it);if(!m)return {cls:'visual',text:'VISUAL ONLY · no collision'};
+  const k=collisionKind(m.collision).toLowerCase(),src=m.source&&m.source.includes('theme')?'theme ':'instance ';
+  if(k==='climb'||k==='climbzone'||k==='ladder'||k==='vine'||k==='climbable')return {cls:'solid',text:'CLIMB · '+src+'climb zone'};
+  if(k.includes('top'))return {cls:'solid',text:'SOLID · '+src+'top-strip collision'};
+  if(k.includes('slope')||k==='line')return {cls:'solid',text:'SOLID · '+src+'slope/line collision'};
+  return {cls:'solid',text:'SOLID · '+src+'rectangle collision'};
+}
+function cartState(){return cart?JSON.stringify(stripMeta(cart)):''}
+function updateHistoryUI(){const u=byId('undo'),r=byId('redo');if(u)u.disabled=!history.length;if(r)r.disabled=!future.length}
+function saveUndo(label='edit'){if(!cart||restoring)return;const s=cartState();if(history.length&&history[history.length-1].state===s)return;history.push({state:s,label});if(history.length>100)history.shift();future=[];updateHistoryUI()}
+function restoreCartState(state,label){if(!state)return;restoring=true;cart=JSON.parse(state);loadImages();selection=[];selected=null;rebuild();updateCartIdentity();renderSelectionPanel();updateFilterRows();draw();restoring=false;setStatus(label||'restored','good');updateHistoryUI()}
+function undo(){if(!history.length)return setStatus('nothing to undo','');const cur=cartState();const prev=history.pop();if(cur)future.push({state:cur,label:'redo'});restoreCartState(prev.state,'undo: '+(prev.label||'edit'))}
+function redo(){if(!future.length)return setStatus('nothing to redo','');const cur=cartState();const next=future.pop();if(cur)history.push({state:cur,label:'undo'});restoreCartState(next.state,'redo')}
+function localKey(){return 'llmario_cartbench_moonbench_v1'}
+function saveLocal(){if(!cart)return setStatus('nothing to store','bad');localStorage.setItem(localKey(),JSON.stringify({fileName,when:new Date().toISOString(),cart:stripMeta(cart)}));setStatus('stored local moonbench copy','good')}
+function loadLocal(){try{const raw=localStorage.getItem(localKey());if(!raw)return setStatus('no local moonbench copy found','bad');const pack=JSON.parse(raw);if(cart)saveUndo('before local restore');cart=pack.cart;fileName=pack.fileName||fileName;loadImages();selection=[];selected=null;rebuild();updateCartIdentity();renderSelectionPanel();updateFilterRows();fit();setStatus('restored local copy from '+(pack.when||'unknown time'),'good')}catch(e){setStatus('local restore failed: '+e.message,'bad')}}
+function checkedKinds(){return Array.from(document.querySelectorAll('.kindFilter:checked')).map(x=>x.dataset.kind)}
+function kindGroup(k){if(k==='star')return 'coin';if(k==='player')return 'portal';return k}
+function filterTextBlob(it){const o=it.obj;return (it.label+' '+it.path.join('.')+' '+String(o.image||'')+' '+String(o.id||'')+' '+String(o.type||'')+' '+String(o.kind||'')+' '+String(o.style||'')+' '+String(o.skin||'')+' '+String(o.row||'')).toLowerCase()}
+function passesFilters(it){if(!cart)return false;const kinds=checkedKinds();if(kinds.length&&!kinds.includes(kindGroup(it.kind))&&!kinds.includes(it.kind))return false;const q=(els.filterText&&els.filterText.value||'').trim().toLowerCase();if(q&&!filterTextBlob(it).includes(q))return false;const row=(els.filterRow&&els.filterRow.value)||'';if(row&&String(it.obj.row||'')!==row)return false;return true}
+function visibleObjects(){return objects.filter(passesFilters)}
+function updateFilterRows(){if(!els.filterRow)return;const cur=els.filterRow.value;const rows=rowsList();els.filterRow.innerHTML='<option value="">all rows</option>'+rows.map((r,i)=>`<option value="${escapeHtml(rowId(r,i))}">${escapeHtml(rowId(r,i))}</option>`).join('');els.filterRow.value=cur;updateRowManager()}
+function refreshFilters(){updateCounts();draw();const v=visibleObjects().length;if(els.filterInfo)els.filterInfo.textContent=(v===objects.length?'showing all objects':'showing '+v+' / '+objects.length+' objects');updateTopStatus()}
+function ensureRows(){if(!cart)return [];cart.world=plain(cart.world)?cart.world:{};if(!Array.isArray(cart.world.rows))cart.world.rows=[];return cart.world.rows}
+function rowCameraDefaults(){return {enabled:true,panSpeed:0.095,seamMargin:36,holdFrames:24,stallMaxVy:1.25,stallGravity:0.07,deathPad:180,releaseMinVy:1.1,releaseMaxVy:2.25,freezeUntilCamera:true,switchCooldownFrames:10,downSwitchMinVy:-0.25,upSwitchMaxVy:0.05,snapEpsilon:0.7}}
+function rowCameraCfg(){const w=cart&&cart.world?cart.world:{};return plain(w.rowCamera)?w.rowCamera:{}}
+function rowViewportH(){const rc=rowCameraCfg();return Math.max(240,num(rc.viewportH||rc.viewH||rc.screenH,480))}
+function rowGap(){const rows=rowsList().slice().sort((a,b)=>rowY(a,0)-rowY(b,0));const diffs=[];for(let i=1;i<rows.length;i++){const d=rowY(rows[i],i)-rowY(rows[i-1],i-1);if(d>80)diffs.push(d)}if(diffs.length){diffs.sort((a,b)=>a-b);return diffs[Math.floor(diffs.length/2)]}return 360}
+function rowSeamMargin(){return Math.max(0,num(rowCameraCfg().seamMargin,36))}
+function rowDownSeam(r,i){return rowY(r,i)+rowH(r)-rowSeamMargin()}
+function syncRowCamera({forceEnable=false}={}){if(!cart)return;const rows=ensureRows();cart.world.rowCamera=plain(cart.world.rowCamera)?cart.world.rowCamera:{};const rc=cart.world.rowCamera;if(rows.length>1&&(forceEnable||rc.enabled===false||rc.enabled==null)){Object.assign(rc,rowCameraDefaults(),rc,{enabled:true})}else if(rows.length>1){const d=rowCameraDefaults();for(const k of Object.keys(d))if(rc[k]==null)rc[k]=d[k]}rows.forEach((r,i)=>{const cy=rowY(r,i);r.cameraY=roundish(cy);r.y=roundish(cy);if(!hasNum(r.height))r.height=rowViewportH()});rows.sort((a,b)=>rowY(a,0)-rowY(b,0));const vh=rowViewportH(),last=rows[rows.length-1],needed=last?Math.ceil(rowY(last,rows.length-1)+vh+90):0;if(needed>0)cart.world.height=Math.max(num(cart.world.height,0),needed);}
+function rowCameraSummary(){if(!cart||!cart.world)return '';const rows=rowsList(),rc=rowCameraCfg(),vh=rowViewportH(),last=rows[rows.length-1],needed=last?Math.ceil(rowY(last,rows.length-1)+vh+90):0;return `rowCamera ${rows.length>1&&rc.enabled!==false?'ON':'OFF'} · rows ${rows.length} · viewH ${Math.round(vh)} · world.height ${Math.round(num(cart.world.height,0))}${needed?` / needs ≥ ${needed}`:''}`}
+function repairRowCamera(){if(!cart)return setStatus('no cart loaded','bad');saveUndo('repair row camera');syncRowCamera({forceEnable:true});rebuild();updateFilterRows();renderSelectionPanel();draw();setStatus('repaired row camera: '+rowCameraSummary(),'good')}
+function updateRowManager(){if(!els.rowManagePick)return;const rows=rowsList(),cur=els.rowManagePick.value;els.rowManagePick.innerHTML=rows.length?rows.map((r,i)=>`<option value="${i}">${escapeHtml(rowId(r,i))} · cameraY ${Math.round(rowY(r,i))} · seam ${Math.round(rowDownSeam(r,i))}</option>`).join(''):'<option value="">no rows</option>';if(cur&&rows[Number(cur)])els.rowManagePick.value=cur;else if(rows.length)els.rowManagePick.value='0';loadRowForm()}
+function loadRowForm(){if(!els.rowManagePick)return;const rows=rowsList(),i=Number(els.rowManagePick.value),r=rows[i];const ok=!!r;if(els.rowId)els.rowId.value=ok?rowId(r,i):'';if(els.rowY)els.rowY.value=ok?Math.round(rowY(r,i)):'';if(els.rowH)els.rowH.value=ok?Math.round(rowH(r)):'';if(els.rowFloor)els.rowFloor.value=ok?Math.round(rowDownSeam(r,i)):''}
+function applyRowEdit(){const rows=ensureRows(),i=Number(els.rowManagePick&&els.rowManagePick.value);if(!rows[i])return setStatus('no row selected','bad');const oldId=rowId(rows[i],i),newId=(els.rowId.value||oldId).trim()||oldId,y=num(els.rowY.value,rowY(rows[i],i)),h=Math.max(240,num(els.rowH.value,rowH(rows[i])));saveUndo('edit row');rows[i].id=newId;rows[i].label=newId;rows[i].cameraY=roundish(y);rows[i].y=roundish(y);rows[i].height=roundish(h);if(newId!==oldId){for(const it of objects)if(String(it.obj.row||'')===oldId)it.obj.row=newId}syncRowCamera();rebuild();const ni=rows.findIndex(r=>rowId(r,0)===newId);els.rowManagePick.value=String(ni>=0?ni:i);updateFilterRows();renderSelectionPanel();draw();setStatus('row updated: '+newId+' · '+rowCameraSummary(),'good')}
+function addRowBelow(){const rows=ensureRows();saveUndo('add row');let i=Number(els.rowManagePick&&els.rowManagePick.value);if(!Number.isFinite(i)||i<0||!rows[i])i=rows.length-1;const gap=rowGap(),base=rows[i],maxY=rows.reduce((m,r,j)=>Math.max(m,rowY(r,j)),-gap);let y=base?rowY(base,i)+gap:maxY+gap;if(rows.some((r,j)=>Math.abs(rowY(r,j)-y)<90))y=maxY+gap;let n=rows.length+1,id='row'+n;while(rows.some((r,j)=>rowId(r,j)===id)){n++;id='row'+n}rows.push({id,label:id,role:'camera row',cameraY:roundish(y),y:roundish(y),height:rowViewportH()});syncRowCamera({forceEnable:true});rebuild();const ni=rows.findIndex(r=>rowId(r,0)===id);els.rowManagePick.value=String(ni>=0?ni:rows.length-1);updateFilterRows();draw();setStatus('added '+id+' · '+rowCameraSummary(),'good')}
+function deleteManagedRow(){const rows=ensureRows(),i=Number(els.rowManagePick&&els.rowManagePick.value);if(!rows[i])return setStatus('no row selected','bad');const oldId=rowId(rows[i],i);saveUndo('delete row');rows.splice(i,1);for(const it of objects)if(String(it.obj.row||'')===oldId)delete it.obj.row;syncRowCamera();rebuild();els.rowManagePick.value=String(Math.min(i,rows.length-1));updateFilterRows();renderSelectionPanel();draw();setStatus('deleted '+oldId+' and cleared matching row tags · '+rowCameraSummary(),'good')}
+function resize(){const r=canvas.parentElement.getBoundingClientRect();canvas.width=Math.max(1,Math.floor(r.width*devicePixelRatio));canvas.height=Math.max(1,Math.floor(r.height*devicePixelRatio));draw()}
+addEventListener('resize',resize); resize();
+function w2s(x,y){return {x:(x-view.x)*view.z*devicePixelRatio,y:(y-view.y)*view.z*devicePixelRatio}}
+function s2w(x,y){return {x:x/(view.z*devicePixelRatio)+view.x,y:y/(view.z*devicePixelRatio)+view.y}}
+function setAt(path,val){let cur=cart;for(let i=0;i<path.length-1;i++)cur=cur[path[i]];cur[path[path.length-1]]=val}
+function delAt(path){let cur=cart;for(let i=0;i<path.length-1;i++)cur=cur[path[i]];if(Array.isArray(cur))cur.splice(path[path.length-1],1);else delete cur[path[path.length-1]]}
+function ensureArray(path){let cur=cart;for(let i=0;i<path.length;i++){const k=path[i];if(i===path.length-1){if(!Array.isArray(cur[k]))cur[k]=[];return cur[k]}if(!plain(cur[k]))cur[k]={};cur=cur[k];}}
+function loadImages(){images={};const srcs=(cart&&cart.assets&&cart.assets.images)||{};for(const [k,v] of Object.entries(srcs)){const im=new Image();im.onload=()=>draw();im.onerror=()=>draw();im.src=v;images[k]=im}}
+function labelFor(kind,path,o,i){const last=path[path.length-2]||kind;let tag=o.id||o.name||o.image||o.type||o.kind||o.style||o.skin||'';return (['sprites','pipes','trees','shrubs','mushrooms','arches','hills','props'].includes(last)?last:kind)+'['+i+']'+(tag?' '+tag:'')}
+function addObj(arr,pathBase,kind){if(!Array.isArray(arr))return;arr.forEach((o,i)=>{if(!plain(o))return;const p=pathBase.concat(i), k=pathKey(p);if(knownPaths.has(k))return;knownPaths.add(k);Object.defineProperty(o,'__kind',{value:kind,configurable:true});objects.push({kind,path:p,obj:o,label:labelFor(kind,p,o,i)});});}
+function classifyPath(path){const s=path.join('.').toLowerCase();if(s.includes('platform'))return 'platform';if(s.includes('floatingblock')||s.includes('block'))return 'block';if(s.includes('coin'))return 'coin';if(s.includes('star'))return 'star';if(s.includes('enem'))return 'enemy';if(s.includes('sign'))return 'sign';if(s.includes('portal'))return 'portal';if(s.includes('spawn')||s.includes('player'))return 'player';return 'scenery'}
+function objectLikeArray(a){return Array.isArray(a)&&a.some(o=>plain(o)&&(('x'in o)||('y'in o)||('image'in o)||('surfaceY'in o)||('w'in o)||('h'in o)))}
+function skipDiscoverPath(path){const s=path.join('.');return /^(assets|recipes|resources|fundamentals|placement|audio|messages|hud|primer|engineNotes|world\.rows|world\.rowCamera|cartbench|cartPolicy)/.test(s)}
+function discoverArrays(node,path=[]){if(!plain(node)&&!Array.isArray(node))return;if(skipDiscoverPath(path))return;if(Array.isArray(node)){if(objectLikeArray(node))addObj(node,path,classifyPath(path));node.forEach((v,i)=>{if(plain(v)||Array.isArray(v))discoverArrays(v,path.concat(i))});return}for(const [k,v] of Object.entries(node)){if(String(k).startsWith('__'))continue;if(Array.isArray(v)||plain(v))discoverArrays(v,path.concat(k));}}
+function rebuild(){objects=[];knownPaths.clear();if(!cart)return;addObj(cart.platforms,['platforms'],'platform');addObj(cart.floatingBlocks,['floatingBlocks'],'block');addObj(cart.coins,['coins'],'coin');addObj(cart.stars,['stars'],'star');addObj(cart.enemies,['enemies'],'enemy');addObj(cart.signposts,['signposts'],'sign');const rs=cart.resourceScenery||{};for(const k of ['sprites','pipes','trees','mushrooms','shrubs','arches','hills','props'])addObj(rs[k],['resourceScenery',k],'scenery');discoverArrays(cart,[]);if(cart.portal&&!knownPaths.has('portal')){Object.defineProperty(cart.portal,'__kind',{value:'portal',configurable:true});objects.push({kind:'portal',path:['portal'],obj:cart.portal,label:'portal'});knownPaths.add('portal')}if(cart.playerSpawn&&!knownPaths.has('playerSpawn')){Object.defineProperty(cart.playerSpawn,'__kind',{value:'player',configurable:true});objects.push({kind:'player',path:['playerSpawn'],obj:cart.playerSpawn,label:'playerSpawn'});knownPaths.add('playerSpawn')}selection=selection.map(old=>objects.find(o=>pathKey(o.path)===pathKey(old.path))).filter(Boolean);selected=selection[selection.length-1]||null;document.body.classList.toggle('loaded',!!cart);updateFilterRows();populateInsertCatalog();populatePathExplorer();updateCounts();}
+function updateCounts(){if(!cart){els.counts.innerHTML='<span>objects</span><span>0</span>';return}const vis=visibleObjects();const c={};for(const o of vis)c[o.kind]=(c[o.kind]||0)+1;const order=['platform','block','coin','star','enemy','sign','scenery','portal','player'];let html='';if(vis.length!==objects.length)html+=`<span>visible</span><span>${vis.length}/${objects.length}</span>`;html+=order.filter(k=>c[k]).map(k=>`<span>${k}</span><span>${c[k]}</span>`).join('');els.counts.innerHTML=html||'<span>objects</span><span>0</span>';if(els.filterInfo)els.filterInfo.textContent=(vis.length===objects.length?'showing all objects':'showing '+vis.length+' / '+objects.length+' objects');}
+function imageSize(o){const key=o.image||o.id||o.sprite;const im=images[key];const sc=num(o.scale,1);return im&&im.complete&&im.naturalWidth?{w:im.naturalWidth*sc,h:im.naturalHeight*sc}:{w:64*sc,h:64*sc}}
+function pathHas(it,word){return it.path.join('.').toLowerCase().includes(word)}
+function tagText(o){return String(o.image||o.id||o.type||o.kind||o.style||o.skin||'').toLowerCase()}
+function isPipe(it){return pathHas(it,'pipes')||tagText(it.obj).includes('pipe')}
+function isClimbable(it){const o=it&&it.obj||{};const k=String(o.kind||o.type||o.role||'').toLowerCase();const c=collisionKind(o.collision).toLowerCase();return !!(o.climbable||k==='ladder'||k==='vine'||k==='climb'||k==='climbable'||c==='climb'||c==='climbzone'||c==='ladder'||c==='vine')}
+function isTree(it){return pathHas(it,'trees')||tagText(it.obj).includes('tree')}
+function isMushroom(it){return pathHas(it,'mushrooms')||tagText(it.obj).includes('mushroom')}
+function isShrub(it){return pathHas(it,'shrubs')||tagText(it.obj).includes('shrub')||tagText(it.obj).includes('bush')}
+function isArch(it){return pathHas(it,'arches')||tagText(it.obj).includes('arch')}
+function isHill(it){return pathHas(it,'hills')||tagText(it.obj).includes('hill')}
+function visualSize(it){const o=it.obj,k=it.kind,sc=num(o.scale,1);if(Number.isFinite(Number(o.w))&&Number.isFinite(Number(o.h)))return {w:num(o.w),h:num(o.h)};if(k==='coin'||k==='star')return {w:24,h:24};if(k==='enemy')return {w:num(o.w,38),h:num(o.h,34)};if(k==='sign')return {w:num(o.w,72),h:num(o.h,62)};if(k==='portal')return {w:num(o.w,70),h:num(o.h,98)};if(k==='player')return {w:num(o.w,34),h:num(o.h,48)};if(k==='block')return {w:num(o.w,42),h:num(o.h,42)};if(k==='platform')return {w:num(o.w,42),h:num(o.h,42)};if(k==='scenery'){if(o.image||o.id||o.sprite)return imageSize(o);if(isPipe(it))return {w:58*sc,h:num(o.h,86*sc)};if(isTree(it))return {w:96*sc,h:132*sc};if(isMushroom(it))return {w:58*sc,h:46*sc};if(isShrub(it))return {w:52*sc,h:28*sc};if(isArch(it))return {w:180*sc,h:135*sc};if(isHill(it))return {w:num(o.w,160*sc),h:num(o.h,70*sc)}}return {w:num(o.w,42),h:num(o.h,42)}}
+function anchorFor(it){const o=it.obj,k=it.kind;if(k==='coin'||k==='star')return {x:.5,y:.5};if(k==='scenery'){if(Number.isFinite(Number(o.anchorX))||Number.isFinite(Number(o.anchorY)))return {x:num(o.anchorX,.5),y:num(o.anchorY,1)};if(isPipe(it)||isShrub(it)||isArch(it)||isHill(it))return {x:0,y:1};if(isTree(it)||isMushroom(it))return {x:.5,y:1};if(o.image||o.id||o.sprite)return {x:.5,y:1}}return {x:0,y:0}}
+function baseYFor(o){if(o.surfaceY!=null&&o.surface&&(!('y'in o)||Math.abs(num(o.y))<1))return num(o.surfaceY)+num(o.yOffset,0);return num(o.y)}
+function objectRect(oOrIt,kind){const it=oOrIt.obj?oOrIt:{obj:oOrIt,kind:kind||oOrIt.__kind,path:[]};const o=it.obj,k=it.kind||o.__kind,sz=visualSize(it),a=anchorFor(it);let x=num(o.x)-sz.w*a.x,y=(k==='scenery'?baseYFor(o):num(o.y))-sz.h*a.y;return {x,y,w:sz.w,h:sz.h}}
+function roundish(v){return Math.round(v*100)/100}
+function grid(){return Math.max(0,num(els.snapMode.value,0))}
+function snap(v){const g=grid();return g>0?Math.round(v/g)*g:roundish(v)}
+function snapPoint(x,y){return {x:snap(x),y:snap(y)}}
+function setObjectRectXY(it,x,y,useSnap=false){if(useSnap){const p=snapPoint(x,y);x=p.x;y=p.y}const o=it.obj,sz=visualSize(it),a=anchorFor(it);o.x=roundish(x+sz.w*a.x);const base=roundish(y+sz.h*a.y);if(it.kind==='scenery'&&o.surfaceY!=null&&o.surface&&(!('y'in o)||Math.abs(num(o.y))<1)){o.surfaceY=roundish(base-num(o.yOffset,0));}else{o.y=base}}
+function worldBounds(){let w=num(cart&&cart.world&&cart.world.width,0),h=num(cart&&cart.world&&cart.world.height,0);for(const it of objects){const r=objectRect(it);w=Math.max(w,r.x+r.w+200);h=Math.max(h,r.y+r.h+160)}return {w:Math.max(1200,w||2400),h:Math.max(700,h||900)}}
+function rowsList(){return cart&&cart.world&&Array.isArray(cart.world.rows)?cart.world.rows:[]}
+function rowY(r,i){return hasNum(r.cameraY)?num(r.cameraY):(hasNum(r.y)?num(r.y):i*rowGap())}
+function rowH(r){return Math.max(240,num(r.height,rowViewportH()))}
+function closestRowForRect(r){const rows=rowsList();if(!rows.length)return null;const cy=r.y+r.h*.5;let best=null,bd=Infinity;rows.forEach((row,i)=>{const y=rowY(row,i),h=rowH(row),inside=cy>=y&&cy<=y+h;const d=inside?0:Math.min(Math.abs(cy-y),Math.abs(cy-(y+h)));if(d<bd){bd=d;best={row,i,y,h,d}}});return best}
+function rowId(row,i){return String(row.id||row.label||('row'+i))}
+function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function selectionItems(){return selection.slice()}
+function isSelected(it){return selection.some(s=>pathKey(s.path)===pathKey(it.path))}
+function setSelection(items){const seen=new Set();selection=[];for(const it of items||[]){if(!it)continue;const k=pathKey(it.path);if(!seen.has(k)){seen.add(k);selection.push(it)}}selected=selection[selection.length-1]||null;renderSelectionPanel();updateTopStatus();draw()}
+function select(it,add=false){if(!it){setSelection([]);return}if(add||multiMode){const k=pathKey(it.path);if(isSelected(it))setSelection(selection.filter(s=>pathKey(s.path)!==k));else setSelection(selection.concat(it));}else setSelection([it])}
+function renderSelectionPanel(){if(!selection.length){els.selInfo.textContent='nothing selected';els.json.value='';refreshRowTools();refreshProps();refreshBehavior();refreshStackTools();return}if(selection.length>1){els.selInfo.innerHTML='<b>'+selection.length+' objects selected</b><br><span class="muted">primary: '+escapeHtml(selected.label)+'</span>';els.json.value=selection.map((it,i)=>`${i+1}. ${it.label}  ${it.path.join('.')}`).join('\n');refreshRowTools();refreshProps();refreshBehavior();refreshStackTools();return}const it=selected,cr=closestRowForRect(objectRect(it));const rowTxt='row: '+(it.obj.row==null?'(none)':it.obj.row)+(cr?' · nearest '+rowId(cr.row,cr.i):'');els.selInfo.innerHTML='<b>'+escapeHtml(it.label)+'</b><br><span class="muted">path: '+escapeHtml(it.path.join('.'))+'<br>'+escapeHtml(rowTxt)+'</span>';els.json.value=JSON.stringify(stripMeta(it.obj),null,2);refreshRowTools();refreshProps();refreshBehavior();refreshStackTools()}
+function refreshProps(){if(!els.propTools)return;if(selection.length!==1){els.propTools.className='rowTools';return}els.propTools.className='rowTools on';const r=objectRect(selected);byId('propX').value=roundish(r.x);byId('propY').value=roundish(r.y);byId('propW').value=roundish(r.w);byId('propH').value=roundish(r.h)}
+function applyProps(){if(selection.length!==1)return setStatus('select exactly one object to edit rect','bad');const x=num(byId('propX').value),y=num(byId('propY').value),w=num(byId('propW').value),h=num(byId('propH').value);if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(w)||!Number.isFinite(h)||w<=0||h<=0)return setStatus('rect needs finite positive w/h','bad');saveUndo('rect edit');selected.obj.w=roundish(w);selected.obj.h=roundish(h);setObjectRectXY(selected,x,y,false);renderSelectionPanel();draw();setStatus('rect applied','good')}
+function isSolidCollisionKind(k){return k==='platform'||k==='block'}
+function isVisualOnlyKind(k){return k==='scenery'}
+function blockRecipe(o){const b=(cart&&cart.recipes&&cart.recipes.blocks)||{};return b[o.style]||b[o.skin]||b[o.type]||b[o.image]||{}}
+function visualImageFor(it){const o=it.obj||{};if(it.kind==='platform'){const rec=recipeForPlatform(o);return rec.image||o.image||o.skin||o.style||o.type||''}if(it.kind==='block'){const rec=blockRecipe(o);return rec.image||o.image||o.skin||o.style||o.type||''}return o.image||o.id||o.sprite||o.skin||o.style||''}
+function sceneryHasInstanceCollision(it){const o=it&&it.obj||{};return !!(o.solid===true||o.collision||o.collisionOnly||o.editorHitbox||o.editorCollisionOnly||o.terrainMapped)}
+function sceneryHasOwnCollision(it){return !!(sceneryHasInstanceCollision(it)||sceneryCollisionMap(it))}
+function collisionRole(it){if(!it)return {cls:'',text:'collision: unknown'};if(it.kind==='platform'){if(it.obj&&(it.obj.collisionOnly||it.obj.editorCollisionOnly||it.obj.editorHitbox))return {cls:'solid',text:'SOLID HELPER · rectangle collision / hitbox'};return {cls:'solid',text:'SOLID · platform / slope collision'}};if(it.kind==='block')return {cls:'solid',text:'SOLID · floating block collision'};if(it.kind==='scenery')return sceneryCollisionSummary(it);if(it.kind==='enemy')return {cls:'own',text:'ACTOR · enemy collision/hit logic'};if(it.kind==='coin'||it.kind==='star')return {cls:'own',text:'PICKUP · collect trigger'};if(it.kind==='portal')return {cls:'own',text:'TRIGGER · portal'};if(it.kind==='sign')return {cls:'own',text:'SIGN · interaction/display object'};if(it.kind==='player')return {cls:'own',text:'SPAWN · player start'};return {cls:'',text:'collision: engine-defined / unknown'}}
+function refreshTerrainMapper(){if(!els.terrainMapTools)return;if(selection.length!==1||selected.kind!=='scenery'){els.terrainMapTools.className='terrainMapTools rowTools';return}const key=visualImageFor(selected);if(!key){els.terrainMapTools.className='terrainMapTools rowTools';return}els.terrainMapTools.className='terrainMapTools rowTools on';const map=terrainMapForAsset(key)||{},r=objectRect(selected),dims=imageDimsForKey(key);const kind=String(map.kind||'spriteSolid');if(els.terrainMapKind)els.terrainMapKind.value=['spriteSolid','platform','slopeUp','slopeDown','block','visual','topStrip'].includes(kind)?kind:'spriteSolid';if(els.terrainMapW)els.terrainMapW.value=roundish(num(map.w,dims.w||r.w||64));if(els.terrainMapH)els.terrainMapH.value=roundish(num(map.h,dims.h||r.h||64));if(els.terrainMapInfo)els.terrainMapInfo.innerHTML=(map.source?('mapped: '+escapeHtml(map.source)):'custom/unmapped')+' · key <span class="mono">'+escapeHtml(key)+'</span>'}
+function refreshBehavior(){if(!els.collisionTools)return;if(selection.length!==1){els.collisionTools.className='rowTools';if(els.bustTools)els.bustTools.className='rowTools';refreshTerrainMapper();return}els.collisionTools.className='rowTools on';const role=collisionRole(selected),key=visualImageFor(selected),solid=solidRecipeForScenery(selected),mapped=key?terrainMapForAsset(key):null;let note='';if(selected.kind==='scenery'){if(sceneryHasInstanceCollision(selected))note='<br><span class="mapped">instance sprite collision</span>';else if(mapped)note='<br><span class="mapped">theme truth: '+escapeHtml(paletteBadgeForMap(mapped).toLowerCase())+' collision</span>';else if(solid)note='<br><span class="muted">solid recipe: '+escapeHtml(solid.key)+'</span>';else note='<br><span class="warn">unmapped visual/decor only</span>'}if(els.collisionInfo)els.collisionInfo.innerHTML='<b>Behavior</b><br><span class="'+role.cls+'">'+escapeHtml(role.text)+'</span>'+(key?'<br><span class="muted">visual key: '+escapeHtml(key)+'</span>':'')+note;const makeSolid=byId('makeSolid'),makeVisual=byId('makeVisual'),addHitbox=byId('addHitbox');if(makeSolid)makeSolid.style.display=(selected.kind==='scenery'&&!sceneryHasOwnCollision(selected)&&(!!solid||!!mapped))?'':'none';if(addHitbox)addHitbox.style.display='none';if(makeVisual)makeVisual.style.display=(isSolidCollisionKind(selected.kind)||(selected.kind==='scenery'&&sceneryHasInstanceCollision(selected)))?'':'none';refreshTerrainMapper();if(els.bustTools){els.bustTools.className=selected.kind==='block'?'rowTools on':'rowTools';if(selected.kind==='block'){els.bustableToggle.checked=!!(selected.obj.bustable||selected.obj.breakable);els.requiresBigToggle.checked=!!selected.obj.requiresBig;els.bustPayloadToggle.checked=!!selected.obj.bustPayload;}}}
+function setBustFlag(name,on){if(selection.length!==1||selected.kind!=='block')return setStatus('select one floating block first','bad');saveUndo('block bust flag');if(name==='bustable'){if(on){selected.obj.bustable=true;delete selected.obj.breakable}else{delete selected.obj.bustable;delete selected.obj.breakable}}else if(name==='requiresBig'){if(on)selected.obj.requiresBig=true;else delete selected.obj.requiresBig}else if(name==='bustPayload'){if(on)selected.obj.bustPayload=true;else delete selected.obj.bustPayload}renderSelectionPanel();draw();setStatus('block flag updated','good')}
+function recipeImageKeys(){const keys=new Set();function add(v){if(typeof v==='string'&&v)keys.add(v)}const pr=(cart&&cart.recipes&&cart.recipes.platforms)||{};for(const [k,r] of Object.entries(pr)){add(k);if(plain(r)){add(r.image);if(plain(r.tiles))Object.values(r.tiles).forEach(add)}}const br=(cart&&cart.recipes&&cart.recipes.blocks)||{};for(const [k,r] of Object.entries(br)){add(k);if(plain(r))add(r.image)}return keys}
+function platformRecipeForAsset(key){const pr=(cart&&cart.recipes&&cart.recipes.platforms)||{};if(pr[key])return {key,rec:pr[key]};for(const [k,r] of Object.entries(pr)){if(plain(r)){if(r.image===key)return {key:k,rec:r};if(plain(r.tiles)&&Object.values(r.tiles).includes(key))return {key:k,rec:r}}}return null}
+function blockRecipeForAsset(key){const br=(cart&&cart.recipes&&cart.recipes.blocks)||{};if(br[key])return {key,rec:br[key]};for(const [k,r] of Object.entries(br)){if(plain(r)&&r.image===key)return {key:k,rec:r}}return null}
+function inferPlatformType(st,rec={}){const rt=String(rec.type||'');if(rt)return rt;const s=String(st||'').toLowerCase();if(s.includes('slopedown')||s.includes('slope_down')||s.includes('slope-down')||/slope.*down/.test(s)||s.endsWith('_down'))return 'slopeDown';if(s.includes('slopeup')||s.includes('slope_up')||s.includes('slope-up')||/slope.*up/.test(s)||s.endsWith('_up'))return 'slopeUp';return 'ground'}
+function inferPlatformDims(st,rec={}){let w=Number(rec.w??rec.width??rec.tileW),h=Number(rec.h??rec.height??rec.tileH);if(Number.isFinite(w)&&Number.isFinite(h)&&w>0&&h>0)return {w,h};const s=String(st||'').toLowerCase(),type=inferPlatformType(st,rec).toLowerCase();if(type.includes('slope')){if(s.includes('steep'))return {w:84,h:84};return {w:168,h:42}}return {w:168,h:42}}
+function platformObjFromRecipe(st,p,rec={}){const d=inferPlatformDims(st,rec),type=inferPlatformType(st,rec);return {id:nextId(platformIdPrefix(st,type)),x:p.x,y:p.y,w:d.w,h:d.h,type,style:st,skin:st}}
+function platformKeyForObj(o){return String(o&&((o.style||o.skin||o.image||o.type)||'')).trim()}
+function platformIdPrefix(st,type){const s=String(st||'').toLowerCase(),t=String(type||'').toLowerCase();if(s.includes('zigzag')||s.includes('slope'))return 'zig_s';if(t.includes('slope'))return 'slope';return 'cb_p'}
+function cloneIdPrefixFromTemplate(id,st,type){const raw=String(id||'');const m=raw.match(/^([a-zA-Z]+(?:_[a-zA-Z]+)?)/);return m?m[1]:platformIdPrefix(st,type)}
+function platformTemplateMap(){const map=new Map();for(const it of objects){if(it.kind!=='platform')continue;const k=platformKeyForObj(it.obj);if(!k)continue;const existing=map.get(k);if(!existing||String(existing.obj.id||'').startsWith('cb_p'))map.set(k,it)}return map}
+function platformObjFromTemplateOrRecipe(st,p,rec={}){const type=inferPlatformType(st,rec),tmpl=platformTemplateMap().get(st);if(tmpl){const c=stripMeta(tmpl.obj);c.id=nextId(cloneIdPrefixFromTemplate(c.id,st,type));c.style=c.style||st;c.skin=c.skin||st;c.type=c.type||type;setObjectRectXY({obj:c,kind:'platform',path:['platforms']},p.x,p.y,true);return c}return platformObjFromRecipe(st,p,rec)}
+function blockObjFromRecipe(st,p,rec={}){const obj={x:p.x,y:p.y,w:num(rec.w||rec.width,42),h:num(rec.h||rec.height,42),style:st,skin:st,boxKind:'inert',bob:0};if(/brick|break|bust/i.test(st)){obj.bustable=true;obj.requiresBig=true}return obj}
+function builtinTerrainKeys(){
+  const jungleNums=[3,5,7,9,11,13,15,17,19,21,33,34,35,36,37,38,39,40,41];
+  const brownNums=[19,20,21,22,24,25,26,27,30,52,53,56,57,58,59,60,61,62,63];
+  const keys=[];
+  jungleNums.forEach(n=>{keys.push('jungle_pack_'+String(n).padStart(2,'0'));keys.push('jungle_pack_'+n)});
+  brownNums.forEach(n=>{keys.push('brown_tile_'+n)});
+  return new Set(keys);
+}
+function imageDimsForKey(key){const im=images&&images[key];if(im&&im.complete&&(im.naturalWidth||im.width))return {w:im.naturalWidth||im.width,h:im.naturalHeight||im.height};return {w:64,h:64}}
+function ensureCartbench(){cart.cartbench=plain(cart.cartbench)?cart.cartbench:{};return cart.cartbench}
+function manualTerrainMap(){return cart&&cart.cartbench&&plain(cart.cartbench.terrainMap)?cart.cartbench.terrainMap:{}}
+function topStripExceptionKeys(){return new Set(['jungle_pack_36','jungle_pack_036','jungle_pack_37','jungle_pack_037']);}
+function alphaTerrainGuess(key){
+  const im=images&&images[key];
+  if(!im||!im.complete||!(im.naturalWidth||im.width))return null;
+  const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;
+  if(!w||!h||w*h>180000)return null;
+  try{
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,w,h);
+    const data=g.getImageData(0,0,w,h).data;
+    let minX=w,minY=h,maxX=-1,maxY=-1,solid=0;
+    const alphaAt=(x,y)=>data[(y*w+x)*4+3];
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(alphaAt(x,y)>24){solid++;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
+    if(maxX<minX||maxY<minY)return null;
+    const bw=maxX-minX+1,bh=maxY-minY+1;if(bw<8||bh<8)return null;
+    const tops=[];
+    for(let x=minX;x<=maxX;x++){
+      let found=null;
+      for(let y=minY;y<=maxY;y++){if(alphaAt(x,y)>24){found=y;break;}}
+      if(found!=null)tops.push({x,y:found});
+    }
+    if(tops.length<Math.max(6,bw*.45))return null;
+    const n=tops.length,sx=tops.reduce((a,p)=>a+p.x,0),sy=tops.reduce((a,p)=>a+p.y,0),sxx=tops.reduce((a,p)=>a+p.x*p.x,0),sxy=tops.reduce((a,p)=>a+p.x*p.y,0);
+    const den=n*sxx-sx*sx;
+    const m=den?((n*sxy-sx*sy)/den):0,b=(sy-m*sx)/n;
+    const err=Math.sqrt(tops.reduce((a,p)=>{const e=p.y-(m*p.x+b);return a+e*e},0)/n);
+    const left=m*minX+b,right=m*maxX+b,dy=right-left;
+    let occBelow=0,areaBelow=0;
+    const topBand=minY+Math.max(3,Math.round(bh*.22));
+    for(let y=topBand;y<=maxY;y++)for(let x=minX;x<=maxX;x++){areaBelow++;if(alphaAt(x,y)>24)occBelow++;}
+    const density=areaBelow?occBelow/areaBelow:1;
+    const dims={w:bw,h:bh,visualW:bw,visualH:bh,offsetX:minX,offsetY:minY};
+    if(Math.abs(dy)>Math.max(8,bh*.28)&&err<Math.max(5,bh*.18))return Object.assign({kind:dy<0?'slopeUp':'slopeDown',source:'alpha terrain guess'},dims);
+    if((Math.max(...tops.map(p=>p.y))-Math.min(...tops.map(p=>p.y)))<Math.max(5,bh*.14)&&density<.58)return Object.assign({kind:'topStrip',h:Math.max(8,Math.round(bh*.22)),source:'alpha terrain guess: flat top overhang'},dims);
+    return Object.assign({kind:'spriteSolid',type:'ground',source:'alpha terrain guess: solid rectangle'},dims);
+  }catch(e){return null}
+}
+function terrainMapForAsset(key){if(!key)return null;const themeMap=themeMapForAsset(key);if(themeMap)return themeMap;if(!cart)return null;const manual=manualTerrainMap()[key];if(plain(manual)){if(manual.kind==='visual')return null;return Object.assign({source:'manual terrain map'},manual)}const plat=platformRecipeForAsset(key),blk=blockRecipeForAsset(key);if(blk&&!plat)return {kind:'block',key:blk.key,rec:blk.rec,w:num(blk.rec.w||blk.rec.width,42),h:num(blk.rec.h||blk.rec.height,42),source:'block recipe'};if(plat){const d=inferPlatformDims(plat.key,plat.rec),type=inferPlatformType(plat.key,plat.rec);return {kind:type,key:plat.key,rec:plat.rec,w:d.w,h:d.h,source:'platform recipe'}}if(topStripExceptionKeys().has(key)){const d=imageDimsForKey(key);return {kind:'topStrip',w:d.w,h:Math.max(8,Math.round(d.h*.22)),visualW:d.w,visualH:d.h,type:'ground',source:'built-in overhang top-strip exception'}}if(builtinTerrainKeys().has(key)){const g=alphaTerrainGuess(key);if(g)return g;const d=imageDimsForKey(key);return {kind:'spriteSolid',w:d.w,h:d.h,type:'ground',source:'built-in ground-piece terrain list'}}return null}
+function solidRecipeForScenery(it){if(!it||it.kind!=='scenery')return null;const key=visualImageFor(it),map=terrainMapForAsset(key);if(map)return {kind:map.kind||'spriteSolid',key:map.key||key,rec:map.rec||map,map};const plat=platformRecipeForAsset(key),blk=blockRecipeForAsset(key);if(blk&&!plat)return {kind:'block',key:blk.key,rec:blk.rec};if(plat)return {kind:'platform',key:plat.key,rec:plat.rec};return null}
+function ensurePlatformImageRecipe(key,kind,w,h){cart.recipes=plain(cart.recipes)?cart.recipes:{};cart.recipes.platforms=plain(cart.recipes.platforms)?cart.recipes.platforms:{};if(plain(cart.recipes.platforms[key]))return cart.recipes.platforms[key];if(String(kind).toLowerCase().includes('slope'))cart.recipes.platforms[key]={prefab:'imageSlopePlatform',image:key,smooth:true,shadow:false,fallback:{prefab:'slopePlatform',top:'#79d94e',mid:'#51a536',dirtTop:'#8b572f',dirtBottom:'#543017',edge:'#2e5f20',surface:'#caff88',surfaceWidth:4},w,h,type:kind};else cart.recipes.platforms[key]={prefab:'imageTilePlatform',tileSize:Math.max(1,Math.round(Math.min(w||64,h||64))),smooth:true,shadow:false,tiles:{topLeft:key,topMid:key,topRight:key,midLeft:key,mid:key,midRight:key,bottomLeft:key,bottomMid:key,bottomRight:key},backFill:'#5a3822',fallbackDirt:'#5a3822',fallbackTop:'#6fbf2b',overlap:0,w,h,type:'ground'};return cart.recipes.platforms[key]}
+function ensureBlockImageRecipe(key,w,h){cart.recipes=plain(cart.recipes)?cart.recipes:{};cart.recipes.blocks=plain(cart.recipes.blocks)?cart.recipes.blocks:{};if(!plain(cart.recipes.blocks[key]))cart.recipes.blocks[key]={prefab:'imageBlock',image:key,smooth:true,w:w||42,h:h||42};return cart.recipes.blocks[key]}
+function spriteSolidObj(key,p,map={}){const d=imageDimsForKey(key),w=num(map.visualW||map.w,d.w||64),h=num(map.visualH||map.h,d.h||64),obj={image:key,scale:1,x:p.x,y:p.y,w:roundish(w),h:roundish(h),anchorX:0,anchorY:0,solid:true,terrainMapped:true,terrainType:map.type||'ground'};if(plain(map.collision))obj.collision=stripMeta(map.collision);return obj}
+function climbSpriteObj(key,p,map={}){const d=imageDimsForKey(key),w=num(map.visualW||map.w,d.w||42),h=num(map.visualH||map.h,d.h||168),obj={kind:'ladder',x:p.x,y:p.y,w:roundish(w),h:roundish(h),anchorX:0,anchorY:0,layer:'front',climbable:true,terrainMapped:true,terrainType:'climb',collision:{kind:'climb'}};if(key)obj.image=key;if(plain(map.collision))obj.collision=stripMeta(Object.assign({kind:'climb'},map.collision));return obj}
+function platformObjForMappedAsset(key,p,map={}){const kind=map.kind==='platform'?'ground':(map.kind||map.type||'ground'),w=num(map.w, inferPlatformDims(key,map).w),h=num(map.h, inferPlatformDims(key,map).h),rec=ensurePlatformImageRecipe(key,kind,w,h);const obj=platformObjFromRecipe(key,p,Object.assign({},rec,{type:kind,w,h}));obj.w=roundish(w);obj.h=roundish(h);obj.type=kind==='platform'?'ground':kind;obj.style=key;obj.skin=key;return obj}
+function blockObjForMappedAsset(key,p,map={}){const rec=ensureBlockImageRecipe(key,num(map.w,42),num(map.h,42));return blockObjFromRecipe(key,p,Object.assign({},rec,{w:num(map.w,42),h:num(map.h,42)}))}
+function mapShouldStaySprite(map){const k=String((map&&map.kind)||'').toLowerCase(),t=String((map&&map.type)||'').toLowerCase(),c=collisionKind(map&&map.collision).toLowerCase();return !map||k==='spritesolid'||k==='topstrip'||k==='climbable'||t==='topstrip'||t==='climb'||c==='topstrip'||c.includes('top')||c==='climb'||c==='climbzone'||c==='ladder'||c==='vine'}
+function promoteSceneryWithMap(it,map,key){const r=objectRect(it),p={x:r.x,y:r.y};let obj;if(mapShouldStaySprite(map)){obj=Object.assign({},it.obj,spriteSolidObj(key,{x:r.x,y:r.y},map||{}));setObjectRectXY({obj,kind:'scenery',path:it.path},r.x,r.y,false);setAt(it.path,obj);return it.path.slice()}if(map.kind==='block'){obj=blockObjForMappedAsset(key,{x:0,y:0},map);setObjectRectXY({obj,kind:'block',path:['floatingBlocks']},r.x,r.y,false);const tag=nearestRowTagForRect(objectRect({obj,kind:'block',path:[]}));if(tag)obj.row=tag;delAt(it.path);const arr=ensureArray(['floatingBlocks']);arr.push(obj);return ['floatingBlocks',arr.length-1]}obj=platformObjForMappedAsset(key,{x:0,y:0},map);setObjectRectXY({obj,kind:'platform',path:['platforms']},r.x,r.y,false);const tag=nearestRowTagForRect(objectRect({obj,kind:'platform',path:[]}));if(tag)obj.row=tag;delAt(it.path);const arr=ensureArray(['platforms']);arr.push(obj);return ['platforms',arr.length-1]}
+
+function layerLabelForSelected(){if(selection.length!==1||!selected)return 'stack: select one object';const b=layerBucket(selected),k=selected.kind,l=sceneryLayerValue(selected.obj);let slot='world object';if(k==='scenery'){if(b<30)slot='BACK scenery · behind terrain';else if(b>90)slot='FOREGROUND · over player';else slot='FRONT scenery · behind player';}else if(k==='player')slot='--- PLAYER ---';else slot='terrain/objects · behind player';return slot;}
+function refreshStackTools(){const box=byId('stackTools'),info=byId('stackInfo');if(!box||!info)return;if(selection.length!==1){box.className='rowTools';return}box.className='rowTools on';const canLayer=selected.kind==='scenery';const canOrder=selected.path.length>=2&&Array.isArray(parentArrayForPath(selected.path));info.innerHTML='<b>Stack</b><br>'+escapeHtml(layerLabelForSelected())+'<br><span class="muted">order: back scenery → terrain/objects → front scenery → --- player --- → foreground</span>';['layerBack','layerFront','layerForeground'].forEach(id=>{const b=byId(id);if(b)b.style.display=canLayer?'':'none'});['orderBack','orderForward'].forEach(id=>{const b=byId(id);if(b)b.style.display=canOrder?'':'none'});}
+function setSelectedLayer(layer){if(selection.length!==1||selected.kind!=='scenery')return setStatus('select one scenery/image object','bad');saveUndo('set layer');if(layer==='front')delete selected.obj.layer;else selected.obj.layer=layer;renderSelectionPanel();draw();setStatus('layer: '+(layer==='front'?'front decor':layer),'good')}
+function moveSelectedInArray(delta){if(selection.length!==1||!selected||selected.path.length<2)return setStatus('select one object to reorder','bad');const arr=parentArrayForPath(selected.path),idx=Number(selected.path[selected.path.length-1]);if(!Array.isArray(arr)||!Number.isFinite(idx))return setStatus('selected object is not in a reorderable array','bad');const ni=Math.max(0,Math.min(arr.length-1,idx+delta));if(ni===idx)return setStatus('already at edge of this stack','');saveUndo('reorder stack');const [obj]=arr.splice(idx,1);arr.splice(ni,0,obj);const newPath=selected.path.slice(0,-1).concat(ni);rebuild();const it=objects.find(o=>pathKey(o.path)===pathKey(newPath));setSelection([it].filter(Boolean));draw();setStatus(delta<0?'sent back one':'brought forward one','good')}
+function saveTerrainMapForSelected(){if(selection.length!==1||selected.kind!=='scenery')return setStatus('select one visual ground/image asset first','bad');const key=visualImageFor(selected);if(!key)return setStatus('selected object has no image key to map','bad');saveUndo('terrain map');const w=num(els.terrainMapW&&els.terrainMapW.value,objectRect(selected).w),h=num(els.terrainMapH&&els.terrainMapH.value,objectRect(selected).h),kind=els.terrainMapKind?els.terrainMapKind.value:'spriteSolid';const cb=ensureCartbench();cb.terrainMap=plain(cb.terrainMap)?cb.terrainMap:{};cb.terrainMap[key]={kind,w:roundish(w),h:roundish(h),source:'manual terrain map'};if(kind==='topStrip'){const d=imageDimsForKey(key);cb.terrainMap[key].visualW=d.w;cb.terrainMap[key].visualH=d.h;cb.terrainMap[key].type='ground'}populateInsertCatalog();refreshBehavior();setStatus('saved terrain map for '+key,'good')}
+function promoteSelectedTerrain(){return convertSelectedToSolid()}
+function hitboxObjForRect(r,key){return {id:nextId('hitbox'),x:roundish(r.x),y:roundish(r.y),w:roundish(r.w),h:roundish(r.h),type:'ground',style:'collision_helper',skin:'collision_helper',collisionOnly:true,editorHitbox:true,editorNote:'Collision helper for visual-only scenery '+(key||'')}}
+function topStripVisualObj(key,p,map={}){const d=imageDimsForKey(key),w=num(map.visualW||map.w,d.w||64),h=num(map.visualH,d.h||num(map.h,64));return {image:key,scale:1,x:roundish(p.x),y:roundish(p.y),w:roundish(w),h:roundish(h),anchorX:0,anchorY:0,visualOnly:true,terrainMapped:true,terrainType:'topStripVisual'}}
+function topStripHitboxObj(key,p,map={}){const d=imageDimsForKey(key),w=num(map.w||map.visualW,d.w||64),h=num(map.h,Math.max(8,Math.round((d.h||64)*.22))),offX=num(map.hitboxX||map.offsetX,0),offY=num(map.hitboxY,0);return {id:nextId('topstrip'),x:roundish(p.x+offX),y:roundish(p.y+offY),w:roundish(w),h:roundish(h),type:'ground',style:'collision_helper',skin:'collision_helper',collisionOnly:true,editorHitbox:true,terrainMapped:true,terrainType:'topStrip',editorNote:'Top collision strip for overhang terrain '+(key||'')}}
+function addHitboxForSelected(){return setStatus('separate hitboxes are disabled here; use single sprite collision from theme truth','bad')}
+function convertSelectedToSolid(){if(selection.length!==1)return setStatus('select one visual object first','bad');if(isSolidCollisionKind(selected.kind)||sceneryHasOwnCollision(selected))return setStatus('already solid: '+collisionRole(selected).text,'good');if(selected.kind!=='scenery')return setStatus('this object is not a visual scenery asset','bad');const key=visualImageFor(selected),solid=solidRecipeForScenery(selected);if(!solid)return setStatus('no terrain map or solid recipe matches '+(key||'this asset')+'; this asset needs theme truth in Truthbench','bad');saveUndo('make solid');const map=solid.map||solid.rec||solid,newPath=promoteSceneryWithMap(selected,map,key);rebuild();const paths=Array.isArray(newPath&&newPath[0])?newPath:[newPath];setSelection(paths.map(p=>objects.find(o=>pathKey(o.path)===pathKey(p))).filter(Boolean));setStatus('promoted '+key+' into '+(map.kind||solid.kind||'solid')+' collision','good')}
+function convertSelectedToVisual(){if(selection.length!==1)return setStatus('select one solid object first','bad');if(selected.kind==='scenery'&&sceneryHasOwnCollision(selected)){saveUndo('make visual-only');delete selected.obj.solid;delete selected.obj.collision;delete selected.obj.collisionOnly;delete selected.obj.editorHitbox;delete selected.obj.editorCollisionOnly;delete selected.obj.terrainMapped;selected.obj.visualOnly=true;renderSelectionPanel();draw();return setStatus('removed sprite collision; visual art remains','good')}if(!isSolidCollisionKind(selected.kind))return setStatus('only platform/block/collision-mapped sprites can be made visual-only here','bad');const r=objectRect(selected),key=visualImageFor(selected)||'visual_only';saveUndo('make visual-only');const obj={image:key,x:0,y:0,w:roundish(r.w),h:roundish(r.h),anchorX:0,anchorY:0,visualOnly:true};setObjectRectXY({obj,kind:'scenery',path:['resourceScenery','sprites']},r.x,r.y,false);delAt(selected.path);const arr=ensureArray(['resourceScenery','sprites']);arr.push(obj);const newPath=['resourceScenery','sprites',arr.length-1];rebuild();setSelection([objects.find(o=>pathKey(o.path)===pathKey(newPath))].filter(Boolean));setStatus('converted solid object into visual-only scenery','good')}
+
+
+function selectionBounds(){const items=selectionItems();if(!items.length)return null;let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const it of items){const r=objectRect(it);minX=Math.min(minX,r.x);minY=Math.min(minY,r.y);maxX=Math.max(maxX,r.x+r.w);maxY=Math.max(maxY,r.y+r.h)}return {x:minX,y:minY,w:maxX-minX,h:maxY-minY}}
+function focusSelection(){const b=selectionBounds();if(!b)return fit();const cw=canvas.width/devicePixelRatio,ch=canvas.height/devicePixelRatio;view.z=Math.max(.06,Math.min(4,Math.min(cw/(b.w+180),ch/(b.h+140))));view.x=b.x+b.w/2-cw/(2*view.z);view.y=b.y+b.h/2-ch/(2*view.z);draw();setStatus('focused selected','good')}
+function selectVisible(){setSelection(visibleObjects());setStatus('selected '+selection.length+' visible object(s)','good')}
+function selectSameKind(){if(!selected)return setStatus('select an object first','bad');const g=kindGroup(selected.kind);setSelection(visibleObjects().filter(it=>kindGroup(it.kind)===g));setStatus('selected same kind: '+g,'good')}
+function alignSelection(mode){if(selection.length<2)return setStatus('select 2+ objects to align','bad');const b=selectionBounds();saveUndo('align '+mode);for(const it of selection){const r=objectRect(it);let x=r.x,y=r.y;if(mode==='L')x=b.x;if(mode==='R')x=b.x+b.w-r.w;if(mode==='CX')x=b.x+b.w/2-r.w/2;if(mode==='T')y=b.y;if(mode==='B')y=b.y+b.h-r.h;if(mode==='CY')y=b.y+b.h/2-r.h/2;setObjectRectXY(it,x,y,true)}renderSelectionPanel();draw();setStatus('aligned '+selection.length+' object(s)','good')}
+function distributeSelection(axis){if(selection.length<3)return setStatus('select 3+ objects to distribute','bad');const items=selection.slice().sort((a,b)=>{const ar=objectRect(a),br=objectRect(b);return axis==='x'?(ar.x+ar.w/2)-(br.x+br.w/2):(ar.y+ar.h/2)-(br.y+br.h/2)});const first=objectRect(items[0]),last=objectRect(items[items.length-1]);const c0=axis==='x'?first.x+first.w/2:first.y+first.h/2,c1=axis==='x'?last.x+last.w/2:last.y+last.h/2,step=(c1-c0)/(items.length-1);saveUndo('distribute '+axis);items.forEach((it,i)=>{const r=objectRect(it),c=c0+step*i;if(axis==='x')setObjectRectXY(it,c-r.w/2,r.y,true);else setObjectRectXY(it,r.x,c-r.h/2,true)});renderSelectionPanel();draw();setStatus('distributed '+axis.toUpperCase(),'good')}
+function dropToRowFloor(){if(!selection.length)return setStatus('nothing selected','bad');saveUndo('drop to row floor');let n=0;for(const it of selection){const r=objectRect(it),hit=closestRowForRect(r);if(hit){setObjectRectXY(it,r.x,hit.y+hit.h-r.h,true);it.obj.row=rowId(hit.row,hit.i);n++}}renderSelectionPanel();draw();setStatus('dropped '+n+' object(s) to nearest row floor','good')}
+function copySelection(){if(!selection.length)return setStatus('nothing selected to copy','bad');const b=selectionBounds();clip={bounds:b,items:selection.filter(it=>it.kind!=='player').map(it=>({kind:it.kind,parentPath:it.path.slice(0,-1),obj:stripMeta(it.obj),rect:objectRect(it)}))};setStatus('copied '+clip.items.length+' object(s)','good')}
+function pasteClip(at){if(!cart||!clip||!clip.items.length)return setStatus('clipboard empty','bad');const target=snapPoint(at.x,at.y),dx=target.x-clip.bounds.x,dy=target.y-clip.bounds.y;saveUndo('paste');const refs=[];for(const cp of clip.items){const clone=JSON.parse(JSON.stringify(cp.obj));const pseudo={obj:clone,kind:cp.kind,path:cp.parentPath};setObjectRectXY(pseudo,cp.rect.x+dx,cp.rect.y+dy,false);if(cp.kind==='portal'&&cp.parentPath.length===0){cart.portal=clone;refs.push({path:['portal']});continue}if(!cp.parentPath.length)continue;const arr=ensureArray(cp.parentPath);arr.push(clone);refs.push({path:cp.parentPath.concat(arr.length-1)})}rebuild();setSelection(refs.map(r=>objects.find(o=>pathKey(o.path)===pathKey(r.path))).filter(Boolean));setStatus('pasted '+selection.length+' object(s)','good')}
+function refreshRowTools(){if(!selection.length||!cart){els.rowTools.className='rowTools';els.rowPick.innerHTML='';return}const rows=rowsList();els.rowTools.className='rowTools on';const cur=selected&&selected.obj.row!=null?String(selected.obj.row):'';els.rowPick.innerHTML='<option value="">(none)</option>'+rows.map((r,i)=>`<option value="${escapeHtml(rowId(r,i))}">${escapeHtml(rowId(r,i))}</option>`).join('');els.rowPick.value=cur}
+function assignRowFromY(){if(!selection.length)return;saveUndo('row from y');let n=0;for(const it of selection){const hit=closestRowForRect(objectRect(it));if(hit){it.obj.row=rowId(hit.row,hit.i);n++}}renderSelectionPanel();draw();setStatus('row set on '+n+' object(s)','good')}
+function clearRow(){if(!selection.length)return;saveUndo('clear row');for(const it of selection)delete it.obj.row;renderSelectionPanel();draw();setStatus('row cleared on '+selection.length+' object(s)','good')}
+function nudge(dx,dy,record=true){if(!selection.length)return;if(record)saveUndo('nudge');for(const it of selection){const r=objectRect(it);setObjectRectXY(it,r.x+dx,r.y+dy,false)}renderSelectionPanel();draw()}
+function snapSelected(){if(!selection.length)return;saveUndo('snap selected');for(const it of selection){const r=objectRect(it);setObjectRectXY(it,r.x,r.y,true)}renderSelectionPanel();draw();setStatus('snapped '+selection.length+' object(s)','good')}
+function parentArrayForPath(path){let parent=cart;for(let i=0;i<path.length-1;i++)parent=parent[path[i]];return parent}
+function duplicate(){const items=selectionItems().filter(it=>it.kind!=='player'&&it.path.length>=2);if(items.length)saveUndo('duplicate');if(!items.length)return setStatus('nothing duplicatable selected','bad');const newRefs=[];for(const it of items){const parent=parentArrayForPath(it.path);if(!Array.isArray(parent))continue;const c=stripMeta(it.obj);parent.push(c);newRefs.push({parentPath:it.path.slice(0,-1),idx:parent.length-1})}rebuild();const clones=[];for(const r of newRefs){const k=r.parentPath.concat(r.idx).join('.');const it=objects.find(o=>o.path.join('.')===k);if(it)clones.push(it)}setSelection(clones);const st=num(els.step.value,4)||42;nudge(st,0,false);beep(660,.045,.035);setStatus('duplicated '+clones.length+' object(s)','good')}
+function removeSelected(){const items=selectionItems().filter(it=>it.kind!=='player');if(!items.length)return setStatus('nothing deletable selected','bad');saveUndo('delete');items.sort((a,b)=>{const ap=a.path.slice(0,-1).join('.'),bp=b.path.slice(0,-1).join('.');if(ap===bp)return num(b.path[b.path.length-1])-num(a.path[a.path.length-1]);return bp.localeCompare(ap)});for(const it of items)delAt(it.path);setSelection([]);rebuild();draw();beep(220,.05,.04);setStatus('deleted '+items.length+' object(s)','good')}
+function applyJson(){if(selection.length!==1)return setStatus('select exactly one object to apply JSON','bad');try{saveUndo('json edit');const val=JSON.parse(els.json.value);Object.defineProperty(val,'__kind',{value:selected.kind,configurable:true});const p=pathKey(selected.path);setAt(selected.path,val);rebuild();setSelection([objects.find(o=>pathKey(o.path)===p)].filter(Boolean));setStatus('applied selected JSON','good')}catch(e){setStatus('JSON error: '+e.message,'bad')}}
+function fit(){if(!cart)return;const b=worldBounds(),cw=canvas.width/devicePixelRatio,ch=canvas.height/devicePixelRatio;view.z=Math.min(cw/(b.w+160),ch/(b.h+120));view.z=Math.max(.08,Math.min(2,view.z));view.x=-80;view.y=-60;draw()}
+function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#050607';ctx.fillRect(0,0,canvas.width,canvas.height);if(!cart){renderRowGutter([]);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(40,40,620,120);ctx.fillStyle='#fff';ctx.font=`${18*devicePixelRatio}px sans-serif`;ctx.fillText('Load a theme + map, or a legacy cart, to begin.',60*devicePixelRatio,86*devicePixelRatio);return}const vis=visibleObjects();drawEditorBackground();drawGrid();drawRows();for(const it of drawOrderedObjects(vis))drawObject(it);drawPlayerStackMarker();for(const it of selection.filter(passesFilters))drawSelection(it);if(drag&&drag.mode==='marquee')drawMarquee();els.view.textContent='zoom '+Math.round(view.z*100)+'%'}
+
+function activeSkyRecipe(){return (cart&&cart.recipes&&cart.recipes.sky)||(themePack&&themePack.recipes&&themePack.recipes.sky)||null}
+function mapBackgroundMode(){const b=cart&&plain(cart.background)?cart.background:{};return b.mode||b.kind||'all'}
+function syncMapBgModeUI(){if(els.mapBgMode)els.mapBgMode.value=mapBackgroundMode()==='surface-underground'?'surface-underground':'all'}
+function setMapBgMode(mode){if(!cart)return setStatus('load a map first','bad');saveUndo('map background mode');cart.background=plain(cart.background)?cart.background:{};if(mode==='surface-underground')cart.background.mode='surface-underground';else delete cart.background.mode;if(Object.keys(cart.background).length===0)delete cart.background;syncMapBgModeUI();draw();setStatus(mode==='surface-underground'?'map bg: top sky, lower rows black':'map bg: sky all rows','good',{ms:1400})}
+function firstRowForBackground(){const rs=rowsList();if(!rs.length)return {cameraY:0,viewH:480,height:480};const r=rs[0],h=num(r.viewH,r.height||480);return {cameraY:num(r.cameraY,r.y||0),viewH:h,height:h}}
+function drawSkyRecipeRect(r,topPx,heightPx){
+  const W=canvas.width,Hc=Math.max(1,heightPx),D=devicePixelRatio,cw=W/D,ch=Hc/D;
+  const grad=ctx.createLinearGradient(0,topPx,0,topPx+Hc);
+  grad.addColorStop(0,r.fallbackTop||'#223047');grad.addColorStop(1,r.fallbackBottom||'#050607');
+  ctx.fillStyle=grad;ctx.fillRect(0,topPx,W,Hc);
+  const layers=Array.isArray(r.layers)?r.layers:[];
+  const camish=-view.x;
+  for(const l of layers){
+    const key=l.image||l.id,im=images[key];if(!im||!im.complete||!im.naturalWidth)continue;
+    const oldSmooth=ctx.imageSmoothingEnabled,oldAlpha=ctx.globalAlpha;
+    ctx.imageSmoothingEnabled=l.smooth!==false;if(l.alpha!=null)ctx.globalAlpha=oldAlpha*num(l.alpha,1);
+    let dw,dh;
+    if(l.fit==='cover'){const sc=Math.max(cw/im.naturalWidth,ch/im.naturalHeight)*num(l.scale,1);dw=im.naturalWidth*sc*D;dh=im.naturalHeight*sc*D;}
+    else if(l.fit==='width'){const sc=(cw/im.naturalWidth)*num(l.scale,1);dw=im.naturalWidth*sc*D;dh=im.naturalHeight*sc*D;}
+    else if(l.w&&l.h){dw=num(l.w)*D;dh=num(l.h)*D;}else{const sc=num(l.scale,1);dw=im.naturalWidth*sc*D;dh=im.naturalHeight*sc*D;}
+    const yy=topPx+(l.y==null?(Hc-dh):num(l.y)*D);
+    const span=Math.max(1,dw),xf=l.xFactor==null?.04:num(l.xFactor,.04),baseX=num(l.x,0)*D;
+    if(l.repeatX===false){ctx.drawImage(im,baseX,yy,dw,dh);}else{
+      const off=((camish*xf*D)%span+span)%span;
+      for(let x=baseX-off-span;x<W+span;x+=span)ctx.drawImage(im,Math.round(x),Math.round(yy),Math.ceil(dw),Math.ceil(dh));
+    }
+    ctx.globalAlpha=oldAlpha;ctx.imageSmoothingEnabled=oldSmooth;
+  }
+}
+function drawEditorBackground(){
+  ctx.fillStyle='#050607';ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(editorBgMode==='black')return;
+  const r=activeSkyRecipe();
+  if(!r)return;
+  if(mapBackgroundMode()==='surface-underground'){
+    const row=firstRowForBackground(),a=w2s(0,row.cameraY),h=row.viewH*view.z*devicePixelRatio;
+    ctx.save();ctx.beginPath();ctx.rect(0,a.y,canvas.width,h);ctx.clip();drawSkyRecipeRect(r,a.y,h);ctx.restore();
+  }else drawSkyRecipeRect(r,0,canvas.height);
+  if(editorBgMode==='dim'){ctx.fillStyle='rgba(0,0,0,.46)';ctx.fillRect(0,0,canvas.width,canvas.height);}
+}
+function setEditorBgMode(mode){
+  editorBgMode=['game','dim','black'].includes(mode)?mode:'game';
+  localStorage.setItem('llmario_cartbench_bg_view_mode',editorBgMode);
+  if(els.bgViewMode)els.bgViewMode.value=editorBgMode;
+  draw();
+  setStatus(editorBgMode==='black'?'editor background: black/off':editorBgMode==='dim'?'editor background: dim game view':'editor background: game view','good',{ms:1200});
+}
+function sceneryLayerValue(o){return String((o&&o.layer)||'front').toLowerCase()}
+function isBackgroundAssetKey(key){key=String(key||'').toLowerCase();return key.includes('_bg')||key==='bg'||key.includes('background')||key.includes('sky')}
+function layerBucket(it){
+  if(!it)return 50;const k=it.kind,o=it.obj||{};
+  if(k==='scenery'){const l=sceneryLayerValue(o);if(l==='background'||l==='back'||l==='behind')return 5;if(l==='foreground'||l==='overlay'||l==='over')return 95;return 75;}
+  if(k==='platform')return 30;if(k==='sign'||k==='portal')return 38;if(k==='block')return 40;if(k==='coin'||k==='star')return 45;if(k==='enemy')return 55;if(k==='player')return 85;return 60;
+}
+function drawOrderedObjects(list){return list.slice().sort((a,b)=>{const ba=layerBucket(a),bb=layerBucket(b);if(ba!==bb)return ba-bb;return pathKey(a.path).localeCompare(pathKey(b.path));})}
+function drawPlayerStackMarker(){
+  if(!cart||!cart.playerSpawn)return;
+  const ps=cart.playerSpawn,r={x:num(ps.x,0),y:num(ps.y,0),w:num(ps.w,34),h:num(ps.h,48)},a=w2s(r.x,r.y),w=r.w*view.z*devicePixelRatio,h=r.h*view.z*devicePixelRatio;
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,.88)';ctx.lineWidth=Math.max(1.5,2*devicePixelRatio);ctx.setLineDash([3*devicePixelRatio,4*devicePixelRatio]);ctx.strokeRect(a.x,a.y,w,h);ctx.setLineDash([]);ctx.font=`${10*devicePixelRatio}px sans-serif`;const text='--- player ---',tw=ctx.measureText(text).width+8*devicePixelRatio;ctx.fillStyle='rgba(0,0,0,.70)';ctx.fillRect(a.x,a.y-15*devicePixelRatio,tw,14*devicePixelRatio);ctx.fillStyle='#ffffff';ctx.fillText(text,a.x+4*devicePixelRatio,a.y-4*devicePixelRatio);ctx.restore();
+}
+
+function drawSky(){ctx.fillStyle='#050607';ctx.fillRect(0,0,canvas.width,canvas.height)}
+function drawGrid(){const step=grid()>0?grid():42,b=worldBounds();ctx.lineWidth=1*devicePixelRatio;ctx.strokeStyle='rgba(150,155,160,.20)';for(let x=0;x<b.w;x+=step){const a=w2s(x,-100),bb=w2s(x,b.h+200);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(bb.x,bb.y);ctx.stroke()}for(let y=0;y<b.h;y+=step){const a=w2s(-100,y),bb=w2s(b.w+200,y);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(bb.x,bb.y);ctx.stroke()}}
+function drawRows(){
+  const rows=cart.world&&cart.world.rows;
+  if(!Array.isArray(rows)||!rows.length){renderRowGutter([]);return}
+  const wb=worldBounds(),left=w2s(0,0).x,right=w2s(wb.w,0).x,rowData=rows.map((r,i)=>({r,i,y:rowY(r,i),h:rowH(r),seam:rowDownSeam(r,i)})).sort((a,b)=>a.y-b.y);
+  ctx.save();
+  rowData.forEach((rr,idx)=>{
+    const top=w2s(0,rr.y),bot=w2s(wb.w,rr.y+rr.h),x=top.x,y=top.y,w=bot.x-top.x,h=bot.y-top.y;
+    ctx.fillStyle=idx%2?'rgba(255,255,255,.035)':'rgba(255,255,255,.055)';
+    ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle='rgba(190,190,190,.52)';
+    ctx.lineWidth=Math.max(2,2*devicePixelRatio);
+    ctx.setLineDash([10*devicePixelRatio,6*devicePixelRatio]);
+    ctx.strokeRect(x,y,w,h);
+    ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(150,155,160,.16)';
+    ctx.lineWidth=Math.max(1,1*devicePixelRatio);
+    for(let yy=Math.ceil(rr.y/42)*42;yy<rr.y+rr.h;yy+=42){const a=w2s(0,yy);ctx.beginPath();ctx.moveTo(left,a.y);ctx.lineTo(right,a.y);ctx.stroke()}
+    const ss=w2s(0,rr.seam);
+    ctx.strokeStyle='rgba(210,205,165,.92)';
+    ctx.lineWidth=Math.max(2,2.25*devicePixelRatio);
+    ctx.setLineDash([6*devicePixelRatio,7*devicePixelRatio]);
+    ctx.beginPath();ctx.moveTo(left,ss.y);ctx.lineTo(right,ss.y);ctx.stroke();ctx.setLineDash([]);
+  });
+  for(let i=0;i<rowData.length-1;i++){
+    const a=rowData[i],b=rowData[i+1];
+    if(b.y>a.y+a.h){const ga=w2s(0,a.y+a.h),gb=w2s(wb.w,b.y);ctx.fillStyle='rgba(210,205,165,.08)';ctx.fillRect(ga.x,ga.y,gb.x-ga.x,gb.y-ga.y)}
+  }
+  ctx.restore();
+  renderRowGutter(rowData);
+}
+function renderRowGutter(rowData){
+  if(!els.rowGutter)return;
+  if(!rowData||!rowData.length){els.rowGutter.innerHTML='';return}
+  const cssH=canvas.height/devicePixelRatio,items=[];
+  function add(kind,text,wy){const sy=w2s(0,wy).y/devicePixelRatio;if(sy<-40||sy>cssH+40)return;items.push({kind,text,y:Math.max(12,Math.min(cssH-16,sy))})}
+  rowData.forEach(rr=>{
+    const name=rr.r.label||rr.r.id||('row '+(rr.i+1));
+    add('rowChip',`${name} · cam ${Math.round(rr.y)}`,rr.y+18);
+    add('rowChip switch',`↓ switch ${Math.round(rr.seam)}`,rr.seam);
+  });
+  items.sort((a,b)=>a.y-b.y);
+  let last=-999;
+  for(const it of items){if(it.y<last+22)it.y=last+22;last=it.y}
+  els.rowGutter.innerHTML=items.map(it=>`<div class="${it.kind}" style="top:${Math.round(it.y)}px">${escapeHtml(it.text)}</div>`).join('');
+}
+
+function recipeForPlatform(o){const p=(cart.recipes&&cart.recipes.platforms)||{};return p[o.style]||p[o.skin]||p[o.type]||p.ground||{}}
+function drawObject(it){const o=it.obj,k=it.kind,r=objectRect(it),a=w2s(r.x,r.y),w=r.w*view.z*devicePixelRatio,h=r.h*view.z*devicePixelRatio;ctx.save();ctx.lineWidth=Math.max(1,1.5*devicePixelRatio);if(k==='platform'){if(o.collisionOnly||o.editorHitbox||o.editorCollisionOnly){drawHitboxHelper(o,a,w,h)}else{const rec=recipeForPlatform(o),isSlope=String(o.type||'').toLowerCase().includes('slope')||String(o.style||'').toLowerCase().includes('slope');if(rec.image&&images[rec.image]&&images[rec.image].complete)ctx.drawImage(images[rec.image],a.x,a.y,w,h);else if(rec.prefab==='imageSlopePlatform'&&images[rec.image]&&images[rec.image].complete)ctx.drawImage(images[rec.image],a.x,a.y,w,h);else if(isSlope)drawSlope(o,a,w,h);else drawTiledPlatform(o,r,a,w,h,rec)}}else if(k==='scenery'){drawScenery(it,a,w,h)}else if(k==='coin'||k==='star'){ctx.fillStyle=k==='coin'?colors.coin:colors.star;ctx.strokeStyle='#8a5e00';ctx.beginPath();ctx.arc(a.x+w/2,a.y+h/2,Math.min(w,h)*.38,0,Math.PI*2);ctx.fill();ctx.stroke()}else if(k==='enemy'){ctx.fillStyle=colors.enemy;roundRect(a.x,a.y,w,h,8*devicePixelRatio,true,true)}else if(k==='block'){drawBlock(o,a,w,h)}else if(k==='sign'){ctx.fillStyle=colors.sign;roundRect(a.x,a.y,w,h,5*devicePixelRatio,true,true)}else if(k==='portal'){ctx.strokeStyle=colors.portal;ctx.lineWidth=4*devicePixelRatio;ctx.beginPath();ctx.ellipse(a.x+w/2,a.y+h/2,w*.42,h*.48,0,0,Math.PI*2);ctx.stroke()}else if(k==='player'){ctx.fillStyle='#fff';roundRect(a.x,a.y,w,h,7*devicePixelRatio,true,true)}ctx.restore()}
+function drawHitboxHelper(o,a,w,h){ctx.fillStyle='rgba(255,205,64,.20)';ctx.strokeStyle='rgba(255,225,90,.98)';ctx.lineWidth=Math.max(2,2*devicePixelRatio);ctx.setLineDash([6*devicePixelRatio,4*devicePixelRatio]);ctx.fillRect(a.x,a.y,w,h);ctx.strokeRect(a.x,a.y,w,h);ctx.setLineDash([]);ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(a.x+3*devicePixelRatio,a.y+3*devicePixelRatio,46*devicePixelRatio,14*devicePixelRatio);ctx.fillStyle='#ffe15a';ctx.font=`${10*devicePixelRatio}px sans-serif`;ctx.fillText('hitbox',a.x+6*devicePixelRatio,a.y+14*devicePixelRatio)}
+function drawSlope(o,a,w,h){ctx.fillStyle=colors.slope;ctx.strokeStyle='rgba(20,60,20,.75)';ctx.beginPath();if(String(o.type).toLowerCase().includes('down')){ctx.moveTo(a.x,a.y);ctx.lineTo(a.x,a.y+h);ctx.lineTo(a.x+w,a.y+h)}else{ctx.moveTo(a.x,a.y+h);ctx.lineTo(a.x+w,a.y);ctx.lineTo(a.x+w,a.y+h)}ctx.closePath();ctx.fill();ctx.stroke()}
+function drawSceneryCollisionOverlay(it,a,w,h){const m=sceneryCollisionMap(it);if(!m||!plain(m.collision))return;const c=m.collision,k=collisionKind(c).toLowerCase();ctx.save();ctx.strokeStyle='rgba(140,255,120,.90)';ctx.lineWidth=Math.max(1,2*devicePixelRatio);ctx.setLineDash([4*devicePixelRatio,3*devicePixelRatio]);const sx=w/(num(m.visualW||objectRect(it).w,objectRect(it).w)||1),sy=h/(num(m.visualH||objectRect(it).h,objectRect(it).h)||1);const cx=a.x+num(c.x||c.xOffset,0)*sx,cy=a.y+num(c.y||c.yOffset,0)*sy,cw=num(c.w,m.w||objectRect(it).w)*sx,ch=num(c.h,m.h||objectRect(it).h)*sy;if(k==='line'||k.includes('slope')){ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(a.x+num(c.x1,0)*sx,a.y+num(c.y1,objectRect(it).h)*sy);ctx.lineTo(a.x+num(c.x2,objectRect(it).w)*sx,a.y+num(c.y2,0)*sy);ctx.stroke()}else{ctx.strokeRect(cx,cy,cw,ch)}ctx.restore()}
+function drawScenery(it,a,w,h){const o=it.obj,key=o.image||o.id||o.sprite;if(key&&images[key]&&images[key].complete){ctx.globalAlpha=o.alpha==null?1:num(o.alpha,1);ctx.imageSmoothingEnabled=o.smooth!==false;ctx.drawImage(images[key],a.x,a.y,w,h);ctx.globalAlpha=1;ctx.imageSmoothingEnabled=true;const scm=sceneryCollisionMap(it);ctx.strokeStyle=scm?colors.platform:colors.scenery;ctx.setLineDash(scm?[5*devicePixelRatio,3*devicePixelRatio]:[]);ctx.strokeRect(a.x,a.y,w,h);ctx.setLineDash([]);drawSceneryCollisionOverlay(it,a,w,h);return}ctx.strokeStyle=colors.scenery;ctx.fillStyle='rgba(119,184,255,.28)';if(isClimbable(it)){ctx.strokeStyle='rgba(210,176,113,.95)';ctx.lineWidth=Math.max(2,2*devicePixelRatio);const lx=a.x+w*.26,rx=a.x+w*.74;ctx.beginPath();ctx.moveTo(lx,a.y);ctx.lineTo(lx,a.y+h);ctx.moveTo(rx,a.y);ctx.lineTo(rx,a.y+h);ctx.stroke();for(let yy=a.y+Math.max(10*devicePixelRatio,h/8);yy<a.y+h-4*devicePixelRatio;yy+=Math.max(12*devicePixelRatio,h/7)){ctx.beginPath();ctx.moveTo(a.x+w*.18,yy);ctx.lineTo(a.x+w*.82,yy);ctx.stroke()}drawSceneryCollisionOverlay(it,a,w,h)}else if(isPipe(it)){ctx.fillStyle='rgba(30,190,88,.70)';roundRect(a.x+w*.18,a.y+h*.12,w*.64,h*.88,4*devicePixelRatio,true,true);roundRect(a.x,a.y,w,h*.22,6*devicePixelRatio,true,true)}else if(isHill(it)){ctx.fillStyle='rgba(238,105,190,.45)';ctx.beginPath();ctx.moveTo(a.x,a.y+h);ctx.quadraticCurveTo(a.x+w*.5,a.y,a.x+w,a.y+h);ctx.closePath();ctx.fill();ctx.stroke()}else if(isTree(it)){ctx.fillStyle='rgba(40,130,72,.55)';ctx.beginPath();ctx.arc(a.x+w*.5,a.y+h*.36,w*.32,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(100,70,42,.75)';ctx.fillRect(a.x+w*.43,a.y+h*.46,w*.14,h*.54)}else if(isShrub(it)){ctx.fillStyle='rgba(40,160,78,.55)';roundRect(a.x,a.y+h*.35,w,h*.65,12*devicePixelRatio,true,true)}else{roundRect(a.x,a.y,w,h,4*devicePixelRatio,true,true);ctx.fillStyle='rgba(0,0,0,.65)';ctx.font=`${10*devicePixelRatio}px sans-serif`;ctx.fillText((o.image||o.type||o.kind||'scenery').slice(0,18),a.x+3*devicePixelRatio,a.y+13*devicePixelRatio)}}
+function drawTiledPlatform(o,r,a,w,h,rec){ctx.fillStyle=rec.backFill||rec.fallbackDirt||'#75451f';ctx.fillRect(a.x,a.y,w,h);ctx.fillStyle=rec.fallbackTop||'#6abf31';ctx.fillRect(a.x,a.y,w,Math.min(12*view.z*devicePixelRatio,h));ctx.strokeStyle='rgba(0,0,0,.45)';ctx.strokeRect(a.x,a.y,w,h);if(rec.prefab==='imageTilePlatform'&&rec.tiles){const tileKey=rec.tiles.topMid||rec.tiles.mid;const im=images[tileKey];if(im&&im.complete){const ts=num(rec.tileSize,42)*view.z*devicePixelRatio;for(let xx=a.x;xx<a.x+w;xx+=ts)ctx.drawImage(im,xx,a.y,Math.min(ts,a.x+w-xx),Math.min(h,ts))}}}
+function drawBlock(o,a,w,h){const rec=(cart.recipes&&cart.recipes.blocks&&(cart.recipes.blocks[o.style]||cart.recipes.blocks[o.skin]))||{};if(rec.prefab==='imageBlock'&&rec.image&&images[rec.image]&&images[rec.image].complete)ctx.drawImage(images[rec.image],a.x,a.y,w,h);else{ctx.fillStyle=colors.block;roundRect(a.x,a.y,w,h,5*devicePixelRatio,true,true)}}
+function drawSelection(it){const r=objectRect(it),a=w2s(r.x,r.y),w=r.w*view.z*devicePixelRatio,h=r.h*view.z*devicePixelRatio;ctx.save();ctx.strokeStyle=colors.select;ctx.lineWidth=3*devicePixelRatio;ctx.setLineDash([6*devicePixelRatio,4*devicePixelRatio]);ctx.strokeRect(a.x-4*devicePixelRatio,a.y-4*devicePixelRatio,w+8*devicePixelRatio,h+8*devicePixelRatio);ctx.setLineDash([]);ctx.font=`${12*devicePixelRatio}px sans-serif`;if(it===selected){const label=String(it.label||'selected');const tx=a.x,ty=a.y-8*devicePixelRatio,tw=ctx.measureText(label).width+10*devicePixelRatio,th=18*devicePixelRatio;ctx.fillStyle='rgba(0,0,0,.78)';roundRect(tx-5*devicePixelRatio,ty-14*devicePixelRatio,tw,th,5*devicePixelRatio,true,false);ctx.fillStyle='#e8edf1';ctx.fillText(label,tx,ty)}ctx.restore()}
+function drawMarquee(){const x=Math.min(drag.wx,drag.cx),y=Math.min(drag.wy,drag.cy),w=Math.abs(drag.wx-drag.cx),h=Math.abs(drag.wy-drag.cy),a=w2s(x,y);ctx.save();ctx.strokeStyle=colors.select;ctx.fillStyle='rgba(112,217,255,.12)';ctx.setLineDash([8*devicePixelRatio,4*devicePixelRatio]);ctx.lineWidth=2*devicePixelRatio;ctx.fillRect(a.x,a.y,w*view.z*devicePixelRatio,h*view.z*devicePixelRatio);ctx.strokeRect(a.x,a.y,w*view.z*devicePixelRatio,h*view.z*devicePixelRatio);ctx.restore()}
+function roundRect(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();if(fill)ctx.fill();if(stroke)ctx.stroke()}
+function pick(wx,wy){const vis=visibleObjects();for(let i=vis.length-1;i>=0;i--){const it=vis[i],r=objectRect(it);if(wx>=r.x&&wx<=r.x+r.w&&wy>=r.y&&wy<=r.y+r.h)return it}return null}
+function rectsIntersect(a,b){return a.x<=b.x+b.w&&a.x+a.w>=b.x&&a.y<=b.y+b.h&&a.y+a.h>=b.y}
+function screenPos(e){const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*devicePixelRatio,y:(e.clientY-rect.top)*devicePixelRatio}}
+function pointerWorld(e){const p=screenPos(e);return s2w(p.x,p.y)}
+function centerWorld(){return s2w(canvas.width/2,canvas.height/2)}
+function bestBlockStyle(kind){const b=(cart.recipes&&cart.recipes.blocks)||{},keys=Object.keys(b);const find=(tests)=>{for(const t of tests){const hit=keys.find(k=>t(String(k).toLowerCase()));if(hit)return hit}return null};if(kind==='rewardBox')return find([k=>k==='jungle_reward_box',k=>k.includes('reward')&&k.includes('box'),k=>k.includes('reward'),k=>k==='glow'])||keys[0]||'glow';if(kind==='infoBox')return find([k=>k==='jungle_info_box',k=>k.includes('info')&&k.includes('box'),k=>k.includes('info'),k=>k==='glow'])||keys[0]||'glow';return find([k=>k==='jungle_brick_box',k=>k.includes('inert')&&k.includes('box'),k=>k==='brick',k=>k.includes('brick')])||keys[0]||'brick'}
+function bestUsedBlockStyle(){const b=(cart&&cart.recipes&&cart.recipes.blocks)||{},keys=Object.keys(b);return keys.find(k=>String(k).toLowerCase()==='jungle_used_box')||keys.find(k=>String(k).toLowerCase().includes('used')&&String(k).toLowerCase().includes('box'))||keys.find(k=>String(k).toLowerCase().includes('used'))||'used'}
+function infoBoxTemplate(p){const style=bestBlockStyle('infoBox'),used=bestUsedBlockStyle();return {x:p.x,y:p.y,w:42,h:42,style,bob:0,message:['Jungle info box.','Info message goes here'],boxKind:'info',skin:style,usedStyle:used,oneShot:false}}
+function rewardBoxTemplate(p){const style=bestBlockStyle('rewardBox'),used=bestUsedBlockStyle();return {x:p.x,y:p.y,w:42,h:42,style,bob:0,message:['Reward box!','Three coins, then it goes used.'],boxKind:'coin',skin:style,usedStyle:used,payload:{kind:'coin',count:3},usedMessage:['Empty now.','Used jungle block skin.']}}
+function nearestRowTagForRect(r){const hit=closestRowForRect(r);return hit?rowId(hit.row,hit.i):null}
+function nextId(prefix){return prefix+'_'+Date.now().toString(36).slice(-5)}
+function opt(v,label){return `<option value="${escapeHtml(v)}">${escapeHtml(label)}</option>`}
+function group(label,body){return body?`<optgroup label="${escapeHtml(label)}">${body}</optgroup>`:''}
+function insertOptionEntries(){
+  const entries=[];
+  function add(value,label,group){entries.push({value,label,group})}
+  [['coin','Coin'],['enemy','Enemy walker'],['box','Solid block'],['bustBrick','Bustable brick · big only'],['rewardBox','Reward box'],['infoBox','Info box'],['ladder','Global ladder / climb zone'],['pipe','Global pipe / tube'],['platformSmall','Solid platform 84×42'],['platformWide','Solid platform 168×42'],['platformLong','Solid platform 336×84'],['sign','Sign'],['portal','Portal']].forEach(x=>add(x[0],x[1],'New primitives'));
+  if(cart){
+    const br=(cart.recipes&&cart.recipes.blocks)||{};
+    Object.keys(br).sort().forEach(k=>add('blockStyle:'+k,'Solid block recipe · '+k,'Solid block recipes'));
+    const pr=(cart.recipes&&cart.recipes.platforms)||{},tmpl=platformTemplateMap();
+    Object.keys(pr).sort().forEach(k=>{const type=inferPlatformType(k,pr[k]),from=tmpl.has(k)?'from existing solid':'recipe fallback';add('platformStyle:'+k,'Solid '+type+' · '+k+' · '+from,'Solid platform/slope recipes')});
+    const im=((cart&&cart.assets&&cart.assets.images)||(themePack&&themePack.assets&&themePack.assets.images)||{}),used=recipeImageKeys();
+    Object.keys(im).sort().filter(k=>!used.has(k)).forEach(k=>{const tm=terrainMapForAsset(k);if(tm)add('terrainAsset:'+k,'Mapped terrain · '+(tm.kind||'spriteSolid')+' · '+k,'Mapped terrain image assets');else add('asset:'+k,'Visual-only image · '+k,'Visual-only image assets')});
+  }
+  return entries;
+}
+function populateInsertCatalog(){
+  if(!els.insertKind)return;
+  const cur=els.insertKind.value, entries=insertOptionEntries();
+  const groups={}; entries.forEach(e=>{groups[e.group]=groups[e.group]||[];groups[e.group].push(e)});
+  els.insertKind.innerHTML=Object.entries(groups).map(([g,items])=>group(g,items.map(e=>opt(e.value,e.label)).join(''))).join('');
+  if(Array.from(els.insertKind.options).some(o=>o.value===cur))els.insertKind.value=cur;else if(els.insertKind.options.length)els.insertKind.selectedIndex=0;
+  populatePalette();
+  updateActiveBrush();
+  if(els.insertInfo){const n=els.insertKind.options.length;els.insertInfo.textContent=cart?('palette: '+n+' cards · SOLID/TRUTH cards use loaded theme collision; VISUAL cards are decor-only'):'load a cart to index cartridge assets and recipes'}
+}
+function shortNameForValue(value,label){
+  let s=String(label||value||'');
+  s=s.replace(/^Solid /,'').replace(/^Visual-only image · /,'').replace(/^block recipe · /,'');
+  s=s.replace(/ · from existing solid| · recipe fallback| recipe · |platform recipe · /g,' · ');
+  if(value.startsWith('platformStyle:'))s=value.slice(14);
+  if(value.startsWith('blockStyle:'))s=value.slice(11);
+  if(value.startsWith('terrainAsset:'))s=value.slice(13);
+  if(value.startsWith('asset:'))s=value.slice(6);
+  return s;
+}
+function paletteMeta(value,label){
+  let cat='system',badges=[],thumb='',cls='';
+  if(value==='coin'){cat='items';badges=['ITEM'];cls='coin'}
+  else if(value==='enemy'){cat='enemies';badges=['ENEMY'];cls='enemy'}
+  else if(value==='ladder'){cat='system';badges=['CLIMB','GLOBAL'];cls='terrain'}
+  else if(value==='pipe'){cat='system';badges=['PIPE','GLOBAL','SOLID'];cls='pipe'}
+  else if(['box','bustBrick','rewardBox','infoBox'].includes(value)){cat='blocks';badges=['SOLID','BLOCK'];if(value==='bustBrick')badges.push('BUST');cls='block'}
+  else if(value.startsWith('blockStyle:')){cat='blocks';badges=['SOLID','BLOCK'];cls='block';const st=value.slice(11),rec=((cart&&cart.recipes&&cart.recipes.blocks)||{})[st]||{};const key=rec.image;if(key&&images[key]&&images[key].src)thumb=images[key].src}
+  else if(value.startsWith('platformStyle:')){const st=value.slice(14),rec=((cart&&cart.recipes&&cart.recipes.platforms)||{})[st]||{},type=inferPlatformType(st,rec);cat=String(type).toLowerCase().includes('slope')?'slopes':'terrain';badges=['SOLID',String(type).toLowerCase().includes('slope')?'SLOPE':'TERRAIN'];cls=String(type).toLowerCase().includes('down')?'slopeDown':(String(type).toLowerCase().includes('slope')?'slopeUp':'terrain');const key=rec.image||(rec.tiles&&(rec.tiles.topMid||rec.tiles.mid||rec.tiles.left||rec.tiles.right));if(key&&images[key]&&images[key].src)thumb=images[key].src}
+  else if(value.startsWith('terrainAsset:')){const key=value.slice(13),tm=terrainMapForAsset(key)||{},badge=paletteBadgeForMap(tm);cat=badge==='SLOPE'?'slopes':(badge==='CLIMB'?'system':'terrain');badges=[badge==='CLIMB'?'CLIMB':'SOLID',badge,'TRUTH'];cls=badge==='SLOPE'?'slopeUp':'terrain';if(images[key]&&images[key].src)thumb=images[key].src}
+  else if(value.startsWith('asset:')){const key=value.slice(6),tm=terrainMapForAsset(key);if(isBackgroundAssetKey(key)){cat='system';badges=['BG','VIEW'];cls='decor'}else if(tm){const badge=paletteBadgeForMap(tm);cat=badge==='SLOPE'?'slopes':(badge==='CLIMB'?'system':'terrain');badges=[badge==='CLIMB'?'CLIMB':'SOLID',badge,'TRUTH'];cls=badge==='SLOPE'?'slopeUp':'terrain'}else{cat='decor';badges=['VISUAL'];cls='decor'}if(images[key]&&images[key].src)thumb=images[key].src}
+  else if(value.startsWith('platform')){cat='terrain';badges=['SOLID','TERRAIN'];cls='terrain'}
+  else if(value==='sign'){cat='system';badges=['SIGN'];cls='sign'}
+  else if(value==='portal'){cat='system';badges=['PORTAL'];cls='portal'}
+  return {cat,badges,thumb,cls,name:shortNameForValue(value,label)};
+}
+function cardHtml(entry){
+  const m=paletteMeta(entry.value,entry.label),active=els.insertKind&&els.insertKind.value===entry.value;
+  const thumb=m.thumb?`<img src="${escapeHtml(m.thumb)}" alt="">`:`<span class="shapeIcon ${escapeHtml(m.cls)}"></span>`;
+  const badges=m.badges.map(b=>`<span class="badge ${b==='SOLID'?'solid':b==='VISUAL'?'visual':b==='SLOPE'?'slope':b==='BLOCK'?'block':(b==='BUST'||b==='MAPPED'||b==='TRUTH'||b==='CLIMB'||b==='PIPE'||b==='GLOBAL')?'warn':''}">${escapeHtml(b)}</span>`).join('');
+  return `<button type="button" class="assetCard ${active?'active':''}" data-value="${escapeHtml(entry.value)}" data-cat="${escapeHtml(m.cat)}" draggable="true" title="${escapeHtml(entry.label)}"><div class="thumb">${thumb}</div><div class="name">${escapeHtml(m.name)}</div><div class="badges">${badges}</div></button>`;
+}
+function populatePalette(){
+  if(!els.paletteGrid)return;
+  const q=String(els.paletteSearch&&els.paletteSearch.value||'').trim().toLowerCase();
+  const entries=insertOptionEntries().filter(e=>{const m=paletteMeta(e.value,e.label);return (paletteCat==='all'||m.cat===paletteCat)&&(!q||e.value.toLowerCase().includes(q)||e.label.toLowerCase().includes(q)||m.name.toLowerCase().includes(q)||m.badges.join(' ').toLowerCase().includes(q))});
+  els.paletteGrid.innerHTML=entries.map(cardHtml).join('')||'<div class="mini">No cards match this filter.</div>';
+  els.paletteGrid.querySelectorAll('.assetCard').forEach(card=>{card.onclick=()=>{if(els.insertKind)els.insertKind.value=card.dataset.value;updateActiveBrush();populatePalette();setSideMode('palette');};card.ondragstart=e=>{const v=card.dataset.value||'';card.classList.add('dragging');try{e.dataTransfer.effectAllowed='copy';e.dataTransfer.setData('application/x-llmario-palette',v);e.dataTransfer.setData('text/plain','llmario-palette:'+v)}catch(_){}};card.ondragend=()=>card.classList.remove('dragging');});
+}
+function updateActiveBrush(){
+  if(!els.activeBrush||!els.insertKind)return;
+  const optEl=els.insertKind.options[els.insertKind.selectedIndex];
+  if(!optEl){els.activeBrush.textContent='No brush selected yet.';return}
+  const value=els.insertKind.value,m=paletteMeta(value,optEl.textContent||value);
+  els.activeBrush.innerHTML='<b>'+escapeHtml(m.name)+'</b><br>'+m.badges.map(b=>escapeHtml(b)).join(' · ')+'<div class="modeMini">Drag this card onto the map, use Insert buttons, press I for center, or turn on Stamp mode and click the map.</div>';
+}
+function placeInserted(arrPath,obj,selectKind,label,p){if(['platform','block','sign','enemy'].includes(selectKind)){const tag=nearestRowTagForRect({x:p.x,y:p.y,w:num(obj.w,42),h:num(obj.h,42)});if(tag)obj.row=tag}const arr=ensureArray(arrPath);arr.push(obj);const newPath=arrPath.concat(arr.length-1);rebuild();const it=objects.find(o=>pathKey(o.path)===pathKey(newPath));setSelection([it].filter(Boolean));setStatus('inserted '+label,'good')}
+function cloneFromCatalog(key,p){const src=objects.find(o=>pathKey(o.path)===key);if(!src)return setStatus('source item not found','bad');if(src.kind==='player')return setStatus('player spawn is not cloned by insert','bad');const c=stripMeta(src.obj),parentPath=src.path.slice(0,-1);setObjectRectXY({obj:c,kind:src.kind,path:parentPath},p.x,p.y,true);if(src.kind==='portal'&&src.path.length===1){cart.portal=c;rebuild();setSelection([objects.find(o=>o.kind==='portal')].filter(Boolean));return setStatus('inserted clone portal','good')}if(!parentPath.length)return setStatus('cannot clone this root object','bad');placeInserted(parentPath,c,src.kind,'clone '+src.label,p)}
+function insertAsset(key,p){if(isBackgroundAssetKey(key))return setStatus('background art is shown by the theme sky layer, not stamped as a normal map object here. Use editor bg game/dim/black to inspect it.','bad');const obj={image:key,scale:1,visualOnly:true};setObjectRectXY({obj,kind:'scenery',path:['resourceScenery','sprites']},p.x,p.y,true);placeInserted(['resourceScenery','sprites'],obj,'scenery','visual-only asset '+key,p)}
+function insertMappedTerrain(key,p){const map=terrainMapForAsset(key)||{kind:'spriteSolid'},kind=map.kind||'spriteSolid';let obj;if(String(kind).toLowerCase()==='climbable'||String(map.type||'').toLowerCase()==='climb'){obj=climbSpriteObj(key,p,map);return placeInserted(['resourceScenery','sprites'],obj,'scenery','mapped climbable '+key,p)}if(mapShouldStaySprite(map)){obj=spriteSolidObj(key,p,map);return placeInserted(['resourceScenery','sprites'],obj,'scenery','mapped solid sprite '+key,p)}if(kind==='block'){obj=blockObjForMappedAsset(key,p,map);return placeInserted(['floatingBlocks'],obj,'block','mapped block '+key,p)}if(kind==='platform'||String(kind).toLowerCase().includes('slope')){obj=platformObjForMappedAsset(key,p,map);return placeInserted(['platforms'],obj,'platform','mapped terrain '+key,p)}obj=spriteSolidObj(key,p,map);return placeInserted(['resourceScenery','sprites'],obj,'scenery','mapped solid sprite '+key,p)}
+function insertObject(at){if(!cart)return setStatus('load a cart first','bad');saveUndo('insert');let p=snapPoint(at.x,at.y),kind=els.insertKind.value,obj,arrPath,selectKind;if(kind.startsWith('terrainAsset:'))return insertMappedTerrain(kind.slice(13),p);if(kind.startsWith('asset:')){const key=kind.slice(6);if(terrainMapForAsset(key))return insertMappedTerrain(key,p);return insertAsset(key,p);}if(kind.startsWith('blockStyle:')){const st=kind.slice(11),rec=((cart.recipes&&cart.recipes.blocks)||{})[st]||{};obj=blockObjFromRecipe(st,p,rec);return placeInserted(['floatingBlocks'],obj,'block','solid block '+st,p)}if(kind.startsWith('platformStyle:')){const st=kind.slice(14),rec=((cart.recipes&&cart.recipes.platforms)||{})[st]||{};obj=platformObjFromTemplateOrRecipe(st,p,rec);return placeInserted(['platforms'],obj,'platform','solid platform '+st,p)}switch(kind){case 'coin':arrPath=['coins'];obj={x:p.x,y:p.y};selectKind='coin';break;case 'enemy':arrPath=['enemies'];obj={x:p.x,y:p.y,w:38,h:34,type:'walker'};selectKind='enemy';break;case 'box':arrPath=['floatingBlocks'];obj={x:p.x,y:p.y,w:42,h:42,style:bestBlockStyle('box'),skin:bestBlockStyle('box'),boxKind:'inert',bob:0};selectKind='block';break;case 'bustBrick':arrPath=['floatingBlocks'];obj={x:p.x,y:p.y,w:42,h:42,style:bestBlockStyle('box'),skin:bestBlockStyle('box'),boxKind:'inert',bob:0,bustable:true,requiresBig:true};selectKind='block';break;case 'rewardBox':arrPath=['floatingBlocks'];obj=rewardBoxTemplate(p);selectKind='block';break;case 'infoBox':arrPath=['floatingBlocks'];obj=infoBoxTemplate(p);selectKind='block';break;case 'ladder':arrPath=['resourceScenery','sprites'];obj=climbSpriteObj('',p,{w:42,h:168,collision:{kind:'climb'}});selectKind='scenery';break;case 'pipe':arrPath=['resourceScenery','pipes'];obj={kind:'pipe',x:p.x,y:p.y+96,h:96,scale:1,layer:'back',solid:true,global:true};selectKind='scenery';break;case 'platformSmall':arrPath=['platforms'];obj={id:nextId('cb_p'),x:p.x,y:p.y,w:84,h:42,type:'ground'};selectKind='platform';break;case 'platformWide':arrPath=['platforms'];obj={id:nextId('cb_p'),x:p.x,y:p.y,w:168,h:42,type:'ground'};selectKind='platform';break;case 'platformLong':arrPath=['platforms'];obj={id:nextId('cb_p'),x:p.x,y:p.y,w:336,h:84,type:'ground'};selectKind='platform';break;case 'sign':arrPath=['signposts'];obj={x:p.x,y:p.y,text:['new sign']};selectKind='sign';break;case 'portal':cart.portal={x:p.x,y:p.y,w:70,h:98};rebuild();setSelection([objects.find(o=>o.kind==='portal')].filter(Boolean));setStatus('inserted portal','good');return;default:setStatus('unknown insert kind: '+kind,'bad');return}placeInserted(arrPath,obj,selectKind,kind,p)}
+function markHumanEdited(){if(!cart)return;cart.placement=plain(cart.placement)?cart.placement:{};cart.placement.autoCleanup=false;cart.placement.fixACart='off';cart.placement.placementNormalizer='off';cart.placement.editedBy='Cartbench v0.18 Box Templates Moonbench';cart.cartPolicy=plain(cart.cartPolicy)?cart.cartPolicy:{};cart.cartPolicy.authoringState='human-edited';cart.cartPolicy.fixACart='off';cart.cartPolicy.placementNormalizer='off';cart.cartbench=plain(cart.cartbench)?cart.cartbench:{};cart.cartbench.humanEdited=true;cart.cartbench.version='0.18-box-templates-moonbench';cart.cartbench.notes='Box template pass: bright selected-object labels on dark canvas and theme-aware fuller info/reward box JSON generation, while preserving darkbench visuals, terrain mapping, card drag-to-map, and bustable block support.';cart.cartbench.lastEdited=new Date().toISOString()}
+function cleanExportBaseName(name){let n=String(name||'').split(/[\/]/).pop().trim();n=n.replace(/\s*\(\d+\)\s*/g,'');n=n.replace(/\.txt$/i,'').replace(/\.json$/i,'').replace(/\.htmlz$/i,'');n=n.replace(/_cartbench.*$/i,'');n=n.replace(/(\.llmcart|\.llmtheme|\.llmmap)+$/i,'');if(!n&&cart&&cart.id)n=String(cart.id);if(!n&&cart&&cart.title)n=String(cart.title).toLowerCase();n=n.replace(/[^a-z0-9_.-]+/gi,'_').replace(/_+/g,'_').replace(/^_+|_+$/g,'');return n||'edited'}
+function exportFileName(){return cleanExportBaseName(fileName)+'_cartbench.llmcart.txt'}
+function exportThemeFileName(){let base=(themePack&&themePack.id)||cleanExportBaseName(fileName);return cleanExportBaseName(base)+'.llmtheme.txt'}
+function exportMapFileName(){return cleanExportBaseName(mapFileName||fileName||'map')+'.llmmap.txt'}
+function downloadJson(obj,name){const clean=JSON.stringify(stripMeta(obj),null,2);const blob=new Blob([clean],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);return name}
+function themeIdFromSource(c){let s=(themePack&&themePack.id)||c.theme||c.id||c.title||fileName||'theme';s=cleanExportBaseName(String(s)).replace(/_(slope|art|lab|cart|cartbench|preview|map|llmario)+$/ig,'');return s||'theme'}
+function imageSizeGuess(key){const im=images&&images[key];return im&&im.naturalWidth?{w:im.naturalWidth,h:im.naturalHeight}:null}
+function assetCatalogFromCart(c){const out={},imgs=(c.assets&&c.assets.images)||{};for(const key of Object.keys(imgs)){let category='decor',defaultPlacement='sprite',collision={kind:'none'},verification='harvested-unverified';if(key.includes('_bg')||key==='desert_bg'){category='background';defaultPlacement='sky';verification='theme-source'}else if((/slope.*_up$/i.test(key))||(/_up$/i.test(key)&&key.includes('slope'))){category='terrain-slope-skin';defaultPlacement='platform';collision={kind:'slopeUp'};verification='known-slope-skin'}else if((/slope.*_down$/i.test(key))||(/_down$/i.test(key)&&key.includes('slope'))){category='terrain-slope-skin';defaultPlacement='platform';collision={kind:'slopeDown'};verification='known-slope-skin'}else if(key.includes('box')){category='block-skin';defaultPlacement='floatingBlock';collision={kind:'floatingBlock'};verification='known-block-skin'}else if(/tile_?\d+/i.test(key)||key.includes('ground')){category='terrain-tile-image';defaultPlacement='themeTile';collision={kind:'from-platform-recipe'};verification='tileset-piece-not-standalone-promise'}else if(/cactus|bush|grass|tree|skeleton|stone|crate|sign|flower|cloud|hill/i.test(key)){category='scenery';defaultPlacement='sprite';verification='decor-source'}out[key]={category,defaultPlacement,collision,verification};const sz=imageSizeGuess(key);if(sz){out[key].w=sz.w;out[key].h=sz.h}}return out}
+function placeablesFromCart(c){const out={terrain:{},slopes:{},blocks:{},scenery:{},system:{}};const rp=(c.recipes&&c.recipes.platforms)||{};for(const [rid,r] of Object.entries(rp)){if(!plain(r))continue;if(r.prefab==='imageSlopePlatform'||rid.includes('slope')){const k=/_down$/i.test(rid)?'slopeDown':/_up$/i.test(rid)?'slopeUp':'slope';out.slopes[rid]={kind:k,recipe:rid,skin:r.image||rid,collision:{kind:k},verified:true}}else out.terrain[rid]={kind:'platformRecipe',recipe:rid,collision:{kind:'solidRect'},verified:true,tileSize:r.tileSize}}
+const rb=(c.recipes&&c.recipes.blocks)||{};for(const [rid,r] of Object.entries(rb)){if(plain(r))out.blocks[rid]={kind:'blockTemplate',recipe:rid,image:r.image,usedImage:r.usedImage,collision:{kind:'floatingBlock'},verified:true}}
+for(const [key,m] of Object.entries(assetCatalogFromCart(c))){if(m.category==='scenery')out.scenery[key]={kind:'scenerySprite',asset:key,collision:{kind:'none'},verified:true};if(m.category==='background')out.system[key]={kind:'background',asset:key,verified:true}}
+return out}
+function buildThinMapFromCart(c,{preview=false}={}){const keep=['world','background','playerSpawn','hud','messages','audio','resourceScenery','platforms','floatingBlocks','coins','stars','enemies','signposts','portal'];const theme=themeIdFromSource(c);const m={format:'llmario-map-v1',mapVersion:1,id:cleanExportBaseName(c.id||c.title||fileName)+(preview?'_preview':''),title:c.title||'Untitled map',theme};if(preview){m.role='previewMap';m.notes='Extracted preview/test map. Real maps should stay thin and reference the theme pack.'}for(const k of keep)if(k in c)m[k]=JSON.parse(JSON.stringify(c[k]));return m}
+function emptyMapForTheme(t){return {format:'llmario-map-v1',mapVersion:1,id:(t.id||'theme')+'_empty_map',title:'Empty '+(t.title||t.id||'theme')+' map',theme:t.id||'theme',world:{width:4300,height:900,groundY:372,rows:[{id:'main',label:'MAIN ROW',cameraY:0}],rowCamera:{enabled:false}},playerSpawn:{x:80,y:324},hud:(t.defaults&&t.defaults.hud)||{},messages:{welcome:['Empty map using '+(t.title||t.id||'theme')],win:'Clear!'},audio:(t.defaults&&t.defaults.audio)||{},resourceScenery:{sprites:[],pipes:[]},platforms:[],floatingBlocks:[],coins:[],stars:[],enemies:[],signposts:[]}}
+function buildThemeFromCart(c){const id=themeIdFromSource(c);const preview=buildThinMapFromCart(c,{preview:true});return {format:'llmario-theme-pack-v1',themeVersion:1,id,title:(c.title?c.title.replace(/\s*(slope|art|lab|cart).*$/i,'').trim():'LLMario Theme Pack')||id,source:{fromFile:fileName,sourceTitle:c.title,extractedFromFormat:c.format,engineContract:c.engineContract},notes:['Harvested asset/theme pack. Maps should reference these asset IDs instead of embedding base64 images per level.','Asset catalog categories are not the same as engine collision truth. Tile-looking images are not promised solid unless a recipe/placeable or explicit map instance says so.'],engineContract:c.engineContract,assets:JSON.parse(JSON.stringify(c.assets||{images:{}})),recipes:JSON.parse(JSON.stringify(c.recipes||{})),resources:JSON.parse(JSON.stringify(c.resources||[])),fundamentals:JSON.parse(JSON.stringify(c.fundamentals||{})),defaults:{hud:JSON.parse(JSON.stringify(c.hud||{})),messages:JSON.parse(JSON.stringify(c.messages||{})),audio:JSON.parse(JSON.stringify(c.audio||{})),placement:JSON.parse(JSON.stringify(c.placement||{}))},assetCatalog:assetCatalogFromCart(c),placeables:placeablesFromCart(c),previewMap:preview,removedFromThemePack:['runtime layout belongs in .llmmap.txt','assets stay in the theme pack','thin maps do not save data:image/base64 strings']}}
+function cartFromThemeAndMap(t,m){
+  const c={format:'llmcart-toybox-recipe',cartVersion:7,engineContract:m.engineContract||t.engineContract,title:m.title||t.title||'LLMario map',theme:t.id||m.theme||'theme',assets:JSON.parse(JSON.stringify(t.assets||{images:{}})),recipes:JSON.parse(JSON.stringify(t.recipes||{})),resources:JSON.parse(JSON.stringify(t.resources||[])),fundamentals:JSON.parse(JSON.stringify(t.fundamentals||{})),placement:JSON.parse(JSON.stringify((t.defaults&&t.defaults.placement)||{})),hud:JSON.parse(JSON.stringify(m.hud||((t.defaults&&t.defaults.hud)||{}))),messages:JSON.parse(JSON.stringify(m.messages||((t.defaults&&t.defaults.messages)||{}))),audio:JSON.parse(JSON.stringify(m.audio||((t.defaults&&t.defaults.audio)||{}))),background:JSON.parse(JSON.stringify(m.background||((t.defaults&&t.defaults.background)||{})))};
+  for(const k of ['assetTruth','themeTruth','collisionTruth','truth','assetCatalog','placeables'])if(t[k]!==undefined)c[k]=JSON.parse(JSON.stringify(t[k]));
+  for(const k of ['world','playerSpawn','resourceScenery','platforms','floatingBlocks','coins','stars','enemies','signposts','portal'])c[k]=JSON.parse(JSON.stringify(m[k]!==undefined?m[k]:(k==='resourceScenery'?{sprites:[]}:k==='world'?{width:4300,height:900,groundY:372}:k==='playerSpawn'?{x:80,y:324}:[])));
+  if(!Array.isArray(c.platforms))c.platforms=[];if(!Array.isArray(c.floatingBlocks))c.floatingBlocks=[];if(!Array.isArray(c.coins))c.coins=[];if(!Array.isArray(c.stars))c.stars=[];if(!Array.isArray(c.enemies))c.enemies=[];if(!Array.isArray(c.signposts))c.signposts=[];if(!plain(c.resourceScenery))c.resourceScenery={sprites:[]};
+  return c
+}
+function isThemeDoc(d){return plain(d)&&String(d.format||'').includes('theme')}
+function isMapDoc(d){return plain(d)&&String(d.format||'').includes('llmario-map')}
+function setLoadedDoc(c,name,mode,msg){cart=c;fileName=name;history=[];future=[];titleEditing=false;updateHistoryUI();loadImages();selection=[];selected=null;rebuild();updateCartIdentity();renderSelectionPanel();updateThemeInfo();syncMapBgModeUI();fit();setStatus(msg||('loaded '+fileName+' / '+objects.length+' objects'),'good')}
+function exportCart(){if(!cart)return;saveUndo('export row camera sync');syncRowCamera();if(els.humanEdit&&els.humanEdit.checked)markHumanEdited();const outName=downloadJson(cart,exportFileName());setStatus('exported legacy sealed cart '+outName+((els.humanEdit&&els.humanEdit.checked)?' / auto-cleanup off':''),'good')}
+function exportTheme(){if(!cart)return setStatus('nothing to save as theme','bad');const t=buildThemeFromCart(cart);if(themePack){t.id=themePack.id||t.id;t.title=themePack.title||t.title;t.source=themePack.source||t.source}themePack=t;const outName=downloadJson(t,exportThemeFileName());updateDocModeBox();setStatus('saved theme pack '+outName+' / assets live here, not in maps','good')}
+function exportMap(){if(!cart)return setStatus('nothing to save as map','bad');syncRowCamera();const m=buildThinMapFromCart(cart);mapDoc=m;const outName=downloadJson(m,exportMapFileName());setStatus('saved thin map '+outName+' / no embedded base64 assets','good')}
+function cancelLongPress(){if(drag&&drag.longTimer){clearTimeout(drag.longTimer);drag.longTimer=null}}
+function removeFromSelection(it){if(!it)return;setSelection(selection.filter(s=>pathKey(s.path)!==pathKey(it.path)));setStatus('deselected '+it.label,'good')}
+canvas.addEventListener('contextmenu',e=>{e.preventDefault();const pos=pointerWorld(e),hit=pick(pos.x,pos.y);if(multiMode&&hit&&isSelected(hit))removeFromSelection(hit)});
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);const pos=pointerWorld(e);lastMouseWorld=pos;if(stampMode&&cart&&e.button!==2){insertObject(pos);return}const hit=pick(pos.x,pos.y);if(multiMode){if(e.button===2){if(hit&&isSelected(hit))removeFromSelection(hit);return}if(hit){if(!isSelected(hit))setSelection(selection.concat(hit));saveUndo('move group');const starts=selection.map(it=>({it,r:objectRect(it)}));drag={mode:'moveGroup',sx:e.clientX,sy:e.clientY,starts,longTarget:hit,moved:false};drag.longTimer=setTimeout(()=>{if(drag&&drag.longTarget===hit&&!drag.moved){cancelLongPress();removeFromSelection(hit);drag=null;}},560);return}else{drag={mode:'marquee',wx:pos.x,wy:pos.y,cx:pos.x,cy:pos.y};return}}if(hit){select(hit);saveUndo('move');drag={mode:isSelected(hit)&&selection.length>1?'moveGroup':'move',sx:e.clientX,sy:e.clientY,it:hit,rx:objectRect(hit).x,ry:objectRect(hit).y,starts:selection.map(it=>({it,r:objectRect(it)}))};}else{select(null);drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y};}});
+addEventListener('pointermove',e=>{const pos=pointerWorld(e);lastMouseWorld=pos;if(!drag)return;const px=e.clientX-drag.sx,py=e.clientY-drag.sy;if((Math.abs(px)+Math.abs(py))>6){drag.moved=true;cancelLongPress()}if(drag.mode==='pan'){view.x=drag.vx-px/view.z;view.y=drag.vy-py/view.z;draw()}else if(drag.mode==='move'&&drag.it===selected){setObjectRectXY(selected,drag.rx+px/view.z,drag.ry+py/view.z,true);renderSelectionPanel();draw()}else if(drag.mode==='moveGroup'){const dx=px/view.z,dy=py/view.z;for(const s of drag.starts)setObjectRectXY(s.it,s.r.x+dx,s.r.y+dy,true);renderSelectionPanel();draw()}else if(drag.mode==='marquee'){drag.cx=pos.x;drag.cy=pos.y;draw()}});
+addEventListener('pointerup',()=>{cancelLongPress();if(drag&&drag.mode==='marquee'){const x=Math.min(drag.wx,drag.cx),y=Math.min(drag.wy,drag.cy),r={x,y,w:Math.abs(drag.wx-drag.cx),h:Math.abs(drag.wy-drag.cy)};const hits=visibleObjects().filter(it=>rectsIntersect(objectRect(it),r));setSelection(hits);setStatus('selected '+hits.length+' object(s)','good')}drag=null});
+canvas.addEventListener('wheel',e=>{e.preventDefault();const before=s2w(e.offsetX*devicePixelRatio,e.offsetY*devicePixelRatio),factor=e.deltaY<0?1.12:.89;view.z=Math.max(.05,Math.min(4,view.z*factor));const after=s2w(e.offsetX*devicePixelRatio,e.offsetY*devicePixelRatio);view.x+=before.x-after.x;view.y+=before.y-after.y;draw()},{passive:false});
+let audioCtx=null,music=null;function beep(freq=440,dur=.05,vol=.03){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.value=freq;g.gain.value=vol;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur)}catch(e){}}
+function toggleSound(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(music){music.nodes.forEach(n=>{try{n.stop?n.stop():n.disconnect()}catch(e){}});music=null;setStatus('soundtrack off','');return}const g=audioCtx.createGain();g.gain.value=.025;g.connect(audioCtx.destination);const o1=audioCtx.createOscillator(),o2=audioCtx.createOscillator(),lfo=audioCtx.createOscillator(),lg=audioCtx.createGain();o1.type='sine';o2.type='triangle';o1.frequency.value=110;o2.frequency.value=165;lfo.frequency.value=.12;lg.gain.value=20;lfo.connect(lg);lg.connect(o2.frequency);o1.connect(g);o2.connect(g);o1.start();o2.start();lfo.start();music={nodes:[o1,o2,lfo,g]};setStatus('soundtrack on: tiny workbench hum','good')}catch(e){setStatus('audio failed: '+e.message,'bad')}}
+function updateSunroofButton(){const on=document.body.classList.contains('sunroof');if(els.sideToggle)els.sideToggle.textContent=on?'☰ Tools':'☀ Sunroof'}
+function toggleSunroof(){document.body.classList.toggle('sunroof');updateSunroofButton();setTimeout(resize,30);setStatus(document.body.classList.contains('sunroof')?'sunroof open · top Tools button returns sidebar':'sunroof closed','good')}
+addEventListener('keydown',e=>{const active=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){undo();e.preventDefault();return}if((e.ctrlKey||e.metaKey)&&(e.key.toLowerCase()==='y'||(e.shiftKey&&e.key.toLowerCase()==='z'))){redo();e.preventDefault();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='c'&&!active){copySelection();e.preventDefault();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='v'&&!active){pasteClip(centerWorld());e.preventDefault();return}if(active)return;const st=num(els.step.value,4)*(e.shiftKey?4:1);if(e.key==='ArrowLeft'){nudge(-st,0);e.preventDefault()}if(e.key==='ArrowRight'){nudge(st,0);e.preventDefault()}if(e.key==='ArrowUp'){nudge(0,-st);e.preventDefault()}if(e.key==='ArrowDown'){nudge(0,st);e.preventDefault()}if(e.key==='Delete'||e.key==='Backspace'){removeSelected();e.preventDefault()}if(e.key.toLowerCase()==='d'){duplicate();e.preventDefault()}if(e.key.toLowerCase()==='r'){assignRowFromY();e.preventDefault()}if(e.key.toLowerCase()==='m'){toggleMulti();e.preventDefault()}if(e.key.toLowerCase()==='i'){insertObject(centerWorld());e.preventDefault()}});
+async function loadCartFile(f){if(!f)return;try{const txt=await f.text();loadCartText(txt,f.name)}catch(err){setStatus('load failed: '+err.message,'bad')}}
+function loadCartText(txt,name='cart.llmcart.txt'){
+  try{
+    const doc=JSON.parse(txt);
+    if(isThemeDoc(doc)){
+      themePack=doc;themeFileName=name;mapDoc=null;mapFileName='';docMode='theme';
+      const working=cartFromThemeAndMap(themePack,emptyMapForTheme(themePack));
+      return setLoadedDoc(working,name,'theme','loaded theme pack '+name+' / view-only theme; map workspace is empty until a map is loaded');
+    }
+    if(isMapDoc(doc)){
+      let base=themePack;
+      if(!base&&cart&&cart.assets&&cart.recipes)base=buildThemeFromCart(cart);
+      if(!base)return setStatus('map loaded, but no theme pack is loaded yet. Load a matching .llmtheme.txt or legacy cart first.','bad');
+      themePack=base;mapDoc=doc;mapFileName=name;docMode='map';
+      return setLoadedDoc(cartFromThemeAndMap(themePack,mapDoc),name,'map','loaded thin map '+name+' using theme '+(themePack.id||mapDoc.theme||'theme')+' / '+objects.length+' objects');
+    }
+    docMode='cart';themePack=buildThemeFromCart(doc);themeFileName='(derived from '+name+')';mapDoc=buildThinMapFromCart(doc);mapFileName='(derived from '+name+')';return setLoadedDoc(doc,name,'cart','loaded legacy/sealed cart '+name+' / Save Map writes a thin map; theme is view-only here');
+  }catch(err){setStatus('load failed: '+err.message,'bad')}
+}
+els.file.addEventListener('change',e=>loadCartFile(e.target.files[0]));
+if(els.themeFile)els.themeFile.addEventListener('change',e=>loadCartFile(e.target.files[0]));
+if(els.mapFile)els.mapFile.addEventListener('change',e=>loadCartFile(e.target.files[0]));
+on('loadThemeBtn',()=>els.themeFile&&els.themeFile.click());
+on('loadMapBtn',()=>els.mapFile&&els.mapFile.click());
+on('loadAnyBtn',()=>els.file&&els.file.click());
+
+function pathPartsFromString(s){s=String(s||'').trim();if(!s)return [];return s.split('.').filter(Boolean).map(p=>/^\d+$/.test(p)?Number(p):p)}
+function pathStringFromParts(parts){return (parts||[]).map(String).join('.')}
+function pathType(v){if(Array.isArray(v))return 'array';if(v===null)return 'null';return typeof v==='object'?'object':typeof v}
+function pathSummary(v,parts=[]){
+  if(Array.isArray(v))return 'array['+v.length+']';
+  if(plain(v))return 'object{'+Object.keys(v).length+'}';
+  if(typeof v==='string'){
+    if(v.startsWith('data:image'))return 'image data string · '+Math.round(v.length/1024)+' KB';
+    const q=JSON.stringify(v);return q.length>54?q.slice(0,51)+'…':q;
+  }
+  if(typeof v==='number'||typeof v==='boolean'||v===null)return String(v);
+  return pathType(v);
+}
+function getPathValue(pathStr){
+  if(!cart)return {exists:false,value:undefined,parts:[]};
+  const parts=pathPartsFromString(pathStr);let cur=cart;
+  for(const k of parts){if(cur==null||!(k in cur))return {exists:false,value:undefined,parts};cur=cur[k]}
+  return {exists:true,value:cur,parts};
+}
+function setPathValue(pathStr,value){
+  const parts=pathPartsFromString(pathStr);
+  if(!parts.length){cart=value;return}
+  let cur=cart;
+  for(let i=0;i<parts.length-1;i++){
+    const k=parts[i],next=parts[i+1];
+    if(cur[k]==null||typeof cur[k]!=='object')cur[k]=(typeof next==='number'?[]:{});
+    cur=cur[k];
+  }
+  cur[parts[parts.length-1]]=value;
+}
+function deletePathValue(pathStr){
+  const parts=pathPartsFromString(pathStr);if(!parts.length)return false;
+  let cur=cart;for(let i=0;i<parts.length-1;i++){const k=parts[i];if(cur==null||!(k in cur))return false;cur=cur[k]}
+  const last=parts[parts.length-1];if(cur==null||!(last in cur))return false;
+  if(Array.isArray(cur)&&typeof last==='number')cur.splice(last,1);else delete cur[last];return true;
+}
+function collectPathEntries(){
+  const out=[];if(!cart)return out;
+  function add(parts,v){out.push({path:pathStringFromParts(parts),type:pathType(v),summary:pathSummary(v,parts),depth:parts.length})}
+  function walk(v,parts,depth){
+    add(parts,v);if(out.length>1200)return;
+    if(!(plain(v)||Array.isArray(v)))return;
+    if(depth>=6)return;
+    const entries=Array.isArray(v)?v.map((x,i)=>[i,x]):Object.entries(v).filter(([k])=>!String(k).startsWith('__'));
+    for(const [k,child] of entries){
+      const p=parts.concat(k);
+      if(parts[0]==='assets'&&parts[1]==='images'&&parts.length>=2){add(p,child);continue}
+      if(typeof child==='string'&&child.length>5000){add(p,child);continue}
+      walk(child,p,depth+1);if(out.length>1200)break;
+    }
+  }
+  walk(cart,[],0);
+  return out;
+}
+function populatePathExplorer(preferPath){
+  if(!els.pathPick)return;
+  const q=String(els.pathFilter&&els.pathFilter.value||'').trim().toLowerCase();
+  const entries=collectPathEntries().filter(e=>!q||e.path.toLowerCase().includes(q)||e.summary.toLowerCase().includes(q)||e.type.toLowerCase().includes(q));
+  const cur=preferPath!=null?preferPath:(els.pathInput&&els.pathInput.value)||els.pathPick.value;
+  els.pathPick.innerHTML=entries.map(e=>{
+    const p=e.path||'';const indent='  '.repeat(Math.min(4,e.depth));
+    const label=(p?indent+p:'cart root')+'  · '+e.summary;
+    return `<option value="${escapeHtml(p)}">${escapeHtml(label)}</option>`;
+  }).join('')||'<option value="">cart root</option>';
+  if(Array.from(els.pathPick.options).some(o=>o.value===cur))els.pathPick.value=cur;
+  if(els.pathInfo)els.pathInfo.textContent=cart?('mapped '+entries.length+' cartridge paths · type a missing path to create it on Apply'):'load a cart to map global config and recipes';
+}
+function loadPathEditor(pathStr){
+  if(!els.pathInput||!els.pathJson)return;
+  pathStr=pathStr!=null?String(pathStr):String(els.pathInput.value||els.pathPick.value||'');
+  const hit=getPathValue(pathStr);els.pathInput.value=pathStr;
+  if(els.pathPick&&Array.from(els.pathPick.options).some(o=>o.value===pathStr))els.pathPick.value=pathStr;
+  delete els.pathJson.dataset.previewOnly;
+  if(!hit.exists){els.pathJson.value='{}';if(els.pathInfo){els.pathInfo.className='pathInfo warn';els.pathInfo.textContent='path does not exist yet · Apply JSON will create '+(pathStr||'cart root')}return}
+  let s;try{s=JSON.stringify(stripMeta(hit.value),null,2)}catch(e){s=String(hit.value)}
+  if(s.length>70000){els.pathJson.value=JSON.stringify({preview:pathSummary(hit.value,hit.parts),note:'Large value omitted from editor to avoid accidentally replacing image/blob data. Select a smaller child path instead.'},null,2);els.pathJson.dataset.previewOnly='1';if(els.pathInfo){els.pathInfo.className='pathInfo warn';els.pathInfo.textContent=(pathStr||'cart root')+' · large value preview only · select a smaller child path to edit'}return}
+  els.pathJson.value=s;
+  if(els.pathInfo){els.pathInfo.className='pathInfo good';els.pathInfo.textContent=(pathStr||'cart root')+' · '+pathSummary(hit.value,hit.parts)}
+}
+function applyPathEditor(){
+  if(!cart)return setStatus('load a cart first','bad');
+  const p=String(els.pathInput&&els.pathInput.value||'').trim();
+  if(els.pathJson&&els.pathJson.dataset.previewOnly==='1')return setStatus('large preview only · select a smaller child path before applying','bad');
+  try{
+    const val=JSON.parse(els.pathJson.value);saveUndo('edit path '+(p||'cart root'));setPathValue(p,val);
+    loadImages();selection=[];selected=null;rebuild();updateCartIdentity();renderSelectionPanel();populatePathExplorer(p);loadPathEditor(p);draw();setStatus('applied cartridge path '+(p||'cart root'),'good');
+  }catch(e){setStatus('path JSON error: '+e.message,'bad')}
+}
+function deletePathEditor(){
+  if(!cart)return setStatus('load a cart first','bad');
+  const p=String(els.pathInput&&els.pathInput.value||'').trim();
+  if(!p)return setStatus('refusing to delete cart root','bad');
+  saveUndo('delete path '+p);
+  if(!deletePathValue(p))return setStatus('path not found: '+p,'bad');
+  loadImages();selection=[];selected=null;rebuild();updateCartIdentity();renderSelectionPanel();populatePathExplorer();loadPathEditor('');draw();setStatus('deleted cartridge path '+p,'good');
+}
+
+const aboutKey='llmario_cartbench_moonbench_notes_v1';
+function openAbout(){if(els.aboutNotes)els.aboutNotes.value=localStorage.getItem(aboutKey)||'';if(els.aboutDialog&&els.aboutDialog.showModal)els.aboutDialog.showModal();else setStatus('About: v0.18 Box Templates Moonbench · notes unavailable in this browser','good')}
+function saveAboutNotes(){if(!els.aboutNotes)return;localStorage.setItem(aboutKey,els.aboutNotes.value||'');setStatus('saved About notes locally','good')}
+const wrap=byId('canvasWrap');
+function dragFileState(on){document.body.classList.toggle('draggingFile',!!on)}
+function dragTypes(e){return Array.from((e.dataTransfer&&e.dataTransfer.types)||[])}
+function dragHasPalette(e){const t=dragTypes(e);return t.includes('application/x-llmario-palette')||t.includes('text/plain')}
+function dragHasFile(e){const t=dragTypes(e);return t.includes('Files')}
+function paletteDropValue(e){try{let v=e.dataTransfer.getData('application/x-llmario-palette');if(v)return v;const txt=e.dataTransfer.getData('text/plain')||'';if(txt.startsWith('llmario-palette:'))return txt.slice('llmario-palette:'.length)}catch(_){}return ''}
+if(wrap){['dragenter','dragover'].forEach(t=>wrap.addEventListener(t,e=>{e.preventDefault();if(dragHasFile(e)){dragFileState(true);setStatus(cart?'drop to replace current source':'drop to load source','good',{ms:900})}else if(dragHasPalette(e)){dragFileState(false);setStatus(cart?'drop palette card to stamp it':'load a cart before stamping cards','good',{ms:900})}}));['dragleave','dragend'].forEach(t=>wrap.addEventListener(t,e=>{e.preventDefault();dragFileState(false)}));wrap.addEventListener('drop',e=>{e.preventDefault();dragFileState(false);const val=paletteDropValue(e);if(val){if(!cart)return setStatus('load a cart before stamping cards','bad');if(els.insertKind)els.insertKind.value=val;updateActiveBrush();populatePalette();insertObject(pointerWorld(e));return}const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)loadCartFile(f);else setStatus('drop did not include a file or palette card','bad')})}
+
+function toggleMulti(){multiMode=!multiMode;els.multi.classList.toggle('active',multiMode);setStatus(multiMode?'multi-select on':'multi-select off',multiMode?'good':'')}
+function on(id,fn){const el=byId(id);if(el)el.onclick=fn}
+if(els.titleInput){els.titleInput.addEventListener('input',titleInputLive);els.titleInput.addEventListener('change',titleInputCommit);els.titleInput.addEventListener('blur',()=>{if(titleEditing)titleInputCommit()})}
+on('fit',fit);on('export',exportCart);on('exportMap',exportMap);on('sound',toggleSound);on('sunroof',toggleSunroof);on('sideToggle',toggleSunroof);on('aboutBtn',openAbout);on('aboutBtn2',openAbout);on('saveAbout',saveAboutNotes);on('undo',undo);on('redo',redo);on('saveLocal',saveLocal);on('loadLocal',loadLocal);on('multi',toggleMulti);on('clearSel',()=>setSelection([]));on('selectVisible',selectVisible);on('selectSame',selectSameKind);on('focusSel',focusSelection);on('copySel',copySelection);on('pasteMouse',()=>pasteClip(lastMouseWorld));on('pasteCenter',()=>pasteClip(centerWorld()));on('up',()=>nudge(0,-num(els.step.value,4)));on('down',()=>nudge(0,num(els.step.value,4)));on('left',()=>nudge(-num(els.step.value,4),0));on('right',()=>nudge(num(els.step.value,4),0));on('dup',duplicate);on('del',removeSelected);on('rowFromY',assignRowFromY);on('rowClear',clearRow);on('rowAdd',addRowBelow);on('rowApply',applyRowEdit);on('rowRepair',repairRowCamera);on('rowDelete',deleteManagedRow);on('propApply',applyProps);on('makeSolid',convertSelectedToSolid);on('addHitbox',addHitboxForSelected);on('makeVisual',convertSelectedToVisual);on('terrainMapSave',saveTerrainMapForSelected);on('terrainPromote',promoteSelectedTerrain);if(els.bustableToggle)els.bustableToggle.onchange=()=>setBustFlag('bustable',els.bustableToggle.checked);if(els.requiresBigToggle)els.requiresBigToggle.onchange=()=>setBustFlag('requiresBig',els.requiresBigToggle.checked);if(els.bustPayloadToggle)els.bustPayloadToggle.onchange=()=>setBustFlag('bustPayload',els.bustPayloadToggle.checked);on('alignL',()=>alignSelection('L'));on('alignCX',()=>alignSelection('CX'));on('alignR',()=>alignSelection('R'));on('alignT',()=>alignSelection('T'));on('alignCY',()=>alignSelection('CY'));on('alignB',()=>alignSelection('B'));on('distX',()=>distributeSelection('x'));on('distY',()=>distributeSelection('y'));on('floorRow',dropToRowFloor);on('layerBack',()=>setSelectedLayer('back'));on('layerFront',()=>setSelectedLayer('front'));on('layerForeground',()=>setSelectedLayer('foreground'));on('orderBack',()=>moveSelectedInArray(-1));on('orderForward',()=>moveSelectedInArray(1));
+if(els.rowManagePick)els.rowManagePick.onchange=loadRowForm;
+els.rowPick.onchange=()=>{if(!selection.length)return;saveUndo('row update');for(const it of selection){if(els.rowPick.value)it.obj.row=els.rowPick.value;else delete it.obj.row}renderSelectionPanel();draw();setStatus('row updated on '+selection.length+' object(s)','good')};
+on('apply',applyJson);on('snap42',()=>els.step.value=42);on('snap64',()=>els.step.value=64);on('snapNow',snapSelected);els.snapMode.onchange=()=>{draw();setStatus('snap '+(grid()||'free'),'good')};els.filterText.oninput=refreshFilters;els.filterRow.onchange=refreshFilters;document.querySelectorAll('.kindFilter').forEach(cb=>cb.onchange=refreshFilters);on('filterClear',()=>{els.filterText.value='';els.filterRow.value='';document.querySelectorAll('.kindFilter').forEach(cb=>cb.checked=true);refreshFilters()});on('insertMouse',()=>insertObject(lastMouseWorld));on('insertCenter',()=>insertObject(centerWorld()));if(els.insertKind)els.insertKind.onchange=()=>{updateActiveBrush();populatePalette()};if(els.bgViewMode){els.bgViewMode.value=editorBgMode;els.bgViewMode.onchange=()=>setEditorBgMode(els.bgViewMode.value)}if(els.mapBgMode){syncMapBgModeUI();els.mapBgMode.onchange=()=>setMapBgMode(els.mapBgMode.value)}
+if(els.paletteSearch)els.paletteSearch.oninput=()=>populatePalette();if(els.paletteCats)els.paletteCats.querySelectorAll('button').forEach(b=>b.onclick=()=>{paletteCat=b.dataset.cat||'all';els.paletteCats.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));populatePalette()});on('stampMode',()=>setStampMode(!stampMode));if(els.sideTabs)els.sideTabs.querySelectorAll('button').forEach(b=>b.onclick=()=>setSideMode(b.dataset.mode));if(els.pathFilter)els.pathFilter.oninput=()=>populatePathExplorer();if(els.pathPick)els.pathPick.onchange=()=>loadPathEditor(els.pathPick.value);on('pathLoad',()=>loadPathEditor());on('pathApply',applyPathEditor);on('pathDelete',deletePathEditor);updateHistoryUI();populateInsertCatalog();updateSunroofButton();updateCartIdentity();setSideMode('palette');setStatus('Load a theme, then load/create a map. Legacy carts still load as compatibility sources.','',{quiet:true})
+})();
+</script>
+</body>
+</html>
