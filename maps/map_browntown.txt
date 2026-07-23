@@ -1,8 +1,8 @@
 {
   "format": "llmario-map-v1",
   "mapVersion": 1,
-  "id": "Empty_LLMario_Jungle_Master_Two_Rows_Slope_Asset_Set_map_collab_pass_1",
-  "title": "Empty LLMario Jungle Master — Two Rows + Slope Asset Set map — collab pass 1",
+  "id": "browntown",
+  "title": "browntown",
   "theme": "jungle-3level",
   "world": {
     "width": 4300,
