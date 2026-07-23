@@ -59,3 +59,6 @@ Current built-in SFX hooks include:
 
 The audio system is intentionally ready for future music, but full MIDI parser/drop-folder/song scheduling is not part of the current baseline.
 
+**Play the demo level**
+
+https://thesepeoplearenotyourfriends.github.io/super_llmario/
