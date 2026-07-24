@@ -85,41 +85,78 @@ https://thesepeoplearenotyourfriends.github.io/super_llmario/
 
 **(partial) historical trace**
 
-v68 added first-pass local-row slope platforms (up/down); v69 fixes the slope-to-flat handoff seam on steeper ramps while keeping v67 bonk-box behavior; v70 fixes the flat-to-slope seam jump teleport; v71 fixes steep slope-to-flat walking/running exit pause; v72 guards bonk boxes against seam-jump side-overlap false bonks; v74 extends the true-underside rule to solid image sprites and rectangular platforms; v75 adds cartridge-toggled bustable/breakable floating blocks with shard animation; v76 makes mushroom powerups row-aware, adds a simple emergence phase, ignores the source block briefly, and lets mushrooms ride existing slope platforms; v77 supports the split source model: load .llmtheme.txt and .llmmap.txt as two documents, combining them in memory without turning maps back into base64 asset carts; v78 makes theme-truth image assets draw as their original sprites while collision truth handles physics, including line/slope truth.
+Cleaned and sorted newest to oldest:
 
-v79 stops demo resourceScenery trees/shrubs/mushrooms from leaking into loaded maps.
+**v85** — Adds global pipe/tube support as an engine noun. Maps can place solid green fallback pipes, themes can provide custom skins, and optional JSON targets enable down-press pipe travel.
 
-v83 adds first-pass global ladder/climb-zone physics: maps can place ladder/vine climbables with engine fallback art or theme skins; up/down climbs, jump detaches. v84 smooths ladder seams by merging/treating touching climb-zone pieces as one climb column, so stacked ladder/vine pieces do not clamp-stop at joins.
+**v84** — Smooths ladder seams by merging touching climb-zone pieces into a single climb column, preventing stacked ladder or vine segments from clamp-stopping at their joins.
 
-v85 adds global pipe/tube support as an engine noun: maps can place solid green fallback pipes, themes can still skin later, and optional JSON targets can make down-press pipe travel.
+**v83** — Adds first-pass global ladder and climb-zone physics. Maps can place ladder or vine climbables with engine fallback art or theme skins. Up/down controls climbing; jumping detaches.
 
-v67 keeps v66 behavior and makes the existing bonk block vocabulary cartridge/theme-friendly: floating blocks may declare boxKind/kind, payload/contents, usedStyle/usedRecipe/usedImage, oneShot info behavior, and imageBlock/usedBlock recipes. Reward boxes can emit coin bursts or the existing mushroom powerup without hardcoding theme art. Floating blocks may also opt into busting with bustable:true/breakable:true and optional requiresBig:true.
+**v79** — Prevents demo `resourceScenery` trees, shrubs, and mushrooms from leaking into loaded maps.
 
-v66 adds optional solid image sprites for asset-backed cartridges. Resource scenery sprites marked solid:true now participate in collision using their rendered image rectangle, so platform-looking PNG/SVG pieces do not accidentally behave like background decoration.
+**v78** — Makes theme-truth image assets render as their original sprites while collision truth independently controls physics, including line and slope collision.
 
-v65 keeps the row-camera latched seam as the first successful row transition implementation: falling across a row boundary latches the target row, gives a short readable seam pause, pans the camera, then releases the fall without old/new row bounce.
+**v77** — Supports the split source model: `.llmtheme.txt` and `.llmmap.txt` load as separate documents and combine in memory, without turning maps back into base64 asset carts.
 
-v63 adds an optional row-aware camera experiment for carts that define world.rows, including a brief fall-stall while the camera pans down to the next row. Carts without rows should keep the v62 side-scroller camera behavior.
+**v76** — Makes mushroom powerups row-aware, adds a simple emergence phase, briefly ignores collision with the source block, and allows mushrooms to ride existing slope platforms.
 
-v62 tightens the image-cartridge hooks after the first Jungle/BrownNature visual test: image tile platforms can paint a backing color and overdraw seams so transparent tile gutters do not reveal sky, and themed sign recipes get readable light text without mutating the classic physics-test level.
+**v75** — Adds cartridge-toggled bustable/breakable floating blocks with shard animation.
 
-v60 adds a conservative load-time placement normalizer for external cartridges: surface props such as pipes/trees/shrubs/mushrooms/arrow signs are snapped to nearby walking surfaces, impossible scenery over chasms is dropped unless marked anchor:"raw", solid pipe collision follows the corrected pipe base, and floating blocks are forced into either ground-block placement or big-hero-safe overhead clearance.
+**v74** — Extends the true-underside rule to solid image sprites and rectangular platforms.
 
-v59 fixes the final 1-1 scenery nit: the later tree near x≈3080/3208 now has its base raised so the trunk reads above the grass/ledge. Rest of World 1 is intended to live as external .llmcart cartridge files, not embedded in the engine.
+**v72** — Guards bonk boxes against false bonks caused by side overlap during seam jumps.
 
-v58 raises the two too-low second-half block pairs so the hero can pass underneath, adds a tap-to-read map coordinate probe in the lower corner, shifts the arrow triangles right so their visual weight is centered, and drops the first decorative mushroom onto the grass.
+**v71** — Fixes the pause when walking or running from a steep slope onto a flat platform.
 
-v57 fixes the sign/mushroom polish nibs and extends built-in 1-1 into a longer second half with extra platforms, coins, enemies, scenery, and a later portal.
+**v70** — Fixes the teleport that could occur when jumping across a flat-to-slope seam.
 
-v56 fixes the follow-up polish misses: arrow signs now point right, the decorative red mushroom recipe gets a visible stem, and the hero ground shadow no longer follows jumps.
+**v69** — Fixes the slope-to-flat handoff seam on steeper ramps while preserving v67 bonk-box behavior.
 
-v55 refines the built-in 1-1 cart presentation: removes the confusing starting pipe, gives arrow signs a more balanced double-chevron face, and lifts the small red mushroom so it reads as a mushroom instead of a speckled rock.
+**v68** — Adds first-pass local-row upward and downward slope platforms.
 
-v54 is the v53 merged baseline plus built-in 1-1 scenery cleanup: pipes/arches anchored to platforms, pipes optionally solid, and shrubs moved into cartridge data.
+**v67** — Keeps v66 behavior and makes the existing bonk-block vocabulary cartridge/theme-friendly. Floating blocks may declare:
 
-v53 is the merged baseline containing:
+* `boxKind` / `kind`
+* `payload` / `contents`
+* `usedStyle`
+* `usedRecipe`
+* `usedImage`
+* one-shot information behavior
+* `imageBlock` / `usedBlock` recipes
 
-v46 milestone systems: SFX/audio path, gamepad Learn, pause/status-bar menu, mobile display fixes, working counters/HUD, no onscreen mobile buttons.
-v52 visual systems: mushroom-cap hero, improved grass/dirt blend, attribution pager, EPS-derived scenery/prefab math.
-v53 external cartridge loader: Load Cartridge in pause menu; supports ".llmcart.txt", ".llmcart", ".json", ".txt".
+Reward boxes can emit coin bursts or the existing mushroom powerup without hardcoding theme art. Floating blocks may also opt into breaking with `bustable:true` or `breakable:true`, plus optional `requiresBig:true`.
+
+**v66** — Adds optional solid image sprites for asset-backed cartridges. `resourceScenery` sprites marked `solid:true` participate in collision using their rendered image rectangle, so platform-like PNG or SVG assets do not behave as background decoration.
+
+**v65** — Establishes the row-camera latched seam as the first successful row-transition implementation. Falling across a row boundary latches the target row, pauses briefly at the seam, pans the camera, and then releases the fall without old/new-row bouncing.
+
+**v63** — Adds an optional row-aware camera experiment for cartridges defining `world.rows`, including a brief fall stall while the camera pans to the next row. Cartridges without rows retain the v62 side-scroller camera behavior.
+
+**v62** — Tightens image-cartridge hooks after the first Jungle/BrownNature visual test. Image-tile platforms can paint a backing color and overdraw seams so transparent tile gutters do not reveal sky. Themed sign recipes receive readable light text without altering the classic physics-test level.
+
+**v60** — Adds a conservative load-time placement normalizer for external cartridges:
+
+* Surface props such as pipes, trees, shrubs, mushrooms, and arrow signs snap to nearby walking surfaces.
+* Impossible scenery over chasms is dropped unless marked `anchor:"raw"`.
+* Solid pipe collision follows the corrected pipe base.
+* Floating blocks are forced into either ground-block placement or big-hero-safe overhead clearance.
+
+**v59** — Fixes the final World 1-1 scenery issue: the later tree near `x ≈ 3080/3208` has its base raised so the trunk reads above the grass ledge. The remainder of World 1 is intended to live in external `.llmcart` cartridge files rather than being embedded in the engine.
+
+**v58** — Raises the two overly low second-half block pairs so the hero can pass beneath them, adds a tap-to-read map-coordinate probe in the lower corner, shifts arrow triangles right for better visual centering, and places the first decorative mushroom directly on the grass.
+
+**v57** — Fixes sign and mushroom polish issues and extends the built-in World 1-1 cartridge with a longer second half containing additional platforms, coins, enemies, scenery, and a later portal.
+
+**v56** — Fixes follow-up presentation issues: arrow signs now point right, the decorative red mushroom has a visible stem, and the hero’s ground shadow no longer follows jumps.
+
+**v55** — Refines the built-in World 1-1 presentation by removing the confusing starting pipe, giving arrow signs a more balanced double-chevron face, and raising the small red mushroom so it reads as a mushroom rather than a speckled rock.
+
+**v54** — Uses the v53 merged baseline and adds built-in World 1-1 scenery cleanup: pipes and arches are anchored to platforms, pipes may optionally be solid, and shrubs are moved into cartridge data.
+
+**v53** — Merged baseline containing:
+
+* **v46 milestone systems:** SFX/audio path, gamepad Learn, pause/status-bar menu, mobile display fixes, working counters/HUD, and no onscreen mobile buttons.
+* **v52 visual systems:** mushroom-cap hero, improved grass/dirt blending, attribution pager, and EPS-derived scenery/prefab math.
+* **v53 external cartridge loader:** adds **Load Cartridge** to the pause menu and supports `.llmcart.txt`, `.llmcart`, `.json`, and `.txt`.
 
