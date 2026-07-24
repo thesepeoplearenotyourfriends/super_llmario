@@ -85,8 +85,6 @@ https://thesepeoplearenotyourfriends.github.io/super_llmario/
 
 **(partial) historical trace**
 
-Cleaned and sorted newest to oldest:
-
 **v85** — Adds global pipe/tube support as an engine noun. Maps can place solid green fallback pipes, themes can provide custom skins, and optional JSON targets enable down-press pipe travel.
 
 **v84** — Smooths ladder seams by merging touching climb-zone pieces into a single climb column, preventing stacked ladder or vine segments from clamp-stopping at their joins.
