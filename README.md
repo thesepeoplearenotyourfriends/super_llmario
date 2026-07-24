@@ -64,9 +64,24 @@ The audio system is intentionally ready for future music, but full MIDI parser/d
 
 the above map is in maps/ and is a work in progress, mainly done while simultaneously getting the map editor working, which it does pretty well. 
 
+**Retro Charm MIDI player**
+<img width="866" height="568" alt="image" src="https://github.com/user-attachments/assets/03500e4d-49f4-4520-b9be-6e2ab5aa2123" />
+
+converts any .mid file into (admittedly pretty awesome) retro-sounding NES-style output. 
+
+**BloopForge**
+<img width="764" height="616" alt="image" src="https://github.com/user-attachments/assets/15569e36-7e32-4657-93a4-343df48b2f24" />
+
+Generate retro sound effects and/or tweak existing ones. 
+
+
+----
+
 **Play the demo level**
 
 https://thesepeoplearenotyourfriends.github.io/super_llmario/
+
+----
 
 **(partial) historical trace**
 
