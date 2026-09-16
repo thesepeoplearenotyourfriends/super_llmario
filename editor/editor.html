@@ -644,6 +644,7 @@ function asciiUnsupportedReason(it){
   const o=it.obj||{},tag=[o.type,o.kind,o.style,o.skin].join(' ').toLowerCase(),motion=['moving','move','motion','path','pathX','pathY','moveX','moveY','vx','vy','speed','amplitude','range','period'];
   if(!ASCII_SYMBOL[it.kind])return 'unsupported noun';
   if(it.kind==='platform'){
+    if(o.collisionOnly||o.editorCollisionOnly||o.editorHitbox||o.helperOnly)return 'collision-only helper';
     if(/slope|line/.test(tag)||/slope|line/.test(collisionKind(o.collision).toLowerCase()))return 'slope terrain';
     if(motion.some(k=>o[k]!=null)||o.bob!=null&&num(o.bob)!==0)return 'moving platform';
     if(plain(o.collision)&&!['rect','solidrect','box','none'].includes(collisionKind(o.collision).toLowerCase()))return 'custom platform collision';
