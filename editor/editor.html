@@ -232,7 +232,7 @@ body:not(.loaded) .needsCart{opacity:.58}
     <h2>LLMario ASCII interchange</h2>
     <p id="asciiInfo" class="mini">ASCII is an editor clipboard sketch. Import compiles symbols into native map objects.</p>
     <textarea id="asciiText" spellcheck="false" aria-label="ASCII map text"></textarea>
-    <div class="asciiLegend">X solid terrain · # floating block · o coin · * star · e enemy · ? sign · O portal · @ player spawn<br>v1 snaps to @cell; recipes, slopes, movement, pipe targets, scenery, and custom metadata are intentionally not encoded.</div>
+    <div class="asciiLegend">X solid terrain · # floating block · o coin · * star · e enemy · ? sign · O portal · @ player spawn<br>The visible grid is authoritative. One cell holds one symbol: replacing X/# with an entity intentionally removes that terrain cell. v1 snaps to @cell; recipes, slopes, movement, pipe targets, scenery, and custom metadata are not encoded.</div>
     <div class="row"><button id="asciiCopy" type="button" class="good">Copy text</button><button id="asciiImport" type="button">Import at cursor</button><button value="cancel">Close</button></div>
   </form>
 </dialog>
@@ -640,7 +640,21 @@ function copySelection(){if(!selection.length)return setStatus('nothing selected
 function pasteClip(at){if(!cart||!clip||!clip.items.length)return setStatus('clipboard empty','bad');const target=snapPoint(at.x,at.y),dx=target.x-clip.bounds.x,dy=target.y-clip.bounds.y;saveUndo('paste');const refs=[];for(const cp of clip.items){const clone=JSON.parse(JSON.stringify(cp.obj));const pseudo={obj:clone,kind:cp.kind,path:cp.parentPath};setObjectRectXY(pseudo,cp.rect.x+dx,cp.rect.y+dy,false);if(cp.kind==='portal'&&cp.parentPath.length===0){cart.portal=clone;refs.push({path:['portal']});continue}if(!cp.parentPath.length)continue;const arr=ensureArray(cp.parentPath);arr.push(clone);refs.push({path:cp.parentPath.concat(arr.length-1)})}rebuild();setSelection(refs.map(r=>objects.find(o=>pathKey(o.path)===pathKey(r.path))).filter(Boolean));setStatus('pasted '+selection.length+' object(s)','good')}
 
 const ASCII_SYMBOL={platform:'X',block:'#',coin:'o',star:'*',enemy:'e',sign:'?',portal:'O',player:'@'};
-function asciiItems(scope){return (scope==='selection'?selection:objects).filter(it=>ASCII_SYMBOL[it.kind])}
+function asciiUnsupportedReason(it){
+  const o=it.obj||{},tag=[o.type,o.kind,o.style,o.skin].join(' ').toLowerCase(),motion=['moving','move','motion','path','pathX','pathY','moveX','moveY','vx','vy','speed','amplitude','range','period'];
+  if(!ASCII_SYMBOL[it.kind])return 'unsupported noun';
+  if(it.kind==='platform'){
+    if(/slope|line/.test(tag)||/slope|line/.test(collisionKind(o.collision).toLowerCase()))return 'slope terrain';
+    if(motion.some(k=>o[k]!=null)||o.bob!=null&&num(o.bob)!==0)return 'moving platform';
+    if(plain(o.collision)&&!['rect','solidrect','box','none'].includes(collisionKind(o.collision).toLowerCase()))return 'custom platform collision';
+  }
+  if(it.kind==='block'&&(motion.some(k=>o[k]!=null)||o.powerup!=null||o.payload!=null||o.contents!=null||o.message!=null||o.bustable||o.breakable||o.oneShot))return 'behavioral block';
+  if(['coin','star','enemy'].includes(it.kind)&&motion.some(k=>o[k]!=null))return 'moving entity';
+  if(it.kind==='enemy'&&o.type!=null&&!['walker','blob'].includes(String(o.type).toLowerCase()))return 'special enemy';
+  if(it.kind==='portal'&&['target','destination','to','pipeTarget','requires','condition'].some(k=>o[k]!=null))return 'targeted/conditional portal';
+  return '';
+}
+function asciiItems(scope){return (scope==='selection'?selection:objects).filter(it=>!asciiUnsupportedReason(it))}
 function asciiBounds(items,cell){
   if(!items.length)return null;let x=Infinity,y=Infinity,r=-Infinity,b=-Infinity;
   for(const it of items){const q=objectRect(it);x=Math.min(x,q.x);y=Math.min(y,q.y);r=Math.max(r,q.x+q.w);b=Math.max(b,q.y+q.h)}
@@ -648,25 +662,26 @@ function asciiBounds(items,cell){
   return {x,y,w:Math.max(cell,r-x),h:Math.max(cell,b-y)};
 }
 function exportAsciiText(scope='selection'){
-  const cell=21,items=asciiItems(scope),bounds=scope==='map'?{x:0,y:0,w:Math.ceil(worldBounds().w/cell)*cell,h:Math.ceil(worldBounds().h/cell)*cell}:asciiBounds(items,cell);
-  if(!bounds)return {text:'',count:0,omitted:selection.length};
+  const cell=21,candidate=scope==='selection'?selection:objects,items=asciiItems(scope),bounds=scope==='map'?{x:0,y:0,w:Math.ceil(worldBounds().w/cell)*cell,h:Math.ceil(worldBounds().h/cell)*cell}:asciiBounds(candidate,cell);
+  if(!bounds)return {text:'',count:0,omitted:0};
   const cols=Math.ceil(bounds.w/cell),rows=Math.ceil(bounds.h/cell),grid=Array.from({length:rows},()=>Array(cols).fill('.'));
   const solids=items.filter(it=>it.kind==='platform'||it.kind==='block').sort((a,b)=>pathKey(a.path).localeCompare(pathKey(b.path)));
   for(const it of solids){const q=objectRect(it),ch=ASCII_SYMBOL[it.kind];const x0=Math.max(0,Math.floor((q.x-bounds.x)/cell)),x1=Math.min(cols-1,Math.ceil((q.x+q.w-bounds.x)/cell)-1),y0=Math.max(0,Math.floor((q.y-bounds.y)/cell)),y1=Math.min(rows-1,Math.ceil((q.y+q.h-bounds.y)/cell)-1);for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)grid[y][x]=ch}
-  const markers=items.filter(it=>it.kind!=='platform'&&it.kind!=='block').sort((a,b)=>pathKey(a.path).localeCompare(pathKey(b.path)));
-  const entityLines=[];for(const it of markers){const q=objectRect(it),x=Math.max(0,Math.min(cols-1,Math.floor((q.x+q.w/2-bounds.x)/cell))),y=Math.max(0,Math.min(rows-1,Math.floor((q.y+q.h/2-bounds.y)/cell))),symbol=ASCII_SYMBOL[it.kind];grid[y][x]=symbol;entityLines.push('@entity '+symbol+' '+x+' '+y)}
-  const candidate=scope==='selection'?selection:objects,omitted=candidate.filter(it=>!ASCII_SYMBOL[it.kind]).length;
+  const markers=items.filter(it=>it.kind!=='platform'&&it.kind!=='block').sort((a,b)=>pathKey(a.path).localeCompare(pathKey(b.path))),overlap=[];
+  for(const it of markers){const q=objectRect(it),x=Math.max(0,Math.min(cols-1,Math.floor((q.x+q.w/2-bounds.x)/cell))),y=Math.max(0,Math.min(rows-1,Math.floor((q.y+q.h/2-bounds.y)/cell))),symbol=ASCII_SYMBOL[it.kind];if(grid[y][x]!=='.'){overlap.push(it);continue}grid[y][x]=symbol}
+  const unsupported=candidate.map(it=>({it,reason:asciiUnsupportedReason(it)})).filter(x=>x.reason),omitted=unsupported.length+overlap.length;
   const head=['@llmario-ascii 1','@cell '+cell,'@origin '+roundish(bounds.x)+' '+roundish(bounds.y),'@size '+cols+' '+rows,'@legend X=terrain #=block o=coin *=star e=enemy ?=sign O=portal @=player'];
-  if(omitted)head.push('@note omitted '+omitted+' unsupported object(s): slopes/scenery/pipes and custom metadata are not represented');
-  head.push(...entityLines);
-  return {text:head.join('\n')+'\n\n'+grid.map(r=>r.join('')).join('\n'),count:items.length,omitted};
+  const reasons={};for(const x of unsupported)reasons[x.reason]=(reasons[x.reason]||0)+1;if(overlap.length)reasons['entity overlapping terrain/block']=overlap.length;
+  if(omitted)head.push('@note omitted '+omitted+' object(s): '+Object.entries(reasons).sort().map(([k,n])=>n+' '+k).join(', '));
+  head.push('@note grid is authoritative; replacing X/# with an entity removes that terrain/block cell on import');
+  return {text:head.join('\n')+'\n\n'+grid.map(r=>r.join('')).join('\n'),count:items.length-overlap.length,omitted};
 }
 function showAscii(scope){if(!cart)return setStatus('load a map first','bad');if(scope==='selection'&&!selection.length)return setStatus('select objects before ASCII export','bad');const out=exportAsciiText(scope);els.asciiText.value=out.text;els.asciiInfo.textContent=(scope==='selection'?'Selection':'Whole map')+' sketch · '+out.count+' supported object(s)'+(out.omitted?' · '+out.omitted+' omitted (see @note)':'')+'. Edit here or copy it.';els.asciiDialog.showModal()}
 async function copyAsciiText(){if(!els.asciiText.value)return;try{await navigator.clipboard.writeText(els.asciiText.value);setStatus('ASCII copied to clipboard','good')}catch(_){els.asciiText.focus();els.asciiText.select();setStatus('clipboard unavailable · text selected for manual copy','') }}
 function parseAscii(text){
-  const lines=String(text||'').replace(/\r/g,'').split('\n'),directives={},entities=[],grid=[];let sawHeader=false;
-  for(const raw of lines){const line=raw.trimEnd();if(line.startsWith('@')){const m=line.match(/^@(\S+)\s*(.*)$/);if(m){if(m[1]==='entity'){const e=m[2].trim().match(/^([o*e?O@])\s+(\d+)\s+(\d+)$/);if(e)entities.push({ch:e[1],x:Number(e[2]),y:Number(e[3])})}else directives[m[1]]=m[2];if(m[1]==='llmario-ascii'&&m[2].trim()==='1')sawHeader=true}continue}if(!line.trim()){if(grid.length)continue;else continue}if(/^[.X#o*e?O@]+$/.test(line))grid.push(line)}
-  if(!sawHeader)throw new Error('missing @llmario-ascii 1 header');const cell=Number(directives.cell);if(!Number.isFinite(cell)||cell<4||cell>256)throw new Error('@cell must be 4–256');if(!grid.length)throw new Error('no ASCII grid found');const width=Math.max(...grid.map(s=>s.length));if(width>500||grid.length>300)throw new Error('grid is too large (maximum 500×300)');return {cell,width,entities,grid:grid.map(s=>s.padEnd(width,'.'))};
+  const lines=String(text||'').replace(/\r/g,'').split('\n'),directives={},grid=[];let sawHeader=false,inGrid=false;
+  for(const raw of lines){const line=raw.trimEnd(),validGrid=/^[.X#o*e?O@]+$/.test(line);if(!inGrid){if(!line.trim()){if(sawHeader)inGrid=true;continue}if(validGrid&&sawHeader&&directives.cell){inGrid=true;grid.push(line);continue}if(line.startsWith('@')){const m=line.match(/^@(\S+)\s*(.*)$/);if(m){directives[m[1]]=m[2];if(m[1]==='llmario-ascii'&&m[2].trim()==='1')sawHeader=true}continue}}if(!line.trim())continue;if(validGrid){inGrid=true;grid.push(line)}else if(inGrid)throw new Error('invalid grid row: '+line)}
+  if(!sawHeader)throw new Error('missing @llmario-ascii 1 header');const cell=Number(directives.cell);if(!Number.isFinite(cell)||cell<4||cell>256)throw new Error('@cell must be 4–256');if(!grid.length)throw new Error('no ASCII grid found');const width=Math.max(...grid.map(s=>s.length));if(width>500||grid.length>300)throw new Error('grid is too large (maximum 500×300)');return {cell,width,grid:grid.map(s=>s.padEnd(width,'.'))};
 }
 function asciiRectangles(grid,ch){
   const h=grid.length,w=grid[0].length,used=Array.from({length:h},()=>Array(w).fill(false)),out=[];
@@ -679,7 +694,7 @@ function importAsciiAt(text,at){
   for(const a of asciiRectangles(doc.grid,'X')){const obj={id:nextId('ascii_p'),x:base.x+a.x*doc.cell,y:base.y+a.y*doc.cell,w:a.w*doc.cell,h:a.h*doc.cell,type:'ground',style:platformStyle,skin:platformStyle};const row=nearestRowTagForRect({x:obj.x,y:obj.y,w:obj.w,h:obj.h});if(row)obj.row=row;const arr=ensureArray(['platforms']);arr.push(obj);refs.push(['platforms',arr.length-1])}
   for(const a of asciiRectangles(doc.grid,'#')){const obj={x:base.x+a.x*doc.cell,y:base.y+a.y*doc.cell,w:a.w*doc.cell,h:a.h*doc.cell,style:bestBlockStyle('box'),skin:bestBlockStyle('box'),boxKind:'inert',bob:0};const arr=ensureArray(['floatingBlocks']);arr.push(obj);refs.push(['floatingBlocks',arr.length-1])}
   const specs={o:['coins','coin'], '*':['stars','star'],e:['enemies','enemy'],'?':['signposts','sign'],O:['portal','portal'],'@':['playerSpawn','player']};
-  const markers=doc.entities.length?doc.entities:(()=>{const a=[];for(let y=0;y<doc.grid.length;y++)for(let x=0;x<doc.width;x++)if(specs[doc.grid[y][x]])a.push({ch:doc.grid[y][x],x,y});return a})();
+  const markers=(()=>{const a=[];for(let y=0;y<doc.grid.length;y++)for(let x=0;x<doc.width;x++)if(specs[doc.grid[y][x]])a.push({ch:doc.grid[y][x],x,y});return a})();
   for(const mark of markers){const {ch,x,y}=mark,spec=specs[ch],px=base.x+x*doc.cell,py=base.y+y*doc.cell;if(ch==='O'){cart.portal={x:px,y:py,w:70,h:98};refs.push(['portal'])}else if(ch==='@'){cart.playerSpawn=Object.assign({},cart.playerSpawn,{x:px,y:py});refs.push(['playerSpawn'])}else{const obj=ch==='e'?{x:px,y:py,w:38,h:34,type:'walker'}:ch==='?'?{x:px,y:py,text:['new sign']}:{x:px,y:py};const arr=ensureArray([spec[0]]);arr.push(obj);refs.push([spec[0],arr.length-1])}}
   rebuild();setSelection(refs.map(p=>objects.find(o=>pathKey(o.path)===pathKey(p))).filter(Boolean));draw();els.asciiDialog.close();setStatus('imported ASCII as '+selection.length+' native object(s) · undo is available','good')
 }
@@ -695,7 +710,13 @@ function applyJson(){if(selection.length!==1)return setStatus('select exactly on
 function fit(){if(!cart)return;const b=worldBounds(),cw=canvas.width/devicePixelRatio,ch=canvas.height/devicePixelRatio;view.z=Math.min(cw/(b.w+160),ch/(b.h+120));view.z=Math.max(.08,Math.min(2,view.z));view.x=-80;view.y=-60;draw()}
 function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#050607';ctx.fillRect(0,0,canvas.width,canvas.height);if(!cart){renderRowGutter([]);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(40,40,620,120);ctx.fillStyle='#fff';ctx.font=`${18*devicePixelRatio}px sans-serif`;ctx.fillText('Load a theme + map, or a legacy cart, to begin.',60*devicePixelRatio,86*devicePixelRatio);return}const vis=visibleObjects();drawEditorBackground();drawGrid();drawRows();for(const it of drawOrderedObjects(vis))drawObject(it);drawPlayerStackMarker();if(showCollisionContour)drawCollisionContour(vis);for(const it of selection.filter(passesFilters))drawSelection(it);if(drag&&drag.mode==='marquee')drawMarquee();if(drag&&drag.mode==='terrainMass')drawTerrainMassPreview(drag);els.view.textContent='zoom '+Math.round(view.z*100)+'%'}
 
-function effectiveSolidRects(list){return list.filter(it=>(it.kind==='platform'||it.kind==='block'||(it.kind==='scenery'&&sceneryHasOwnCollision(it)))&&!String(it.obj.type||'').toLowerCase().includes('slope')).map(it=>objectRect(it))}
+function effectiveCollisionRect(it){
+  if(it.kind==='platform'){const k=[it.obj.type,it.obj.kind,it.obj.style,it.obj.skin,collisionKind(it.obj.collision)].join(' ').toLowerCase();return /slope|line/.test(k)?null:objectRect(it)}
+  if(it.kind==='block')return objectRect(it);
+  if(it.kind!=='scenery')return null;const map=sceneryCollisionMap(it);if(!map)return null;const c=map.collision||{},k=[map.kind,map.type,collisionKind(c)].join(' ').toLowerCase();if(/slope|line|climb|ladder|vine/.test(k))return null;
+  const visual=objectRect(it),top=/top/.test(k);return {x:visual.x+num(c.x||c.offsetX||map.hitboxX||map.offsetX,0),y:visual.y+num(c.y||c.offsetY||map.hitboxY,0),w:num(c.w||map.w,visual.w),h:top?num(c.h||map.h,Math.max(4,visual.h*.2)):num(c.h||map.h,visual.h)};
+}
+function effectiveSolidRects(list){return list.map(effectiveCollisionRect).filter(Boolean)}
 function drawCollisionContour(list){
   const rs=effectiveSolidRects(list),D=devicePixelRatio;ctx.save();ctx.strokeStyle='rgba(114,236,255,.92)';ctx.lineWidth=Math.max(1.5,2*D);ctx.setLineDash([7*D,4*D]);for(const r of rs){const a=w2s(r.x,r.y);ctx.strokeRect(a.x,a.y,r.w*view.z*D,r.h*view.z*D)}ctx.setLineDash([]);
   ctx.strokeStyle='#ff8d72';ctx.fillStyle='rgba(255,141,114,.2)';ctx.lineWidth=Math.max(2,3*D);for(let i=0;i<rs.length;i++)for(let j=i+1;j<rs.length;j++){const a=rs[i],b=rs[j],gap=b.x-(a.x+a.w),back=a.x-(b.x+b.w),g=gap>=0?gap:back>=0?back:null;if(g==null||g>8)continue;const overlap=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x);if(overlap>0)continue;const lip=Math.abs(a.y-b.y);if(lip>8)continue;const x=gap>=0?a.x+a.w:b.x+b.w,y=Math.min(a.y,b.y),p=w2s(x,y);ctx.beginPath();ctx.arc(p.x,p.y,7*D,0,Math.PI*2);ctx.fill();ctx.stroke()}
