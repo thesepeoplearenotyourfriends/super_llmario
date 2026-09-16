@@ -1963,9 +1963,14 @@ function floatingSolid(b){
 }
 function sceneryPipeSolid(p){
   const s = p.scale || 1;
-  const w = 58 * s;
-  const h = p.h || 86 * s;
-  return {x:p.x, y:p.y - h, w:w, h:h, _pipe:p};
+  const thick = 58 * s;
+  const direction = String(p.direction || p.orientation || 'up').toLowerCase();
+  const d = ['up','down','left','right'].includes(direction) ? direction : (direction === 'horizontal' ? 'left' : 'up');
+  const length = Math.max(21, finiteNumber(p.length) ? p.length : (finiteNumber(p.h) ? p.h : (d === 'left' || d === 'right' ? 96 : 86 * s)));
+  if(d === 'left') return {x:p.x, y:p.y, w:length, h:thick, direction:d, _pipe:p};
+  if(d === 'right') return {x:p.x-length, y:p.y, w:length, h:thick, direction:d, _pipe:p};
+  if(d === 'down') return {x:p.x, y:p.y, w:thick, h:length, direction:d, _pipe:p};
+  return {x:p.x, y:p.y-length, w:thick, h:length, direction:d, _pipe:p};
 }
 function pipeTravelTarget(p){
   if(!p || p.noTravel || p.travel === false) return null;
@@ -1980,17 +1985,26 @@ function pipeTravelTarget(p){
   return null;
 }
 function findPlayerEntryPipe(){
-  if(!input.down || player.pipeCooldown > 0 || !player.onGround) return null;
+  if(player.pipeCooldown > 0) return null;
   const cx = player.x + player.w * 0.5;
   const feet = player.y + player.h;
   for(const p of (((ACTIVE_CART.resourceScenery || {}).pipes) || [])){
     const target = pipeTravelTarget(p);
     if(!target) continue;
     const r = sceneryPipeSolid(p);
-    const margin = Math.max(6, r.w * 0.18);
-    const centered = cx >= r.x + margin && cx <= r.x + r.w - margin;
-    const onLip = Math.abs(feet - r.y) <= 7 && player.vy >= -0.25;
-    if(centered && onLip) return {pipe:p,target:target,rect:r};
+    const d = r.direction || 'up', vertical = d === 'up' || d === 'down';
+    const pressed = d === 'up' ? input.down : d === 'down' ? input.up : d === 'left' ? input.right : input.left;
+    if(!pressed) continue;
+    if(vertical){
+      const margin = Math.max(6, r.w * 0.18), mouthY = d === 'up' ? r.y : r.y + r.h;
+      const centered = cx >= r.x + margin && cx <= r.x + r.w - margin;
+      const edge = d === 'up' ? feet : player.y;
+      if(centered && Math.abs(edge-mouthY)<=7 && (d !== 'up' || (player.onGround && player.vy>=-0.25))) return {pipe:p,target:target,rect:r};
+    }else{
+      const cy=player.y+player.h*.5, margin=Math.max(6,r.h*.18), mouthX=d==='left'?r.x:r.x+r.w;
+      const edge=d==='left'?player.x+player.w:player.x;
+      if(cy>=r.y+margin&&cy<=r.y+r.h-margin&&Math.abs(edge-mouthX)<=7)return {pipe:p,target:target,rect:r};
+    }
   }
   return null;
 }
@@ -3187,6 +3201,19 @@ function drawArcadePipe(x, baseY, h, scale, r){
   ctx.fillRect(Math.round(sx+w-15*s), Math.round(y+3*s), Math.max(2,Math.round(5*s)), Math.round(bodyH-7*s));
   ctx.restore();
 }
+function drawNativePipe(p,r){
+  const box=sceneryPipeSolid(p),x=Math.round(worldX(box.x)),y=Math.round(box.y),s=p.scale||1,d=box.direction||'up';
+  if(x>W+120||x+box.w<-120)return;
+  ctx.save();
+  const g=ctx.createLinearGradient(x,y,x+box.w,y+box.h);g.addColorStop(0,r.hi||'#a2f042');g.addColorStop(.45,r.mid||'#6fd000');g.addColorStop(1,r.dark||'#2f8900');
+  rr(x,y,box.w,box.h,5*s,g,r.edge||'#2a7b00',2);
+  const lip=23*s;
+  if(d==='up')rr(x,y,box.w,Math.min(lip,box.h),5*s,r.rim||'#84df17',r.edge||'#2a7b00',2);
+  else if(d==='down')rr(x,y+box.h-Math.min(lip,box.h),box.w,Math.min(lip,box.h),5*s,r.rim||'#84df17',r.edge||'#2a7b00',2);
+  else if(d==='left')rr(x,y,Math.min(lip,box.w),box.h,5*s,r.rim||'#84df17',r.edge||'#2a7b00',2);
+  else rr(x+box.w-Math.min(lip,box.w),y,Math.min(lip,box.w),box.h,5*s,r.rim||'#84df17',r.edge||'#2a7b00',2);
+  ctx.restore();
+}
 function drawArcadeArch(a, r){
   const x = worldX(a.x), y = a.y;
   if(x > W + 100 || x + a.w < -100) return;
@@ -3262,7 +3289,7 @@ function drawResourceSceneryBack(){
   const data = ACTIVE_CART.resourceScenery || {};
   drawImageSceneryLayer('back');
   for(const a of (data.arches || [])) if((a.layer||'back') === 'back') drawArcadeArch(a, sr.arch || {});
-  for(const p of (data.pipes || [])) if((p.layer||'back') === 'back') drawArcadePipe(p.x, p.y, p.h, p.scale || 1, sr.pipe || {});
+  for(const p of (data.pipes || [])) if((p.layer||'back') === 'back') drawNativePipe(p, sr.pipe || {});
   for(const t of (data.trees || [])) if((t.layer||'back') === 'back') drawFantasyTree(t, fr || {});
 }
 
