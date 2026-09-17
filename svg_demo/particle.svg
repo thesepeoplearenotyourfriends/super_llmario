@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">Mooncap Grove sparkle particle</title>
+  <desc id="desc">A soft golden four-point sparkle with plum and teal accents.</desc>
+  <defs><radialGradient id="halo"><stop stop-color="#fff4ad" stop-opacity=".9"/><stop offset="1" stop-color="#ffd35a" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="24" cy="24" r="23" fill="url(#halo)"/>
+  <path d="M24 4c2 12 4 16 16 20-12 3-14 7-16 20-2-13-4-17-16-20 12-4 14-8 16-20z" fill="#fff3a6" stroke="#6b456a" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="10" cy="10" r="3" fill="#55c59a"/><circle cx="40" cy="10" r="2" fill="#ff8a9b"/><circle cx="40" cy="39" r="3" fill="#8267b7"/>
+</svg>

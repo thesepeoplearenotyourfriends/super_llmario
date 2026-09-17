@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Mooncap Grove terrain tile</title>
+  <desc id="desc">A seamless-width moonlit moss and plum soil platform tile.</desc>
+  <defs>
+    <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#60456f"/><stop offset="1" stop-color="#32263f"/></linearGradient>
+    <linearGradient id="moss" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#7ee0ad"/><stop offset="1" stop-color="#299b86"/></linearGradient>
+  </defs>
+  <path d="M0 20h128v108H0z" fill="url(#soil)"/>
+  <path d="M0 17C15 8 28 15 39 12S61 3 74 11s25 8 54 1v27c-12 2-19-7-30-3-9 3-7 14-18 14-12 0-10-13-23-13s-15 10-27 8C17 43 13 34 0 39z" fill="url(#moss)"/>
+  <path d="M0 17C15 8 28 15 39 12S61 3 74 11s25 8 54 1" fill="none" stroke="#c2f0b0" stroke-width="5" stroke-linecap="round"/>
+  <path d="M17 65l14-10 15 9-14 11zM78 65l17-12 18 13-17 12zM42 103l18-13 18 13-18 13z" fill="#4b365a" stroke="#755380" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="17" cy="96" r="5" fill="#a86c86"/><circle cx="108" cy="102" r="4" fill="#a86c86"/>
+  <path d="M7 31q7-9 14 0M105 26q7-9 14 0M50 28q8-11 16 0" fill="none" stroke="#d2f5b9" stroke-width="3" stroke-linecap="round"/>
+</svg>
