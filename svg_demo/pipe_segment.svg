@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 128" role="img" aria-labelledby="title desc">
-  <title id="title">Mooncap Grove pipe segment</title>
-  <desc id="desc">A chunky teal travel pipe wrapped by a flowering vine.</desc>
-  <defs><linearGradient id="pipe" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#17716f"/><stop offset=".3" stop-color="#43c4aa"/><stop offset=".62" stop-color="#26998f"/><stop offset="1" stop-color="#145b61"/></linearGradient></defs>
-  <path d="M23 30h50v98H23z" fill="url(#pipe)" stroke="#382747" stroke-width="4"/>
-  <path d="M15 9h66c5 0 8 4 8 9v19c0 5-3 8-8 8H15c-5 0-8-3-8-8V18c0-5 3-9 8-9z" fill="url(#pipe)" stroke="#382747" stroke-width="4"/>
-  <path d="M20 16h48M33 52v68" stroke="#8ee4bd" stroke-width="5" stroke-linecap="round" opacity=".62"/>
-  <path d="M69 51c13 12-7 22 3 34 8 9-4 20 2 32" fill="none" stroke="#6bd08d" stroke-width="5" stroke-linecap="round"/>
-  <path d="M72 68c9-8 15-5 17 0-6 5-12 6-17 0zM70 91c-8-7-14-4-16 1 6 5 11 5 16-1z" fill="#8be2a5" stroke="#382747" stroke-width="2"/>
-  <circle cx="74" cy="114" r="7" fill="#ffcf58" stroke="#382747" stroke-width="3"/><circle cx="74" cy="114" r="2" fill="#fff2c7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
+  <title id="title">Night Garden pipe segment</title>
+  <desc id="desc">A flat green pipe segment with square joints and a climbing vine.</desc>
+  <path fill="#241a35" d="M6 4h36v4h4v16h-4v4h-4v36H10V28H6V24H2V8h4z"/>
+  <path fill="#3f8f68" d="M6 8h36v12H6zm8 16h20v40H14z"/>
+  <path fill="#72b267" d="M10 8h8v12h-8zm8 16h6v40h-6z"/>
+  <path fill="#24634f" d="M34 24h-6v40h6zm-4-16h12v12H30z"/>
+  <path fill="#241a35" d="M34 31h4v8h4v8h-4v13h-4V48h-4v-8h4z"/>
+  <path fill="#72b267" d="M34 32h4v8h-4zm-4 8h4v8h-4zm8 8h4v8h-4z"/>
+  <path fill="#e8b94a" d="M34 56h8v8h-8z"/>
 </svg>

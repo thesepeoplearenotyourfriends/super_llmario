@@ -1,14 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 80" role="img" aria-labelledby="title desc">
-  <title id="title">Mooncap Grove bramble beetle enemy</title>
-  <desc id="desc">A squat purple beetle with leafy horns and an annoyed expression.</desc>
-  <defs><linearGradient id="shell" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#8267b7"/><stop offset="1" stop-color="#49345f"/></linearGradient></defs>
-  <ellipse cx="48" cy="72" rx="35" ry="5" fill="#271c3b" opacity=".2"/>
-  <path d="M25 24C16 15 19 7 24 5c5 11 13 9 18 17M71 24c9-9 6-17 1-19-5 11-13 9-18 17" fill="#55c59a" stroke="#382747" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M16 50c0-23 14-34 32-34s32 11 32 34c0 14-13 22-32 22S16 64 16 50z" fill="url(#shell)" stroke="#382747" stroke-width="4"/>
-  <path d="M21 39c8-8 17-11 27-11s19 3 27 11" fill="none" stroke="#a993d0" stroke-width="4" stroke-linecap="round"/>
-  <path d="M12 54h13M71 54h13M23 67l-7 7M73 67l7 7" stroke="#382747" stroke-width="7" stroke-linecap="round"/>
-  <path d="M29 45l12 3M67 45l-12 3" stroke="#fff2c7" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="39" cy="48" r="3" fill="#271c3b"/><circle cx="57" cy="48" r="3" fill="#271c3b"/>
-  <path d="M40 61q8-5 16 0" fill="none" stroke="#271c3b" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="48" cy="28" r="5" fill="#ffcf58" stroke="#382747" stroke-width="3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 40" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
+  <title id="title">Night Garden beetle enemy</title>
+  <desc id="desc">A squat horned beetle built from flat geometric shapes.</desc>
+  <path fill="#241a35" d="M8 16h4v-4h4V8h4V4h4v8h4V4h4v4h4v4h4v4h4v16h-4v4h-8v-4H16v4H8v-4H4V16z"/>
+  <path fill="#6b3d6f" d="M12 16h4v-4h16v4h8v13h-4v3H12V29H8V20h4z"/>
+  <path fill="#3f8f68" d="M16 8h4v8h-4zm12 0h4v8h-4z"/>
+  <path fill="#f4dfb1" d="M14 20h8v5h-8zm12 0h8v5h-8z"/>
+  <path fill="#241a35" d="M18 20h4v5h-4zm4 8h8v3h-8zm-14 4h8v4H8zm24 0h8v4h-8z"/>
+  <path fill="#e8b94a" d="M22 12h4v4h-4z"/>
 </svg>

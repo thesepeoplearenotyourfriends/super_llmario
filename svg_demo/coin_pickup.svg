@@ -1,13 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" role="img" aria-labelledby="title desc">
-  <title id="title">Mooncap Grove moon coin</title>
-  <desc id="desc">A glowing golden coin stamped with a crescent moon.</desc>
-  <defs>
-    <radialGradient id="glow"><stop stop-color="#fff4ad" stop-opacity=".8"/><stop offset="1" stop-color="#ffd35a" stop-opacity="0"/></radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff09a"/><stop offset=".45" stop-color="#ffd35a"/><stop offset="1" stop-color="#e8913e"/></linearGradient>
-  </defs>
-  <circle cx="32" cy="36" r="31" fill="url(#glow)"/>
-  <ellipse cx="32" cy="36" rx="21" ry="28" fill="url(#gold)" stroke="#69425f" stroke-width="4"/>
-  <ellipse cx="32" cy="36" rx="14" ry="21" fill="none" stroke="#fff3a8" stroke-width="2" opacity=".8"/>
-  <path d="M38 22a14 14 0 1 0 0 28 16 16 0 0 1-8-14 16 16 0 0 1 8-14z" fill="#fff7cc" stroke="#9e5d55" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M18 20l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
+  <title id="title">Night Garden moon coin</title>
+  <desc id="desc">A flat octagonal gold pickup marked with a dark crescent.</desc>
+  <path fill="#241a35" d="M10 2h12v3h5v5h3v20h-3v5h-5v3H10v-3H5v-5H2V10h3V5h5z"/>
+  <path fill="#e8b94a" d="M10 6h12v3h4v22h-4v3H10v-3H6V9h4z"/>
+  <path fill="#f4dfb1" d="M10 10h8v4h-4v12h4v4h-8z"/>
+  <path fill="#6b3d6f" d="M18 10h4v4h-4v4h-4v8h4v4h4v-4h4V14h-4v-4z"/>
 </svg>

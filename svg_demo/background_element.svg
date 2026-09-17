@@ -1,18 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 192" role="img" aria-labelledby="title desc">
-  <title id="title">Mooncap Grove background hill</title>
-  <desc id="desc">A dreamy layered grove hill beneath a crescent moon.</desc>
-  <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#4a396a"/><stop offset="1" stop-color="#8267a2"/></linearGradient>
-    <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#3c8b83"/><stop offset="1" stop-color="#24555d"/></linearGradient>
-  </defs>
-  <rect width="256" height="192" rx="18" fill="url(#sky)"/>
-  <circle cx="194" cy="46" r="25" fill="#fff0a3"/><circle cx="204" cy="38" r="25" fill="#554273"/>
-  <g fill="#fff4cf"><circle cx="39" cy="35" r="2"/><circle cx="94" cy="21" r="3"/><circle cx="143" cy="54" r="2"/><circle cx="228" cy="78" r="2"/></g>
-  <path d="M0 137C32 101 63 105 94 139c28-47 75-60 116 2 18-16 32-20 46-12v63H0z" fill="#326b70" opacity=".75"/>
-  <path d="M0 157c26-24 58-30 84 0 31-44 86-39 111 3 21-20 42-18 61-5v37H0z" fill="url(#hill)"/>
-  <g fill="#1d4651" stroke="#182f40" stroke-width="3" stroke-linejoin="round">
-    <path d="M22 164l19-60 19 60z"/><path d="M45 169l25-78 25 78z"/><path d="M171 169l22-71 23 71z"/><path d="M201 173l18-58 19 58z"/>
-  </g>
-  <g fill="#75c99e"><circle cx="42" cy="119" r="7"/><circle cx="68" cy="111" r="9"/><circle cx="193" cy="119" r="8"/><circle cx="219" cy="132" r="6"/></g>
-  <path d="M0 181c48-11 86-4 128 3 48 8 88 4 128-4v12H0z" fill="#193c48"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 96" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
+  <title id="title">Night Garden background ridge</title>
+  <desc id="desc">A flat night ridge with blocky trees, stars, and a crescent moon.</desc>
+  <path fill="#49385f" d="M0 0h128v96H0z"/>
+  <path fill="#f4dfb1" d="M94 10h16v4h4v16h-4v4H94v-4h8V14h-8z"/>
+  <path fill="#e8b94a" d="M18 14h4v4h-4zm28 8h4v4h-4zm24-12h4v4h-4zm48 28h4v4h-4z"/>
+  <path fill="#385869" d="M0 66h8v-8h8v-8h8v8h8v8h8V54h8V46h8v-8h8v8h8v8h8v12h8v-8h8v-8h8v8h8v8h16v30H0z"/>
+  <path fill="#243f4d" d="M0 74h12V54h4v-8h4v8h4v20h16V58h4v-8h4v-8h4v8h4v8h4v16h16V54h4V42h4V30h4v12h4v12h4v20h16V58h4v-8h4v8h4v16h8v22H0z"/>
+  <path fill="#3f8f68" d="M8 74h20v8H8zm28 0h28v8H36zm36 0h24v8H72zm32 0h24v8h-24z"/>
+  <path fill="#241a35" d="M0 82h128v14H0z"/>
 </svg>
