@@ -1,11 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 96" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
-  <title id="title">Night Garden background ridge</title>
-  <desc id="desc">A flat night ridge with blocky trees, stars, and a crescent moon.</desc>
-  <path fill="#49385f" d="M0 0h128v96H0z"/>
-  <path fill="#f4dfb1" d="M94 10h16v4h4v16h-4v4H94v-4h8V14h-8z"/>
-  <path fill="#e8b94a" d="M18 14h4v4h-4zm28 8h4v4h-4zm24-12h4v4h-4zm48 28h4v4h-4z"/>
-  <path fill="#385869" d="M0 66h8v-8h8v-8h8v8h8v8h8V54h8V46h8v-8h8v8h8v8h8v12h8v-8h8v-8h8v8h8v8h16v30H0z"/>
-  <path fill="#243f4d" d="M0 74h12V54h4v-8h4v8h4v20h16V58h4v-8h4v-8h4v8h4v8h4v16h16V54h4V42h4V30h4v12h4v12h4v20h16V58h4v-8h4v8h4v16h8v22H0z"/>
-  <path fill="#3f8f68" d="M8 74h20v8H8zm28 0h28v8H36zm36 0h24v8H72zm32 0h24v8h-24z"/>
-  <path fill="#241a35" d="M0 82h128v14H0z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 192" role="img" aria-labelledby="title desc">
+  <title id="title">Sunleaf Grove background vista</title>
+  <desc id="desc">Layered distant ruins and windswept trees beneath a pale morning moon.</desc>
+  <path fill="#718ab0" d="M0 0h256v192H0z"/>
+  <path fill="#91a8c2" d="M0 87c25-19 49-24 73-16 24 8 42 7 58-2 27-15 51-11 73 12 17 18 34 21 52 10v101H0z"/>
+  <!-- Moon and small cloud cuts establish depth without glow effects. -->
+  <path fill="#f3ddb0" d="M183 18c18 0 31 14 31 31 0 10-4 18-11 24 2-5 3-10 3-15 0-19-14-33-34-33 4-4 7-6 11-7z"/>
+  <path fill="#dce0d1" d="M24 52c7-9 17-10 25-3 8-5 17-2 20 6 9 0 15 4 18 10H17c0-6 2-10 7-13zm143 38c6-7 14-8 21-2 7-4 15-2 18 5 8-1 14 3 16 8h-61c0-5 2-9 6-11z"/>
+  <!-- Distant architectural rhythm -->
+  <path fill="#607895" d="M17 130h20V91h8v-9h8v9h8v39h22v-27h11v27h31V76h8V62h9v14h8v54h30v-35h11v35h28v62H17z"/>
+  <path fill="#4e687f" d="M29 103h20v27H29zm102-17h12v44h-12zm48 23h14v21h-14z"/>
+  <path fill="#344f61" d="M34 130v-17c0-7 4-11 10-11s10 4 10 11v17zm96 0v-24c0-8 4-13 10-13s10 5 10 13v24zm50 0v-9c0-6 3-9 8-9s8 3 8 9v9z"/>
+  <!-- Foreground tree masses have distinct lean and branch silhouettes. -->
+  <path fill="#28594f" d="M0 144c18-7 34-6 48 4 10-14 25-20 43-17 15 3 27 12 36 27 16-18 35-23 57-15 12-13 26-16 43-9 13 5 23 13 29 24v34H0z"/>
+  <path fill="#1f4547" d="M15 168l14-45 8 27 13-42 10 48 20-39 2 47 30-27 5 36 19-52 11 41 27-55 3 54 25-32 1 42 25-24 10 41z"/>
+  <path fill="#39735a" d="M7 148c12-13 25-17 39-10l-13 9 18 5-26 8zm59-5c14-14 28-14 43-2l-14 5 17 8-32 4zm94 0c15-15 31-16 48-4l-16 7 22 8-39 5z"/>
+  <path fill="#183d41" d="M0 174c34-8 68-7 102 2 45 11 96 8 154-7v23H0z"/>
+  <!-- Sparse warm accents tie the vista to interactive assets. -->
+  <path fill="#e1ad4b" d="M74 132l4-6 4 6-4 5zm140 17l4-6 4 6-4 5z"/>
 </svg>

@@ -1,10 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
-  <title id="title">Night Garden terrain tile</title>
-  <desc id="desc">A flat moss and dark soil platform tile designed for clean repetition.</desc>
-  <path fill="#241a35" d="M0 8h64v56H0z"/>
-  <path fill="#6b3d6f" d="M0 20h64v44H0z"/>
-  <path fill="#3f8f68" d="M0 8h8V4h12v4h12V2h12v6h20v12H52v8h-8v-8H28v5h-8v-5H8v4H0z"/>
-  <path fill="#72b267" d="M0 8h8V4h12v4h12V2h12v6h20v5H0z"/>
-  <path fill="#49304f" d="M8 32h8v8H8zm20 12h8v8h-8zm20-12h8v8h-8z"/>
-  <path fill="#8f526c" d="M12 32h4v4h-4zm20 12h4v4h-4zm20-12h4v4h-4z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Sunleaf Grove terrain tile</title>
+  <desc id="desc">A repeatable grassy earth tile with a leafy overhang and layered stone texture.</desc>
+  <!-- Soil body is edge-to-edge so adjacent tiles join without gutters. -->
+  <path fill="#49384c" d="M0 18h128v110H0z"/>
+  <path fill="#674654" d="M0 34h128v94H0z"/>
+  <path fill="#79525a" d="M0 45h128v83H0z"/>
+  <!-- Grass hangs into the soil instead of forming a bright horizontal seam. -->
+  <path fill="#216b54" d="M0 13c13-7 25-8 37-3 12-8 25-8 39-1 15-6 32-5 52 3v25c-8 1-14-3-20-10-5 12-13 17-24 14-8-2-13-8-16-18-7 12-17 17-29 13-7-2-12-7-15-15-8 11-16 15-24 14z"/>
+  <path fill="#3e9a61" d="M0 10c14-7 26-7 37-2 12-8 25-8 39-1 16-6 33-5 52 3v12c-12-5-24-6-36-2-10 3-18 2-25-2-10-6-20-5-29 1-10 5-23 5-38 0z"/>
+  <path fill="#79bd68" d="M4 8c10-4 20-4 29-1L19 17 3 16zm39-3c9-4 19-3 29 1L57 15l-17-2zm43 0c12-3 24-1 36 4l-20 8-19-5z"/>
+  <!-- Broken strata avoid a tiled checkerboard read. -->
+  <path fill="#563d50" d="M7 53l21-9 18 10-7 17-24 3zm53 0l19-9 26 8 5 17-21 9-25-8zm-22 38l20-10 20 11-3 23-25 5-17-14zm61 4l18-10 11 4v29l-22 3zM0 91l16-8 12 12-5 22-23 5z"/>
+  <path fill="#93605b" d="M12 53l14-5 12 7-4 8-17 4zm53 2l14-7 17 6-9 10-18 1zm-20 39l13-7 12 7-6 11-17 4zm60 3l12-7 11 4v13l-15 5z"/>
+  <path fill="#c07a61" d="M18 52l8-3 5 3-9 4zm52 4l9-7 8 3-10 6zm-19 38l7-5 6 4-8 5z"/>
+  <path fill="#d7a85b" d="M7 28l7-7 6 8-5 7zm104 2l6-9 7 7-4 9z"/>
 </svg>

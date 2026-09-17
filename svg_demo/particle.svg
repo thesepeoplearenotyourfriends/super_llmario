@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
-  <title id="title">Night Garden sparkle particle</title>
-  <desc id="desc">A small flat four-point gold sparkle.</desc>
-  <path fill="#241a35" d="M10 2h4v6h6v2h2v4h-2v2h-6v6h-4v-6H4v-2H2v-4h2V8h6z"/>
-  <path fill="#e8b94a" d="M10 6h4v4h4v4h-4v4h-4v-4H6v-4h4z"/>
-  <path fill="#f4dfb1" d="M10 10h4v4h-4z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">Sunleaf Grove impact particle</title>
+  <desc id="desc">A sharp golden impact spark with separated ember flecks.</desc>
+  <path fill="#d57b35" d="M22 1l5 15 12-8-6 14 14 3-15 4 7 13-13-8-5 13-2-14-14 7 9-12L1 22l15-2z"/>
+  <path fill="#f1bd45" d="M23 9l3 11 8-5-5 9 10 2-10 2 4 8-8-5-3 9-1-10-9 5 6-8-9-4 10-1z"/>
+  <path fill="#fff0a5" d="M22 17l3 6 6 2-6 2-3 6-2-6-6-3 6-2z"/>
+  <path fill="#ef6b61" d="M4 5l5 2-2 5-5-2zm37 6l5-1 1 5-5 1zM4 38l6-1 1 5-6 2z"/>
 </svg>

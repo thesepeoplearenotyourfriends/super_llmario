@@ -1,8 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
-  <title id="title">Night Garden moon coin</title>
-  <desc id="desc">A flat octagonal gold pickup marked with a dark crescent.</desc>
-  <path fill="#241a35" d="M10 2h12v3h5v5h3v20h-3v5h-5v3H10v-3H5v-5H2V10h3V5h5z"/>
-  <path fill="#e8b94a" d="M10 6h12v3h4v22h-4v3H10v-3H6V9h4z"/>
-  <path fill="#f4dfb1" d="M10 10h8v4h-4v12h4v4h-8z"/>
-  <path fill="#6b3d6f" d="M18 10h4v4h-4v4h-4v8h4v4h4v-4h4V14h-4v-4z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" role="img" aria-labelledby="title desc">
+  <title id="title">Sunleaf Grove sun seed pickup</title>
+  <desc id="desc">A faceted golden seed token with a cut-leaf emblem.</desc>
+  <!-- A narrow edge and offset facets imply a spinning gameplay pickup. -->
+  <path fill="#8a4b45" d="M25 4h15l11 9 6 20-4 23-12 12H24L12 57 7 35l6-22z"/>
+  <path fill="#d88732" d="M25 7h11l10 9 5 18-4 19-10 11H25L16 54l-4-19 5-18z"/>
+  <path fill="#f1bf46" d="M24 9h10l9 9 4 16-4 17-9 10H24l-6-9-3-17 4-16z"/>
+  <path fill="#ffe08a" d="M21 18l7-6h6l8 8-3 8-16 6-6-2z"/>
+  <path fill="#cf762d" d="M17 39l9 7 17-8 3 13-9 10H24l-6-9z"/>
+  <!-- Leaf emblem is cut as a bold internal silhouette rather than an outline. -->
+  <path fill="#446044" d="M24 42c2-11 10-18 19-19-1 10-7 18-17 20l-3 10-4-2 4-10zm4-3c4-2 7-5 10-10-5 2-8 5-10 10z"/>
+  <path fill="#fff2bd" d="M23 17l5-4 4 1-6 5z"/>
 </svg>

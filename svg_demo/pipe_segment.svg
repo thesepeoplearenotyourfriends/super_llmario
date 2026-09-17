@@ -1,11 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
-  <title id="title">Night Garden pipe segment</title>
-  <desc id="desc">A flat green pipe segment with square joints and a climbing vine.</desc>
-  <path fill="#241a35" d="M6 4h36v4h4v16h-4v4h-4v36H10V28H6V24H2V8h4z"/>
-  <path fill="#3f8f68" d="M6 8h36v12H6zm8 16h20v40H14z"/>
-  <path fill="#72b267" d="M10 8h8v12h-8zm8 16h6v40h-6z"/>
-  <path fill="#24634f" d="M34 24h-6v40h6zm-4-16h12v12H30z"/>
-  <path fill="#241a35" d="M34 31h4v8h4v8h-4v13h-4V48h-4v-8h4z"/>
-  <path fill="#72b267" d="M34 32h4v8h-4zm-4 8h4v8h-4zm8 8h4v8h-4z"/>
-  <path fill="#e8b94a" d="M34 56h8v8h-8z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 128" role="img" aria-labelledby="title desc">
+  <title id="title">Sunleaf Grove pipe segment</title>
+  <desc id="desc">A deep green travel pipe with carved bands, directional lighting, and a flowering vine.</desc>
+  <!-- Dark back shape supplies weight without a uniform contour. -->
+  <path fill="#173f43" d="M20 29h56v99H20z"/>
+  <path fill="#1c6258" d="M25 35h46v93H25z"/>
+  <path fill="#287d62" d="M30 35h25v93H30z"/>
+  <path fill="#46a768" d="M35 35h11v93H35z"/>
+  <path fill="#16504f" d="M62 35h9v93h-9z"/>
+  <!-- Lip uses overlapping ellipses and value bands to read as a hollow tube. -->
+  <path fill="#173f43" d="M10 14c0-8 7-12 15-12h46c9 0 15 4 15 12v26c0 7-6 11-15 11H25c-8 0-15-4-15-11z"/>
+  <path fill="#287d62" d="M15 15c0-5 5-8 12-8h42c7 0 12 3 12 8v21c0 6-5 9-12 9H27c-7 0-12-3-12-9z"/>
+  <ellipse cx="48" cy="16" rx="29" ry="10" fill="#52b873"/>
+  <ellipse cx="48" cy="17" rx="21" ry="6" fill="#173f43"/>
+  <path fill="#84cb78" d="M24 12c5-5 16-7 27-6-10 1-17 4-21 9z"/>
+  <path fill="#12383e" d="M27 37h43v5H27zM28 119h43v9H28z"/>
+  <!-- Vine breaks the manufactured silhouette and provides close-view detail. -->
+  <path d="M69 43c12 12-6 23 4 36 9 11-5 22 2 35" fill="none" stroke="#31583d" stroke-width="5"/>
+  <path fill="#58a54e" d="M71 61c8-9 16-8 20-2-5 8-12 10-20 2zm1 22c-9-7-17-4-19 3 7 6 13 5 19-3zm2 21c9-7 16-5 19 2-6 6-13 5-19-2z"/>
+  <path fill="#91cb62" d="M74 58c5-3 9-3 13 0-5 2-9 3-13 0zm-17 28c5-2 9-1 12 0-5 2-8 2-12 0z"/>
+  <path fill="#e3b546" d="M68 109l6-5 7 4 2 8-7 6-8-4z"/>
+  <path fill="#f4d675" d="M73 108l4 1 1 4-4 3-3-3z"/>
 </svg>

@@ -1,10 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" role="img" aria-labelledby="title desc" shape-rendering="crispEdges">
-  <title id="title">Night Garden player, idle</title>
-  <desc id="desc">A small mushroom-cap adventurer built from flat geometric shapes.</desc>
-  <path fill="#241a35" d="M12 48h8v6H8v-3h4zm16 0h8v3h4v3H28zM8 18h4v-6h6V8h12v4h6v6h4v10h-4v20h-8v-4h-8v4h-8V28H8z"/>
-  <path fill="#a84662" d="M12 16h4v-4h16v4h4v8H12z"/>
-  <path fill="#f4dfb1" d="M16 12h6v5h-6zm14 5h6v5h-6zM12 24h24v17h-4v3H16v-3h-4z"/>
-  <path fill="#241a35" d="M17 29h4v5h-4zm10 0h4v5h-4zm-6 9h6v3h-6z"/>
-  <path fill="#3f8f68" d="M12 38h24v6h-8v3h-8v-3h-8z"/>
-  <path fill="#e8b94a" d="M22 39h4v4h-4z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 112" role="img" aria-labelledby="title desc">
+  <title id="title">Sunleaf Grove player, idle</title>
+  <desc id="desc">A poised mushroom-cap adventurer with a leaf scarf and sturdy boots.</desc>
+  <!-- Ground contact -->
+  <path fill="#25354b" d="M19 104c7-3 18-4 29-4 15 0 25 2 31 5-8 3-18 4-31 4-12 0-22-2-29-5z"/>
+  <!-- Back arm and body silhouette -->
+  <path fill="#442e55" d="M24 66c-8 4-11 13-8 22 2 6 8 7 14 4l-3-8c-3 1-4 0-4-3 0-4 3-7 7-8zm46 0c9 3 13 11 11 20-1 7-7 9-13 7l2-8c3 1 5-1 4-4 0-4-3-7-7-8z"/>
+  <path fill="#51345d" d="M27 55c5-9 13-14 22-14 11 0 20 6 23 16l-3 35c-1 8-7 13-16 14H41c-9-1-15-6-16-14z"/>
+  <!-- Face -->
+  <path fill="#f4d6a5" d="M30 57c5-7 11-10 19-10 9 0 15 3 20 11l-3 27c-1 8-7 13-17 13-11 0-17-5-18-13z"/>
+  <path fill="#e7b987" d="M31 78c5 4 10 5 16 5 8 0 14-2 20-6l-1 8c-1 8-7 13-17 13-11 0-17-5-18-13z"/>
+  <!-- Mushroom cap: broad, asymmetric, no enclosing outline -->
+  <path fill="#5a315d" d="M8 48C11 21 26 6 49 6c22 0 36 15 39 41-11 8-24 12-40 12-15 0-28-4-40-11z"/>
+  <path fill="#d95068" d="M13 44C17 22 30 11 49 11c18 0 29 10 34 31-10 7-22 10-35 10-14 0-25-3-35-8z"/>
+  <path fill="#ef6b70" d="M18 36c7-15 18-21 33-21 10 0 18 4 24 11-12-5-26-4-38 1-7 3-13 6-19 9z"/>
+  <path fill="#f8d99a" d="M27 20c5-3 10-5 16-5l-2 13-13 4-8-4c2-3 4-6 7-8zm30-4c7 1 13 4 17 9l-2 10-12-1-6-8zM18 38l12-6 10 8-4 11c-7-1-14-3-20-6zM49 38l12-2 8 12c-7 2-14 3-22 3z"/>
+  <!-- Face and idle expression -->
+  <path fill="#352b45" d="M37 66c0-4 2-7 5-7s5 3 5 7-2 7-5 7-5-3-5-7zm17 0c0-4 2-7 5-7s5 3 5 7-2 7-5 7-5-3-5-7z"/>
+  <path fill="#fff4d5" d="M40 61c2-1 4 0 4 2s-2 3-4 2zm17 0c2-1 4 0 4 2s-2 3-4 2z"/>
+  <path fill="#a6475a" d="M44 79c4 3 8 3 12 0-1 5-3 7-6 7s-5-2-6-7z"/>
+  <!-- Leaf scarf and boots -->
+  <path fill="#247f69" d="M26 82c12 4 28 4 43-2l3 10c-8 4-16 6-23 6-9 0-17-2-24-5z"/>
+  <path fill="#49aa70" d="M30 83c9 2 19 2 29 0-7 5-16 8-27 7z"/>
+  <path fill="#e8b43f" d="M52 91c7 1 12 5 14 12-6 0-11-2-15-5z"/>
+  <path fill="#352b45" d="M27 94c5 3 10 4 15 3l1 9c-7 2-15 1-22-2zm28 3c5 1 10 0 15-3l6 10c-7 3-14 4-22 2z"/>
 </svg>
