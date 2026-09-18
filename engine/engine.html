@@ -2201,12 +2201,14 @@ function enterPipeTravel(hit){
   player.vy = 0;
   player.onGround = true;
   player.pipeTravel={phase:'entry',entry:hit.pipe,entryRect:hit.rect,target:hit.target,destination:destination};
+  positionHeldShell();
   setToast(['Pipe travel'], 42);
   return true;
 }
 function updatePipeTravel(){
   const travel=player.pipeTravel;
   if(!travel) return false;
+  if(input.runRelease&&player.carryEnemy) travel.releaseCarry=true;
   player.vx=0; player.vy=0; player.onGround=false;
   if(travel.phase==='entry'){
     const inward=pipeTravelVector(travel.entryRect,true), hidden=pipeTravelPose(travel.entryRect,true);
@@ -2216,6 +2218,8 @@ function updatePipeTravel(){
       const d=travel.destination;
       if(!d){
         player.x=travel.target.x;player.y=travel.target.y;player.pipeTravel=null;player.pipeCooldown=36;player.onGround=false;
+        positionHeldShell();
+        if(travel.releaseCarry) releaseHeldShell(true);
         setRowCameraFromPlayer();cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));return true;
       }
       travel.exitRect=d.rect; travel.phase='exit';
@@ -2230,8 +2234,11 @@ function updatePipeTravel(){
     if(reached){
       player.x=emerged.x;player.y=emerged.y;player.pipeTravel=null;player.pipeCooldown=36;
       player.onGround=(travel.exitRect.direction||'up')==='up';
+      positionHeldShell();
+      if(travel.releaseCarry) releaseHeldShell(true);
     }
   }
+  positionHeldShell();
   return true;
 }
 function themeTruthForImage(id){
@@ -4616,7 +4623,10 @@ function draw(){
   drawSky();
   ctx.save();
   ctx.translate(0, -Math.round(camY));
-  if(player.pipeTravel) drawPlayer();
+  if(player.pipeTravel){
+    if(player.carryEnemy) drawBlob(player.carryEnemy);
+    drawPlayer();
+  }
   drawPipeMountedFlowers();
   drawResourceSceneryBack();
   for(const sign of signposts){
@@ -4633,7 +4643,7 @@ function draw(){
   powerups.forEach(drawPowerup);
   drawProjectiles();
   drawFlowers();
-  enemies.forEach(e=>{if(flowerHostPipe(e))return;drawEnemyAttachments(e);drawBlob(e);});
+  enemies.forEach(e=>{if(flowerHostPipe(e)||(player.pipeTravel&&e===player.carryEnemy))return;drawEnemyAttachments(e);drawBlob(e);});
   drawSceneryFront();
   if(!player.pipeTravel) drawPlayer();
   drawSceneryForeground();
