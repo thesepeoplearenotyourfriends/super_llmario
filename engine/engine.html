@@ -2168,19 +2168,35 @@ function destinationPipeFor(target, entryPipe){
   for(const p of (((ACTIVE_CART.resourceScenery || {}).pipes) || [])){
     if(p===entryPipe) continue;
     const r=sceneryPipeSolid(p);
-    if(r.direction!=='up') continue;
-    const score=Math.abs((r.x+r.w/2)-(target.x+player.w/2))+Math.abs((r.y+r.h)-(target.y+player.h));
+    const tx0=target.x,tx1=target.x+player.w,ty0=target.y,ty1=target.y+player.h;
+    const dx=Math.max(0,r.x-tx1,tx0-(r.x+r.w));
+    const dy=Math.max(0,r.y-ty1,ty0-(r.y+r.h));
+    const score=dx+dy+.01*(Math.abs((r.x+r.w/2)-(tx0+player.w/2))+Math.abs((r.y+r.h/2)-(ty0+player.h/2)));
     if(score<bestScore){bestScore=score;best={pipe:p,rect:r};}
   }
-  return bestScore<=180?best:null;
+  return bestScore<=48?best:null;
+}
+function pipeTravelPose(rect, hidden){
+  const d=rect.direction||'up';
+  if(d==='down') return {x:rect.x+(rect.w-player.w)/2,y:rect.y+rect.h-(hidden?player.h:0)};
+  if(d==='left') return {x:rect.x-(hidden?0:player.w),y:rect.y+(rect.h-player.h)/2};
+  if(d==='right') return {x:rect.x+rect.w-(hidden?player.w:0),y:rect.y+(rect.h-player.h)/2};
+  return {x:rect.x+(rect.w-player.w)/2,y:rect.y-(hidden?0:player.h)};
+}
+function pipeTravelVector(rect, inward){
+  const d=rect.direction||'up', sign=inward?1:-1;
+  if(d==='down') return {x:0,y:-sign};
+  if(d==='left') return {x:sign,y:0};
+  if(d==='right') return {x:-sign,y:0};
+  return {x:0,y:sign};
 }
 function enterPipeTravel(hit){
   if(!hit || !hit.target) return false;
   playSfx('powerup');
   leaveClimb();
   const destination=destinationPipeFor(hit.target,hit.pipe);
-  player.x=hit.rect.x+(hit.rect.w-player.w)/2;
-  player.y=hit.rect.y-player.h;
+  const start=pipeTravelPose(hit.rect,false);
+  player.x=start.x; player.y=start.y;
   player.vx = 0;
   player.vy = 0;
   player.onGround = true;
@@ -2193,22 +2209,27 @@ function updatePipeTravel(){
   if(!travel) return false;
   player.vx=0; player.vy=0; player.onGround=false;
   if(travel.phase==='entry'){
-    player.x=travel.entryRect.x+(travel.entryRect.w-player.w)/2;
-    player.y+=2.25;
-    if(player.y>=travel.entryRect.y){
+    const inward=pipeTravelVector(travel.entryRect,true), hidden=pipeTravelPose(travel.entryRect,true);
+    player.x+=inward.x*2.25; player.y+=inward.y*2.25;
+    const reached=inward.x>0?player.x>=hidden.x:inward.x<0?player.x<=hidden.x:inward.y>0?player.y>=hidden.y:player.y<=hidden.y;
+    if(reached){
       const d=travel.destination;
-      const rect=d?d.rect:{x:travel.target.x,y:travel.target.y+player.h,w:player.w,h:1,direction:'up'};
-      travel.exitRect=rect; travel.phase='exit';
-      player.x=rect.x+(rect.w-player.w)/2; player.y=rect.y;
+      if(!d){
+        player.x=travel.target.x;player.y=travel.target.y;player.pipeTravel=null;player.pipeCooldown=36;player.onGround=false;
+        setRowCameraFromPlayer();cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));return true;
+      }
+      travel.exitRect=d.rect; travel.phase='exit';
+      const inside=pipeTravelPose(d.rect,true);player.x=inside.x;player.y=inside.y;
       setRowCameraFromPlayer();
       cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));
     }
   }else{
-    player.x=travel.exitRect.x+(travel.exitRect.w-player.w)/2;
-    player.y-=2.25;
-    const emergedY=travel.exitRect.y-player.h;
-    if(player.y<=emergedY){
-      player.y=emergedY; player.pipeTravel=null; player.pipeCooldown=36; player.onGround=true;
+    const outward=pipeTravelVector(travel.exitRect,false), emerged=pipeTravelPose(travel.exitRect,false);
+    player.x+=outward.x*2.25;player.y+=outward.y*2.25;
+    const reached=outward.x>0?player.x>=emerged.x:outward.x<0?player.x<=emerged.x:outward.y>0?player.y>=emerged.y:player.y<=emerged.y;
+    if(reached){
+      player.x=emerged.x;player.y=emerged.y;player.pipeTravel=null;player.pipeCooldown=36;
+      player.onGround=(travel.exitRect.direction||'up')==='up';
     }
   }
   return true;
@@ -4239,7 +4260,8 @@ function playerMotionAsset(){
   const has=state=>available.includes(state);
   const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
   let states;
-  if(player.carryEnemy){
+  if(player.pipeTravel) states=['idle_walk_0','walk_1'];
+  else if(player.carryEnemy){
     const carry=available.filter(x=>/^carry_\d+$/.test(x)).sort();
     states=!player.onGround?['carry_2_or_jump','carry_1','carry_0']:[carry[Math.floor(tick/7)%Math.max(1,carry.length)],'carry_0','idle_walk_0'];
   }else if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
