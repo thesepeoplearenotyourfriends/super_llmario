@@ -1513,6 +1513,7 @@ function buildCartFromThemeAndMap(theme, map){
     // remain available for missing semantic states and older partial themes.
     recipes: mergeCartValue(DEMO_CART.recipes || {}, theme.recipes || {}),
     animationGroups: cloneData(theme.animationGroups || {}),
+    constructionCatalog: cloneData(theme.constructionCatalog || {}),
     assetCatalog: cloneData(theme.assetCatalog || {}),
     collisionTruth: cloneData(theme.collisionTruth || {}),
     assetTruth: cloneData(theme.assetTruth || {}),
@@ -2267,9 +2268,11 @@ function imageSpriteEffectiveCollision(s){
   if(!k || k === 'none' || k === 'visual' || k === 'decor') return null;
   return c;
 }
+function semanticRoleAsset(role){const families=ACTIVE_CART&&ACTIVE_CART.constructionCatalog&&ACTIVE_CART.constructionCatalog.families;if(!role||!isPlainObject(families))return null;for(const id of Object.keys(families)){const assets=families[id]&&families[id].assets;if(isPlainObject(assets)&&assets[role])return assets[role]}return null}
 function imageSpriteFrame(s){
   if(!s || s.hidden || s._drop) return null;
-  const id = s.image || s.asset || s.id;
+  // Stored semantic pieces are authoritative; runtime only resolves role to theme art.
+  const id = semanticRoleAsset(s.semanticRole) || s.image || s.asset || s.id;
   const rec = cartImageRecord(id);
   const img = rec && rec.img;
   const truth = themeTruthForImage(id) || {};

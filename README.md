@@ -158,3 +158,11 @@ Reward boxes can emit coin bursts or the existing mushroom powerup without hardc
 * **v52 visual systems:** mushroom-cap hero, improved grass/dirt blending, attribution pager, and EPS-derived scenery/prefab math.
 * **v53 external cartridge loader:** adds **Load Cartridge** to the pause menu and supports `.llmcart.txt`, `.llmcart`, `.json`, and `.txt`.
 
+
+## Semantic construction catalog
+
+Theme packs may define the versioned `constructionCatalog` used by Cartbench to
+compile semantic paint and assembly tools into explicit WYSIWYG map pieces. The
+engine draws those stored roles and never autotiles them. See
+[`docs/construction-catalog.md`](docs/construction-catalog.md) for the schema,
+ASCII rules, compatibility behavior, and extension invariant.

@@ -19201,5 +19201,175 @@
     "placement": {
       "grid": 16
     }
+  },
+  "constructionCatalog": {
+    "version": 1,
+    "topologyContract": {
+      "neighborOrder": [
+        "top",
+        "right",
+        "bottom",
+        "left"
+      ],
+      "note": "Catalog keys are explicit editor topology; MarioAI mask suffixes are provenance and are not decoded at runtime."
+    },
+    "families": {
+      "terrain.overground": {
+        "id": "terrain.overground",
+        "name": "Overground terrain",
+        "category": "terrain",
+        "type": "terrain",
+        "dimensions": {
+          "cell": 16
+        },
+        "components": {
+          "topology": {
+            "1000": "terrain.topology.1000",
+            "1100": "terrain.topology.1100",
+            "0100": "terrain.topology.0100",
+            "1110": "terrain.topology.1110",
+            "1010": "terrain.topology.1010",
+            "0110": "terrain.topology.0110",
+            "0101": "terrain.topology.0101",
+            "1101": "terrain.topology.1101",
+            "0010": "terrain.topology.0010",
+            "0011": "terrain.topology.0011",
+            "0001": "terrain.topology.0001",
+            "0111": "terrain.topology.0111",
+            "1011": "terrain.topology.1011"
+          },
+          "default": "terrain.topology.0101"
+        },
+        "assets": {
+          "terrain.topology.1000": "map.terrain-autotile.overground.mask_1000",
+          "terrain.topology.1100": "map.terrain-autotile.overground.mask_1100",
+          "terrain.topology.0100": "map.terrain-autotile.overground.mask_0100",
+          "terrain.topology.1110": "map.terrain-autotile.overground.mask_1110",
+          "terrain.topology.1010": "map.terrain-autotile.overground.mask_1010",
+          "terrain.topology.0110": "map.terrain-autotile.overground.mask_0110",
+          "terrain.topology.0101": "map.terrain-autotile.overground.mask_0101",
+          "terrain.topology.1101": "map.terrain-autotile.overground.mask_1101",
+          "terrain.topology.0010": "map.terrain-autotile.overground.mask_0010",
+          "terrain.topology.0011": "map.terrain-autotile.overground.mask_0011",
+          "terrain.topology.0001": "map.terrain-autotile.overground.mask_0001",
+          "terrain.topology.0111": "map.terrain-autotile.overground.mask_0111",
+          "terrain.topology.1011": "map.terrain-autotile.overground.mask_1011"
+        },
+        "ascii": {
+          "import": "#",
+          "export": "#"
+        }
+      },
+      "pipe.vertical": {
+        "id": "pipe.vertical",
+        "name": "Vertical pipe",
+        "category": "system",
+        "type": "resizable",
+        "dimensions": {
+          "cell": 16,
+          "minW": 2,
+          "maxW": 2,
+          "defaultW": 2,
+          "minH": 2,
+          "defaultH": 4
+        },
+        "components": {
+          "cap": [
+            {
+              "role": "pipe.mouth.left",
+              "x": 0
+            },
+            {
+              "role": "pipe.mouth.right",
+              "x": 1
+            }
+          ],
+          "body": [
+            {
+              "role": "pipe.body.left",
+              "x": 0
+            },
+            {
+              "role": "pipe.body.right",
+              "x": 1
+            }
+          ]
+        },
+        "assets": {
+          "pipe.mouth.left": "map.pipe-vertical.mouth.left",
+          "pipe.mouth.right": "map.pipe-vertical.mouth.right",
+          "pipe.body.left": "map.pipe-vertical.body.left",
+          "pipe.body.right": "map.pipe-vertical.body.right"
+        },
+        "ascii": null
+      },
+      "cannon.vertical": {
+        "id": "cannon.vertical",
+        "name": "Vertical cannon stack",
+        "category": "system",
+        "type": "fixed",
+        "dimensions": {
+          "cell": 16
+        },
+        "components": {
+          "parts": [
+            {
+              "role": "cannon.muzzle",
+              "x": 0,
+              "y": 0
+            },
+            {
+              "role": "cannon.neck",
+              "x": 0,
+              "y": 1
+            },
+            {
+              "role": "cannon.body",
+              "x": 0,
+              "y": 2
+            }
+          ]
+        },
+        "assets": {
+          "cannon.muzzle": "map.cannon-vertical.muzzle",
+          "cannon.neck": "map.cannon-vertical.neck",
+          "cannon.body": "map.cannon-vertical.body"
+        },
+        "ascii": null
+      },
+      "ladder.vertical": {
+        "id": "ladder.vertical",
+        "name": "Ladder strip",
+        "category": "system",
+        "type": "resizable",
+        "dimensions": {
+          "cell": 16,
+          "minW": 1,
+          "maxW": 1,
+          "defaultW": 1,
+          "minH": 2,
+          "defaultH": 5
+        },
+        "components": {
+          "cap": [
+            {
+              "role": "ladder.top",
+              "x": 0
+            }
+          ],
+          "body": [
+            {
+              "role": "ladder.body",
+              "x": 0
+            }
+          ]
+        },
+        "assets": {
+          "ladder.top": "map.ladder-top",
+          "ladder.body": "map.ladder-body"
+        },
+        "ascii": null
+      }
+    }
   }
 }
