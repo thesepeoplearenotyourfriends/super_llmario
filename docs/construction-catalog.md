@@ -37,6 +37,10 @@ Terrain edits reconsider the edited cell plus its four orthogonal neighbors.
 Native maps retain the resolved roles and are authoritative. ASCII import maps
 one symbol to family intent and invokes editor resolution; export collapses all
 roles in that family to one symbol. Consequently ASCII is intentionally lossy.
+Every ASCII document still has one world-space lattice: `@cell` positions all
+catalog and legacy nouns. On import Cartbench projects each semantic terrain
+cell's world rectangle onto the native family grid before resolving topology;
+it never treats an ASCII column number as a native construction-cell number.
 Procedural fallback colors and proportions live in the family's
 `topologyFallback.style`; both Cartbench and the engine call the same generated
 draw helper, so fallback cells are WYSIWYG without runtime topology analysis.
