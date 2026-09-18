@@ -38,10 +38,11 @@
         "constructionGroup": "reference_pipe_1",
         "constructionSize": {
           "w": 2,
-          "h": 4
+          "h": 4,
+          "worldH": 58
         },
         "x": 688,
-        "y": 308,
+        "y": 314,
         "w": 29,
         "h": 29,
         "anchorX": 0,
@@ -55,10 +56,11 @@
         "constructionGroup": "reference_pipe_1",
         "constructionSize": {
           "w": 2,
-          "h": 4
+          "h": 4,
+          "worldH": 58
         },
         "x": 717,
-        "y": 308,
+        "y": 314,
         "w": 29,
         "h": 29,
         "anchorX": 0,
@@ -72,10 +74,11 @@
         "constructionGroup": "reference_pipe_1",
         "constructionSize": {
           "w": 2,
-          "h": 4
+          "h": 4,
+          "worldH": 58
         },
         "x": 688,
-        "y": 337,
+        "y": 343,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -89,10 +92,11 @@
         "constructionGroup": "reference_pipe_1",
         "constructionSize": {
           "w": 2,
-          "h": 4
+          "h": 4,
+          "worldH": 58
         },
         "x": 717,
-        "y": 337,
+        "y": 343,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -106,12 +110,13 @@
         "constructionGroup": "reference_pipe_1",
         "constructionSize": {
           "w": 2,
-          "h": 4
+          "h": 4,
+          "worldH": 58
         },
         "x": 688,
-        "y": 353,
+        "y": 359,
         "w": 29,
-        "h": 16,
+        "h": 13,
         "anchorX": 0,
         "anchorY": 0,
         "visualOnly": true,
@@ -123,46 +128,13 @@
         "constructionGroup": "reference_pipe_1",
         "constructionSize": {
           "w": 2,
-          "h": 4
+          "h": 4,
+          "worldH": 58
         },
         "x": 717,
-        "y": 353,
+        "y": 359,
         "w": 29,
-        "h": 16,
-        "anchorX": 0,
-        "anchorY": 0,
-        "visualOnly": true,
-        "layer": "back"
-      },
-      {
-        "semanticFamily": "pipe.vertical",
-        "image": "map.pipe.vertical.body.left",
-        "constructionGroup": "reference_pipe_1",
-        "constructionSize": {
-          "w": 2,
-          "h": 4
-        },
-        "x": 688,
-        "y": 369,
-        "w": 29,
-        "h": 3,
-        "anchorX": 0,
-        "anchorY": 0,
-        "visualOnly": true,
-        "layer": "back"
-      },
-      {
-        "semanticFamily": "pipe.vertical",
-        "image": "map.pipe.vertical.body.right",
-        "constructionGroup": "reference_pipe_1",
-        "constructionSize": {
-          "w": 2,
-          "h": 4
-        },
-        "x": 717,
-        "y": 369,
-        "w": 29,
-        "h": 3,
+        "h": 13,
         "anchorX": 0,
         "anchorY": 0,
         "visualOnly": true,
@@ -174,10 +146,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1450,
-        "y": 276,
+        "y": 286,
         "w": 29,
         "h": 29,
         "anchorX": 0,
@@ -191,10 +164,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1479,
-        "y": 276,
+        "y": 286,
         "w": 29,
         "h": 29,
         "anchorX": 0,
@@ -208,10 +182,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1450,
-        "y": 305,
+        "y": 315,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -225,10 +200,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1479,
-        "y": 305,
+        "y": 315,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -242,10 +218,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1450,
-        "y": 321,
+        "y": 331,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -259,10 +236,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1479,
-        "y": 321,
+        "y": 331,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -276,10 +254,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1450,
-        "y": 337,
+        "y": 347,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -293,10 +272,11 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1479,
-        "y": 337,
+        "y": 347,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -310,12 +290,13 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1450,
-        "y": 353,
+        "y": 363,
         "w": 29,
-        "h": 16,
+        "h": 9,
         "anchorX": 0,
         "anchorY": 0,
         "visualOnly": true,
@@ -327,46 +308,13 @@
         "constructionGroup": "reference_pipe_2",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1479,
-        "y": 353,
+        "y": 363,
         "w": 29,
-        "h": 16,
-        "anchorX": 0,
-        "anchorY": 0,
-        "visualOnly": true,
-        "layer": "back"
-      },
-      {
-        "semanticFamily": "pipe.vertical",
-        "image": "map.pipe.vertical.body.left",
-        "constructionGroup": "reference_pipe_2",
-        "constructionSize": {
-          "w": 2,
-          "h": 6
-        },
-        "x": 1450,
-        "y": 369,
-        "w": 29,
-        "h": 3,
-        "anchorX": 0,
-        "anchorY": 0,
-        "visualOnly": true,
-        "layer": "back"
-      },
-      {
-        "semanticFamily": "pipe.vertical",
-        "image": "map.pipe.vertical.body.right",
-        "constructionGroup": "reference_pipe_2",
-        "constructionSize": {
-          "w": 2,
-          "h": 6
-        },
-        "x": 1479,
-        "y": 369,
-        "w": 29,
-        "h": 3,
+        "h": 9,
         "anchorX": 0,
         "anchorY": 0,
         "visualOnly": true,
@@ -378,10 +326,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1740,
-        "y": 276,
+        "y": 286,
         "w": 29,
         "h": 29,
         "anchorX": 0,
@@ -395,10 +344,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1769,
-        "y": 276,
+        "y": 286,
         "w": 29,
         "h": 29,
         "anchorX": 0,
@@ -412,10 +362,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1740,
-        "y": 305,
+        "y": 315,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -429,10 +380,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1769,
-        "y": 305,
+        "y": 315,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -446,10 +398,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1740,
-        "y": 321,
+        "y": 331,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -463,10 +416,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1769,
-        "y": 321,
+        "y": 331,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -480,10 +434,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1740,
-        "y": 337,
+        "y": 347,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -497,10 +452,11 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1769,
-        "y": 337,
+        "y": 347,
         "w": 29,
         "h": 16,
         "anchorX": 0,
@@ -514,12 +470,13 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1740,
-        "y": 353,
+        "y": 363,
         "w": 29,
-        "h": 16,
+        "h": 9,
         "anchorX": 0,
         "anchorY": 0,
         "visualOnly": true,
@@ -531,46 +488,13 @@
         "constructionGroup": "reference_pipe_3",
         "constructionSize": {
           "w": 2,
-          "h": 6
+          "h": 6,
+          "worldH": 86
         },
         "x": 1769,
-        "y": 353,
+        "y": 363,
         "w": 29,
-        "h": 16,
-        "anchorX": 0,
-        "anchorY": 0,
-        "visualOnly": true,
-        "layer": "back"
-      },
-      {
-        "semanticFamily": "pipe.vertical",
-        "image": "map.pipe.vertical.body.left",
-        "constructionGroup": "reference_pipe_3",
-        "constructionSize": {
-          "w": 2,
-          "h": 6
-        },
-        "x": 1740,
-        "y": 369,
-        "w": 29,
-        "h": 3,
-        "anchorX": 0,
-        "anchorY": 0,
-        "visualOnly": true,
-        "layer": "back"
-      },
-      {
-        "semanticFamily": "pipe.vertical",
-        "image": "map.pipe.vertical.body.right",
-        "constructionGroup": "reference_pipe_3",
-        "constructionSize": {
-          "w": 2,
-          "h": 6
-        },
-        "x": 1769,
-        "y": 369,
-        "w": 29,
-        "h": 3,
+        "h": 9,
         "anchorX": 0,
         "anchorY": 0,
         "visualOnly": true,
@@ -583,7 +507,7 @@
         "kind": "pipe",
         "x": 688,
         "y": 372,
-        "h": 64,
+        "h": 58,
         "scale": 1,
         "layer": "back",
         "solid": true,
@@ -592,13 +516,13 @@
         "constructionGroup": "reference_pipe_1",
         "constructionBinding": "pipe",
         "resolvedVisuals": true,
-        "length": 64
+        "length": 58
       },
       {
         "kind": "pipe",
         "x": 1450,
         "y": 372,
-        "h": 96,
+        "h": 86,
         "scale": 1,
         "layer": "back",
         "solid": true,
@@ -610,13 +534,13 @@
         "constructionGroup": "reference_pipe_2",
         "constructionBinding": "pipe",
         "resolvedVisuals": true,
-        "length": 96
+        "length": 86
       },
       {
         "kind": "pipe",
         "x": 1740,
         "y": 372,
-        "h": 96,
+        "h": 86,
         "scale": 1,
         "layer": "back",
         "solid": true,
@@ -628,7 +552,7 @@
         "constructionGroup": "reference_pipe_3",
         "constructionBinding": "pipe",
         "resolvedVisuals": true,
-        "length": 96
+        "length": 86
       }
     ]
   },
