@@ -3,7 +3,7 @@
   "mapVersion": 1,
   "id": "marioai-reference-playground",
   "title": "MarioAI Semantic Reference Playground",
-  "theme": "marioai",
+  "theme": "marioai-semantic-nonempty",
   "world": {
     "width": 3400,
     "height": 520,
@@ -42,11 +42,12 @@
         },
         "x": 688,
         "y": 308,
-        "w": 16,
-        "h": 16,
+        "w": 29,
+        "h": 29,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -56,13 +57,14 @@
           "w": 2,
           "h": 4
         },
-        "x": 704,
+        "x": 717,
         "y": 308,
-        "w": 16,
-        "h": 16,
+        "w": 29,
+        "h": 29,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -73,12 +75,13 @@
           "h": 4
         },
         "x": 688,
-        "y": 324,
-        "w": 16,
+        "y": 337,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -88,13 +91,14 @@
           "w": 2,
           "h": 4
         },
-        "x": 704,
-        "y": 324,
-        "w": 16,
+        "x": 717,
+        "y": 337,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -105,12 +109,13 @@
           "h": 4
         },
         "x": 688,
-        "y": 340,
-        "w": 16,
+        "y": 353,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -120,13 +125,14 @@
           "w": 2,
           "h": 4
         },
-        "x": 704,
-        "y": 340,
-        "w": 16,
+        "x": 717,
+        "y": 353,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -137,12 +143,13 @@
           "h": 4
         },
         "x": 688,
-        "y": 356,
-        "w": 16,
-        "h": 16,
+        "y": 369,
+        "w": 29,
+        "h": 3,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -152,13 +159,14 @@
           "w": 2,
           "h": 4
         },
-        "x": 704,
-        "y": 356,
-        "w": 16,
-        "h": 16,
+        "x": 717,
+        "y": 369,
+        "w": 29,
+        "h": 3,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -170,11 +178,12 @@
         },
         "x": 1450,
         "y": 276,
-        "w": 16,
-        "h": 16,
+        "w": 29,
+        "h": 29,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -184,13 +193,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1466,
+        "x": 1479,
         "y": 276,
-        "w": 16,
-        "h": 16,
+        "w": 29,
+        "h": 29,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -201,12 +211,13 @@
           "h": 6
         },
         "x": 1450,
-        "y": 292,
-        "w": 16,
+        "y": 305,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -216,13 +227,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1466,
-        "y": 292,
-        "w": 16,
+        "x": 1479,
+        "y": 305,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -233,12 +245,13 @@
           "h": 6
         },
         "x": 1450,
-        "y": 308,
-        "w": 16,
+        "y": 321,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -248,13 +261,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1466,
-        "y": 308,
-        "w": 16,
+        "x": 1479,
+        "y": 321,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -265,12 +279,13 @@
           "h": 6
         },
         "x": 1450,
-        "y": 324,
-        "w": 16,
+        "y": 337,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -280,13 +295,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1466,
-        "y": 324,
-        "w": 16,
+        "x": 1479,
+        "y": 337,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -297,12 +313,13 @@
           "h": 6
         },
         "x": 1450,
-        "y": 340,
-        "w": 16,
+        "y": 353,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -312,13 +329,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1466,
-        "y": 340,
-        "w": 16,
+        "x": 1479,
+        "y": 353,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -329,12 +347,13 @@
           "h": 6
         },
         "x": 1450,
-        "y": 356,
-        "w": 16,
-        "h": 16,
+        "y": 369,
+        "w": 29,
+        "h": 3,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -344,13 +363,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1466,
-        "y": 356,
-        "w": 16,
-        "h": 16,
+        "x": 1479,
+        "y": 369,
+        "w": 29,
+        "h": 3,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -362,11 +382,12 @@
         },
         "x": 1740,
         "y": 276,
-        "w": 16,
-        "h": 16,
+        "w": 29,
+        "h": 29,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -376,13 +397,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1756,
+        "x": 1769,
         "y": 276,
-        "w": 16,
-        "h": 16,
+        "w": 29,
+        "h": 29,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -393,12 +415,13 @@
           "h": 6
         },
         "x": 1740,
-        "y": 292,
-        "w": 16,
+        "y": 305,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -408,13 +431,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1756,
-        "y": 292,
-        "w": 16,
+        "x": 1769,
+        "y": 305,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -425,12 +449,13 @@
           "h": 6
         },
         "x": 1740,
-        "y": 308,
-        "w": 16,
+        "y": 321,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -440,13 +465,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1756,
-        "y": 308,
-        "w": 16,
+        "x": 1769,
+        "y": 321,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -457,12 +483,13 @@
           "h": 6
         },
         "x": 1740,
-        "y": 324,
-        "w": 16,
+        "y": 337,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -472,13 +499,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1756,
-        "y": 324,
-        "w": 16,
+        "x": 1769,
+        "y": 337,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -489,12 +517,13 @@
           "h": 6
         },
         "x": 1740,
-        "y": 340,
-        "w": 16,
+        "y": 353,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -504,13 +533,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1756,
-        "y": 340,
-        "w": 16,
+        "x": 1769,
+        "y": 353,
+        "w": 29,
         "h": 16,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -521,12 +551,13 @@
           "h": 6
         },
         "x": 1740,
-        "y": 356,
-        "w": 16,
-        "h": 16,
+        "y": 369,
+        "w": 29,
+        "h": 3,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       },
       {
         "semanticFamily": "pipe.vertical",
@@ -536,13 +567,14 @@
           "w": 2,
           "h": 6
         },
-        "x": 1756,
-        "y": 356,
-        "w": 16,
-        "h": 16,
+        "x": 1769,
+        "y": 369,
+        "w": 29,
+        "h": 3,
         "anchorX": 0,
         "anchorY": 0,
-        "visualOnly": true
+        "visualOnly": true,
+        "layer": "back"
       }
     ],
     "pipes": [
@@ -552,7 +584,7 @@
         "x": 688,
         "y": 372,
         "h": 64,
-        "scale": 0.5517241379310345,
+        "scale": 1,
         "layer": "back",
         "solid": true,
         "global": true,
@@ -567,7 +599,7 @@
         "x": 1450,
         "y": 372,
         "h": 96,
-        "scale": 0.5517241379310345,
+        "scale": 1,
         "layer": "back",
         "solid": true,
         "global": true,
@@ -585,7 +617,7 @@
         "x": 1740,
         "y": 372,
         "h": 96,
-        "scale": 0.5517241379310345,
+        "scale": 1,
         "layer": "back",
         "solid": true,
         "global": true,

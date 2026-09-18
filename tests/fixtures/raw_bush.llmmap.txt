@@ -3,7 +3,7 @@
   "mapVersion": 1,
   "id": "raw-canonical-bush-fixture",
   "title": "Raw Canonical Bush Fixture",
-  "theme": "marioai",
+  "theme": "marioai-semantic-nonempty",
   "world": {"width": 640, "height": 480, "groundY": 372},
   "playerSpawn": {"x": 80, "y": 324},
   "placement": {"autoCleanup": false},

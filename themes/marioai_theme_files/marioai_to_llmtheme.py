@@ -161,7 +161,7 @@ def make_theme(src: Path) -> tuple[dict, dict]:
     license_text = (src/"LICENSE").read_text(encoding="utf-8",errors="replace") if (src/"LICENSE").is_file() else None
     resource={"id":"medovina_marioai_resources","title":"MarioAI resource sheets","source":"medovina/MarioAI","url":"https://github.com/medovina/MarioAI","sourceFiles":list(THEME_SHEETS)+["tiles.dat"],"copyright":"Copyright (c) 2009-2015, Sergey Karakovskiy, Julian Togelius and Jakub Gemrot; all rights reserved.","license":"MarioAI BSD-style license; retain copyright, conditions, and disclaimer."}
     if license_text: resource["licenseText"]=license_text
-    theme={"format":"llmario-theme-pack-v1","themeVersion":1,"id":"marioai","title":"MarioAI Complete Nonempty Reference Theme","engineContract":"llmario-theme-pack-v1+marioai-semantics-v1",
+    theme={"format":"llmario-theme-pack-v1","themeVersion":1,"id":"marioai-semantic-nonempty","title":"MarioAI Complete Nonempty Reference Theme","engineContract":"llmario-theme-pack-v1+marioai-semantics-v1",
       "source":{"repository":"https://github.com/medovina/MarioAI","resourcePath":"src/engine/resources","converter":"marioai_to_llmtheme.py","semanticCompiler":"compile_marioai_semantics.py","notes":["Only visually non-empty cells are embedded as image assets.","Canonical names and semantic metadata are owned by the semantic compiler.","All map behavior bytes remain preserved even when a tile has no visual asset."]},
       "resources":[resource],"assets":{"images":images},"assetCatalog":catalog,"animationGroups":dict(sorted(animations.items())),
       "collisionTruth":{"source":"MarioAI tiles.dat","tileSize":16,"assets":collisions},"sourceIndex":dict(source_index),

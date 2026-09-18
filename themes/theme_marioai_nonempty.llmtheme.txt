@@ -1,7 +1,7 @@
 {
   "format": "llmario-theme-pack-v1",
   "themeVersion": 1,
-  "id": "marioai",
+  "id": "marioai-semantic-nonempty",
   "title": "MarioAI Semantic Non-Empty Reference Theme",
   "engineContract": "llmario-theme-pack-v1+marioai-semantics-v1",
   "source": {
