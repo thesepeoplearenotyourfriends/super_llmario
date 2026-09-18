@@ -16,7 +16,7 @@
   "resourceScenery": {
     "sprites": [],
     "pipes": [
-      {"kind":"pipe","x":688,"y":372,"h":58,"scale":1,"layer":"back","solid":true,"global":true,"noTravel":true},
+      {"id":"flower_pipe","kind":"pipe","x":688,"y":372,"h":58,"scale":1,"layer":"back","solid":true,"global":true,"noTravel":true},
       {"kind":"pipe","x":1450,"y":372,"h":86,"scale":1,"layer":"back","solid":true,"global":true,"target":{"x":1775,"y":324}},
       {"kind":"pipe","x":1740,"y":372,"h":86,"scale":1,"layer":"back","solid":true,"global":true,"target":{"x":1408,"y":324}}
     ]
@@ -42,7 +42,7 @@
   "stars": [{"x":2930,"y":174}],
   "enemies": [
     {"x":535,"y":338,"w":34,"h":34,"vx":-0.65,"min":480,"max":620,"kind":"spiky"},
-    {"x":700,"y":280,"w":34,"h":34,"vx":0,"min":700,"max":700,"kind":"flower","cycleFrames":190,"riseFrames":32,"exposedFrames":70,"recedeFrames":32},
+    {"x":700,"y":280,"w":34,"h":34,"vx":0,"min":700,"max":700,"kind":"flower","hostPipe":"flower_pipe","cycleFrames":190,"riseFrames":32,"exposedFrames":70,"recedeFrames":32},
     {"x":1050,"y":338,"w":34,"h":34,"vx":-0.72,"min":990,"max":1180,"kind":"green_koopa","winged":true,"flightHeight":78},
     {"x":1260,"y":338,"w":34,"h":34,"vx":0.72,"min":1200,"max":1370,"kind":"red_koopa","winged":true,"flightHeight":62},
     {"x":1900,"y":338,"w":34,"h":34,"vx":-0.72,"min":1820,"max":2010,"kind":"red_koopa"},

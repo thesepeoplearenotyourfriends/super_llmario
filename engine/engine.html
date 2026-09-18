@@ -1713,7 +1713,8 @@ const player = {
   pSpeed: false,
   flightFrames: 0,
   fireCooldown: 0,
-  carryEnemy: null
+  carryEnemy: null,
+  pipeTravel: null
 };
 
 function reset(full){
@@ -1735,6 +1736,7 @@ function reset(full){
   player.flightFrames = 0;
   player.fireCooldown = 0;
   player.carryEnemy = null;
+  player.pipeTravel = null;
   player.w = 34;
   player.h = 48;
   cam = Math.max(0, Math.min(WORLD_W - W, player.x - 210));
@@ -1755,7 +1757,7 @@ function reset(full){
     stars.forEach(s => s.taken = false);
     enemies.forEach(e => {
       const walkW=e._walkW||e.w;
-      e.alive=true; e.flat=0; e.state='walking'; e.winged=!!e._startsWinged; e.wingPhase=0; e.wingFalling=false; e.wingVy=0; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
+      e.alive=true; e.flat=0; e.state='walking'; e.winged=!!e._startsWinged; e.wingPhase=0; e.wingFalling=false; e.wingVy=0; e.flowerClock=null; e._flowerSuppressed=false; e.pickupLock=false; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
       e.w=walkW; e.h=e._walkH||e.h; e.x=e._originX; e.y=e._originY;
     });
     powerups.length = 0;
@@ -2161,19 +2163,82 @@ function findPlayerEntryPipe(){
   }
   return null;
 }
+function destinationPipeFor(target, entryPipe){
+  let best=null, bestScore=Infinity;
+  for(const p of (((ACTIVE_CART.resourceScenery || {}).pipes) || [])){
+    if(p===entryPipe) continue;
+    const r=sceneryPipeSolid(p);
+    const tx0=target.x,tx1=target.x+player.w,ty0=target.y,ty1=target.y+player.h;
+    const dx=Math.max(0,r.x-tx1,tx0-(r.x+r.w));
+    const dy=Math.max(0,r.y-ty1,ty0-(r.y+r.h));
+    const score=dx+dy+.01*(Math.abs((r.x+r.w/2)-(tx0+player.w/2))+Math.abs((r.y+r.h/2)-(ty0+player.h/2)));
+    if(score<bestScore){bestScore=score;best={pipe:p,rect:r};}
+  }
+  return bestScore<=48?best:null;
+}
+function pipeTravelPose(rect, hidden){
+  const d=rect.direction||'up';
+  if(d==='down') return {x:rect.x+(rect.w-player.w)/2,y:rect.y+rect.h-(hidden?player.h:0)};
+  if(d==='left') return {x:rect.x-(hidden?0:player.w),y:rect.y+(rect.h-player.h)/2};
+  if(d==='right') return {x:rect.x+rect.w-(hidden?player.w:0),y:rect.y+(rect.h-player.h)/2};
+  return {x:rect.x+(rect.w-player.w)/2,y:rect.y-(hidden?0:player.h)};
+}
+function pipeTravelVector(rect, inward){
+  const d=rect.direction||'up', sign=inward?1:-1;
+  if(d==='down') return {x:0,y:-sign};
+  if(d==='left') return {x:sign,y:0};
+  if(d==='right') return {x:-sign,y:0};
+  return {x:0,y:sign};
+}
 function enterPipeTravel(hit){
   if(!hit || !hit.target) return false;
   playSfx('powerup');
   leaveClimb();
-  player.x = hit.target.x;
-  player.y = hit.target.y;
+  const destination=destinationPipeFor(hit.target,hit.pipe);
+  const start=pipeTravelPose(hit.rect,false);
+  player.x=start.x; player.y=start.y;
   player.vx = 0;
   player.vy = 0;
-  player.onGround = false;
-  player.pipeCooldown = 36;
-  setRowCameraFromPlayer();
-  cam = Math.max(0, Math.min(WORLD_W - W, player.x - 210));
+  player.onGround = true;
+  player.pipeTravel={phase:'entry',entry:hit.pipe,entryRect:hit.rect,target:hit.target,destination:destination};
+  positionHeldShell();
   setToast(['Pipe travel'], 42);
+  return true;
+}
+function updatePipeTravel(){
+  const travel=player.pipeTravel;
+  if(!travel) return false;
+  if(input.runRelease&&player.carryEnemy) travel.releaseCarry=true;
+  player.vx=0; player.vy=0; player.onGround=false;
+  if(travel.phase==='entry'){
+    const inward=pipeTravelVector(travel.entryRect,true), hidden=pipeTravelPose(travel.entryRect,true);
+    player.x+=inward.x*2.25; player.y+=inward.y*2.25;
+    const reached=inward.x>0?player.x>=hidden.x:inward.x<0?player.x<=hidden.x:inward.y>0?player.y>=hidden.y:player.y<=hidden.y;
+    if(reached){
+      const d=travel.destination;
+      if(!d){
+        player.x=travel.target.x;player.y=travel.target.y;player.pipeTravel=null;player.pipeCooldown=36;player.onGround=false;
+        positionHeldShell();
+        if(travel.releaseCarry) releaseHeldShell(true);
+        setRowCameraFromPlayer();cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));return true;
+      }
+      travel.exitRect=d.rect; travel.phase='exit';
+      const inside=pipeTravelPose(d.rect,true);player.x=inside.x;player.y=inside.y;
+      setRowCameraFromPlayer();
+      cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));
+    }
+  }else{
+    const outward=pipeTravelVector(travel.exitRect,false), emerged=pipeTravelPose(travel.exitRect,false);
+    player.x+=outward.x*2.25;player.y+=outward.y*2.25;
+    const reached=outward.x>0?player.x>=emerged.x:outward.x<0?player.x<=emerged.x:outward.y>0?player.y>=emerged.y:player.y<=emerged.y;
+    if(reached){
+      player.x=emerged.x;player.y=emerged.y;player.pipeTravel=null;player.pipeCooldown=36;
+      player.onGround=(travel.exitRect.direction||'up')==='up';
+      positionHeldShell();
+      if(travel.releaseCarry) releaseHeldShell(true);
+    }
+  }
+  positionHeldShell();
   return true;
 }
 function themeTruthForImage(id){
@@ -2755,6 +2820,24 @@ function shellCapableEnemy(e){
 }
 function spikedEnemy(e){ return /spik/.test(String((e&&e.kind)||'').toLowerCase()); }
 function flowerEnemy(e){ return /flower|emerging/.test(String((e&&e.kind)||'').toLowerCase()); }
+function flowerHostPipe(e){
+  if(!flowerEnemy(e)) return null;
+  const pipes=(((ACTIVE_CART.resourceScenery||{}).pipes)||[]);
+  if(e.hostPipe){const named=pipes.find(p=>String(p.id||'')===String(e.hostPipe));if(named)return named;}
+  let best=null,bestScore=Infinity;
+  for(const p of pipes){
+    const r=sceneryPipeSolid(p); if(r.direction!=='up')continue;
+    const score=Math.abs((r.x+r.w/2)-(e._originX+e.w/2))+Math.abs(r.y-(e._originY+e.h));
+    if(score<bestScore&&score<=24){best=p;bestScore=score;}
+  }
+  return best;
+}
+function playerOccupiesPipeMouth(p){
+  if(!p)return false;
+  const r=sceneryPipeSolid(p);
+  const mouth={x:r.x,y:r.y-player.h,w:r.w,h:player.h+12};
+  return aabb(player,mouth);
+}
 function enterKoopaShell(e, state){
   const feet=e.y+e.h;
   e._walkW=e._walkW||e.w; e._walkH=e._walkH||e.h;
@@ -2776,7 +2859,7 @@ function carryShell(e){
 function positionHeldShell(){
   const e=player.carryEnemy;
   if(!e || !e.alive){player.carryEnemy=null;return;}
-  e.x=player.face>0 ? player.x+player.w-3 : player.x-e.w+3;
+  e.x=player.face>0 ? player.x+player.w-7 : player.x-e.w+7;
   e.y=player.y+player.h-e.h-7;
 }
 function releaseHeldShell(throwIt){
@@ -2809,6 +2892,7 @@ function stompEnemy(e){
       e.state = 'shellStopped';
       e.shellVx = 0;
       e.shellTimer = 0;
+      e.pickupLock = true;
     }else if(e.state === 'walking'){
       enterKoopaShell(e,'shellStopped');
     }else if(e.state === 'shellStopped'){
@@ -2863,7 +2947,13 @@ function updateShellVertical(e){
 }
 function updateEnemyMotion(e){
   if(flowerEnemy(e)){
-    const cycle=Math.max(150,e.cycleFrames||210), phase=(tick+(e.phase||0))%cycle;
+    const host=flowerHostPipe(e);
+    if(host&&playerOccupiesPipeMouth(host)){e._flowerSuppressed=true;e.exposure=0;e.x=e._originX;e.y=e._originY+e.h;return;}
+    const cycle=Math.max(150,e.cycleFrames||210);
+    if(e._flowerSuppressed){e.flowerClock=0;e._flowerSuppressed=false;}
+    else if(finiteNumber(e.flowerClock))e.flowerClock=(e.flowerClock+1)%cycle;
+    else e.flowerClock=(tick+(e.phase||0))%cycle;
+    const phase=e.flowerClock;
     const rise=e.riseFrames||34, exposed=e.exposedFrames||76, fall=e.recedeFrames||34;
     let shown=0;
     if(phase<rise) shown=phase/rise;
@@ -3102,6 +3192,11 @@ function update(){
     updatePausePanel();
     return;
   }
+  if(updatePipeTravel()){
+    input.jumpTap=false; input.runTap=false; input.runRelease=false;
+    let targetCam=player.x-210; targetCam=Math.max(0,Math.min(WORLD_W-W,targetCam)); cam+=(targetCam-cam)*.16;
+    return;
+  }
   if(shake > 0) shake *= 0.84;
   for(const b of floatingBlocks) b.prevY = currentBlockY(b);
   floatingBlocks.forEach(b => { if(b.busted) return; b.bob += 0.045; if(b.bump > 0) b.bump -= 1; });
@@ -3130,8 +3225,6 @@ function update(){
   if(player.pipeCooldown > 0) player.pipeCooldown -= 1;
   if(player.fireCooldown > 0) player.fireCooldown -= 1;
   const fireRequested=input.runTap;
-  const touchingHeldCandidate=enemies.find(e=>e.alive&&e.state==='shellStopped'&&aabb(player,e));
-  if(input.run && touchingHeldCandidate) carryShell(touchingHeldCandidate);
   if(input.runRelease && player.carryEnemy) releaseHeldShell(true);
   input.runTap=false;
   input.runRelease=false;
@@ -3167,6 +3260,7 @@ function update(){
   if(pipeHit && enterPipeTravel(pipeHit)){
     input.jumpTap = false;
     input.down = false;
+    return;
   }
 
   let climbZone = findPlayerClimbZone();
@@ -3239,6 +3333,7 @@ function update(){
   const stompVy = player.vy;
   for(const e of enemies){
     if(!e.alive){ if(e.flat > 0) e.flat -= 1; continue; }
+    if(e.pickupLock && !aabb(player,e)) e.pickupLock=false;
     updateEnemyMotion(e);
   }
   resolveMovingShellHits();
@@ -3249,7 +3344,8 @@ function update(){
       for(const e of stompHits) stompEnemy(e);
       player.vy = -8.6;
     }else{
-      const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped');
+      const lockedShells=enemyHits.filter(e=>shellCapableEnemy(e)&&e.state==='shellStopped'&&e.pickupLock);
+      const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped' && !e.pickupLock);
       for(const e of kickable){
         if(input.run) carryShell(e);
         else{
@@ -3259,7 +3355,9 @@ function update(){
           e.x = kickRight ? player.x + player.w : player.x - e.w;
         }
       }
-      if(enemyHits.some(e => !kickable.includes(e))) hurtPlayer();
+      const harmful=enemyHits.filter(e=>!kickable.includes(e)&&!lockedShells.includes(e));
+      for(const e of harmful) if(shellCapableEnemy(e)&&e.state==='shellMoving') e.pickupLock=true;
+      if(harmful.length) hurtPlayer();
     }
   }
   // Resolve shell contact first: Run picks up a stopped shell instead of also
@@ -4139,6 +4237,12 @@ function drawEnemyAttachments(e){
   drawThemedAsset(id,{x:e.x-9,y:e.y+2,w:18,h:25},{mirror:true});
   drawThemedAsset(id,{x:e.x+e.w-9,y:e.y+2,w:18,h:25});
 }
+function drawPipeMountedFlowers(){
+  for(const e of enemies){
+    const host=flowerHostPipe(e);
+    if(e.alive&&host&&!playerOccupiesPipeMouth(host)) drawBlob(e);
+  }
+}
 function drawProjectiles(){
   for(const p of projectiles){if(!p.alive)continue;const id=animationAsset('projectile.fireball',tick+p.x,3);if(id)drawThemedAsset(id,p);else{ctx.fillStyle='#ff8b25';ctx.beginPath();ctx.arc(worldX(p.x+7),p.y+7,6,0,Math.PI*2);ctx.fill();}}
 }
@@ -4166,7 +4270,12 @@ function playerMotionAsset(){
   const has=state=>available.includes(state);
   const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
   let states;
-  if(player.carryEnemy){
+  if(player.pipeTravel) states=['idle_walk_0','walk_1'];
+  else if(player.carryEnemy&&!player.big){
+    if(!player.onGround) states=['carry_1_or_jump','carry_0'];
+    else if(speed>.15) states=[Math.floor(tick/7)%2?'carry_1_or_jump':'carry_0','carry_0'];
+    else states=['carry_0','idle_walk_0'];
+  }else if(player.carryEnemy){
     const carry=available.filter(x=>/^carry_\d+$/.test(x)).sort();
     states=!player.onGround?['carry_2_or_jump','carry_1','carry_0']:[carry[Math.floor(tick/7)%Math.max(1,carry.length)],'carry_0','idle_walk_0'];
   }else if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
@@ -4514,6 +4623,11 @@ function draw(){
   drawSky();
   ctx.save();
   ctx.translate(0, -Math.round(camY));
+  if(player.pipeTravel){
+    if(player.carryEnemy) drawBlob(player.carryEnemy);
+    drawPlayer();
+  }
+  drawPipeMountedFlowers();
   drawResourceSceneryBack();
   for(const sign of signposts){
     if(sign.kind === 'arrow') drawArrowSign(sign.x, sign.y);
@@ -4529,9 +4643,9 @@ function draw(){
   powerups.forEach(drawPowerup);
   drawProjectiles();
   drawFlowers();
-  enemies.forEach(e=>{drawEnemyAttachments(e);drawBlob(e);});
+  enemies.forEach(e=>{if(flowerHostPipe(e)||(player.pipeTravel&&e===player.carryEnemy))return;drawEnemyAttachments(e);drawBlob(e);});
   drawSceneryFront();
-  drawPlayer();
+  if(!player.pipeTravel) drawPlayer();
   drawSceneryForeground();
 
   ctx.restore();
