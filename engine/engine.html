@@ -366,21 +366,7 @@ const ART_RESOURCES = [
   }
 ];
 
-const DEMO_CART = {
-  format:'llmcart-toybox-recipe',
-  cartVersion:2,
-  engineContract:'toybox-recipe-side-scroller-v1',
-  fundamentals:LEVEL_FUNDAMENTALS,
-  resources:ART_RESOURCES,
-  title:'LLMario Physics Plains',
-  world:{width:4300, groundY:372},
-  playerSpawn:{x:78,y:276},
-  hud:{title:'SUPER LLMARIO', logoSmall:'SUPER', logoBig:'LLMARIO', shortName:'JUMP TEST'},
-  messages:{
-    welcome:['Physics Test Plains','Walk, run, hop, and clear the gaps.'],
-    win:'Physics test cartridge clear!'
-  },
-  audio:{
+const ENGINE_AUDIO_DEFAULTS = {
     // Same RetroCharm synth identity as the future MIDI/theme player.
     // This keeps SFX and later music on one shared AudioContext/synth rail.
     defaults:{volume:.70,transpose:0,charm:1,space:0,crunch:0,sfxVolume:.85,musicVolume:.45},
@@ -396,6 +382,24 @@ const DEMO_CART = {
       hurt:[{role:'bass',note:55,vel:.58,at:0,dur:.055},{role:'bass',note:48,vel:.48,at:.070,dur:.075}],
       clear:[{role:'bell',note:72,vel:.55,at:0,dur:.075},{role:'bell',note:76,vel:.58,at:.080,dur:.075},{role:'bell',note:79,vel:.62,at:.160,dur:.100},{role:'spark',note:88,vel:.42,at:.245,dur:.110}]
     }
+  };
+
+// Explicit legacy/example content. It is retained for old monolithic cartridge
+// compatibility, but it is not the engine's startup theme or a split-theme
+// recipe library.
+const LEGACY_PHYSICS_CART = {
+  format:'llmcart-toybox-recipe',
+  cartVersion:2,
+  engineContract:'toybox-recipe-side-scroller-v1',
+  fundamentals:LEVEL_FUNDAMENTALS,
+  resources:ART_RESOURCES,
+  title:'LLMario Physics Plains',
+  world:{width:4300, groundY:372},
+  playerSpawn:{x:78,y:276},
+  hud:{title:'SUPER LLMARIO', logoSmall:'SUPER', logoBig:'LLMARIO', shortName:'JUMP TEST'},
+  messages:{
+    welcome:['Physics Test Plains','Walk, run, hop, and clear the gaps.'],
+    win:'Physics test cartridge clear!'
   },
   theme:{
     skyTop:'#153b76', skyBottom:'#d9fbff',
@@ -586,11 +590,24 @@ const DEMO_CART = {
    DEMO CARTRIDGE ENDS HERE
    ENGINE STARTS HERE
    ============================================================ */
-let ACTIVE_CART = DEMO_CART;
-let ACTIVE_THEME_DOC = null;
-let ACTIVE_THEME_LABEL = "";
-let PENDING_MAP_DOC = null;
-let PENDING_MAP_LABEL = "";
+function loadBundledJson(path){
+  const request = new XMLHttpRequest();
+  request.open('GET', path, false);
+  request.send(null);
+  if((request.status >= 200 && request.status < 300) || (request.status === 0 && request.responseText)) return JSON.parse(request.responseText);
+  throw new Error('Could not load bundled content: ' + path + ' (' + request.status + ')');
+}
+function loadDefaultMarioAiCart(){
+  const theme = loadBundledJson('../themes/theme_marioai_nonempty.llmtheme.txt');
+  const map = loadBundledJson('../maps/map_marioai_reference.llmmap.txt');
+  return {theme, map, cart:buildCartFromThemeAndMap(theme, map)};
+}
+const DEFAULT_CONTENT = loadDefaultMarioAiCart();
+let ACTIVE_CART = DEFAULT_CONTENT.cart;
+let ACTIVE_THEME_DOC = DEFAULT_CONTENT.theme;
+let ACTIVE_THEME_LABEL = DEFAULT_CONTENT.theme.title || 'MarioAI theme';
+let PENDING_MAP_DOC = DEFAULT_CONTENT.map;
+let PENDING_MAP_LABEL = DEFAULT_CONTENT.map.title || 'MarioAI reference map';
 let WORLD_W = ACTIVE_CART.world.width;
 let GROUND_Y = ACTIVE_CART.world.groundY;
 
@@ -1555,9 +1572,9 @@ function buildCartFromThemeAndMap(theme, map){
     resources: cloneData(theme.resources || map.resources || []),
     assets: cloneData(theme.assets || {}),
     imageAssets: cloneData(theme.imageAssets || {}),
-    // Split themes override only the recipes they own. Durable engine fallbacks
-    // remain available for missing semantic states and older partial themes.
-    recipes: mergeCartValue(DEMO_CART.recipes || {}, theme.recipes || {}),
+    // A split theme is visually complete on its own. Missing recipes fall back
+    // to engine drawing primitives, never to an unrelated content cartridge.
+    recipes: cloneData(theme.recipes || {}),
     animationGroups: cloneData(theme.animationGroups || {}),
     constructionCatalog: cloneData(theme.constructionCatalog || {}),
     assetCatalog: cloneData(theme.assetCatalog || {}),
@@ -1568,7 +1585,10 @@ function buildCartFromThemeAndMap(theme, map){
     playerSpawn: cloneData(map.playerSpawn || {x:78,y:276}),
     hud: cloneData(map.hud || {title:'SUPER LLMARIO', shortName:'MAP'}),
     messages: normalizeMapMessages(map),
-    audio: cloneData(map.audio || theme.audio || {}),
+    audio: mergeCartValue(
+      mergeCartValue(ENGINE_AUDIO_DEFAULTS, (theme.defaults && theme.defaults.audio) || theme.audio || {}),
+      map.audio || {}
+    ),
     background: cloneData(map.background || theme.background || (theme.defaults && theme.defaults.background) || {}),
     placement: cloneData(map.placement || {autoCleanup:false}),
     resourceScenery: cloneData(map.resourceScenery || {}),
@@ -1593,7 +1613,8 @@ function normalizeCart(raw){
   if(!isPlainObject(raw)) throw new Error('Cartridge must be a JSON object.');
   if(raw.format && raw.format !== 'llmcart-toybox-recipe') throw new Error('Unsupported cartridge format: '+raw.format);
   const rawHasResourceScenery = Object.prototype.hasOwnProperty.call(raw, 'resourceScenery');
-  const cart = mergeCartValue(DEMO_CART, raw);
+  const cart = mergeCartValue(LEGACY_PHYSICS_CART, raw);
+  cart.audio = mergeCartValue(ENGINE_AUDIO_DEFAULTS, raw.audio || {});
   cart.format = 'llmcart-toybox-recipe';
   cart.cartVersion = cart.cartVersion || 2;
   convertTruthSlopePlatformsToSprites(cart);
@@ -1605,7 +1626,7 @@ function normalizeCart(raw){
   if(!isPlainObject(cart.portal)) throw new Error('Cartridge missing portal object.');
   // IMPORTANT: resourceScenery is map content, not theme/default engine garnish.
   // If the loaded cart/map supplies resourceScenery, use exactly that object.
-  // Do not deep-merge it with DEMO_CART or demo trees/shrubs/mushrooms leak in.
+  // Do not deep-merge it with legacy content or its scenery leaks in.
   if(rawHasResourceScenery) cart.resourceScenery = cloneData(raw.resourceScenery || {});
   else cart.resourceScenery = {};
   if(!isPlainObject(cart.resourceScenery)) cart.resourceScenery = {};
@@ -1640,8 +1661,9 @@ function rebuildWorldFromCart(cart){
   player.spawnY = ACTIVE_CART.playerSpawn.y;
   toastLines = ACTIVE_CART.messages && ACTIVE_CART.messages.welcome ? ACTIVE_CART.messages.welcome : ['Cartridge loaded'];
   if(gameAudio){
-    gameAudio.cartAudio = ACTIVE_CART.audio || {};
-    gameAudio.setParams((ACTIVE_CART.audio && ACTIVE_CART.audio.defaults) || {});
+    gameAudio.cartAudio = mergeCartValue(ENGINE_AUDIO_DEFAULTS, ACTIVE_CART.audio || {});
+    gameAudio.params = mergeCartValue(ENGINE_AUDIO_DEFAULTS.defaults, gameAudio.cartAudio.defaults || {});
+    gameAudio.setParams(gameAudio.params);
   }
   reset(true);
 }
