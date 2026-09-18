@@ -1186,9 +1186,14 @@ const floatingBlocks = cloneData(ACTIVE_CART.floatingBlocks);
 const coins = cloneData(ACTIVE_CART.coins).map(c => ({...c,taken:false}));
 const stars = cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false}));
 const powerups = [];
+const projectiles = [];
 const coinBursts = [];
 const blockBursts = [];
-const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,shellVy:0,shellOnGround:true,_walkW:e.w,_walkH:e.h}));
+function freshEnemy(e){
+  const winged=!!e.winged || /wing|fly/.test(String(e.kind||'').toLowerCase());
+  return {...e,alive:true,flat:0,state:'walking',winged:winged,_startsWinged:winged,wingPhase:e.wingPhase||0,shellTimer:0,shellVy:0,shellOnGround:true,_walkW:e.w,_walkH:e.h,_originX:e.x,_originY:e.y};
+}
+const enemies = cloneData(ACTIVE_CART.enemies).map(freshEnemy);
 const signposts = cloneData(ACTIVE_CART.signposts);
 const portal = cloneData(ACTIVE_CART.portal);
 
@@ -1576,11 +1581,12 @@ function rebuildWorldFromCart(cart){
   replaceArray(floatingBlocks, cloneData(ACTIVE_CART.floatingBlocks));
   replaceArray(coins, cloneData(ACTIVE_CART.coins).map(c => ({...c,taken:false})));
   replaceArray(stars, cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false})));
-  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,shellVy:0,shellOnGround:true,_walkW:e.w,_walkH:e.h})));
+  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(freshEnemy));
   replaceArray(signposts, cloneData(ACTIVE_CART.signposts));
   Object.keys(portal).forEach(k => delete portal[k]);
   Object.assign(portal, cloneData(ACTIVE_CART.portal));
   powerups.length = 0;
+  projectiles.length = 0;
   coinBursts.length = 0;
   blockBursts.length = 0;
   player.spawnX = ACTIVE_CART.playerSpawn.x;
@@ -1696,6 +1702,7 @@ const player = {
   stars: 0,
   deadTimer: 0,
   big: false,
+  form: 'small',
   inv: 0,
   spawnX: ACTIVE_CART.playerSpawn.x,
   spawnY: ACTIVE_CART.playerSpawn.y,
@@ -1703,7 +1710,11 @@ const player = {
   climbBlink: 0,
   pipeCooldown: 0,
   runCharge: 0,
-  pSpeed: false
+  pSpeed: false,
+  flightFrames: 0,
+  fireCooldown: 0,
+  carryEnemy: null,
+  pipeTravel: null
 };
 
 function reset(full){
@@ -1715,12 +1726,17 @@ function reset(full){
   player.deadTimer = 0;
   player.face = 1;
   player.big = false;
+  player.form = 'small';
   player.inv = 0;
   player.climbing = false;
   player.climbBlink = 0;
   player.pipeCooldown = 0;
   player.runCharge = 0;
   player.pSpeed = false;
+  player.flightFrames = 0;
+  player.fireCooldown = 0;
+  player.carryEnemy = null;
+  player.pipeTravel = null;
   player.w = 34;
   player.h = 48;
   cam = Math.max(0, Math.min(WORLD_W - W, player.x - 210));
@@ -1740,12 +1756,12 @@ function reset(full){
     coins.forEach(c => c.taken = false);
     stars.forEach(s => s.taken = false);
     enemies.forEach(e => {
-      const feet=e.y+e.h, walkW=e._walkW||e.w;
-      e.x-=(walkW-e.w)/2;
-      e.alive=true; e.flat=0; e.state='walking'; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
-      e.w=walkW; e.h=e._walkH||e.h; e.y=feet-e.h;
+      const walkW=e._walkW||e.w;
+      e.alive=true; e.flat=0; e.state='walking'; e.winged=!!e._startsWinged; e.wingPhase=0; e.wingFalling=false; e.wingVy=0; e.flowerClock=null; e._flowerSuppressed=false; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
+      e.w=walkW; e.h=e._walkH||e.h; e.x=e._originX; e.y=e._originY;
     });
     powerups.length = 0;
+    projectiles.length = 0;
     coinBursts.length = 0;
     blockBursts.length = 0;
     floatingBlocks.forEach(b => { b.used = !!b.startUsed; b.bump = 0; b.prevY = null; b.busted = !!b.startBusted; });
@@ -1760,6 +1776,7 @@ function loseLife(){
   player.vx = 0;
   player.vy = -4;
   player.climbing = false;
+  releaseHeldShell(false);
   shake = 8;
 }
 
@@ -1767,14 +1784,20 @@ function setPlayerBig(big){
   const feet = player.y + player.h;
   const cx = player.x + player.w/2;
   player.big = !!big;
+  if(!player.big) player.form = 'small';
+  else if(player.form === 'small') player.form = 'big';
   player.w = player.big ? 38 : 34;
   player.h = player.big ? 60 : 48;
   player.x = cx - player.w/2;
   player.y = feet - player.h;
 }
+function setPlayerForm(form){
+  player.form = form || 'small';
+  setPlayerBig(player.form !== 'small');
+}
 function growPlayer(){
   playSfx('powerup');
-  setPlayerBig(true);
+  setPlayerForm('big');
   player.inv = Math.max(player.inv, 24);
   shake = 3;
   setToast(['Big mode!','Enemy bumps shrink you first.'], 150);
@@ -1782,13 +1805,15 @@ function growPlayer(){
 function hurtPlayer(){
   if(player.inv > 0 || player.deadTimer || won) return;
   if(player.big){
+    releaseHeldShell(false);
     playSfx('hurt');
-    setPlayerBig(false);
+    if(player.form === 'fire' || player.form === 'raccoon') setPlayerForm('big');
+    else setPlayerForm('small');
     player.inv = 90;
     player.vy = -5;
     player.vx = -player.face * 2.2;
     shake = 6;
-    setToast(['Ouch!','Back to small mode.'], 120);
+    setToast(['Ouch!',player.form === 'big' ? 'Special power lost.' : 'Back to small mode.'], 120);
   }else loseLife();
 }
 
@@ -1796,7 +1821,7 @@ const ACTIONS = ['left','right','up','down','run','jump','pause'];
 const ACTION_LABELS = {left:'Left',right:'Right',up:'Up',down:'Down',run:'Run',jump:'Jump',pause:'Pause'};
 const DEFAULT_PAD_MAP = {left:14,right:15,up:12,down:13,run:0,jump:1,pause:9};
 const padMapKey = 'super_llmario_button_gamepad_map_v2';
-const input = {left:false,right:false,up:false,down:false,jump:false,jumpTap:false,run:false,pause:false,pauseTap:false};
+const input = {left:false,right:false,up:false,down:false,jump:false,jumpTap:false,run:false,runTap:false,runRelease:false,pause:false,pauseTap:false};
 const keyInput = {left:false,right:false,up:false,down:false,jump:false,run:false,pause:false};
 const padInput = {left:false,right:false,up:false,down:false,jump:false,run:false,pause:false};
 let padMap = Object.assign({}, DEFAULT_PAD_MAP, storageJSONGet(padMapKey, null) || {});
@@ -1806,9 +1831,12 @@ let lastPadSeen = '';
 
 function composeInput(){
   const oldJump = input.jump;
+  const oldRun = input.run;
   const oldPause = input.pause;
   for(const a of ACTIONS) input[a] = !!(keyInput[a] || padInput[a]);
   if(input.jump && !oldJump) input.jumpTap = true;
+  if(input.run && !oldRun) input.runTap = true;
+  if(!input.run && oldRun) input.runRelease = true;
   if(input.pause && !oldPause) input.pauseTap = true;
 }
 function buttonLabel(i){ return i == null ? 'unmapped' : 'Button '+i; }
@@ -2135,19 +2163,54 @@ function findPlayerEntryPipe(){
   }
   return null;
 }
+function destinationPipeFor(target, entryPipe){
+  let best=null, bestScore=Infinity;
+  for(const p of (((ACTIVE_CART.resourceScenery || {}).pipes) || [])){
+    if(p===entryPipe) continue;
+    const r=sceneryPipeSolid(p);
+    if(r.direction!=='up') continue;
+    const score=Math.abs((r.x+r.w/2)-(target.x+player.w/2))+Math.abs((r.y+r.h)-(target.y+player.h));
+    if(score<bestScore){bestScore=score;best={pipe:p,rect:r};}
+  }
+  return bestScore<=180?best:null;
+}
 function enterPipeTravel(hit){
   if(!hit || !hit.target) return false;
   playSfx('powerup');
   leaveClimb();
-  player.x = hit.target.x;
-  player.y = hit.target.y;
+  const destination=destinationPipeFor(hit.target,hit.pipe);
+  player.x=hit.rect.x+(hit.rect.w-player.w)/2;
+  player.y=hit.rect.y-player.h;
   player.vx = 0;
   player.vy = 0;
-  player.onGround = false;
-  player.pipeCooldown = 36;
-  setRowCameraFromPlayer();
-  cam = Math.max(0, Math.min(WORLD_W - W, player.x - 210));
+  player.onGround = true;
+  player.pipeTravel={phase:'entry',entry:hit.pipe,entryRect:hit.rect,target:hit.target,destination:destination};
   setToast(['Pipe travel'], 42);
+  return true;
+}
+function updatePipeTravel(){
+  const travel=player.pipeTravel;
+  if(!travel) return false;
+  player.vx=0; player.vy=0; player.onGround=false;
+  if(travel.phase==='entry'){
+    player.x=travel.entryRect.x+(travel.entryRect.w-player.w)/2;
+    player.y+=2.25;
+    if(player.y>=travel.entryRect.y){
+      const d=travel.destination;
+      const rect=d?d.rect:{x:travel.target.x,y:travel.target.y+player.h,w:player.w,h:1,direction:'up'};
+      travel.exitRect=rect; travel.phase='exit';
+      player.x=rect.x+(rect.w-player.w)/2; player.y=rect.y;
+      setRowCameraFromPlayer();
+      cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));
+    }
+  }else{
+    player.x=travel.exitRect.x+(travel.exitRect.w-player.w)/2;
+    player.y-=2.25;
+    const emergedY=travel.exitRect.y-player.h;
+    if(player.y<=emergedY){
+      player.y=emergedY; player.pipeTravel=null; player.pipeCooldown=36; player.onGround=true;
+    }
+  }
   return true;
 }
 function themeTruthForImage(id){
@@ -2480,12 +2543,13 @@ function setToast(lines, frames){
   messageTimer = frames || 160;
 }
 function spawnPowerup(kind,b){
-  if(kind === 'mushroom'){
+  kind=String(kind||'mushroom').toLowerCase().replace(/[- ]/g,'_');
+  if(['mushroom','green_1up','1up','fire_flower','raccoon'].includes(kind)){
     playSfx('mushroomOut');
     const top = currentBlockY(b);
     const walkVx = finiteNumber(b && b.powerupVx) ? b.powerupVx : 0.85;
     powerups.push({
-      kind:'mushroom',
+      kind:kind,
       x:b.x+b.w/2-13,
       y:top-6,
       w:26,h:24,
@@ -2507,13 +2571,13 @@ function normalizeBlockPayload(b){
   if(typeof raw === 'string'){
     const v = raw.toLowerCase();
     if(v === 'coin' || v === 'coins') return {kind:'coin', count:1};
-    if(v === 'mushroom' || v === 'powerup') return {kind:'powerup', powerup:v === 'mushroom' ? 'mushroom' : (b.powerup || 'mushroom')};
+    if(['mushroom','powerup','green_1up','1up','fire_flower','raccoon'].includes(v)) return {kind:'powerup', powerup:v === 'powerup' ? (b.powerup || 'mushroom') : v};
     return {kind:v};
   }
   if(isPlainObject(raw)){
     const kind = String(raw.kind || raw.type || '').toLowerCase();
     if(kind === 'coin' || kind === 'coins') return {kind:'coin', count:Math.max(1, Math.floor(raw.count || raw.amount || 1))};
-    if(kind === 'mushroom') return {kind:'powerup', powerup:'mushroom'};
+    if(['mushroom','green_1up','1up','fire_flower','raccoon'].includes(kind)) return {kind:'powerup', powerup:kind};
     if(kind === 'powerup') return {kind:'powerup', powerup:raw.powerup || raw.item || b.powerup || 'mushroom'};
     return Object.assign({kind:kind || 'custom'}, raw);
   }
@@ -2726,6 +2790,26 @@ function collectables(){
 function shellCapableEnemy(e){
   return /(?:^|_)(?:red|green)_koopa(?:_|$)/.test(String((e&&e.kind)||'').toLowerCase());
 }
+function spikedEnemy(e){ return /spik/.test(String((e&&e.kind)||'').toLowerCase()); }
+function flowerEnemy(e){ return /flower|emerging/.test(String((e&&e.kind)||'').toLowerCase()); }
+function flowerHostPipe(e){
+  if(!flowerEnemy(e)) return null;
+  const pipes=(((ACTIVE_CART.resourceScenery||{}).pipes)||[]);
+  if(e.hostPipe){const named=pipes.find(p=>String(p.id||'')===String(e.hostPipe));if(named)return named;}
+  let best=null,bestScore=Infinity;
+  for(const p of pipes){
+    const r=sceneryPipeSolid(p); if(r.direction!=='up')continue;
+    const score=Math.abs((r.x+r.w/2)-(e._originX+e.w/2))+Math.abs(r.y-(e._originY+e.h));
+    if(score<bestScore&&score<=24){best=p;bestScore=score;}
+  }
+  return best;
+}
+function playerOccupiesPipeMouth(p){
+  if(!p)return false;
+  const r=sceneryPipeSolid(p);
+  const mouth={x:r.x,y:r.y-player.h,w:r.w,h:player.h+12};
+  return aabb(player,mouth);
+}
 function enterKoopaShell(e, state){
   const feet=e.y+e.h;
   e._walkW=e._walkW||e.w; e._walkH=e._walkH||e.h;
@@ -2737,6 +2821,26 @@ function enterKoopaShell(e, state){
   e.shellTimer=0;
   e.shellVy=0; e.shellOnGround=true;
   if(e.state === 'shellStopped') e.shellVx=0;
+}
+function carryShell(e){
+  if(!e || e.state!=='shellStopped' || player.carryEnemy) return false;
+  player.carryEnemy=e; e.state='shellHeld'; e.shellTimer=0; e.shellVx=0; e.shellVy=0;
+  playSfx('bonk');
+  return true;
+}
+function positionHeldShell(){
+  const e=player.carryEnemy;
+  if(!e || !e.alive){player.carryEnemy=null;return;}
+  e.x=player.face>0 ? player.x+player.w-7 : player.x-e.w+7;
+  e.y=player.y+player.h-e.h-7;
+}
+function releaseHeldShell(throwIt){
+  const e=player.carryEnemy;
+  if(!e) return false;
+  player.carryEnemy=null; e.state=throwIt?'shellMoving':'shellStopped'; e.shellTimer=0;
+  e.shellVx=throwIt ? player.face*6.2 : 0; e.shellVy=throwIt ? -1.2 : 0;
+  e.x=player.face>0 ? player.x+player.w+2 : player.x-e.w-2;
+  return true;
 }
 function reviveKoopa(e){
   const feet=e.y+e.h, center=e.x+e.w/2;
@@ -2752,8 +2856,10 @@ function reviveKoopa(e){
   e.state='walking'; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
 }
 function stompEnemy(e){
+  if(spikedEnemy(e) || flowerEnemy(e)){ hurtPlayer(); return; }
   playSfx('stomp');
   if(shellCapableEnemy(e)){
+    if(e.winged){ e.winged=false; e.wingPhase=0; e.wingFalling=true; e.wingVy=0; player.vy=-8.6; shake=3; return; }
     if(e.state === 'shellMoving'){
       e.state = 'shellStopped';
       e.shellVx = 0;
@@ -2811,14 +2917,39 @@ function updateShellVertical(e){
   if(e.y>worldDeathY()){ e.alive=false; e.flat=0; }
 }
 function updateEnemyMotion(e){
+  if(flowerEnemy(e)){
+    const host=flowerHostPipe(e);
+    if(host&&playerOccupiesPipeMouth(host)){e._flowerSuppressed=true;e.exposure=0;e.x=e._originX;e.y=e._originY+e.h;return;}
+    const cycle=Math.max(150,e.cycleFrames||210);
+    if(e._flowerSuppressed){e.flowerClock=0;e._flowerSuppressed=false;}
+    else if(finiteNumber(e.flowerClock))e.flowerClock=(e.flowerClock+1)%cycle;
+    else e.flowerClock=(tick+(e.phase||0))%cycle;
+    const phase=e.flowerClock;
+    const rise=e.riseFrames||34, exposed=e.exposedFrames||76, fall=e.recedeFrames||34;
+    let shown=0;
+    if(phase<rise) shown=phase/rise;
+    else if(phase<rise+exposed) shown=1;
+    else if(phase<rise+exposed+fall) shown=1-(phase-rise-exposed)/fall;
+    e.exposure=Math.max(0,Math.min(1,shown)); e.x=e._originX; e.y=e._originY+e.h*(1-e.exposure);
+    return;
+  }
+  if(e.state === 'shellHeld') return;
   if(e.state === 'shellStopped' || e.state === 'shellMoving') updateShellVertical(e);
   if(!e.alive) return;
+  if(e.wingFalling){
+    e.wingVy=Math.min(8,(e.wingVy||0)+.45); e.y+=e.wingVy;
+    if(e.y>=e._originY){e.y=e._originY;e.wingVy=0;e.wingFalling=false;}
+  }
   if(e.state === 'shellStopped'){
     if(e.shellOnGround) e.shellTimer=(e.shellTimer||0)+1;
     if(e.shellTimer>=KOOPA_REVIVE_FRAMES) reviveKoopa(e);
     return;
   }
   const vx = e.state === 'shellMoving' ? e.shellVx : e.vx;
+  if(e.winged && e.state === 'walking'){
+    e.wingPhase=(e.wingPhase||0)+1;
+    e.y=e._originY-Math.abs(Math.sin(e.wingPhase*.045))*(e.flightHeight||72);
+  }
   const oldX = e.x;
   e.x += vx;
   let blocked;
@@ -2845,6 +2976,30 @@ function resolveMovingShellHits(){
       player.coins+=2;
       shake=Math.max(shake,3);
     }
+  }
+}
+
+function launchFireball(){
+  if(player.form!=='fire' || player.fireCooldown>0 || projectiles.filter(p=>p.alive).length>=2) return;
+  projectiles.push({x:player.x+(player.face>0?player.w-4:-8),y:player.y+player.h*.48,w:14,h:14,vx:player.face*5.8,vy:-2.2,alive:true,bounces:0,life:210});
+  player.fireCooldown=18; playSfx('bonk');
+}
+function updateProjectiles(){
+  for(const p of projectiles){
+    if(!p.alive) continue; p.life--; p.vy=Math.min(7,p.vy+.34); p.x+=p.vx;
+    if(p.x<0||p.x+p.w>WORLD_W){p.alive=false;continue;}
+    if(hitSolids(p).some(s=>!s._slope)){ p.x-=p.vx; p.alive=false; continue; }
+    const oldY=p.y; p.y+=p.vy;
+    const floor=hitSolids(p).filter(s=>!s._slope&&p.vy>0&&oldY+p.h<=s.y+5).sort((a,b)=>a.y-b.y)[0];
+    if(floor){p.y=floor.y-p.h;p.vy=-4.4;p.bounces++;}
+    powerupSlopeSupport(p,oldY,false) && (p.vy=-4.4,p.bounces++);
+    for(const e of enemies){
+      if(!e.alive || !aabb(p,e) || (flowerEnemy(e)&&e.exposure<.55)) continue;
+      p.alive=false;
+      if(!spikedEnemy(e)){ e.alive=false;e.flat=18;player.coins+=2;playSfx('stomp'); }
+      break;
+    }
+    if(p.life<=0||p.bounces>8||p.y>worldDeathY())p.alive=false;
   }
 }
 
@@ -2881,6 +3036,13 @@ function collectPowerupIfPlayerTouches(p){
   if(!p.taken && aabb(player,p)){
     p.taken = true;
     if(p.kind === 'mushroom') growPlayer();
+    else if(p.kind === 'green_1up' || p.kind === '1up'){
+      playSfx('powerup'); player.lives += 1; setToast(['1-UP!','Extra life collected.'],120);
+    }else if(p.kind === 'fire_flower'){
+      playSfx('powerup'); setPlayerForm('fire'); player.inv=Math.max(player.inv,24); setToast(['Fire form!','Tap Run to throw fireballs.'],150);
+    }else if(p.kind === 'raccoon'){
+      playSfx('powerup'); setPlayerForm('raccoon'); player.inv=Math.max(player.inv,24); setToast(['Raccoon form!','Build P-speed, then hold Jump.'],170);
+    }
     return true;
   }
   return false;
@@ -3001,6 +3163,11 @@ function update(){
     updatePausePanel();
     return;
   }
+  if(updatePipeTravel()){
+    input.jumpTap=false; input.runTap=false; input.runRelease=false;
+    let targetCam=player.x-210; targetCam=Math.max(0,Math.min(WORLD_W-W,targetCam)); cam+=(targetCam-cam)*.16;
+    return;
+  }
   if(shake > 0) shake *= 0.84;
   for(const b of floatingBlocks) b.prevY = currentBlockY(b);
   floatingBlocks.forEach(b => { if(b.busted) return; b.bob += 0.045; if(b.bump > 0) b.bump -= 1; });
@@ -3027,6 +3194,13 @@ function update(){
   }
   if(player.inv > 0) player.inv -= 1;
   if(player.pipeCooldown > 0) player.pipeCooldown -= 1;
+  if(player.fireCooldown > 0) player.fireCooldown -= 1;
+  const fireRequested=input.runTap;
+  const touchingHeldCandidate=enemies.find(e=>e.alive&&e.state==='shellStopped'&&aabb(player,e));
+  if(input.run && touchingHeldCandidate) carryShell(touchingHeldCandidate);
+  if(input.runRelease && player.carryEnemy) releaseHeldShell(true);
+  input.runTap=false;
+  input.runRelease=false;
 
   if(player.deadTimer > 0){
     player.deadTimer -= 1;
@@ -3059,6 +3233,7 @@ function update(){
   if(pipeHit && enterPipeTravel(pipeHit)){
     input.jumpTap = false;
     input.down = false;
+    return;
   }
 
   let climbZone = findPlayerClimbZone();
@@ -3079,11 +3254,11 @@ function update(){
   }else{
     const running = !!input.run;
     const accel = running ? 0.50 : 0.36;
-    const max = running ? 4.35 : 2.95;
+    const max = running ? 4.60 : 3.10;
     const friction = player.onGround ? (running ? 0.84 : 0.78) : 0.96;
     const charging = player.onGround && running && Math.abs(player.vx) > 3.35 && ((input.left && player.vx < 0) || (input.right && player.vx > 0));
     if(charging) player.runCharge = Math.min(90, player.runCharge + 1);
-    else player.runCharge = Math.max(0, player.runCharge - (player.onGround ? 3 : 0.35));
+    else player.runCharge = Math.max(0, player.runCharge - (player.onGround ? 3 : (player.form==='raccoon' && player.flightFrames>0 ? 0.12 : 0.35)));
     player.pSpeed = player.runCharge >= 72;
     if(input.left){ player.vx -= accel; player.face = -1; }
     if(input.right){ player.vx += accel; player.face = 1; }
@@ -3097,6 +3272,7 @@ function update(){
       const runJumpBonus = (input.run && runSpeed > 2.4) ? Math.min(1.0, (runSpeed - 2.4) * 0.42) : 0;
       player.vy = -11.15 - runJumpBonus;
       player.onGround = false;
+      if(player.form==='raccoon' && player.pSpeed) player.flightFrames=150;
     }
     input.jumpTap = false;
 
@@ -3106,12 +3282,20 @@ function update(){
       player.vy += rowCameraConfig().stallGravity || 0.08;
       player.vy = Math.min(player.vy, rowCameraConfig().stallMaxVy || 1.35);
     }else{
-      player.vy += 0.52;
+      const flying=player.form==='raccoon' && player.flightFrames>0;
+      if(flying){
+        const lift=(input.jump||input.up) ? -0.34 : (input.down ? 0.38 : 0.08);
+        player.vy=Math.max(-4.6,Math.min(3.2,player.vy+lift));
+        player.flightFrames--;
+      }else player.vy += 0.52;
       if(player.vy > 11.2) player.vy = 11.2;
     }
     resolvePlayer();
+    if(player.onGround) player.flightFrames=0;
   }
+  positionHeldShell();
   updatePowerups();
+  updateProjectiles();
   updateCoinBursts();
   updateBlockBursts();
 
@@ -3125,24 +3309,29 @@ function update(){
     updateEnemyMotion(e);
   }
   resolveMovingShellHits();
-  const enemyHits=enemies.filter(e => e.alive && aabb(player,e));
+  const enemyHits=enemies.filter(e => e.alive && e.state!=='shellHeld' && (!flowerEnemy(e)||e.exposure>.55) && aabb(player,e));
   if(enemyHits.length){
-    const stompHits = enemyHits.filter(e => stompVy > 1 && player.y + player.h - e.y < 16);
+    const stompHits = enemyHits.filter(e => !spikedEnemy(e) && !flowerEnemy(e) && stompVy > 1 && player.y + player.h - e.y < 16);
     if(stompHits.length){
       for(const e of stompHits) stompEnemy(e);
       player.vy = -8.6;
     }else{
       const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped');
       for(const e of kickable){
-        e.state = 'shellMoving';
-        e.shellTimer = 0;
-        const kickRight = player.x + player.w/2 < e.x + e.w/2;
-        e.shellVx = (kickRight ? 1 : -1) * 6.2;
-        e.x = kickRight ? player.x + player.w : player.x - e.w;
+        if(input.run) carryShell(e);
+        else{
+          e.state = 'shellMoving'; e.shellTimer = 0;
+          const kickRight = player.x + player.w/2 < e.x + e.w/2;
+          e.shellVx = (kickRight ? 1 : -1) * 6.2;
+          e.x = kickRight ? player.x + player.w : player.x - e.w;
+        }
       }
       if(enemyHits.some(e => !kickable.includes(e))) hurtPlayer();
     }
   }
+  // Resolve shell contact first: Run picks up a stopped shell instead of also
+  // firing. A fireball is created only when this press did not acquire one.
+  if(fireRequested && !player.carryEnemy) launchFireball();
 
   collectables();
 
@@ -3911,8 +4100,12 @@ function prefabStar(r,s){
 }
 
 function drawPowerup(p){
-  if(p.kind !== 'mushroom' || p.taken) return;
-  const id=semanticAsset('pickup-powerup.grow');
+  if(p.taken) return;
+  let id=null;
+  if(p.kind==='green_1up'||p.kind==='1up') id=semanticAsset('pickup-special.green');
+  else if(p.kind==='fire_flower') id=semanticAsset('pickup-powerup.projectile');
+  else if(p.kind==='raccoon') id=semanticAsset('racoonmario.player-motion.idle_walk_0') || semanticAsset('pickup-powerup.grow');
+  else id=semanticAsset('pickup-powerup.grow');
   if(id && drawThemedAsset(id,{x:p.x,y:p.y,w:p.w,h:p.h})) return;
   drawRecipe('pickups.mushroom', p);
 }
@@ -3998,12 +4191,29 @@ function enemyAnimationGroup(e){
 }
 function drawBlob(e){
   if(!e.alive && e.flat <= 0) return;
+  if(flowerEnemy(e) && e.exposure <= .04) return;
   const group=enemyAnimationGroup(e);
   const stableShellFrame=group && e.state === 'shellStopped' && animationFrames(group).find(f => cartImageRecord(f.asset));
   const id=stableShellFrame ? stableShellFrame.asset : (group&&animationAsset(group,tick+(e.x||0),8));
   const squash=e.alive?1:Math.max(.24,e.flat/18);
-  if(id && drawThemedAsset(id,{x:e.x,y:e.y,w:e.w,h:e.h},{mirror:(e.state === 'shellMoving' ? e.shellVx : e.vx)<0,squash:squash})) return;
+  const box=shellCapableEnemy(e)&&e.state==='walking'?{x:e.x-5,y:e.y-12,w:e.w+10,h:e.h+12}:e;
+  if(id && drawThemedAsset(id,box,{mirror:(e.state === 'shellMoving' ? e.shellVx : e.vx)<0,squash:squash})) return;
   drawRecipe('enemies.'+(e.kind||'blob'), e);
+}
+function drawEnemyAttachments(e){
+  if(!e.alive||!e.winged||e.state!=='walking')return;
+  const id=animationAsset('enemy.wing.flap',tick+(e.x||0),5); if(!id)return;
+  drawThemedAsset(id,{x:e.x-9,y:e.y+2,w:18,h:25},{mirror:true});
+  drawThemedAsset(id,{x:e.x+e.w-9,y:e.y+2,w:18,h:25});
+}
+function drawPipeMountedFlowers(){
+  for(const e of enemies){
+    const host=flowerHostPipe(e);
+    if(e.alive&&host&&!playerOccupiesPipeMouth(host)) drawBlob(e);
+  }
+}
+function drawProjectiles(){
+  for(const p of projectiles){if(!p.alive)continue;const id=animationAsset('projectile.fireball',tick+p.x,3);if(id)drawThemedAsset(id,p);else{ctx.fillStyle='#ff8b25';ctx.beginPath();ctx.arc(worldX(p.x+7),p.y+7,6,0,Math.PI*2);ctx.fill();}}
 }
 function prefabBlob(r,e){
   if(!e.alive && e.flat <= 0) return;
@@ -4023,13 +4233,16 @@ function playerMotionAsset(){
   const ids=themeImageIds(), familyIds=ids.filter(id=>id.includes('.player-motion.'));
   if(!familyIds.length) return null;
   const families=Array.from(new Set(familyIds.map(id=>id.split('.player-motion.')[0])));
-  const family=player.big ? (families.find(f=>!/small|fire|racoon/i.test(f))||families[0]) : (families.find(f=>/small/i.test(f))||null);
+  const family=player.form==='fire' ? families.find(f=>/fire/i.test(f)) : player.form==='raccoon' ? families.find(f=>/racoon|raccoon/i.test(f)) : player.big ? (families.find(f=>!/small|fire|racoon|raccoon/i.test(f))||families[0]) : (families.find(f=>/small/i.test(f))||null);
   if(!family) return null;
   const prefix=family+'.player-motion.', available=ids.filter(id=>id.startsWith(prefix)).map(id=>id.slice(prefix.length));
   const has=state=>available.includes(state);
   const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
   let states;
-  if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
+  if(player.carryEnemy){
+    const carry=available.filter(x=>/^carry_\d+$/.test(x)).sort();
+    states=!player.onGround?['carry_2_or_jump','carry_1','carry_0']:[carry[Math.floor(tick/7)%Math.max(1,carry.length)],'carry_0','idle_walk_0'];
+  }else if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
   else if(!player.onGround) states=player.pSpeed?['fast_jump','jump']:['jump','fast_jump'];
   else if(reversing) states=['skid','idle_walk_0'];
   else if(player.pSpeed){
@@ -4374,6 +4587,8 @@ function draw(){
   drawSky();
   ctx.save();
   ctx.translate(0, -Math.round(camY));
+  if(player.pipeTravel) drawPlayer();
+  drawPipeMountedFlowers();
   drawResourceSceneryBack();
   for(const sign of signposts){
     if(sign.kind === 'arrow') drawArrowSign(sign.x, sign.y);
@@ -4387,10 +4602,11 @@ function draw(){
   blockBursts.forEach(drawBlockBurst);
   stars.forEach(drawStar);
   powerups.forEach(drawPowerup);
+  drawProjectiles();
   drawFlowers();
-  enemies.forEach(drawBlob);
+  enemies.forEach(e=>{if(flowerHostPipe(e))return;drawEnemyAttachments(e);drawBlob(e);});
   drawSceneryFront();
-  drawPlayer();
+  if(!player.pipeTravel) drawPlayer();
   drawSceneryForeground();
 
   ctx.restore();

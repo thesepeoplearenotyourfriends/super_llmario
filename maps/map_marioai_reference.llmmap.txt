@@ -2,44 +2,58 @@
   "format": "llmario-map-v1",
   "mapVersion": 1,
   "id": "marioai-reference-playground",
-  "title": "MarioAI Reference Playground",
+  "title": "MarioAI Semantic Reference Playground",
   "theme": "marioai-semantic-nonempty",
-  "world": {"width": 1800, "height": 520, "groundY": 372},
+  "world": {"width": 3400, "height": 520, "groundY": 372},
   "playerSpawn": {"x": 80, "y": 324},
-  "hud": {"title": "REFERENCE THEME", "shortName": "MARIOAI"},
+  "hud": {"title": "SEMANTIC TEST MAP", "shortName": "MARIOAI"},
   "messages": {
-    "welcome": ["MarioAI reference theme", "Move, run, jump, and open the mushroom block."],
-    "win": "Reference pass clear!"
+    "welcome": ["Semantic coverage course", "Each short section tests a distinct gameplay family."],
+    "win": "All semantic test cases cleared!"
   },
   "placement": {"autoCleanup": false},
   "background": {"mode": "all"},
   "resourceScenery": {
     "sprites": [],
     "pipes": [
-      {"kind": "pipe", "x": 650, "y": 372, "h": 96, "scale": 1, "layer": "back", "solid": true, "global": true}
+      {"id":"flower_pipe","kind":"pipe","x":688,"y":372,"h":58,"scale":1,"layer":"back","solid":true,"global":true,"noTravel":true},
+      {"kind":"pipe","x":1450,"y":372,"h":86,"scale":1,"layer":"back","solid":true,"global":true,"target":{"x":1775,"y":324}},
+      {"kind":"pipe","x":1740,"y":372,"h":86,"scale":1,"layer":"back","solid":true,"global":true,"target":{"x":1408,"y":324}}
     ]
   },
   "platforms": [
-    {"id": "ground_a", "x": 0, "y": 372, "w": 760, "h": 148, "type": "ground"},
-    {"id": "ground_b", "x": 850, "y": 372, "w": 950, "h": 148, "type": "ground"},
-    {"id": "step", "x": 1020, "y": 306, "w": 192, "h": 66, "type": "ground"}
+    {"id":"ground_a","x":0,"y":372,"w":1620,"h":148,"type":"ground"},
+    {"id":"ground_b","x":1700,"y":372,"w":1700,"h":148,"type":"ground"},
+    {"id":"flight_target","x":2740,"y":220,"w":300,"h":28,"type":"ground"}
   ],
   "floatingBlocks": [
-    {"x": 260, "y": 252, "w": 42, "h": 42, "boxKind": "question", "payload": "mushroom", "bob": 0},
-    {"x": 330, "y": 252, "w": 42, "h": 42, "boxKind": "brick", "style": "brick", "bustable": true, "requiresBig": true, "bob": 0}
+    {"x":210,"y":252,"w":42,"h":42,"boxKind":"question","payload":"mushroom","bob":0},
+    {"x":360,"y":252,"w":42,"h":42,"boxKind":"question","payload":"green_1up","bob":0},
+    {"x":900,"y":252,"w":42,"h":42,"boxKind":"question","payload":"fire_flower","bob":0},
+    {"x":2140,"y":252,"w":42,"h":42,"boxKind":"question","payload":"raccoon","bob":0},
+    {"x":2210,"y":252,"w":42,"h":42,"boxKind":"brick","style":"brick","bustable":true,"requiresBig":true,"bob":0}
   ],
   "coins": [
-    {"x": 190, "y": 320}, {"x": 400, "y": 310}, {"x": 470, "y": 290}, {"x": 540, "y": 310},
-    {"x": 920, "y": 320}, {"x": 1100, "y": 250}, {"x": 1280, "y": 320}
+    {"x":285,"y":320},{"x":445,"y":320},{"x":825,"y":320},{"x":1050,"y":315},
+    {"x":1370,"y":320},{"x":1840,"y":320},{"x":2040,"y":320},
+    {"x":2440,"y":320},{"x":2530,"y":295},{"x":2620,"y":265},{"x":2720,"y":225},
+    {"x":2820,"y":180},{"x":2910,"y":180},{"x":3000,"y":180}
   ],
-  "stars": [{"x": 1160, "y": 250}],
+  "stars": [{"x":2930,"y":174}],
   "enemies": [
-    {"x": 480, "y": 338, "w": 34, "h": 34, "vx": -0.65, "min": 400, "max": 590, "kind": "goomba"},
-    {"x": 940, "y": 338, "w": 34, "h": 34, "vx": 0.7, "min": 880, "max": 990, "kind": "goomba"},
-    {"x": 1320, "y": 338, "w": 34, "h": 34, "vx": -0.72, "min": 1240, "max": 1460, "kind": "red_koopa"}
+    {"x":535,"y":338,"w":34,"h":34,"vx":-0.65,"min":480,"max":620,"kind":"spiky"},
+    {"x":700,"y":280,"w":34,"h":34,"vx":0,"min":700,"max":700,"kind":"flower","hostPipe":"flower_pipe","cycleFrames":190,"riseFrames":32,"exposedFrames":70,"recedeFrames":32},
+    {"x":1050,"y":338,"w":34,"h":34,"vx":-0.72,"min":990,"max":1180,"kind":"green_koopa","winged":true,"flightHeight":78},
+    {"x":1260,"y":338,"w":34,"h":34,"vx":0.72,"min":1200,"max":1370,"kind":"red_koopa","winged":true,"flightHeight":62},
+    {"x":1900,"y":338,"w":34,"h":34,"vx":-0.72,"min":1820,"max":2010,"kind":"red_koopa"},
+    {"x":2300,"y":338,"w":34,"h":34,"vx":0.65,"min":2260,"max":2410,"kind":"goomba"}
   ],
   "signposts": [
-    {"kind": "bubble", "x": 105, "y": 280, "w": 190, "h": 54, "lines": ["Mushroom = big form", "Run + jump to compare frames"]}
+    {"kind":"bubble","x":65,"y":280,"w":250,"h":54,"lines":["Growth + green 1-UP","Spikes cannot be stomped"]},
+    {"kind":"bubble","x":640,"y":205,"w":245,"h":54,"lines":["Flower rises from the pipe","Fire flower is just ahead"]},
+    {"kind":"bubble","x":960,"y":205,"w":290,"h":54,"lines":["Winged koopas lose wings first","Then test their shell lifecycle"]},
+    {"kind":"bubble","x":1390,"y":205,"w":260,"h":54,"lines":["Stand on pipe + press Down","The paired pipe returns here"]},
+    {"kind":"bubble","x":2070,"y":205,"w":280,"h":54,"lines":["Raccoon: build P-speed","Jump, then hold Jump to fly"]}
   ],
-  "portal": {"x": 1660, "y": 266, "w": 70, "h": 98}
+  "portal": {"x":3250,"y":266,"w":70,"h":98}
 }
