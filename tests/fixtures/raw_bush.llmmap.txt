@@ -1,0 +1,14 @@
+{
+  "format": "llmario-map-v1",
+  "mapVersion": 1,
+  "id": "raw-canonical-bush-fixture",
+  "title": "Raw Canonical Bush Fixture",
+  "theme": "marioai",
+  "world": {"width": 640, "height": 480, "groundY": 372},
+  "playerSpawn": {"x": 80, "y": 324},
+  "placement": {"autoCleanup": false},
+  "resourceScenery": {"sprites": [{"image": "map.bush.left", "x": 160, "y": 340, "w": 16, "h": 16, "anchorX": 0, "anchorY": 0, "visualOnly": true}]},
+  "platforms": [{"x": 0, "y": 372, "w": 640, "h": 108, "type": "ground"}],
+  "floatingBlocks": [], "coins": [], "stars": [], "enemies": [], "signposts": [],
+  "portal": {"x": 560, "y": 274, "w": 70, "h": 98}
+}

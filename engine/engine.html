@@ -3094,7 +3094,7 @@ function updateProjectiles(){
     for(const e of enemies){
       if(!e.alive || !aabb(p,e) || (flowerEnemy(e)&&e.exposure<.55)) continue;
       p.alive=false;
-      if(!spikedEnemy(e)){ e.alive=false;e.flat=18;player.coins+=2;playSfx('stomp'); }
+      if(!spikedEnemy(e)){ knockOutEnemy(e,p);player.coins+=2;playSfx('stomp'); }
       break;
     }
     if(p.life<=0||p.bounces>8||p.y>worldDeathY())p.alive=false;
@@ -4166,7 +4166,7 @@ function drawFloatingBlocks(){
     const kind=String(b.boxKind||b.kind||b.style||'').toLowerCase();
     const isBrick=kind === 'brick' || kind === 'breakable';
     const isQuestion=['question','reward','coin','powerup','glow'].includes(kind);
-    const semantic = b.used && (isBrick||isQuestion) ? semanticAsset('block-hidden.revealed') : (isBrick ? semanticAsset('block-breakable') : (isQuestion ? (animationAsset('block.question.visual',tick,8) || semanticAsset('block-question.visual.frame_0')) : null));
+    const semantic = b.used && (isBrick||isQuestion) ? semanticAsset('map.block.hidden.revealed') : (isBrick ? semanticAsset('map.block.breakable') : (isQuestion ? (animationAsset('block.question.visual',tick,8) || semanticAsset('map.block.question.visual.frame_0')) : null));
     if(semantic && drawThemedAsset(semantic,{x:b.x,y:currentBlockY(b),w:b.w,h:b.h})) continue;
     drawRecipe(blockRecipePath(b), b, {used:!!b.used});
   }
