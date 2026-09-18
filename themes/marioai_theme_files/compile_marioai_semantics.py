@@ -2,9 +2,10 @@
 """
 Compile a source-backed semantic inventory for medovina/MarioAI resources.
 
-This is intentionally NOT a hand-labeling exercise.  Names/roles are derived
-from how MarioAI's source indexes the sheets, with every remaining cell given a
-stable coordinate fallback so nothing can disappear from the inventory.
+Names/roles are derived from how MarioAI's source indexes the sheets where
+source usage is known. Visually unambiguous mapsheet art also receives curated
+structural names. Every remaining cell keeps a stable coordinate fallback so
+nothing can disappear from the inventory.
 
 Expected directory (downloaded from src/engine/resources):
     mapsheet.png
@@ -295,6 +296,97 @@ def map_logical_roles() -> dict[int, list[tuple[str, str]]]:
     # TileGeneralizer calls 15 a sparkle/irrelevant tile.
     r(15,  "tile.sparkle_marker",             "effect.map_marker")
 
+    # Visually unambiguous mapsheet components. These names describe visible
+    # structure only; they do not invent gameplay behavior beyond source truth.
+    r(5,   "visual.block.brown_face.variant_1",              "block.brown_face.variant_1")
+    r(6,   "visual.block.brown_face.variant_2",              "block.brown_face.variant_2")
+    r(7,   "visual.block.brown_face.variant_3",              "block.brown_face.variant_3")
+    r(9,   "visual.block.stone",                             "block.stone")
+    r(12,  "visual.block.wood",                              "block.wood")
+    r(19,  "visual.block.brick_solid",                       "block.brick_solid")
+    r(24,  "visual.pipe.narrow.vertical.top",                "pipe.narrow.vertical.top")
+    r(25,  "visual.log_column.cap",                          "log_column.cap")
+    r(28,  "visual.block.glass_blue",                        "block.glass_blue")
+    r(36,  "visual.block.yellow_face",                       "block.yellow_face")
+    r(37,  "visual.platform.yellow_striped",                 "platform.yellow_striped")
+    r(38,  "visual.platform.yellow_face",                    "platform.yellow_face")
+    r(39,  "visual.platform.thin_brown",                     "platform.thin_brown")
+    r(40,  "visual.pipe.narrow.vertical.body",               "pipe.narrow.vertical.body")
+    r(41,  "visual.log_column.body_upper",                   "log_column.body_upper")
+    r(56,  "visual.pipe.narrow.vertical.bottom",             "pipe.narrow.vertical.bottom")
+    r(57,  "visual.log_column.body_lower",                   "log_column.body_lower")
+    r(60,  "visual.bar.white.left_cap",                      "bar.white.left_cap")
+
+    r(67,  "visual.sign.arrow_right.top_left",               "sign.arrow_right.top_left")
+    r(68,  "visual.sign.arrow_right.top_right",              "sign.arrow_right.top_right")
+    r(83,  "visual.sign.arrow_right.bottom_left",            "sign.arrow_right.bottom_left")
+    r(84,  "visual.sign.arrow_right.bottom_right",           "sign.arrow_right.bottom_right")
+
+    r(70,  "visual.hill.large.top_left",                     "hill.large.top_left")
+    r(71,  "visual.hill.large.top_right",                    "hill.large.top_right")
+    r(86,  "visual.hill.large.upper_left",                   "hill.large.upper_left")
+    r(87,  "visual.hill.large.upper_right",                  "hill.large.upper_right")
+    r(102, "visual.hill.large.lower_left",                   "hill.large.lower_left")
+    r(103, "visual.hill.large.lower_right",                  "hill.large.lower_right")
+    r(118, "visual.hill.large.bottom_left",                  "hill.large.bottom_left")
+    r(119, "visual.hill.large.bottom_right",                 "hill.large.bottom_right")
+
+    r(73,  "visual.hill.wide.top_left",                      "hill.wide.top_left")
+    r(74,  "visual.hill.wide.top_middle",                    "hill.wide.top_middle")
+    r(75,  "visual.hill.wide.top_right",                     "hill.wide.top_right")
+    r(89,  "visual.hill.wide.middle_left",                   "hill.wide.middle_left")
+    r(90,  "visual.hill.wide.middle",                        "hill.wide.middle")
+    r(91,  "visual.hill.wide.middle_right",                  "hill.wide.middle_right")
+    r(104, "visual.hill.wide.lower_left",                    "hill.wide.lower_left")
+    r(105, "visual.hill.wide.lower_right",                   "hill.wide.lower_right")
+    r(120, "visual.hill.wide.bottom_left",                   "hill.wide.bottom_left")
+    r(121, "visual.hill.wide.bottom_right",                  "hill.wide.bottom_right")
+
+    r(76,  "visual.pillar_glass.light.top",                  "pillar_glass.light.top")
+    r(77,  "visual.pillar_glass.dark.top",                   "pillar_glass.dark.top")
+    r(92,  "visual.pillar_glass.light.body",                 "pillar_glass.light.body")
+
+    r(80,  "visual.foliage_canopy.left",                     "foliage_canopy.left")
+    r(81,  "visual.foliage_canopy.middle",                   "foliage_canopy.middle")
+    r(82,  "visual.foliage_canopy.right",                    "foliage_canopy.right")
+    r(96,  "visual.bush.left",                               "bush.left")
+    r(97,  "visual.bush.middle",                             "bush.middle")
+    r(98,  "visual.bush.right",                              "bush.right")
+
+    r(132, "visual.terrain.overground.grass_top.left",       "terrain.overground.grass_top.left")
+    r(133, "visual.terrain.overground.grass_top.middle",     "terrain.overground.grass_top.middle")
+    r(134, "visual.terrain.overground.grass_top.right",      "terrain.overground.grass_top.right")
+    r(135, "visual.terrain.overground.rounded_corner.top_left",
+           "terrain.overground.rounded_corner.top_left")
+    r(148, "visual.terrain.overground.dirt_fill.variant_0",  "terrain.overground.dirt_fill.variant_0")
+    r(149, "visual.terrain.overground.dirt_fill.variant_1",  "terrain.overground.dirt_fill.variant_1")
+    r(150, "visual.terrain.overground.dirt_fill.variant_2",  "terrain.overground.dirt_fill.variant_2")
+    r(151, "visual.terrain.overground.rounded_corner.top_right",
+           "terrain.overground.rounded_corner.top_right")
+    r(164, "visual.terrain.overground.dirt_fill.variant_3",  "terrain.overground.dirt_fill.variant_3")
+    r(165, "visual.terrain.overground.dirt_fill.variant_4",  "terrain.overground.dirt_fill.variant_4")
+    r(166, "visual.terrain.overground.dirt_fill.variant_5",  "terrain.overground.dirt_fill.variant_5")
+    r(167, "visual.terrain.overground.rounded_corner.bottom_right",
+           "terrain.overground.rounded_corner.bottom_right")
+    r(176, "visual.terrain.overground.grass_edge.curved_left",
+           "terrain.overground.grass_edge.curved_left")
+    r(177, "visual.terrain.overground.grass_edge.curved_middle",
+           "terrain.overground.grass_edge.curved_middle")
+    r(178, "visual.terrain.overground.grass_edge.curved_right",
+           "terrain.overground.grass_edge.curved_right")
+    r(180, "visual.terrain.overground.grass_top.alt_left",   "terrain.overground.grass_top.alt_left")
+    r(181, "visual.terrain.overground.grass_top.alt_middle", "terrain.overground.grass_top.alt_middle")
+    r(182, "visual.terrain.overground.grass_top.alt_right",  "terrain.overground.grass_top.alt_right")
+    r(183, "visual.terrain.overground.rounded_corner.bottom_left",
+           "terrain.overground.rounded_corner.bottom_left")
+
+    r(224, "visual.mushroom_platform.cap.left",              "mushroom_platform.cap.left")
+    r(225, "visual.mushroom_platform.cap.middle",            "mushroom_platform.cap.middle")
+    r(226, "visual.mushroom_platform.cap.right",             "mushroom_platform.cap.right")
+    r(240, "visual.mushroom_platform.stem.left",             "mushroom_platform.stem.left")
+    r(241, "visual.mushroom_platform.stem.middle",           "mushroom_platform.stem.middle")
+    r(242, "visual.mushroom_platform.stem.right",            "mushroom_platform.stem.right")
+
     return out
 
 
@@ -461,7 +553,7 @@ def main():
             "repository": "https://github.com/medovina/MarioAI",
             "resource_path": "src/engine/resources",
             "notes": [
-                "Canonical names are derived from source usage, not handwritten guesses.",
+                "Canonical names come from source usage or curated visually unambiguous structure.",
                 "Unclassified cells remain present with deterministic coordinate names.",
                 "MarioAI-specific source names are provenance only; contract_role is the neutral replacement target for original artwork.",
             ],
