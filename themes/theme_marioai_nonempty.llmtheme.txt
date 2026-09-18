@@ -19593,6 +19593,27 @@
         "dimensions": {
           "cell": 16
         },
+        "manualAssets": [
+          "map.terrain.overground.grass_top.left",
+          "map.terrain.overground.grass_top.middle",
+          "map.terrain.overground.grass_top.right",
+          "map.terrain.overground.grass_top.alt_left",
+          "map.terrain.overground.grass_top.alt_middle",
+          "map.terrain.overground.grass_top.alt_right",
+          "map.terrain.overground.grass_edge.curved_left",
+          "map.terrain.overground.grass_edge.curved_middle",
+          "map.terrain.overground.grass_edge.curved_right",
+          "map.terrain.overground.rounded_corner.top_left",
+          "map.terrain.overground.rounded_corner.top_right",
+          "map.terrain.overground.rounded_corner.bottom_left",
+          "map.terrain.overground.rounded_corner.bottom_right",
+          "map.terrain.overground.dirt_fill.variant_0",
+          "map.terrain.overground.dirt_fill.variant_1",
+          "map.terrain.overground.dirt_fill.variant_2",
+          "map.terrain.overground.dirt_fill.variant_3",
+          "map.terrain.overground.dirt_fill.variant_4",
+          "map.terrain.overground.dirt_fill.variant_5"
+        ],
         "components": {
           "topology": {
             "0000": "map.terrain.overground.grass_top.middle",

@@ -33,3 +33,18 @@ assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).sem
 C.applyTerrainEdit(state,terrain,new Set(['1,0']),false);
 assert(!state.sprites.some(s=>s.semanticCellX===1&&s.semanticCellY===0));
 console.log('terrain auto/manual contract passed');
+
+// Terrain brush interpolation follows traversed cells rather than filling bounds.
+const irregular=C.terrainStrokeCells([{x:1,y:1},{x:33,y:33},{x:65,y:33}],16);
+assert.deepEqual(irregular,new Set(['0,0','1,1','2,2','3,2','4,2']));
+assert(!irregular.has('0,2'));assert(!irregular.has('4,0'));
+// Manual inventory is explicit family data and is deliberately larger than Auto topology.
+const manual=new Set(terrain.manualAssets),auto=new Set(Object.values(terrain.components.topology));
+for(const id of ['map.terrain.overground.grass_top.alt_middle','map.terrain.overground.grass_edge.curved_left','map.terrain.overground.rounded_corner.bottom_left','map.terrain.overground.dirt_fill.variant_5'])assert(manual.has(id));
+assert(manual.size>auto.size);
+console.log('terrain brush and explicit family inventory contracts passed');
+const editorSource=fs.readFileSync('editor/editor.html','utf8');
+assert(editorSource.includes("const semantic=cart&&activeSemanticTerrain();if(semantic)"));
+assert(editorSource.includes("const semantic=activeSemanticTerrain();if(semantic){terrainStrokeMode=false"));
+assert(!editorSource.includes("if(activeSemanticTerrain()){terrainStrokeMode=true"));
+console.log('terrain palette mode contract passed');
