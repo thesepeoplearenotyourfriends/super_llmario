@@ -162,7 +162,7 @@ Reward boxes can emit coin bursts or the existing mushroom powerup without hardc
 ## Semantic construction catalog
 
 Theme packs may define the versioned `constructionCatalog` used by Cartbench to
-compile semantic paint and assembly tools into explicit WYSIWYG map pieces. The
-engine draws those stored roles and never autotiles them. See
+compile semantic paint and assembly tools into explicit WYSIWYG map pieces. The editor stores canonical asset IDs in resolved map pieces; the
+engine draws those IDs directly and never autotiles them. See
 [`docs/construction-catalog.md`](docs/construction-catalog.md) for the schema,
 ASCII rules, compatibility behavior, and extension invariant.
