@@ -1,0 +1,45 @@
+{
+  "format": "llmario-map-v1",
+  "mapVersion": 1,
+  "id": "marioai-reference-playground",
+  "title": "MarioAI Reference Playground",
+  "theme": "marioai-semantic-nonempty",
+  "world": {"width": 1800, "height": 520, "groundY": 372},
+  "playerSpawn": {"x": 80, "y": 324},
+  "hud": {"title": "REFERENCE THEME", "shortName": "MARIOAI"},
+  "messages": {
+    "welcome": ["MarioAI reference theme", "Move, run, jump, and open the mushroom block."],
+    "win": "Reference pass clear!"
+  },
+  "placement": {"autoCleanup": false},
+  "background": {"mode": "all"},
+  "resourceScenery": {
+    "sprites": [],
+    "pipes": [
+      {"kind": "pipe", "x": 650, "y": 372, "h": 96, "scale": 1, "layer": "back", "solid": true, "global": true}
+    ]
+  },
+  "platforms": [
+    {"id": "ground_a", "x": 0, "y": 372, "w": 760, "h": 148, "type": "ground"},
+    {"id": "ground_b", "x": 850, "y": 372, "w": 950, "h": 148, "type": "ground"},
+    {"id": "step", "x": 1020, "y": 306, "w": 192, "h": 66, "type": "ground"}
+  ],
+  "floatingBlocks": [
+    {"x": 260, "y": 252, "w": 42, "h": 42, "boxKind": "question", "payload": "mushroom", "bob": 0},
+    {"x": 330, "y": 252, "w": 42, "h": 42, "boxKind": "brick", "style": "brick", "bustable": true, "requiresBig": true, "bob": 0}
+  ],
+  "coins": [
+    {"x": 190, "y": 320}, {"x": 400, "y": 310}, {"x": 470, "y": 290}, {"x": 540, "y": 310},
+    {"x": 920, "y": 320}, {"x": 1100, "y": 250}, {"x": 1280, "y": 320}
+  ],
+  "stars": [{"x": 1160, "y": 250}],
+  "enemies": [
+    {"x": 480, "y": 338, "w": 34, "h": 34, "vx": -0.65, "min": 400, "max": 590, "kind": "goomba"},
+    {"x": 940, "y": 338, "w": 34, "h": 34, "vx": 0.7, "min": 880, "max": 990, "kind": "goomba"},
+    {"x": 1320, "y": 338, "w": 34, "h": 34, "vx": -0.72, "min": 1240, "max": 1460, "kind": "red_koopa"}
+  ],
+  "signposts": [
+    {"kind": "bubble", "x": 105, "y": 280, "w": 190, "h": 54, "lines": ["Mushroom = big form", "Run + jump to compare frames"]}
+  ],
+  "portal": {"x": 1660, "y": 266, "w": 70, "h": 98}
+}
