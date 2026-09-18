@@ -2310,7 +2310,10 @@ function imageSpriteFrame(s){
   // Stored semantic pieces are authoritative; runtime only resolves role to theme art.
   const id = s.image || s.asset || s.id;
   const rec = cartImageRecord(id);
-  const img = rec && rec.img;
+  // A cache record exists as soon as loading starts.  Do not treat that as a
+  // drawable image: data-URL themes can reach the first map frame before the
+  // image's load event.  loadCartImageAssets schedules a redraw when ready.
+  const img = rec && rec.ready ? rec.img : null;
   const truth = themeTruthForImage(id) || {};
   const def = isPlainObject(truth.defaultSize) ? truth.defaultSize : {};
   const scale = s.scale || 1;

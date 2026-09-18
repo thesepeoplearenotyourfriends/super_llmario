@@ -551,22 +551,23 @@
         "kind": "pipe",
         "x": 688,
         "y": 372,
-        "h": 58,
-        "scale": 1,
+        "h": 64,
+        "scale": 0.5517241379310345,
         "layer": "back",
         "solid": true,
         "global": true,
         "noTravel": true,
         "constructionGroup": "reference_pipe_1",
         "constructionBinding": "pipe",
-        "resolvedVisuals": true
+        "resolvedVisuals": true,
+        "length": 64
       },
       {
         "kind": "pipe",
         "x": 1450,
         "y": 372,
-        "h": 86,
-        "scale": 1,
+        "h": 96,
+        "scale": 0.5517241379310345,
         "layer": "back",
         "solid": true,
         "global": true,
@@ -576,14 +577,15 @@
         },
         "constructionGroup": "reference_pipe_2",
         "constructionBinding": "pipe",
-        "resolvedVisuals": true
+        "resolvedVisuals": true,
+        "length": 96
       },
       {
         "kind": "pipe",
         "x": 1740,
         "y": 372,
-        "h": 86,
-        "scale": 1,
+        "h": 96,
+        "scale": 0.5517241379310345,
         "layer": "back",
         "solid": true,
         "global": true,
@@ -593,7 +595,8 @@
         },
         "constructionGroup": "reference_pipe_3",
         "constructionBinding": "pipe",
-        "resolvedVisuals": true
+        "resolvedVisuals": true,
+        "length": 96
       }
     ]
   },
