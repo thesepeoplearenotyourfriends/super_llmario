@@ -2310,7 +2310,10 @@ function imageSpriteFrame(s){
   // Stored semantic pieces are authoritative; runtime only resolves role to theme art.
   const id = s.image || s.asset || s.id;
   const rec = cartImageRecord(id);
-  const img = rec && rec.img;
+  // A cache record exists as soon as loading starts.  Do not treat that as a
+  // drawable image: data-URL themes can reach the first map frame before the
+  // image's load event.  loadCartImageAssets schedules a redraw when ready.
+  const img = rec && rec.ready ? rec.img : null;
   const truth = themeTruthForImage(id) || {};
   const def = isPlainObject(truth.defaultSize) ? truth.defaultSize : {};
   const scale = s.scale || 1;
@@ -2945,6 +2948,15 @@ function stompEnemy(e){
   player.vy = -8.6;
   shake = 3;
 }
+function isStompContact(e,previousPlayerY,previousEnemyY){
+  if(!e || !finiteNumber(previousPlayerY) || !finiteNumber(previousEnemyY)) return false;
+  const playerDy=player.y-previousPlayerY, enemyDy=e.y-previousEnemyY;
+  const descendingRelative=playerDy-enemyDy>0;
+  const previousBottom=previousPlayerY+player.h;
+  // Permit only a small integration slop at the old top plane.  This is a
+  // swept, relative-motion test rather than a current-frame penetration test.
+  return descendingRelative && previousBottom<=previousEnemyY+4;
+}
 function knockOutEnemy(e, source){
   const center=e.x+e.w/2, feet=e.y+e.h;
   // A shell can hit a koopa after it has withdrawn.  Restore the walking
@@ -3094,7 +3106,7 @@ function updateProjectiles(){
     for(const e of enemies){
       if(!e.alive || !aabb(p,e) || (flowerEnemy(e)&&e.exposure<.55)) continue;
       p.alive=false;
-      if(!spikedEnemy(e)){ e.alive=false;e.flat=18;player.coins+=2;playSfx('stomp'); }
+      if(!spikedEnemy(e)){ knockOutEnemy(e,p);player.coins+=2;playSfx('stomp'); }
       break;
     }
     if(p.life<=0||p.bounces>8||p.y>worldDeathY())p.alive=false;
@@ -3267,6 +3279,11 @@ function update(){
     return;
   }
   if(shake > 0) shake *= 0.84;
+  // Preserve pre-motion positions for actor contact classification.  Enemy
+  // motion is resolved later in this same frame, so current overlap depth is
+  // not enough to distinguish a stomp from side/below contact.
+  const previousPlayerY = player.y;
+  const previousEnemyY = new Map();
   for(const b of floatingBlocks) b.prevY = currentBlockY(b);
   floatingBlocks.forEach(b => { if(b.busted) return; b.bob += 0.045; if(b.bump > 0) b.bump -= 1; });
   // Carry the player on one best supporting bobbing block only.  At seams,
@@ -3399,16 +3416,16 @@ function update(){
   if(player.x < 0) player.x = 0;
   if(player.x > WORLD_W - player.w) player.x = WORLD_W - player.w;
 
-  const stompVy = player.vy;
   for(const e of enemies){
     if(!e.alive){ if(e.flat > 0) e.flat -= 1; continue; }
     if(e.pickupLock && !aabb(player,e)) e.pickupLock=false;
+    previousEnemyY.set(e,e.y);
     updateEnemyMotion(e);
   }
   resolveMovingShellHits();
   const enemyHits=enemies.filter(e => e.alive && e.state!=='shellHeld' && e.state!=='knockedOut' && (!flowerEnemy(e)||e.exposure>.55) && aabb(player,e));
   if(enemyHits.length){
-    const stompHits = enemyHits.filter(e => !spikedEnemy(e) && !flowerEnemy(e) && stompVy > 1 && player.y + player.h - e.y < 16);
+    const stompHits = enemyHits.filter(e => !spikedEnemy(e) && !flowerEnemy(e) && isStompContact(e,previousPlayerY,previousEnemyY.get(e)));
     if(stompHits.length){
       for(const e of stompHits) stompEnemy(e);
       player.vy = -8.6;
@@ -4166,7 +4183,7 @@ function drawFloatingBlocks(){
     const kind=String(b.boxKind||b.kind||b.style||'').toLowerCase();
     const isBrick=kind === 'brick' || kind === 'breakable';
     const isQuestion=['question','reward','coin','powerup','glow'].includes(kind);
-    const semantic = b.used && (isBrick||isQuestion) ? semanticAsset('block-hidden.revealed') : (isBrick ? semanticAsset('block-breakable') : (isQuestion ? (animationAsset('block.question.visual',tick,8) || semanticAsset('block-question.visual.frame_0')) : null));
+    const semantic = b.used && (isBrick||isQuestion) ? semanticAsset('map.block.hidden.revealed') : (isBrick ? semanticAsset('map.block.breakable') : (isQuestion ? (animationAsset('block.question.visual',tick,8) || semanticAsset('map.block.question.visual.frame_0')) : null));
     if(semantic && drawThemedAsset(semantic,{x:b.x,y:currentBlockY(b),w:b.w,h:b.h})) continue;
     drawRecipe(blockRecipePath(b), b, {used:!!b.used});
   }
@@ -4311,8 +4328,8 @@ function drawBlob(e){
 function drawEnemyAttachments(e){
   if(!e.alive||!e.winged||e.state!=='walking')return;
   const id=animationAsset('enemy.wing.flap',tick+(e.x||0),5); if(!id)return;
-  drawThemedAsset(id,{x:e.x-9,y:e.y+2,w:18,h:25},{mirror:true});
-  drawThemedAsset(id,{x:e.x+e.w-9,y:e.y+2,w:18,h:25});
+  drawThemedAsset(id,{x:e.x-9,y:e.y+2,w:18,h:25});
+  drawThemedAsset(id,{x:e.x+e.w-9,y:e.y+2,w:18,h:25},{mirror:true});
 }
 function drawPipeMountedFlowers(){
   for(const e of enemies){
