@@ -366,6 +366,24 @@ const ART_RESOURCES = [
   }
 ];
 
+// Gameplay SFX are durable engine defaults. Cartridges may override individual
+// settings or cues without having to carry the rest of the RetroCharm library.
+const ENGINE_DEFAULT_AUDIO = {
+  defaults:{volume:.70,transpose:0,charm:1,space:0,crunch:0,sfxVolume:.85,musicVolume:.45},
+  sfx:{
+    jump:[{role:'bass',note:38,vel:.14,at:0,dur:.070},{role:'bass',note:43,vel:.10,at:.045,dur:.075}],
+    coin:[{role:'bell',note:83,vel:.70,at:0,dur:.060},{role:'bell',note:88,vel:.60,at:.052,dur:.085}],
+    star:[{role:'bell',note:88,vel:.70,at:0,dur:.075},{role:'spark',note:95,vel:.50,at:.055,dur:.090}],
+    bonk:[{role:'bass',note:45,vel:.50,at:0,dur:.045},{role:'pluck',note:57,vel:.28,at:.035,dur:.045}],
+    break:[{role:'drum',note:40,vel:.58,at:0,dur:.045},{role:'bass',note:47,vel:.45,at:.028,dur:.050},{role:'spark',note:71,vel:.28,at:.050,dur:.060}],
+    mushroomOut:[{role:'pluck',note:60,vel:.45,at:0,dur:.055},{role:'pluck',note:64,vel:.50,at:.055,dur:.060},{role:'pluck',note:67,vel:.55,at:.112,dur:.080}],
+    powerup:[{role:'lead',note:60,vel:.48,at:0,dur:.055},{role:'lead',note:64,vel:.54,at:.065,dur:.055},{role:'lead',note:67,vel:.60,at:.130,dur:.070},{role:'bell',note:76,vel:.45,at:.190,dur:.110}],
+    stomp:[{role:'drum',note:36,vel:.65,at:0,dur:.050},{role:'spark',note:64,vel:.38,at:.035,dur:.055}],
+    hurt:[{role:'bass',note:55,vel:.58,at:0,dur:.055},{role:'bass',note:48,vel:.48,at:.070,dur:.075}],
+    clear:[{role:'bell',note:72,vel:.55,at:0,dur:.075},{role:'bell',note:76,vel:.58,at:.080,dur:.075},{role:'bell',note:79,vel:.62,at:.160,dur:.100},{role:'spark',note:88,vel:.42,at:.245,dur:.110}]
+  }
+};
+
 const DEMO_CART = {
   format:'llmcart-toybox-recipe',
   cartVersion:2,
@@ -380,23 +398,7 @@ const DEMO_CART = {
     welcome:['Physics Test Plains','Walk, run, hop, and clear the gaps.'],
     win:'Physics test cartridge clear!'
   },
-  audio:{
-    // Same RetroCharm synth identity as the future MIDI/theme player.
-    // This keeps SFX and later music on one shared AudioContext/synth rail.
-    defaults:{volume:.70,transpose:0,charm:1,space:0,crunch:0,sfxVolume:.85,musicVolume:.45},
-    sfx:{
-      jump:[{role:'bass',note:38,vel:.14,at:0,dur:.070},{role:'bass',note:43,vel:.10,at:.045,dur:.075}],
-      coin:[{role:'bell',note:83,vel:.70,at:0,dur:.060},{role:'bell',note:88,vel:.60,at:.052,dur:.085}],
-      star:[{role:'bell',note:88,vel:.70,at:0,dur:.075},{role:'spark',note:95,vel:.50,at:.055,dur:.090}],
-      bonk:[{role:'bass',note:45,vel:.50,at:0,dur:.045},{role:'pluck',note:57,vel:.28,at:.035,dur:.045}],
-      break:[{role:'drum',note:40,vel:.58,at:0,dur:.045},{role:'bass',note:47,vel:.45,at:.028,dur:.050},{role:'spark',note:71,vel:.28,at:.050,dur:.060}],
-      mushroomOut:[{role:'pluck',note:60,vel:.45,at:0,dur:.055},{role:'pluck',note:64,vel:.50,at:.055,dur:.060},{role:'pluck',note:67,vel:.55,at:.112,dur:.080}],
-      powerup:[{role:'lead',note:60,vel:.48,at:0,dur:.055},{role:'lead',note:64,vel:.54,at:.065,dur:.055},{role:'lead',note:67,vel:.60,at:.130,dur:.070},{role:'bell',note:76,vel:.45,at:.190,dur:.110}],
-      stomp:[{role:'drum',note:36,vel:.65,at:0,dur:.050},{role:'spark',note:64,vel:.38,at:.035,dur:.055}],
-      hurt:[{role:'bass',note:55,vel:.58,at:0,dur:.055},{role:'bass',note:48,vel:.48,at:.070,dur:.075}],
-      clear:[{role:'bell',note:72,vel:.55,at:0,dur:.075},{role:'bell',note:76,vel:.58,at:.080,dur:.075},{role:'bell',note:79,vel:.62,at:.160,dur:.100},{role:'spark',note:88,vel:.42,at:.245,dur:.110}]
-    }
-  },
+  audio:ENGINE_DEFAULT_AUDIO,
   theme:{
     skyTop:'#153b76', skyBottom:'#d9fbff',
     hillA:'#4ac79e', hillB:'#7cd9c4', mountainA:'#2a7cc7', mountainB:'#68b9f2',
@@ -1555,9 +1557,9 @@ function buildCartFromThemeAndMap(theme, map){
     resources: cloneData(theme.resources || map.resources || []),
     assets: cloneData(theme.assets || {}),
     imageAssets: cloneData(theme.imageAssets || {}),
-    // Split themes override only the recipes they own. Durable engine fallbacks
-    // remain available for missing semantic states and older partial themes.
-    recipes: mergeCartValue(DEMO_CART.recipes || {}, theme.recipes || {}),
+    // Visual identity belongs wholly to the selected theme. Missing recipes
+    // use engine drawing fallbacks, never the embedded Physics Plains content.
+    recipes: cloneData(theme.recipes || {}),
     animationGroups: cloneData(theme.animationGroups || {}),
     constructionCatalog: cloneData(theme.constructionCatalog || {}),
     assetCatalog: cloneData(theme.assetCatalog || {}),
@@ -1568,7 +1570,13 @@ function buildCartFromThemeAndMap(theme, map){
     playerSpawn: cloneData(map.playerSpawn || {x:78,y:276}),
     hud: cloneData(map.hud || {title:'SUPER LLMARIO', shortName:'MAP'}),
     messages: normalizeMapMessages(map),
-    audio: cloneData(map.audio || theme.audio || {}),
+    audio: mergeCartValue(
+      mergeCartValue(
+        mergeCartValue(ENGINE_DEFAULT_AUDIO, (theme.defaults && theme.defaults.audio) || {}),
+        theme.audio || {}
+      ),
+      map.audio || {}
+    ),
     background: cloneData(map.background || theme.background || (theme.defaults && theme.defaults.background) || {}),
     placement: cloneData(map.placement || {autoCleanup:false}),
     resourceScenery: cloneData(map.resourceScenery || {}),
@@ -1593,7 +1601,11 @@ function normalizeCart(raw){
   if(!isPlainObject(raw)) throw new Error('Cartridge must be a JSON object.');
   if(raw.format && raw.format !== 'llmcart-toybox-recipe') throw new Error('Unsupported cartridge format: '+raw.format);
   const rawHasResourceScenery = Object.prototype.hasOwnProperty.call(raw, 'resourceScenery');
-  const cart = mergeCartValue(DEMO_CART, raw);
+  // A constructed split cart is already complete. Merging it over DEMO_CART
+  // would silently restore Physics Plains recipes and other visual identity.
+  // Legacy monolithic cartridges retain their historical compatibility merge.
+  const base = raw.splitSource ? {audio:ENGINE_DEFAULT_AUDIO} : DEMO_CART;
+  const cart = mergeCartValue(base, raw);
   cart.format = 'llmcart-toybox-recipe';
   cart.cartVersion = cart.cartVersion || 2;
   convertTruthSlopePlatformsToSprites(cart);
