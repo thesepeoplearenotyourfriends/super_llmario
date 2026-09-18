@@ -811,6 +811,50 @@ function cartImage(id){
   return rec && rec.ready ? rec.img : null;
 }
 function cartImageRecord(id){ return id && CART_IMAGE_CACHE[id] ? CART_IMAGE_CACHE[id] : null; }
+function themeImageIds(){ return Object.keys((ACTIVE_CART && ACTIVE_CART.assets && ACTIVE_CART.assets.images) || {}); }
+function inferredAnimationGroups(cart){
+  const out = Object.create(null), explicit = cart && cart.animationGroups;
+  if(isPlainObject(explicit)) for(const key of Object.keys(explicit)){
+    const frames = Array.isArray(explicit[key]) ? explicit[key] : [];
+    out[key] = frames.map((v,i) => typeof v === 'string' ? {asset:v,frame:i} : v).filter(v => v && v.asset).sort((a,b) => (a.frame||0)-(b.frame||0) || String(a.asset).localeCompare(String(b.asset)));
+  }
+  const images = (cart && cart.assets && cart.assets.images) || {};
+  for(const id of Object.keys(images)){
+    const m = id.match(/^(.*)\.frame_(\d+)$/);
+    if(!m) continue;
+    const key = m[1], frame = Number(m[2]);
+    if(!out[key]) out[key] = [];
+    if(!out[key].some(v => v.asset === id)) out[key].push({asset:id,frame:frame});
+  }
+  for(const key of Object.keys(out)) out[key].sort((a,b) => (a.frame||0)-(b.frame||0) || String(a.asset).localeCompare(String(b.asset)));
+  return out;
+}
+function animationFrames(group){ return (ACTIVE_CART && ACTIVE_CART._animationGroups && ACTIVE_CART._animationGroups[group]) || []; }
+function animationAsset(group, clock, hold){
+  const frames = animationFrames(group).filter(f => cartImageRecord(f.asset));
+  if(!frames.length) return null;
+  return frames[Math.floor((clock || 0) / Math.max(1,hold || 8)) % frames.length].asset;
+}
+function semanticAsset(suffix, test){
+  const ids = themeImageIds().filter(id => id === suffix || id.endsWith('.'+suffix));
+  return (test ? ids.find(test) : ids[0]) || null;
+}
+function drawThemedAsset(id, box, opts){
+  const img = cartImage(id);
+  if(!img || !box) return false;
+  opts = opts || {};
+  const oldSmooth = ctx.imageSmoothingEnabled, oldAlpha = ctx.globalAlpha;
+  ctx.save();
+  ctx.imageSmoothingEnabled = opts.smooth === true;
+  if(opts.alpha != null) ctx.globalAlpha = oldAlpha * opts.alpha;
+  const x = Math.round(worldX(box.x)), y = Math.round(box.y), w = Math.round(box.w), h = Math.round(box.h);
+  ctx.translate(x + w/2, y + h);
+  ctx.scale(opts.mirror ? -1 : 1, opts.squash == null ? 1 : opts.squash);
+  ctx.drawImage(img, -w/2, -h, w, h);
+  ctx.restore();
+  ctx.globalAlpha = oldAlpha; ctx.imageSmoothingEnabled = oldSmooth;
+  return true;
+}
 const saveKey = 'super_llmario_plains_picture_style_best';
 function storageGet(k, fallback){
   try{
@@ -1314,7 +1358,7 @@ function normalizeCartridgePlacements(cart){
 }
 
 function docFormat(raw){ return raw && typeof raw.format === 'string' ? raw.format : ''; }
-function isThemeDoc(raw){ return docFormat(raw) === 'llmario-theme-v1'; }
+function isThemeDoc(raw){ return docFormat(raw) === 'llmario-theme-v1' || docFormat(raw) === 'llmario-theme-pack-v1'; }
 function isMapDoc(raw){ return docFormat(raw) === 'llmario-map-v1'; }
 function isLegacyCartDoc(raw){ return !docFormat(raw) || docFormat(raw) === 'llmcart-toybox-recipe'; }
 function themeIdOf(theme){ return theme && (theme.id || theme.themeId || theme.title || 'theme'); }
@@ -1335,6 +1379,10 @@ function truthForCartAsset(cart, id){
   }
   const p = cart.placeables;
   if(isPlainObject(p) && isPlainObject(p[id])) return p[id];
+  const catalog = cart.assetCatalog;
+  if(isPlainObject(catalog) && isPlainObject(catalog[id])) return catalog[id];
+  const collision = cart.collisionTruth;
+  if(isPlainObject(collision) && isPlainObject(collision.assets) && isPlainObject(collision.assets[id])) return collision.assets[id];
   return null;
 }
 function collisionKind(c){ return String((c && (c.kind || c.type)) || '').toLowerCase(); }
@@ -1395,7 +1443,12 @@ function buildCartFromThemeAndMap(theme, map){
     resources: cloneData(theme.resources || map.resources || []),
     assets: cloneData(theme.assets || {}),
     imageAssets: cloneData(theme.imageAssets || {}),
-    recipes: cloneData(theme.recipes || {}),
+    // Split themes override only the recipes they own. Durable engine fallbacks
+    // remain available for missing semantic states and older partial themes.
+    recipes: mergeCartValue(DEMO_CART.recipes || {}, theme.recipes || {}),
+    animationGroups: cloneData(theme.animationGroups || {}),
+    assetCatalog: cloneData(theme.assetCatalog || {}),
+    collisionTruth: cloneData(theme.collisionTruth || {}),
     assetTruth: cloneData(theme.assetTruth || {}),
     placeables: cloneData(theme.placeables || {}),
     world: cloneData(map.world || {width:4300, groundY:372}),
@@ -1451,6 +1504,7 @@ function normalizeCart(raw){
 function replaceArray(target, values){ target.splice(0, target.length, ...values); }
 function rebuildWorldFromCart(cart){
   ACTIVE_CART = cart;
+  ACTIVE_CART._animationGroups = inferredAnimationGroups(ACTIVE_CART);
   WORLD_W = ACTIVE_CART.world.width;
   GROUND_Y = ACTIVE_CART.world.groundY;
   loadCartImageAssets(ACTIVE_CART);
@@ -2032,6 +2086,9 @@ function themeTruthForImage(id){
   }
   const p = ACTIVE_CART.placeables;
   if(isPlainObject(p) && isPlainObject(p[id])) return p[id];
+  if(isPlainObject(ACTIVE_CART.assetCatalog) && isPlainObject(ACTIVE_CART.assetCatalog[id])) return ACTIVE_CART.assetCatalog[id];
+  const collision = ACTIVE_CART.collisionTruth;
+  if(isPlainObject(collision) && isPlainObject(collision.assets) && isPlainObject(collision.assets[id])) return collision.assets[id];
   return null;
 }
 function imageSpriteEffectiveCollision(s){
@@ -3068,9 +3125,19 @@ function drawSky(){
       return;
     }
     // During tiny camera offsets near the top row, keep the normal sky.
-    if(camY <= topY + 2){ drawRecipe('sky'); return; }
+    if(camY <= topY + 2){ if(!drawSemanticBackground()) drawRecipe('sky'); return; }
   }
-  drawRecipe('sky');
+  if(!drawSemanticBackground()) drawRecipe('sky');
+}
+function drawSemanticBackground(){
+  const cells=themeImageIds().map(id=>{const m=id.match(/\.background-cell\.x(\d+)\.y(\d+)$/);return m?{id,x:Number(m[1]),y:Number(m[2])}:null}).filter(Boolean);
+  if(!cells.length) return false;
+  const sample=cartImage(cells[0].id); if(!sample) return false;
+  const ts=32, cols=Math.max(...cells.map(c=>c.x))+1, rows=Math.max(...cells.map(c=>c.y))+1, span=Math.max(ts,cols*ts);
+  ctx.fillStyle='#6c94fc';ctx.fillRect(0,0,W,H);
+  const off=((cam*.04)%span+span)%span, old=ctx.imageSmoothingEnabled;ctx.imageSmoothingEnabled=false;
+  for(let base=-off-span;base<W+span;base+=span)for(const c of cells){const img=cartImage(c.id);if(img)ctx.drawImage(img,Math.round(base+c.x*ts),Math.round(c.y*ts),ts,ts)}
+  ctx.imageSmoothingEnabled=old;return true;
 }
 function prefabToySky(r){
   const grad = r.gradient || ['#69c8ff','#9be3ff','#c3f1ff'];
@@ -3204,6 +3271,22 @@ function drawArcadePipe(x, baseY, h, scale, r){
 function drawNativePipe(p,r){
   const box=sceneryPipeSolid(p),x=Math.round(worldX(box.x)),y=Math.round(box.y),s=p.scale||1,d=box.direction||'up';
   if(x>W+120||x+box.w<-120)return;
+  if(d === 'up'){
+    const mouthL = semanticAsset('pipe-vertical.mouth.left'), mouthR = semanticAsset('pipe-vertical.mouth.right');
+    const bodyL = semanticAsset('pipe-vertical.body.left'), bodyR = semanticAsset('pipe-vertical.body.right');
+    if(mouthL && mouthR && bodyL && bodyR && cartImage(mouthL) && cartImage(mouthR) && cartImage(bodyL) && cartImage(bodyR)){
+      const half = box.w/2, capH = Math.min(box.h, Math.max(16*s, box.w/2));
+      const old = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(cartImage(mouthL), x, y, Math.ceil(half), Math.ceil(capH));
+      ctx.drawImage(cartImage(mouthR), x+Math.floor(half), y, Math.ceil(box.w-half), Math.ceil(capH));
+      for(let yy=y+capH; yy<y+box.h; yy+=Math.max(8,16*s)){
+        const hh=Math.min(Math.max(8,16*s),y+box.h-yy);
+        ctx.drawImage(cartImage(bodyL),x,Math.round(yy),Math.ceil(half),Math.ceil(hh));
+        ctx.drawImage(cartImage(bodyR),x+Math.floor(half),Math.round(yy),Math.ceil(box.w-half),Math.ceil(hh));
+      }
+      ctx.imageSmoothingEnabled = old; return;
+    }
+  }
   ctx.save();
   const g=ctx.createLinearGradient(x,y,x+box.w,y+box.h);g.addColorStop(0,r.hi||'#a2f042');g.addColorStop(.45,r.mid||'#6fd000');g.addColorStop(1,r.dark||'#2f8900');
   rr(x,y,box.w,box.h,5*s,g,r.edge||'#2a7b00',2);
@@ -3308,6 +3391,13 @@ function drawPlatform(p){
     if(drawRecipe('platforms.slope', p)) return;
     prefabSlopePlatform({}, p);
     return;
+  }
+  const terrain = semanticAsset('terrain-autotile.overground.mask_1100') || semanticAsset('terrain-autotile.overground.mask_0100');
+  if(terrain && cartImage(terrain)){
+    const x=worldX(p.x), ts=Math.max(16,Math.min(42,p.tileSize||32)), old=ctx.imageSmoothingEnabled;
+    ctx.save();ctx.beginPath();ctx.rect(Math.round(x),Math.round(p.y),Math.round(p.w),Math.round(p.h));ctx.clip();ctx.imageSmoothingEnabled=false;
+    for(let yy=p.y;yy<p.y+p.h;yy+=ts)for(let xx=x;xx<x+p.w;xx+=ts)ctx.drawImage(cartImage(terrain),Math.round(xx),Math.round(yy),Math.ceil(ts),Math.ceil(ts));
+    ctx.restore();ctx.imageSmoothingEnabled=old;return;
   }
   drawRecipe('platforms.'+(p.type || 'ground'), p);
 }
@@ -3601,11 +3691,18 @@ function prefabImageBlock(r,b,state){
 function drawFloatingBlocks(){
   for(const b of floatingBlocks){
     if(b.busted) continue;
+    const semantic = b.used ? semanticAsset('block-hidden.revealed') : ((String(b.boxKind||b.kind||b.style||'').toLowerCase().includes('brick') ? semanticAsset('block-breakable') : (animationAsset('block.question.visual',tick,8) || semanticAsset('block-question.visual.frame_0'))));
+    if(semantic && drawThemedAsset(semantic,{x:b.x,y:currentBlockY(b),w:b.w,h:b.h})) continue;
     drawRecipe(blockRecipePath(b), b, {used:!!b.used});
   }
 }
 
-function drawCoin(c){ drawRecipe('pickups.coin', c); }
+function drawCoin(c){
+  if(c.taken) return;
+  const id=animationAsset('pickup.coin.visual',tick+c.x,6)||semanticAsset('pickup-coin');
+  if(id && drawThemedAsset(id,{x:c.x-12,y:c.y-14,w:24,h:28})) return;
+  drawRecipe('pickups.coin', c);
+}
 function prefabCoin(r,c){
   if(c.taken) return;
   const x = worldX(c.x), y = c.y + Math.sin(tick*0.1 + c.x*0.03)*5;
@@ -3628,7 +3725,12 @@ function prefabStar(r,s){
   ctx.fillStyle = r.eye || '#398d39'; ctx.fillRect(Math.round(x-5),Math.round(y-2),3,3); ctx.fillRect(Math.round(x+3),Math.round(y-2),3,3); ctx.restore();
 }
 
-function drawPowerup(p){ if(p.kind === 'mushroom') drawRecipe('pickups.mushroom', p); }
+function drawPowerup(p){
+  if(p.kind !== 'mushroom' || p.taken) return;
+  const id=semanticAsset('pickup-powerup.grow');
+  if(id && drawThemedAsset(id,{x:p.x,y:p.y,w:p.w,h:p.h})) return;
+  drawRecipe('pickups.mushroom', p);
+}
 function prefabMushroom(r,p){
   if(p.taken) return;
   const x = worldX(p.x), y = p.y;
@@ -3694,7 +3796,24 @@ function prefabPortal(r,portal){
   ctx.restore();
 }
 
-function drawBlob(e){ drawRecipe('enemies.'+(e.kind||'blob'), e); }
+function enemyAnimationGroup(e){
+  const groups=Object.keys((ACTIVE_CART&&ACTIVE_CART._animationGroups)||{}).filter(k=>k.startsWith('enemy.'));
+  if(e&&e.themeAnimation&&groups.includes(e.themeAnimation)) return e.themeAnimation;
+  const kind=String((e&&e.kind)||'').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+  const wanted=[];
+  if(kind) wanted.push('enemy.'+kind+'.walk','enemy.'+kind);
+  if(kind.includes('shell')) wanted.push(...groups.filter(k=>k.includes('.shell')));
+  if(kind.includes('fly')||kind.includes('wing')) wanted.push(...groups.filter(k=>k.includes('wave')||k.includes('wing')));
+  wanted.push('enemy.goomba.walk');
+  return wanted.find(k=>groups.includes(k)) || groups.find(k=>k.endsWith('.walk')) || groups[0] || null;
+}
+function drawBlob(e){
+  if(!e.alive && e.flat <= 0) return;
+  const group=enemyAnimationGroup(e), id=group&&animationAsset(group,tick+(e.x||0),8);
+  const squash=e.alive?1:Math.max(.24,e.flat/18);
+  if(id && drawThemedAsset(id,{x:e.x,y:e.y,w:e.w,h:e.h},{mirror:e.vx>0,squash:squash})) return;
+  drawRecipe('enemies.'+(e.kind||'blob'), e);
+}
 function prefabBlob(r,e){
   if(!e.alive && e.flat <= 0) return;
   const x = worldX(e.x), y = e.y;
@@ -3709,7 +3828,31 @@ function prefabBlob(r,e){
   ctx.fillStyle = r.pupil || '#0a3b6b'; ctx.fillRect(9,13,2,2); ctx.fillRect(18,13,2,2); ctx.restore();
 }
 
-function drawPlayer(){ drawRecipe('hero', player); }
+function playerMotionAsset(){
+  const ids=themeImageIds(), familyIds=ids.filter(id=>id.includes('.player-motion.'));
+  if(!familyIds.length) return null;
+  const families=Array.from(new Set(familyIds.map(id=>id.split('.player-motion.')[0])));
+  const family=player.big ? (families.find(f=>!/small|fire|racoon/i.test(f))||families[0]) : (families.find(f=>/small/i.test(f))||null);
+  if(!family) return null;
+  const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
+  const running=!!input.run&&speed>2.2;
+  let states;
+  if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
+  else if(!player.onGround) states=running?['fast_jump','jump']:['jump','fast_jump'];
+  else if(reversing) states=['skid','idle_walk_0'];
+  else if(running) states=['fast_run_'+(Math.floor(tick/6)%3),'fast_run_0','walk_1','idle_walk_0'];
+  else if(speed>.15) states=['walk_'+(1+Math.floor(tick/7)%2),'walk_1','idle_walk_0'];
+  else states=['idle_walk_0'];
+  for(const state of states){const id=family+'.player-motion.'+state;if(ids.includes(id)&&cartImageRecord(id))return id;}
+  return null;
+}
+function drawPlayer(){
+  if(player.deadTimer > 0 && Math.floor(player.deadTimer/4)%2) return;
+  if(player.inv > 0 && Math.floor(player.inv/5)%2) return;
+  const id=playerMotionAsset();
+  if(id && drawThemedAsset(id,{x:player.x,y:player.y,w:player.w,h:player.h},{mirror:player.face<0})) return;
+  drawRecipe('hero', player);
+}
 
 function prefabMushroomHero(r,player){
   if(player.deadTimer > 0 && Math.floor(player.deadTimer/4)%2) return;
