@@ -1,25 +1,11 @@
 #!/usr/bin/env python3
+"""Build the complete, nonempty MarioAI reference theme.
+
+Canonical names and semantic metadata intentionally come from
+``compile_marioai_semantics.py``.  This converter only adds a sheet namespace
+when a canonical name is not already namespaced by its sheet; it contains no
+second asset-naming table.
 """
-Convert MarioAI resource sheets into a self-contained LLMario theme pack.
-
-Expected source directory contents:
-    mapsheet.png
-    bgsheet.png
-    enemysheet.png
-    itemsheet.png
-    particlesheet.png
-    tiles.dat
-    LICENSE   (recommended; embedded into theme metadata if present)
-
-Usage:
-    python3 marioai_to_llmtheme.py /path/to/marioai-source
-    python3 marioai_to_llmtheme.py /path/to/marioai-source -o theme_marioai.llmtheme.txt
-    python3 marioai_to_llmtheme.py /path/to/marioai-source --dump-cells
-
-Requires Pillow:
-    python3 -c 'import PIL'
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -27,448 +13,174 @@ import base64
 import io
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 try:
     from PIL import Image
 except ImportError:
-    print(
-        "ERROR: Pillow is required. Check with: python3 -c 'import PIL'\n"
-        "If it is not installed, install your distro's python3-pil package or Pillow.",
-        file=sys.stderr,
-    )
+    print("ERROR: Pillow is required (python3 -m pip install Pillow).", file=sys.stderr)
     raise SystemExit(2)
 
+import compile_marioai_semantics as semantics
 
-BIT_BLOCK_UPPER = 1 << 0
-BIT_BLOCK_ALL = 1 << 1
-BIT_BLOCK_LOWER = 1 << 2
-BIT_SPECIAL = 1 << 3
-BIT_BUMPABLE = 1 << 4
-BIT_BREAKABLE = 1 << 5
-BIT_PICKUPABLE = 1 << 6
-BIT_ANIMATED = 1 << 7
-
-FLAGS = [
-    ("blockUpper", BIT_BLOCK_UPPER),
-    ("blockAll", BIT_BLOCK_ALL),
-    ("blockLower", BIT_BLOCK_LOWER),
-    ("special", BIT_SPECIAL),
-    ("bumpable", BIT_BUMPABLE),
-    ("breakable", BIT_BREAKABLE),
-    ("pickupable", BIT_PICKUPABLE),
-    ("animated", BIT_ANIMATED),
-]
-
-SHEETS = {
-    "mapsheet.png": ("map", 16, 16),
-    "bgsheet.png": ("bg", 32, 32),
-    "enemysheet.png": ("enemy", 16, 32),
-    "itemsheet.png": ("item", 16, 16),
-    "particlesheet.png": ("particle", 8, 8),
+THEME_SHEETS = {name: spec for name, spec in semantics.SHEETS.items() if spec[3] == "theme"}
+CATEGORY = {
+    "map": "mapTile", "background": "backgroundArt", "enemy": "enemyArt",
+    "item": "itemArt", "particle": "particleArt", "player_large": "playerArt",
+    "player_small": "playerArt", "player_fire": "playerArt", "player_carry": "playerArt",
+    "goal_actor": "goalActorArt",
 }
 
 
-def png_data_url(img: Image.Image) -> str:
-    bio = io.BytesIO()
-    img.save(bio, format="PNG", optimize=False)
-    return "data:image/png;base64," + base64.b64encode(bio.getvalue()).decode("ascii")
+def png_data_url(image: Image.Image) -> str:
+    out = io.BytesIO()
+    image.save(out, format="PNG", optimize=False)
+    return "data:image/png;base64," + base64.b64encode(out.getvalue()).decode("ascii")
 
 
-def image_is_empty(img: Image.Image) -> bool:
-    rgba = img.convert("RGBA")
-    return rgba.getchannel("A").getbbox() is None
+def canonical_asset_id(entry: dict) -> str:
+    """Qualify the compiler's canonical name only where it is not self-namespaced."""
+    name = entry["canonical_name"]
+    sheet = entry["sheet"]
+    return name if name.startswith(sheet + ".") else f"{sheet}.{name}"
 
 
-def split_sheet(path: Path, prefix: str, cell_w: int, cell_h: int):
-    img = Image.open(path).convert("RGBA")
-    if img.width % cell_w or img.height % cell_h:
-        raise ValueError(
-            f"{path.name}: {img.width}x{img.height} is not divisible by {cell_w}x{cell_h}"
-        )
-
-    cols = img.width // cell_w
-    rows = img.height // cell_h
-    cells = []
-
-    # Row-major. This matches MarioAI's mapsheet lookup:
-    # Art.level[b % 16][b / 16]
-    for y in range(rows):
-        for x in range(cols):
-            idx = y * cols + x
-            crop = img.crop(
-                (x * cell_w, y * cell_h, (x + 1) * cell_w, (y + 1) * cell_h)
-            )
-            if prefix == "map":
-                key = f"marioai_map_{idx:02x}"
-            else:
-                key = f"marioai_{prefix}_{idx:03d}"
-            cells.append(
-                {
-                    "key": key,
-                    "index": idx,
-                    "x": x,
-                    "y": y,
-                    "w": cell_w,
-                    "h": cell_h,
-                    "empty": image_is_empty(crop),
-                    "image": crop,
-                }
-            )
-    return {
-        "name": path.name,
-        "prefix": prefix,
-        "width": img.width,
-        "height": img.height,
-        "cellWidth": cell_w,
-        "cellHeight": cell_h,
-        "cols": cols,
-        "rows": rows,
-        "cells": cells,
-    }
+def semantic_entries(src: Path, behavior: bytes) -> tuple[list[dict], dict]:
+    logical = semantics.map_logical_roles()
+    visual_anims = semantics.map_visual_animation_roles()
+    autotiles, reverse_autotiles = semantics.autotile_rules()
+    entries = []
+    sheet_info = {}
+    for filename, (sheet, cw, ch, scope) in THEME_SHEETS.items():
+        path = src / filename
+        if not path.is_file():
+            raise FileNotFoundError(f"missing required file: {filename}")
+        image = Image.open(path).convert("RGBA")
+        if image.width % cw or image.height % ch:
+            raise ValueError(f"{filename}: dimensions are not divisible by {cw}x{ch}")
+        cols, rows = image.width // cw, image.height // ch
+        sheet_info[filename] = {"width": image.width, "height": image.height,
+            "cellWidth": cw, "cellHeight": ch, "cols": cols, "rows": rows,
+            "count": cols * rows}
+        for y in range(rows):
+            for x in range(cols):
+                index = y * cols + x
+                crop = image.crop((x*cw, y*ch, (x+1)*cw, (y+1)*ch))
+                entry = {"file": filename, "sheet": sheet, "scope": scope,
+                    "index": index, "x": x, "y": y, "cell_width": cw,
+                    "cell_height": ch, "canonical_name": semantics.fallback_name(sheet, x, y, index),
+                    "roles": [], "image": crop,
+                    "empty": crop.getchannel("A").getbbox() is None}
+                if sheet == "map":
+                    value = behavior[index]
+                    entry.update(behavior_byte=value, behavior_hex=f"{value:02X}",
+                                 behavior_flags=semantics.behavior_flags(value))
+                    for source_name, contract_role in logical.get(index, []):
+                        semantics.add_role(entry, source_name, contract_role)
+                    for source_name, contract_role, group, frame in visual_anims.get(index, []):
+                        semantics.add_role(entry, source_name, contract_role, animation=group, frame=frame)
+                    for style, mask in reverse_autotiles.get(index, []):
+                        semantics.add_role(entry, f"terrain.{style}.mask_{mask:04b}",
+                            f"terrain.autotile.{style}.mask_{mask:04b}",
+                            autotile_style=style, neighbor_mask=f"{mask:04b}")
+                elif sheet.startswith("player_"):
+                    role = semantics.player_role(sheet, x, y)
+                    if role: semantics.add_role(entry, *role)
+                elif sheet == "enemy": semantics.apply_enemy_roles(entry, x, y)
+                elif sheet == "item": semantics.apply_item_roles(entry, x, y)
+                elif sheet == "particle": semantics.apply_particle_roles(entry, x, y)
+                elif sheet == "goal_actor": semantics.apply_goal_roles(entry, x, y)
+                if entry["roles"]:
+                    entry["canonical_name"] = entry["roles"][0]["contract_role"]
+                entry["asset"] = None if entry["empty"] else canonical_asset_id(entry)
+                entries.append(entry)
+    return entries, {"sheets": sheet_info, "autotile": autotiles}
 
 
 def decode_behavior(value: int) -> dict:
-    return {name: bool(value & bit) for name, bit in FLAGS}
+    names = [("blockUpper",1),("blockAll",2),("blockLower",4),("special",8),
+             ("bumpable",16),("breakable",32),("pickupable",64),("animated",128)]
+    return {name: bool(value & bit) for name, bit in names}
 
 
-def llmario_collision(value: int) -> dict:
-    """
-    Best current LLMario collision projection.
-
-    Exact MarioAI behavior is ALSO preserved separately in the theme under
-    marioAI.behaviorByte/behavior flags, so no information is discarded.
-
-    MarioAI isBlocking():
-      BLOCK_ALL   -> blocks regardless of movement direction
-      BLOCK_UPPER -> blocks when ya > 0 (landing / top-only)
-      BLOCK_LOWER -> blocks when ya < 0 (ceiling-only)
-
-    Current LLMario theme truth has a useful rect/topStrip vocabulary but not
-    a native "ceiling-only" primitive. Ceiling-only cases are therefore marked
-    explicitly as an approximation instead of silently pretending they are exact.
-    """
+def collision_projection(value: int) -> tuple[dict, str]:
     b = decode_behavior(value)
-
-    if b["blockAll"]:
-        return {
-            "collision": {"kind": "rect", "x": 0, "y": 0, "w": 16, "h": 16},
-            "projection": "exact-for-solid-rect",
-        }
-
-    if b["blockUpper"] and not b["blockLower"]:
-        return {
-            "collision": {"kind": "topStrip", "x": 0, "y": 0, "w": 16, "h": 4},
-            "projection": "approximation-of-marioai-top-only",
-        }
-
-    if b["blockLower"] and not b["blockUpper"]:
-        return {
-            "collision": {"kind": "none"},
-            "projection": "unsupported-ceiling-only-preserved-in-marioAI-metadata",
-        }
-
-    if b["blockUpper"] and b["blockLower"]:
-        return {
-            "collision": {"kind": "rect", "x": 0, "y": 0, "w": 16, "h": 16},
-            "projection": "approximation-of-two-way-vertical-blocking",
-        }
-
-    return {
-        "collision": {"kind": "none"},
-        "projection": "exact-nonblocking",
-    }
+    if b["blockAll"]: return ({"kind":"rect","x":0,"y":0,"w":16,"h":16}, "exact-for-solid-rect")
+    if b["blockUpper"] and not b["blockLower"]: return ({"kind":"topStrip","x":0,"y":0,"w":16,"h":4}, "approximation-of-marioai-top-only")
+    if b["blockLower"] and not b["blockUpper"]: return ({"kind":"none"}, "unsupported-ceiling-only-preserved-in-marioAI-metadata")
+    if b["blockUpper"] and b["blockLower"]: return ({"kind":"rect","x":0,"y":0,"w":16,"h":16}, "approximation-of-two-way-vertical-blocking")
+    return ({"kind":"none"}, "exact-nonblocking")
 
 
-def make_theme(src: Path, dump_cells: bool = False) -> tuple[dict, dict]:
-    required = list(SHEETS) + ["tiles.dat"]
-    missing = [name for name in required if not (src / name).is_file()]
-    if missing:
-        raise FileNotFoundError("missing required files: " + ", ".join(missing))
+def construction_catalog() -> dict:
+    """Construction behavior references canonical assets directly; no role lookup map."""
+    return {"version":1,"topologyContract":{"neighborOrder":["top","right","bottom","left"],"note":"Catalog keys are explicit editor topology; MarioAI mask suffixes are provenance and are not decoded at runtime."},"families":{
+      "terrain.overground":{"id":"terrain.overground","name":"Overground terrain","category":"terrain","type":"terrain","dimensions":{"cell":16},"components":{"topology":{},"topologyFallback":{"strategy":"procedural","asset":"terrain.overground.procedural","style":{"fill":"#75451f","top":"#6abf31","topRatio":0.3125,"stroke":"rgba(0,0,0,.45)"}}},"ascii":{"import":"X","export":"X"},"topologyVerification":"No top/right/bottom/left relationship is asserted from the historic mask suffix alone. All 16 editor topologies explicitly use topologyFallback until original source semantics or visual evidence verifies an asset mapping."},
+      "pipe.vertical":{"id":"pipe.vertical","name":"Vertical pipe","category":"system","type":"resizable","dimensions":{"cell":16,"minW":2,"maxW":2,"defaultW":2,"minH":2,"defaultH":4},"components":{"cap":[{"asset":"map.pipe.vertical.mouth.left","x":0},{"asset":"map.pipe.vertical.mouth.right","x":1}],"body":[{"asset":"map.pipe.vertical.body.left","x":0},{"asset":"map.pipe.vertical.body.right","x":1}]},"ascii":None,"authoringBinding":{"noun":"pipe","path":"resourceScenery.pipes","defaults":{"direction":"up","solid":True,"global":True,"travel":False}}},
+      "cannon.vertical":{"id":"cannon.vertical","name":"Vertical cannon stack","category":"system","type":"fixed","dimensions":{"cell":16},"components":{"parts":[{"asset":"map.cannon.vertical.muzzle","x":0,"y":0},{"asset":"map.cannon.vertical.neck","x":0,"y":1},{"asset":"map.cannon.vertical.body","x":0,"y":2}]},"ascii":None},
+      "ladder.vertical":{"id":"ladder.vertical","name":"Ladder strip","category":"system","type":"resizable","dimensions":{"cell":16,"minW":1,"maxW":1,"defaultW":1,"minH":2,"defaultH":5},"components":{"cap":[{"asset":"map.ladder.top","x":0}],"body":[{"asset":"map.ladder.body","x":0}]},"ascii":None,"authoringBinding":{"noun":"climbZone","path":"resourceScenery.sprites","defaults":{"kind":"ladder","climbable":True,"collision":{"kind":"climb"},"alpha":0}}}
+    }}
 
-    behaviors = (src / "tiles.dat").read_bytes()
-    if len(behaviors) != 256:
-        raise ValueError(f"tiles.dat must be exactly 256 bytes; got {len(behaviors)}")
 
-    sheets = {}
-    for filename, (prefix, cw, ch) in SHEETS.items():
-        sheets[prefix] = split_sheet(src / filename, prefix, cw, ch)
-
-    map_sheet = sheets["map"]
-    if map_sheet["cols"] != 16 or map_sheet["rows"] != 16:
-        raise ValueError(
-            f"mapsheet.png must be a 16x16 grid of 16px tiles; got "
-            f"{map_sheet['cols']}x{map_sheet['rows']}"
-        )
-    if len(map_sheet["cells"]) != 256:
-        raise ValueError("mapsheet.png did not produce 256 tiles")
-
-    assets_images = {}
-    asset_catalog = {}
-    collision_truth = {}
-    manifest_tiles = []
-
-    if dump_cells:
-        dump_dir = src / "marioai_cells"
-        dump_dir.mkdir(exist_ok=True)
-    else:
-        dump_dir = None
-
-    # Exact 256 mapsheet cells + behavior table.
-    for cell in map_sheet["cells"]:
-        idx = cell["index"]
-        key = cell["key"]
-        value = behaviors[idx]
-        flags = decode_behavior(value)
-        projection = llmario_collision(value)
-
-        assets_images[key] = png_data_url(cell["image"])
-        asset_catalog[key] = {
-            "category": "terrain" if any(
-                (flags["blockAll"], flags["blockUpper"], flags["blockLower"])
-            ) else "scenery",
-            "sourceSheet": "mapsheet.png",
-            "sourceIndex": idx,
-            "sourceHex": f"{idx:02X}",
-            "sourceCell": {"x": cell["x"], "y": cell["y"]},
-            "defaultSize": {"w": 16, "h": 16},
-            "emptyVisual": cell["empty"],
-        }
-
-        collision_truth[key] = {
-            "defaultSize": {"w": 16, "h": 16},
-            "collision": projection["collision"],
-            "verified": True,
-            "source": "MarioAI tiles.dat",
-            "projection": projection["projection"],
-            "marioAI": {
-                "tileIndex": idx,
-                "tileHex": f"{idx:02X}",
-                "behaviorByte": value,
-                "behaviorHex": f"{value:02X}",
-                **flags,
-            },
-        }
-
-        manifest_tiles.append(
-            {
-                "index": idx,
-                "hex": f"{idx:02X}",
-                "asset": key,
-                "sheetX": cell["x"],
-                "sheetY": cell["y"],
-                "behaviorByte": value,
-                "behaviorHex": f"{value:02X}",
-                "flags": flags,
-                "llmarioCollision": projection["collision"],
-                "projection": projection["projection"],
-                "emptyVisual": cell["empty"],
-            }
-        )
-
-        if dump_dir:
-            cell["image"].save(dump_dir / f"{idx:02x}.png")
-
-    # Supporting sheets. These are preserved exactly as cut cells, but we do
-    # not invent gameplay behavior for them here.
-    for prefix in ("bg", "enemy", "item", "particle"):
-        sheet = sheets[prefix]
-        category = {
-            "bg": "background",
-            "enemy": "enemyArt",
-            "item": "itemArt",
-            "particle": "particleArt",
-        }[prefix]
-
-        if dump_dir:
-            sub = dump_dir / prefix
-            sub.mkdir(exist_ok=True)
-
-        for cell in sheet["cells"]:
-            key = cell["key"]
-            assets_images[key] = png_data_url(cell["image"])
-            asset_catalog[key] = {
-                "category": category,
-                "sourceSheet": sheet["name"],
-                "sourceIndex": cell["index"],
-                "sourceCell": {"x": cell["x"], "y": cell["y"]},
-                "defaultSize": {"w": cell["w"], "h": cell["h"]},
-                "emptyVisual": cell["empty"],
-            }
-            if dump_dir:
-                cell["image"].save(sub / f"{cell['index']:03d}.png")
-
-    license_path = src / "LICENSE"
-    license_text = (
-        license_path.read_text(encoding="utf-8", errors="replace")
-        if license_path.is_file()
-        else None
-    )
-
-    resources = [
-        {
-            "id": "medovina_marioai_resources",
-            "title": "MarioAI resource sheets",
-            "source": "medovina/MarioAI",
-            "url": "https://github.com/medovina/MarioAI",
-            "sourceFiles": [
-                "mapsheet.png",
-                "bgsheet.png",
-                "enemysheet.png",
-                "itemsheet.png",
-                "particlesheet.png",
-                "tiles.dat",
-            ],
-            "copyright": (
-                "Copyright (c) 2009-2015, Sergey Karakovskiy, "
-                "Julian Togelius and Jakub Gemrot; all rights reserved."
-            ),
-            "license": "MarioAI BSD-style license; retain copyright, conditions, and disclaimer.",
-        }
-    ]
-    if license_text:
-        resources[0]["licenseText"] = license_text
-
-    theme = {
-        "format": "llmario-theme-pack-v1",
-        "themeVersion": 1,
-        "id": "marioai",
-        "title": "MarioAI 16px Tile Theme",
-        "source": {
-            "repository": "https://github.com/medovina/MarioAI",
-            "resourcePath": "src/engine/resources",
-            "converter": "marioai_to_llmtheme.py",
-            "notes": (
-                "mapsheet tile numbering is row-major and matches "
-                "Art.level[b % 16][b / 16]."
-            ),
-        },
-        "notes": [
-            "Mechanically converted from MarioAI resource sheets.",
-            "All 256 mapsheet tile identities and all 256 tiles.dat behavior bytes are preserved.",
-            "Current LLMario collision truth exactly represents full-solid/nonblocking tiles; "
-            "top-only is projected to topStrip; ceiling-only remains explicitly marked unsupported "
-            "rather than silently converted.",
-            "Supporting background/enemy/item/particle sheets are cut into individual embedded assets "
-            "without inventing gameplay semantics.",
-        ],
-        "engineContract": "llmario-theme-pack-v1+marioai-tiles-v1",
-        "resources": resources,
-        "assets": {"images": assets_images},
-        "recipes": {"platforms": {}, "blocks": {}},
-        "assetCatalog": asset_catalog,
-        "collisionTruth": {
-            "source": "MarioAI tiles.dat",
-            "tileSize": 16,
-            "assets": collision_truth,
-        },
-        "defaults": {
-            "hud": {},
-            "messages": {
-                "welcome": ["MarioAI-derived theme loaded."],
-                "win": "Clear!",
-            },
-            "audio": {},
-            "placement": {"grid": 16},
-        },
-        "marioAI": {
-            "tileSize": 16,
-            "mapsheet": {
-                "cols": 16,
-                "rows": 16,
-                "indexing": "tile = x + y*16",
-            },
-            "behaviorBits": {
-                "BLOCK_UPPER": BIT_BLOCK_UPPER,
-                "BLOCK_ALL": BIT_BLOCK_ALL,
-                "BLOCK_LOWER": BIT_BLOCK_LOWER,
-                "SPECIAL": BIT_SPECIAL,
-                "BUMPABLE": BIT_BUMPABLE,
-                "BREAKABLE": BIT_BREAKABLE,
-                "PICKUPABLE": BIT_PICKUPABLE,
-                "ANIMATED": BIT_ANIMATED,
-            },
-            "sheets": {
-                name: {
-                    "width": s["width"],
-                    "height": s["height"],
-                    "cellWidth": s["cellWidth"],
-                    "cellHeight": s["cellHeight"],
-                    "cols": s["cols"],
-                    "rows": s["rows"],
-                    "count": len(s["cells"]),
-                }
-                for name, s in sheets.items()
-            },
-        },
-    }
-
-    manifest = {
-        "format": "marioai-tile-manifest-v1",
-        "tileSize": 16,
-        "source": "medovina/MarioAI src/engine/resources",
-        "tiles": manifest_tiles,
-    }
-
+def make_theme(src: Path) -> tuple[dict, dict]:
+    tiles = src / "tiles.dat"
+    if not tiles.is_file(): raise FileNotFoundError("missing required file: tiles.dat")
+    behavior = tiles.read_bytes()
+    if len(behavior) != 256: raise ValueError(f"tiles.dat must be exactly 256 bytes; got {len(behavior)}")
+    entries, metadata = semantic_entries(src, behavior)
+    images, catalog, collisions = {}, {}, {}
+    source_index = defaultdict(list)
+    animations = defaultdict(list)
+    map_tiles = []
+    for e in entries:
+        asset = e["asset"]
+        source_index[e["file"]].append({"index":e["index"],"x":e["x"],"y":e["y"],"asset":asset,"emptyVisual":e["empty"]})
+        if e["sheet"] == "map":
+            collision, projection = collision_projection(e["behavior_byte"])
+            map_tiles.append({"index":e["index"],"hex":f"{e['index']:02X}","asset":asset,
+                "emptyVisual":e["empty"],"behaviorByte":e["behavior_byte"],"behaviorHex":e["behavior_hex"],
+                "behaviorFlags":e["behavior_flags"],"llmarioCollision":collision,"projection":projection})
+        if not asset: continue
+        images[asset] = png_data_url(e["image"])
+        catalog[asset] = {"category":CATEGORY[e["sheet"]],"scope":"theme","sourceSheet":e["file"],
+            "sourceIndex":e["index"],"sourceCell":{"x":e["x"],"y":e["y"]},
+            "defaultSize":{"w":e["cell_width"],"h":e["cell_height"]},"emptyVisual":False,
+            "semanticRoles":e["roles"]}
+        if e["sheet"] == "map":
+            collision, projection = collision_projection(e["behavior_byte"])
+            collisions[asset] = {"defaultSize":{"w":16,"h":16},"collision":collision,"verified":True,
+                "source":"MarioAI tiles.dat","projection":projection,"marioAI":{"tileIndex":e["index"],
+                "tileHex":f"{e['index']:02X}","behaviorByte":e["behavior_byte"],"behaviorHex":e["behavior_hex"],
+                **decode_behavior(e["behavior_byte"])}}
+        for role in e["roles"]:
+            if "animation" in role:
+                animations[role["animation"]].append({"asset":asset,"frame":role.get("frame"),
+                    "sheet":e["sheet"],"sourceIndex":e["index"]})
+    for frames in animations.values(): frames.sort(key=lambda x:(str(x["frame"]),x["sheet"],x["sourceIndex"]))
+    license_text = (src/"LICENSE").read_text(encoding="utf-8",errors="replace") if (src/"LICENSE").is_file() else None
+    resource={"id":"medovina_marioai_resources","title":"MarioAI resource sheets","source":"medovina/MarioAI","url":"https://github.com/medovina/MarioAI","sourceFiles":list(THEME_SHEETS)+["tiles.dat"],"copyright":"Copyright (c) 2009-2015, Sergey Karakovskiy, Julian Togelius and Jakub Gemrot; all rights reserved.","license":"MarioAI BSD-style license; retain copyright, conditions, and disclaimer."}
+    if license_text: resource["licenseText"]=license_text
+    theme={"format":"llmario-theme-pack-v1","themeVersion":1,"id":"marioai","title":"MarioAI Complete Nonempty Reference Theme","engineContract":"llmario-theme-pack-v1+marioai-semantics-v1",
+      "source":{"repository":"https://github.com/medovina/MarioAI","resourcePath":"src/engine/resources","converter":"marioai_to_llmtheme.py","semanticCompiler":"compile_marioai_semantics.py","notes":["Only visually non-empty cells are embedded as image assets.","Canonical names and semantic metadata are owned by the semantic compiler.","All map behavior bytes remain preserved even when a tile has no visual asset."]},
+      "resources":[resource],"assets":{"images":images},"assetCatalog":catalog,"animationGroups":dict(sorted(animations.items())),
+      "collisionTruth":{"source":"MarioAI tiles.dat","tileSize":16,"assets":collisions},"sourceIndex":dict(source_index),
+      "marioAI":{"tileSize":16,"mapTiles":map_tiles,"autotile":metadata["autotile"],"sheets":metadata["sheets"]},
+      "summary":{"themeSourceCells":len(entries),"themeNonEmptyAssets":len(images),"themeEmptyCellsDiscarded":len(entries)-len(images),"embeddedImageAssets":len(images),"animationGroupCount":len(animations),"includeUIFont":False},
+      "recipes":{"platforms":{},"blocks":{}},"defaults":{"hud":{},"messages":{"welcome":["MarioAI-derived theme loaded."],"win":"Clear!"},"audio":{},"placement":{"grid":16}},"constructionCatalog":construction_catalog()}
+    manifest={"format":"marioai-tile-manifest-v1","tileSize":16,"source":"medovina/MarioAI src/engine/resources","tiles":map_tiles}
     return theme, manifest
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument(
-        "source_dir",
-        nargs="?",
-        default=".",
-        help="directory containing the MarioAI resource files (default: current directory)",
-    )
-    ap.add_argument(
-        "-o",
-        "--output",
-        default="theme_marioai.llmtheme.txt",
-        help="output theme path (default: theme_marioai.llmtheme.txt)",
-    )
-    ap.add_argument(
-        "--manifest",
-        default="marioai_tile_manifest.json",
-        help="tile manifest output (default: marioai_tile_manifest.json)",
-    )
-    ap.add_argument(
-        "--dump-cells",
-        action="store_true",
-        help="also write cropped PNG cells under SOURCE_DIR/marioai_cells/",
-    )
-    args = ap.parse_args()
-
-    src = Path(args.source_dir).expanduser().resolve()
-    if not src.is_dir():
-        print(f"ERROR: not a directory: {src}", file=sys.stderr)
-        return 2
-
-    try:
-        theme, manifest = make_theme(src, dump_cells=args.dump_cells)
-    except Exception as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        return 1
-
-    out = Path(args.output)
-    if not out.is_absolute():
-        out = src / out
-
-    manifest_out = Path(args.manifest)
-    if not manifest_out.is_absolute():
-        manifest_out = src / manifest_out
-
-    out.write_text(json.dumps(theme, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    manifest_out.write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-
-    print(f"wrote {out}")
-    print(f"wrote {manifest_out}")
-    print(f"theme images: {len(theme['assets']['images'])}")
-    print("mapsheet tiles: 256")
+    parser=argparse.ArgumentParser(); parser.add_argument("source_dir",nargs="?",default="."); parser.add_argument("-o","--output",default="theme_marioai.llmtheme.txt"); parser.add_argument("--manifest",default="marioai_tile_manifest.json")
+    args=parser.parse_args(); src=Path(args.source_dir).expanduser().resolve()
+    try: theme,manifest=make_theme(src)
+    except Exception as exc: print(f"ERROR: {exc}",file=sys.stderr); return 1
+    out=Path(args.output); out=out if out.is_absolute() else src/out
+    mout=Path(args.manifest); mout=mout if mout.is_absolute() else src/mout
+    out.write_text(json.dumps(theme,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    mout.write_text(json.dumps(manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+    print(f"wrote {out}\nwrote {mout}\ntheme images: {len(theme['assets']['images'])}\nmapsheet nonempty: {sum(v['sourceSheet']=='mapsheet.png' for v in theme['assetCatalog'].values())}")
     return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+if __name__ == "__main__": raise SystemExit(main())
