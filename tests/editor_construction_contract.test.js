@@ -20,3 +20,36 @@ assert.deepEqual(C.logicalSelection([ordinaryA,ordinaryB],allPipes,'pipe',isPipe
 assert.equal(C.asciiMaps(theme.constructionCatalog).imports.X,'terrain.overground');assert(!C.asciiMaps(theme.constructionCatalog).exports['pipe.vertical']);
 cp.execFileSync('python3',['scripts/sync_editor_catalog.py','--check']);for(const file of ['editor/editor.html','engine/engine.html']){const html=fs.readFileSync(file,'utf8');assert(!/<script[^>]+src=["'][^"']*construction\/catalog\.js/.test(html));assert(html.includes('BEGIN GENERATED CONSTRUCTION CATALOG'))}
 console.log('editor construction contract tests passed');
+
+// Auto terrain retiles around edits while explicit family tiles remain locked.
+state={sprites:[],collisions:[]};
+C.applyTerrainEdit(state,terrain,new Set(['0,0','1,0']),true);
+state.sprites=state.sprites.filter(s=>s.semanticCellX!==1);state.collisions=state.collisions.filter(s=>s.semanticCellX!==1);
+state.sprites.push({semanticFamily:terrain.id,semanticAuto:false,semanticCellX:1,semanticCellY:0,image:'manual.tile'});
+state.collisions.push({semanticFamily:terrain.id,semanticAuto:false,semanticCellX:1,semanticCellY:0,type:'ground'});
+C.applyTerrainEdit(state,terrain,new Set(['0,1']),true);
+assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).image,'manual.tile');
+assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).semanticAuto,false);
+// An Auto stroke crossing the locked cell preserves it and resolves both neighbors around its occupancy.
+C.applyTerrainEdit(state,terrain,new Set(['1,0','2,0']),true);
+const locked=state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0),left=state.sprites.find(s=>s.semanticCellX===0&&s.semanticCellY===0),right=state.sprites.find(s=>s.semanticCellX===2&&s.semanticCellY===0);
+assert.equal(locked.image,'manual.tile');assert.equal(locked.semanticAuto,false);
+assert.equal(left.semanticTopology,'0110');assert.equal(right.semanticTopology,'0001');
+C.applyTerrainEdit(state,terrain,new Set(['1,0']),false);
+assert(!state.sprites.some(s=>s.semanticCellX===1&&s.semanticCellY===0));
+console.log('terrain auto/manual contract passed');
+
+// Terrain brush interpolation follows traversed cells rather than filling bounds.
+const irregular=C.terrainStrokeCells([{x:1,y:1},{x:33,y:33},{x:65,y:33}],16);
+assert.deepEqual(irregular,new Set(['0,0','1,1','2,2','3,2','4,2']));
+assert(!irregular.has('0,2'));assert(!irregular.has('4,0'));
+// Manual inventory is explicit family data and is deliberately larger than Auto topology.
+const manual=new Set(terrain.manualAssets),auto=new Set(Object.values(terrain.components.topology));
+for(const id of ['map.terrain.overground.grass_top.alt_middle','map.terrain.overground.grass_edge.curved_left','map.terrain.overground.rounded_corner.bottom_left','map.terrain.overground.dirt_fill.variant_5'])assert(manual.has(id));
+assert(manual.size>auto.size);
+console.log('terrain brush and explicit family inventory contracts passed');
+const editorSource=fs.readFileSync('editor/editor.html','utf8');
+assert(editorSource.includes("const semantic=cart&&activeSemanticTerrain();if(semantic)"));
+assert(editorSource.includes("const semantic=activeSemanticTerrain();if(semantic){terrainStrokeMode=false"));
+assert(!editorSource.includes("if(activeSemanticTerrain()){terrainStrokeMode=true"));
+console.log('terrain palette mode contract passed');

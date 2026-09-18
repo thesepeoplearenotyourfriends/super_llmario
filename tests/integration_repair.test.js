@@ -63,3 +63,34 @@ c=context({player:{form:'normal',big:true,carryEnemy:{},onGround:true,vx:0,face:
 // Terrain painting emits visually named canonical pieces for mapped topologies.
 const terrain=theme.constructionCatalog.families['terrain.overground'],state={sprites:[],collisions:[]};C.applyTerrainEdit(state,terrain,new Set(['0,0','1,0','2,0']),true);assert(state.sprites.every(s=>s.image.startsWith('map.terrain.overground.')));assert(state.sprites.every(s=>!s.semanticFallback));
 console.log('integration repair tests passed');
+
+// Explicit semantic prefixes outrank generic collision truth in palette categories.
+const mappedBlock='map.block.hidden.revealed';assert(theme.collisionTruth.assets[mappedBlock]);
+c=context({themePack:theme,cart:{assetCatalog:theme.assetCatalog},images:{},terrainMapForAsset:id=>theme.collisionTruth.assets[id],paletteBadgeForMap:()=> 'RECT',plain:o=>!!o&&typeof o==='object'&&!Array.isArray(o)});
+load(c,editor,['semanticAssetCategory','mapTilePaletteCategory','paletteCategoryForAsset','shortNameForValue','paletteMeta']);
+assert.equal(vm.runInContext('paletteMeta',c)('terrainAsset:'+mappedBlock,mappedBlock).cat,'blocks');
+
+// Every explicit manual-family asset has one family card and no generic duplicate.
+c=context({themePack:theme,cart:{assets:theme.assets,assetCatalog:theme.assetCatalog,recipes:{platforms:{},blocks:{}}},plain:o=>!!o&&typeof o==='object'&&!Array.isArray(o),animationGroupsForTheme:()=>({}),isSupportedWalkerAnimation:()=>false,platformTemplateMap:()=>new Map(),terrainMapForAsset:id=>theme.collisionTruth.assets[id]||null});
+load(c,editor,['semanticAssetCategory','mapTilePaletteCategory','paletteCategoryForAsset','primaryPaletteAsset','recipeImageKeys','insertOptionEntries']);
+const paletteEntries=vm.runInContext('insertOptionEntries',c)(),manualAssets=theme.constructionCatalog.families['terrain.overground'].manualAssets;
+assert.equal(manualAssets.length,19);
+for(const asset of manualAssets){const matches=paletteEntries.filter(e=>e.value.endsWith(':'+asset)||e.value==='asset:'+asset);assert.equal(matches.length,1,asset);assert.equal(matches[0].value,'terrainFamilyAsset:terrain.overground:'+asset)}
+
+// Input precedence and transient tool cleanup remain explicit editor contracts.
+assert(editor.includes("if(e.button===0&&spacePanHeld){drag={mode:'pan'"));
+assert(editor.indexOf("if(e.button===0&&spacePanHeld)")<editor.indexOf("const semantic=cart&&activeSemanticTerrain()"));
+assert(editor.includes("if(terrainStrokeMode&&!isOrdinaryPlatformBrush())"));
+assert(editor.includes("else{clearTerrainErase();"));
+console.log('palette categorization, deduplication, and input cleanup tests passed');
+
+// Palette drops run the same transition used by clicks/select changes before placement.
+const dropHandler=editor.slice(editor.indexOf("wrap.addEventListener('drop'"),editor.indexOf("function openHelp"));
+assert(dropHandler.indexOf('paletteSelectionChanged()')>=0);
+assert(dropHandler.indexOf('paletteSelectionChanged()')<dropHandler.indexOf('insertObject(pointerWorld(e))'));
+assert(!dropHandler.includes('updateActiveBrush();populatePalette();insertObject'));
+c=context({themePack:theme,els:{insertKind:{value:'construction:terrain.overground'},terrainStroke:{classList:{remove(){c.nativeCleared=true}}}},terrainStrokeMode:true,terrainEraseMode:false,paletteWasSemantic:false,stampMode:false,updateActiveBrush:()=>{},populatePalette:()=>{},updateTopStatus:()=>{},clearTerrainErase:undefined,byId:()=>({classList:{remove(){}}}),setStampMode:()=>{}});
+load(c,editor,['activeSemanticTerrain','isOrdinaryPlatformBrush','clearTerrainErase','paletteSelectionChanged']);
+vm.runInContext('paletteSelectionChanged',c)();assert.equal(c.terrainStrokeMode,false);assert.equal(c.nativeCleared,true);assert.equal(c.paletteWasSemantic,true);
+c.terrainEraseMode=true;c.els.insertKind.value='coin';vm.runInContext('paletteSelectionChanged',c)();assert.equal(c.terrainEraseMode,false);assert.equal(c.paletteWasSemantic,false);
+console.log('palette drop transition tests passed');
