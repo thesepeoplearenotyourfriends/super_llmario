@@ -816,7 +816,8 @@ function buildSemanticAssetIndex(cart){
   const ids = Object.keys((cart && cart.assets && cart.assets.images) || {}).sort();
   const bySuffix = Object.create(null);
   for(const id of ids){
-    const aliases = [id, id.includes('.') ? id.slice(id.indexOf('.') + 1) : id];
+    const aliases = [id];
+    for(let dot=id.indexOf('.'); dot>=0; dot=id.indexOf('.',dot+1)) aliases.push(id.slice(dot+1));
     for(const alias of aliases){ if(!bySuffix[alias]) bySuffix[alias] = []; bySuffix[alias].push(id); }
   }
   return {ids:ids, bySuffix:bySuffix};
