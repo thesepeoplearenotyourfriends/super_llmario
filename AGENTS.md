@@ -193,6 +193,57 @@ If a required operation would cause a binary file to enter the PR, STOP doing
 that operation rather than allowing the PR to become blocked.
 
 
+## Standalone runtime invariant
+
+engine/engine.html and editor/editor.html are standalone applications.
+
+Do not introduce runtime fetch(), XMLHttpRequest, dynamic import(), script/link
+dependencies, or any other runtime loading of sibling repository files unless
+the task explicitly requests it.
+
+Bundled/default content required for startup must remain embedded in the
+standalone artifact, or be loaded explicitly by the user through the existing
+file-loading UI.
+
+Do not turn repository layout into a runtime dependency.
+
+
+## Large text/data expansion guard
+
+Before expanding compact map/theme structures into repeated JSON records,
+estimate the resulting object count and diff size.
+
+For .llmmap.txt files:
+
+- If a change would create more than 500 repeated/generated objects OR more
+  than roughly 2,000 added lines, STOP before materializing it.
+- Report the estimated object count, why the expansion would be necessary,
+  and the compact source representation being expanded.
+- Do not proceed unless the task explicitly requires that large expansion.
+- In particular, never convert large platform/area rectangles into per-cell
+  sprites merely to change their visual presentation without explicit approval.
+
+Before every commit run:
+
+    git diff --stat
+    git diff --numstat
+
+If any single non-generated file changes by more than 2,000 lines, investigate
+the cause before committing.
+
+Never accept a large diff merely because:
+- JSON is still valid,
+- tests pass,
+- the change was produced by a script,
+- or the resulting objects are repetitive.
+
+For semantic terrain, generated semanticCellX/Y values MUST use the same global
+cell-coordinate convention used by Cartbench/LLMarioConstruction. Do not invent
+a second local-per-construction coordinate system.
+
+Avoid whole-file JSON reserialization for localized edits. Preserve existing
+formatting and ordering unless reformatting itself is explicitly requested.
+
 
 **Some historical traces**
 
