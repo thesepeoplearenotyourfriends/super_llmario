@@ -1757,7 +1757,7 @@ function reset(full){
     stars.forEach(s => s.taken = false);
     enemies.forEach(e => {
       const walkW=e._walkW||e.w;
-      e.alive=true; e.flat=0; e.state='walking'; e.winged=!!e._startsWinged; e.wingPhase=0; e.wingFalling=false; e.wingVy=0; e.flowerClock=null; e._flowerSuppressed=false; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
+      e.alive=true; e.flat=0; e.state='walking'; e.winged=!!e._startsWinged; e.wingPhase=0; e.wingFalling=false; e.wingVy=0; e.flowerClock=null; e._flowerSuppressed=false; e.pickupLock=false; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
       e.w=walkW; e.h=e._walkH||e.h; e.x=e._originX; e.y=e._originY;
     });
     powerups.length = 0;
@@ -2885,6 +2885,7 @@ function stompEnemy(e){
       e.state = 'shellStopped';
       e.shellVx = 0;
       e.shellTimer = 0;
+      e.pickupLock = true;
     }else if(e.state === 'walking'){
       enterKoopaShell(e,'shellStopped');
     }else if(e.state === 'shellStopped'){
@@ -3217,8 +3218,6 @@ function update(){
   if(player.pipeCooldown > 0) player.pipeCooldown -= 1;
   if(player.fireCooldown > 0) player.fireCooldown -= 1;
   const fireRequested=input.runTap;
-  const touchingHeldCandidate=enemies.find(e=>e.alive&&e.state==='shellStopped'&&aabb(player,e));
-  if(input.run && touchingHeldCandidate) carryShell(touchingHeldCandidate);
   if(input.runRelease && player.carryEnemy) releaseHeldShell(true);
   input.runTap=false;
   input.runRelease=false;
@@ -3327,6 +3326,7 @@ function update(){
   const stompVy = player.vy;
   for(const e of enemies){
     if(!e.alive){ if(e.flat > 0) e.flat -= 1; continue; }
+    if(e.pickupLock && !aabb(player,e)) e.pickupLock=false;
     updateEnemyMotion(e);
   }
   resolveMovingShellHits();
@@ -3337,7 +3337,8 @@ function update(){
       for(const e of stompHits) stompEnemy(e);
       player.vy = -8.6;
     }else{
-      const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped');
+      const lockedShells=enemyHits.filter(e=>shellCapableEnemy(e)&&e.state==='shellStopped'&&e.pickupLock);
+      const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped' && !e.pickupLock);
       for(const e of kickable){
         if(input.run) carryShell(e);
         else{
@@ -3347,7 +3348,9 @@ function update(){
           e.x = kickRight ? player.x + player.w : player.x - e.w;
         }
       }
-      if(enemyHits.some(e => !kickable.includes(e))) hurtPlayer();
+      const harmful=enemyHits.filter(e=>!kickable.includes(e)&&!lockedShells.includes(e));
+      for(const e of harmful) if(shellCapableEnemy(e)&&e.state==='shellMoving') e.pickupLock=true;
+      if(harmful.length) hurtPlayer();
     }
   }
   // Resolve shell contact first: Run picks up a stopped shell instead of also
@@ -4261,7 +4264,11 @@ function playerMotionAsset(){
   const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
   let states;
   if(player.pipeTravel) states=['idle_walk_0','walk_1'];
-  else if(player.carryEnemy){
+  else if(player.carryEnemy&&!player.big){
+    if(!player.onGround) states=['carry_1_or_jump','carry_0'];
+    else if(speed>.15) states=[Math.floor(tick/7)%2?'carry_1_or_jump':'carry_0','carry_0'];
+    else states=['carry_0','idle_walk_0'];
+  }else if(player.carryEnemy){
     const carry=available.filter(x=>/^carry_\d+$/.test(x)).sort();
     states=!player.onGround?['carry_2_or_jump','carry_1','carry_0']:[carry[Math.floor(tick/7)%Math.max(1,carry.length)],'carry_0','idle_walk_0'];
   }else if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
