@@ -13,6 +13,12 @@ its geometry when the group is resized; the catalog does not define physics.
 The reference pipe binds to `resourceScenery.pipes`, while the ladder binds to
 an ordinary climb-zone sprite.
 
+The catalog runtime remains canonical in `construction/catalog.js`. Running
+`python3 scripts/sync_editor_catalog.py` deterministically embeds that exact
+runtime into the standalone editor and engine HTML files; `--check` fails when
+either generated copy has drifted. The HTML artifacts therefore retain their
+one-file/offline behavior without a second handwritten implementation.
+
 ## Invariant
 
 Semantic intent is compiled by Cartbench through the active theme catalog. The
@@ -31,6 +37,9 @@ Terrain edits reconsider the edited cell plus its four orthogonal neighbors.
 Native maps retain the resolved roles and are authoritative. ASCII import maps
 one symbol to family intent and invokes editor resolution; export collapses all
 roles in that family to one symbol. Consequently ASCII is intentionally lossy.
+Procedural fallback colors and proportions live in the family's
+`topologyFallback.style`; both Cartbench and the engine call the same generated
+draw helper, so fallback cells are WYSIWYG without runtime topology analysis.
 
 To add slopes, bridges, ice, water, or original assemblies, add a family and
 assets to theme data. Renderer/import/export changes should not normally be

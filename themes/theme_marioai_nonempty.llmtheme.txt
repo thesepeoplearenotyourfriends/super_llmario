@@ -19226,7 +19226,13 @@
           "topology": {},
           "topologyFallback": {
             "strategy": "procedural",
-            "role": "terrain.overground.procedural"
+            "role": "terrain.overground.procedural",
+            "style": {
+              "fill": "#75451f",
+              "top": "#6abf31",
+              "topRatio": 0.3125,
+              "stroke": "rgba(0,0,0,.45)"
+            }
           }
         },
         "assets": {
