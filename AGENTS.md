@@ -138,7 +138,61 @@ Attributions live in the pause menu as a pager: one card visible at a time, with
 IMPORTANT WORKFLOW:
 Start from the latest actual file on disk, patch it with code tools, then verify before linking. Extract the script contents and run "node --check" on it. When possible, render a screenshot/headless preview to ensure it is not blank. If screenshot/headless rendering is blocked by the sandbox, say so honestly. Never claim a file exists until it has actually been written and verified.
 
-Use the latest ".htmlz" as the source of truth. Do not reconstruct from memory if the file is available.
+IMPORTANT BINARY / GENERATED-FILE BOUNDARY
+
+The original MarioAI spritesheets already exist in the repository under:
+
+    themes/marioai_theme_files/
+
+They are INPUTS. Do not modify, rewrite, re-encode, rename, or recommit those
+binary files.
+
+`compile_marioai_semantics.py` may be run locally to generate the semantic
+manifest/contact sheets needed for inspection and validation.
+
+HOWEVER:
+
+Codex's PR path cannot upload binary files.
+
+Therefore DO NOT add, stage, commit, or include any generated PNG/GIF/JPG/etc.
+from the semantics compiler in the PR.
+
+In particular, if running `compile_marioai_semantics.py` creates something like:
+
+    themes/marioai_theme_files/marioai_semantics/
+        semantic_manifest.json
+        *_contact.png
+
+the generated directory is scratch/output for this task. Use it locally as
+needed, but DO NOT commit that generated output directory. The visual contact
+sheets will be regenerated outside the Codex PR after the source script lands.
+
+It IS valid to modify and commit:
+
+    themes/marioai_theme_files/compile_marioai_semantics.py
+
+and other ordinary UTF-8 source/text files required by the task.
+
+The theme conversion is different:
+
+`marioai_to_llmtheme.py` reads the source images and emits the `.llmtheme.txt`
+with image payloads embedded as base64 text. That `.llmtheme.txt` IS a text
+artifact and CAN be committed by Codex.
+
+Therefore, after semantic naming changes:
+- run the semantics compiler locally for validation, but do not commit its
+  generated visual/contact-sheet output;
+- run `marioai_to_llmtheme.py`;
+- commit the regenerated `.llmtheme.txt` text output;
+- do not commit any newly generated binary artifact.
+
+Before finishing, inspect the PR diff/status and explicitly verify that NO
+binary image file has been added or modified by this branch.
+
+If a required operation would cause a binary file to enter the PR, STOP doing
+that operation rather than allowing the PR to become blocked.
+
+
 
 **Some historical traces**
 
