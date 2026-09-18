@@ -790,7 +790,7 @@ function loadCartImageAssets(cart){
       const entry = images[id];
       const src = typeof entry === 'string' ? entry : (entry && entry.src);
       if(!src) continue;
-      const rec = {id, img:null, ready:false, failed:false, w:0, h:0};
+      const rec = {id, img:null, ready:false, failed:false, w:0, h:0, visibleBounds:null};
       const img = new Image();
       rec.img = img;
       CART_IMAGE_CACHE[id] = rec;
@@ -799,12 +799,29 @@ function loadCartImageAssets(cart){
         rec.ready = true;
         rec.w = img.naturalWidth || img.width || 0;
         rec.h = img.naturalHeight || img.height || 0;
+        rec.visibleBounds = measureOpaqueBounds(img, rec.w, rec.h);
         try{ requestAnimationFrame(draw); }catch(e){}
       };
       img.onerror = function(){ rec.failed = true; };
       img.src = src;
     }
   }
+}
+function measureOpaqueBounds(img, w, h){
+  if(!w || !h) return null;
+  try{
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const g = c.getContext('2d', {willReadFrequently:true});
+    g.drawImage(img,0,0,w,h);
+    const data = g.getImageData(0,0,w,h).data;
+    let minX=w,minY=h,maxX=-1,maxY=-1;
+    for(let y=0;y<h;y++) for(let x=0;x<w;x++) if(data[(y*w+x)*4+3]){
+      if(x<minX) minX=x; if(x>maxX) maxX=x;
+      if(y<minY) minY=y; if(y>maxY) maxY=y;
+    }
+    return maxX<0 ? null : {x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1};
+  }catch(e){ return null; }
 }
 function cartImage(id){
   const rec = id && CART_IMAGE_CACHE[id];
@@ -858,12 +875,14 @@ function drawThemedAsset(id, box, opts){
   ctx.imageSmoothingEnabled = opts.smooth === true;
   if(opts.alpha != null) ctx.globalAlpha = oldAlpha * opts.alpha;
   const x = Math.round(worldX(box.x)), y = Math.round(box.y), boxW = Math.round(box.w), boxH = Math.round(box.h);
+  const rec = cartImageRecord(id);
   const naturalW = img.naturalWidth || img.width || boxW, naturalH = img.naturalHeight || img.height || boxH;
-  const fit = Math.min(boxW / Math.max(1,naturalW), boxH / Math.max(1,naturalH));
-  const w = Math.max(1,Math.round(naturalW * fit)), h = Math.max(1,Math.round(naturalH * fit));
+  const visible = (rec && rec.visibleBounds) || {x:0,y:0,w:naturalW,h:naturalH};
+  const fit = Math.min(boxW / Math.max(1,visible.w), boxH / Math.max(1,visible.h));
+  const w = Math.max(1,Math.round(visible.w * fit)), h = Math.max(1,Math.round(visible.h * fit));
   ctx.translate(x + boxW/2, y + boxH);
   ctx.scale(opts.mirror ? -1 : 1, opts.squash == null ? 1 : opts.squash);
-  ctx.drawImage(img, -w/2, -h, w, h);
+  ctx.drawImage(img, visible.x, visible.y, visible.w, visible.h, -w/2, -h, w, h);
   ctx.restore();
   ctx.globalAlpha = oldAlpha; ctx.imageSmoothingEnabled = oldSmooth;
   return true;
@@ -1140,7 +1159,7 @@ const stars = cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false}));
 const powerups = [];
 const coinBursts = [];
 const blockBursts = [];
-const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0}));
+const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking'}));
 const signposts = cloneData(ACTIVE_CART.signposts);
 const portal = cloneData(ACTIVE_CART.portal);
 
@@ -1528,7 +1547,7 @@ function rebuildWorldFromCart(cart){
   replaceArray(floatingBlocks, cloneData(ACTIVE_CART.floatingBlocks));
   replaceArray(coins, cloneData(ACTIVE_CART.coins).map(c => ({...c,taken:false})));
   replaceArray(stars, cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false})));
-  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0})));
+  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking'})));
   replaceArray(signposts, cloneData(ACTIVE_CART.signposts));
   Object.keys(portal).forEach(k => delete portal[k]);
   Object.assign(portal, cloneData(ACTIVE_CART.portal));
@@ -1653,7 +1672,9 @@ const player = {
   spawnY: ACTIVE_CART.playerSpawn.y,
   climbing: false,
   climbBlink: 0,
-  pipeCooldown: 0
+  pipeCooldown: 0,
+  runCharge: 0,
+  pSpeed: false
 };
 
 function reset(full){
@@ -1669,6 +1690,8 @@ function reset(full){
   player.climbing = false;
   player.climbBlink = 0;
   player.pipeCooldown = 0;
+  player.runCharge = 0;
+  player.pSpeed = false;
   player.w = 34;
   player.h = 48;
   cam = Math.max(0, Math.min(WORLD_W - W, player.x - 210));
@@ -1687,7 +1710,7 @@ function reset(full){
     player.stars = 0;
     coins.forEach(c => c.taken = false);
     stars.forEach(s => s.taken = false);
-    enemies.forEach(e => { e.alive = true; e.flat = 0; });
+    enemies.forEach(e => { e.alive = true; e.flat = 0; e.state = 'walking'; e.shellVx = 0; });
     powerups.length = 0;
     coinBursts.length = 0;
     blockBursts.length = 0;
@@ -2666,13 +2689,39 @@ function collectables(){
   }
 }
 
+function shellCapableEnemy(e){
+  return /(?:^|_)(?:red|green)_koopa(?:_|$)/.test(String((e&&e.kind)||'').toLowerCase());
+}
 function stompEnemy(e){
   playSfx('stomp');
-  e.alive = false;
-  e.flat = 18;
+  if(shellCapableEnemy(e)){
+    if(e.state === 'shellMoving'){
+      e.state = 'shellStopped';
+      e.shellVx = 0;
+    }else if(e.state === 'walking'){
+      e.state = 'shellStopped';
+      e.shellVx = 0;
+    }
+  }else{
+    e.alive = false;
+    e.flat = 18;
+    player.coins += 2;
+  }
   player.vy = -8.6;
-  player.coins += 2;
   shake = 3;
+}
+function updateEnemyMotion(e){
+  if(e.state === 'shellStopped') return;
+  const vx = e.state === 'shellMoving' ? e.shellVx : e.vx;
+  const oldX = e.x;
+  e.x += vx;
+  let blocked = e.x < e.min || e.x > e.max;
+  if(!blocked && e.state === 'shellMoving') blocked = hitSolids(e).some(s => !s._slope);
+  if(blocked){
+    e.x = oldX;
+    if(e.state === 'shellMoving') e.shellVx *= -1;
+    else e.vx *= -1;
+  }
 }
 
 function powerupSlopeSupport(p, prevY, wasOnGround){
@@ -2908,6 +2957,10 @@ function update(){
     const accel = running ? 0.50 : 0.36;
     const max = running ? 4.35 : 2.95;
     const friction = player.onGround ? (running ? 0.84 : 0.78) : 0.96;
+    const charging = player.onGround && running && Math.abs(player.vx) > 3.35 && ((input.left && player.vx < 0) || (input.right && player.vx > 0));
+    if(charging) player.runCharge = Math.min(90, player.runCharge + 1);
+    else player.runCharge = Math.max(0, player.runCharge - (player.onGround ? 3 : 0.35));
+    player.pSpeed = player.runCharge >= 72;
     if(input.left){ player.vx -= accel; player.face = -1; }
     if(input.right){ player.vx += accel; player.face = 1; }
     if(!input.left && !input.right) player.vx *= friction;
@@ -2946,8 +2999,7 @@ function update(){
   const stompVy = player.vy;
   for(const e of enemies){
     if(!e.alive){ if(e.flat > 0) e.flat -= 1; continue; }
-    e.x += e.vx;
-    if(e.x < e.min || e.x > e.max){ e.vx *= -1; e.x += e.vx * 2; }
+    updateEnemyMotion(e);
     if(aabb(player,e)) enemyHits.push(e);
   }
   if(enemyHits.length){
@@ -2955,7 +3007,16 @@ function update(){
     if(stompHits.length){
       for(const e of stompHits) stompEnemy(e);
       player.vy = -8.6;
-    }else hurtPlayer();
+    }else{
+      const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped');
+      for(const e of kickable){
+        e.state = 'shellMoving';
+        const kickRight = player.x + player.w/2 < e.x + e.w/2;
+        e.shellVx = (kickRight ? 1 : -1) * 6.2;
+        e.x = kickRight ? player.x + player.w : player.x - e.w;
+      }
+      if(enemyHits.some(e => !kickable.includes(e))) hurtPlayer();
+    }
   }
 
   collectables();
@@ -3681,11 +3742,8 @@ function prefabImageBlock(r,b,state){
   }
   const x = worldX(b.x), y = currentBlockY(b);
   if(x < -80 || x > W+80) return;
-  const oldSmooth = ctx.imageSmoothingEnabled;
-  ctx.imageSmoothingEnabled = r.smooth !== false;
   if(r.backFill){ ctx.fillStyle = r.backFill; ctx.fillRect(Math.round(x), Math.round(y), Math.ceil(b.w), Math.ceil(b.h)); }
-  ctx.drawImage(img, Math.round(x), Math.round(y), Math.ceil(b.w), Math.ceil(b.h));
-  ctx.imageSmoothingEnabled = oldSmooth;
+  drawThemedAsset(id,{x:b.x,y:y,w:b.w,h:b.h},{smooth:r.smooth !== false});
 }
 function drawFloatingBlocks(){
   for(const b of floatingBlocks){
@@ -3800,7 +3858,11 @@ function prefabPortal(r,portal){
 
 function enemyAnimationGroup(e){
   const groups=Object.keys((ACTIVE_CART&&ACTIVE_CART._animationGroups)||{}).filter(k=>k.startsWith('enemy.'));
-  if(e&&e.themeAnimation&&groups.includes(e.themeAnimation)) return e.themeAnimation;
+  if(e && shellCapableEnemy(e) && e.state !== 'walking'){
+    const shellGroup = 'enemy.'+String(e.kind).toLowerCase().replace(/[^a-z0-9]+/g,'_')+'.shell';
+    if(groups.includes(shellGroup)) return shellGroup;
+  }
+  if(e&&e.themeAnimation&&groups.includes(e.themeAnimation) && e.state === 'walking') return e.themeAnimation;
   const kind=String((e&&e.kind)||'').toLowerCase().replace(/[^a-z0-9]+/g,'_');
   const wanted=[];
   if(kind) wanted.push('enemy.'+kind+'.walk','enemy.'+kind);
@@ -3813,7 +3875,7 @@ function drawBlob(e){
   if(!e.alive && e.flat <= 0) return;
   const group=enemyAnimationGroup(e), id=group&&animationAsset(group,tick+(e.x||0),8);
   const squash=e.alive?1:Math.max(.24,e.flat/18);
-  if(id && drawThemedAsset(id,{x:e.x,y:e.y,w:e.w,h:e.h},{mirror:e.vx>0,squash:squash})) return;
+  if(id && drawThemedAsset(id,{x:e.x,y:e.y,w:e.w,h:e.h},{mirror:(e.state === 'shellMoving' ? e.shellVx : e.vx)<0,squash:squash})) return;
   drawRecipe('enemies.'+(e.kind||'blob'), e);
 }
 function prefabBlob(r,e){
@@ -3836,16 +3898,24 @@ function playerMotionAsset(){
   const families=Array.from(new Set(familyIds.map(id=>id.split('.player-motion.')[0])));
   const family=player.big ? (families.find(f=>!/small|fire|racoon/i.test(f))||families[0]) : (families.find(f=>/small/i.test(f))||null);
   if(!family) return null;
+  const prefix=family+'.player-motion.', available=ids.filter(id=>id.startsWith(prefix)).map(id=>id.slice(prefix.length));
+  const has=state=>available.includes(state);
   const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
-  const running=!!input.run&&speed>2.2;
   let states;
   if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
-  else if(!player.onGround) states=running?['fast_jump','jump']:['jump','fast_jump'];
+  else if(!player.onGround) states=player.pSpeed?['fast_jump','jump']:['jump','fast_jump'];
   else if(reversing) states=['skid','idle_walk_0'];
-  else if(running) states=['fast_run_'+(Math.floor(tick/6)%3),'fast_run_0','walk_1','idle_walk_0'];
-  else if(speed>.15) states=['walk_'+(1+Math.floor(tick/7)%2),'walk_1','idle_walk_0'];
-  else states=['idle_walk_0'];
-  for(const state of states){const id=family+'.player-motion.'+state;if(ids.includes(id)&&cartImageRecord(id))return id;}
+  else if(player.pSpeed){
+    const fast=available.filter(x=>/^fast_run_\d+$/.test(x)).sort();
+    states=[fast[Math.floor(tick/5)%Math.max(1,fast.length)],'fast_run_0','walk_1','idle_walk_0'];
+  }else if(speed>.15){
+    const walk=available.filter(x=>/^walk_\d+$/.test(x)).sort();
+    // Partial families (small Mario has only walk_1) still alternate with idle.
+    if(has('idle_walk_0')) walk.unshift('idle_walk_0');
+    const cadence=input.run?5:7;
+    states=[walk[Math.floor(tick/cadence)%Math.max(1,walk.length)],'walk_1','idle_walk_0'];
+  }else states=['idle_walk_0'];
+  for(const state of states){const id=prefix+state;if(state&&has(state)&&cartImageRecord(id))return id;}
   return null;
 }
 function drawPlayer(){
