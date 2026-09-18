@@ -83,3 +83,14 @@ assert(editor.indexOf("if(e.button===0&&spacePanHeld)")<editor.indexOf("const se
 assert(editor.includes("if(terrainStrokeMode&&!isOrdinaryPlatformBrush())"));
 assert(editor.includes("else{clearTerrainErase();"));
 console.log('palette categorization, deduplication, and input cleanup tests passed');
+
+// Palette drops run the same transition used by clicks/select changes before placement.
+const dropHandler=editor.slice(editor.indexOf("wrap.addEventListener('drop'"),editor.indexOf("function openHelp"));
+assert(dropHandler.indexOf('paletteSelectionChanged()')>=0);
+assert(dropHandler.indexOf('paletteSelectionChanged()')<dropHandler.indexOf('insertObject(pointerWorld(e))'));
+assert(!dropHandler.includes('updateActiveBrush();populatePalette();insertObject'));
+c=context({themePack:theme,els:{insertKind:{value:'construction:terrain.overground'},terrainStroke:{classList:{remove(){c.nativeCleared=true}}}},terrainStrokeMode:true,terrainEraseMode:false,paletteWasSemantic:false,stampMode:false,updateActiveBrush:()=>{},populatePalette:()=>{},updateTopStatus:()=>{},clearTerrainErase:undefined,byId:()=>({classList:{remove(){}}}),setStampMode:()=>{}});
+load(c,editor,['activeSemanticTerrain','isOrdinaryPlatformBrush','clearTerrainErase','paletteSelectionChanged']);
+vm.runInContext('paletteSelectionChanged',c)();assert.equal(c.terrainStrokeMode,false);assert.equal(c.nativeCleared,true);assert.equal(c.paletteWasSemantic,true);
+c.terrainEraseMode=true;c.els.insertKind.value='coin';vm.runInContext('paletteSelectionChanged',c)();assert.equal(c.terrainEraseMode,false);assert.equal(c.paletteWasSemantic,false);
+console.log('palette drop transition tests passed');

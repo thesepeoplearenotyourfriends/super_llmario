@@ -30,6 +30,11 @@ state.collisions.push({semanticFamily:terrain.id,semanticAuto:false,semanticCell
 C.applyTerrainEdit(state,terrain,new Set(['0,1']),true);
 assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).image,'manual.tile');
 assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).semanticAuto,false);
+// An Auto stroke crossing the locked cell preserves it and resolves both neighbors around its occupancy.
+C.applyTerrainEdit(state,terrain,new Set(['1,0','2,0']),true);
+const locked=state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0),left=state.sprites.find(s=>s.semanticCellX===0&&s.semanticCellY===0),right=state.sprites.find(s=>s.semanticCellX===2&&s.semanticCellY===0);
+assert.equal(locked.image,'manual.tile');assert.equal(locked.semanticAuto,false);
+assert.equal(left.semanticTopology,'0110');assert.equal(right.semanticTopology,'0001');
 C.applyTerrainEdit(state,terrain,new Set(['1,0']),false);
 assert(!state.sprites.some(s=>s.semanticCellX===1&&s.semanticCellY===0));
 console.log('terrain auto/manual contract passed');
