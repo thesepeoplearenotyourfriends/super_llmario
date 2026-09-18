@@ -1,7 +1,7 @@
 {
   "format": "llmario-theme-pack-v1",
   "themeVersion": 1,
-  "id": "marioai-semantic-nonempty",
+  "id": "marioai",
   "title": "MarioAI Semantic Non-Empty Reference Theme",
   "engineContract": "llmario-theme-pack-v1+marioai-semantics-v1",
   "source": {
@@ -19594,7 +19594,17 @@
           "cell": 16
         },
         "components": {
-          "topology": {},
+          "topology": {
+            "0000": "map.terrain.overground.grass_top.middle",
+            "0100": "map.terrain.overground.grass_top.left",
+            "0001": "map.terrain.overground.grass_top.right",
+            "0101": "map.terrain.overground.grass_top.middle",
+            "0010": "map.terrain.overground.grass_top.middle",
+            "0110": "map.terrain.overground.grass_top.left",
+            "0011": "map.terrain.overground.grass_top.right",
+            "0111": "map.terrain.overground.grass_top.middle",
+            "1111": "map.terrain.overground.dirt_fill.variant_0"
+          },
           "topologyFallback": {
             "strategy": "procedural",
             "style": {
@@ -19610,7 +19620,7 @@
           "import": "X",
           "export": "X"
         },
-        "topologyVerification": "No top/right/bottom/left relationship is asserted from the historic mask suffix alone. All 16 editor topologies explicitly use topologyFallback until original source semantics or visual evidence verifies an asset mapping."
+        "topologyVerification": "Associations use only the visually named grass-top and dirt-fill pieces. Unclear corner and edge topologies retain the procedural fallback; historic MarioAI mask suffixes are not decoded."
       },
       "pipe.vertical": {
         "id": "pipe.vertical",
@@ -19728,6 +19738,49 @@
             "alpha": 0
           }
         }
+      },
+      "bush.span": {
+        "id": "bush.span",
+        "name": "Bush",
+        "category": "decor",
+        "type": "span",
+        "dimensions": {
+          "cell": 16,
+          "minW": 2,
+          "defaultW": 3
+        },
+        "components": {
+          "left": "map.bush.left",
+          "middle": "map.bush.middle",
+          "right": "map.bush.right"
+        },
+        "ascii": null
+      },
+      "mushroom.platform": {
+        "id": "mushroom.platform",
+        "name": "Mushroom Platform",
+        "category": "terrain",
+        "type": "parametric",
+        "dimensions": {
+          "cell": 16,
+          "minW": 3,
+          "defaultW": 3,
+          "minH": 2,
+          "defaultH": 3
+        },
+        "components": {
+          "cap": {
+            "left": "map.mushroom_platform.cap.left",
+            "middle": "map.mushroom_platform.cap.middle",
+            "right": "map.mushroom_platform.cap.right"
+          },
+          "stem": {
+            "left": "map.mushroom_platform.stem.left",
+            "middle": "map.mushroom_platform.stem.middle",
+            "right": "map.mushroom_platform.stem.right"
+          }
+        },
+        "ascii": null
       }
     }
   }
