@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Build the complete, nonempty MarioAI reference theme.
 
-Canonical names and semantic metadata intentionally come from
-``compile_marioai_semantics.py``.  This converter only adds a sheet namespace
-when a canonical name is not already namespaced by its sheet; it contains no
-second asset-naming table.
+Canonical public IDs and semantic metadata intentionally come verbatim from
+``compile_marioai_semantics.py``; this converter contains no second asset-naming
+table.
 """
 from __future__ import annotations
 
@@ -40,10 +39,8 @@ def png_data_url(image: Image.Image) -> str:
 
 
 def canonical_asset_id(entry: dict) -> str:
-    """Qualify the compiler's canonical name only where it is not self-namespaced."""
-    name = entry["canonical_name"]
-    sheet = entry["sheet"]
-    return name if name.startswith(sheet + ".") else f"{sheet}.{name}"
+    """Use the semantic compiler's public asset ID verbatim."""
+    return entry["canonical_name"]
 
 
 def semantic_entries(src: Path, behavior: bytes) -> tuple[list[dict], dict]:
@@ -91,8 +88,9 @@ def semantic_entries(src: Path, behavior: bytes) -> tuple[list[dict], dict]:
                 elif sheet == "item": semantics.apply_item_roles(entry, x, y)
                 elif sheet == "particle": semantics.apply_particle_roles(entry, x, y)
                 elif sheet == "goal_actor": semantics.apply_goal_roles(entry, x, y)
-                if entry["roles"]:
-                    entry["canonical_name"] = entry["roles"][0]["contract_role"]
+                entry["canonical_name"] = semantics.canonical_asset_name(
+                    sheet, x, y, index, entry["roles"]
+                )
                 entry["asset"] = None if entry["empty"] else canonical_asset_id(entry)
                 entries.append(entry)
     return entries, {"sheets": sheet_info, "autotile": autotiles}

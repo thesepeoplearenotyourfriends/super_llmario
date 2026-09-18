@@ -480,10 +480,44 @@ def autotile_rules():
     return result, reverse
 
 
-def fallback_name(sheet: str, x: int, y: int, idx: int) -> str:
+def canonical_asset_name(sheet: str, x: int, y: int, idx: int, roles: list[dict]) -> str:
+    """Return the stable public theme ID for one source cell.
+
+    Contract roles stay neutral metadata. Public IDs retain the established
+    source-family vocabulary consumed by the engine, while map IDs use the
+    canonical structural names owned by this compiler.
+    """
     if sheet == "map":
-        return f"map.cell_{idx:02x}"
-    return f"{sheet}.cell_x{x:02d}_y{y:02d}"
+        name = roles[0]["contract_role"] if roles else f"cell_{idx:02x}"
+        return f"map.{name}"
+
+    public_prefix = {
+        "background": "bg",
+        "enemy": "enemy",
+        "item": "item",
+        "particle": "particle",
+        "player_large": "mario",
+        "player_small": "smallmario",
+        "player_fire": "firemario",
+        "player_carry": "racoonmario",
+        "goal_actor": "princess",
+        "font": "font",
+    }[sheet]
+    if roles:
+        # Existing public IDs join the first two neutral role segments with a
+        # hyphen: player.motion.* -> mario.player-motion.*, for example.
+        role = roles[0]["contract_role"]
+        head, separator, tail = role.partition(".")
+        public_role = head + (("-" + tail) if separator else "")
+        return f"{public_prefix}.{public_role}"
+
+    family = sheet.replace("_", "-")
+    return f"{public_prefix}.{family}-cell.x{x:02d}.y{y:02d}"
+
+
+def fallback_name(sheet: str, x: int, y: int, idx: int) -> str:
+    """Compatibility helper for callers constructing an unclassified entry."""
+    return canonical_asset_name(sheet, x, y, idx, [])
 
 
 def make_contact(entries: list[dict], image: Image.Image, cw: int, ch: int, output: Path):
@@ -653,9 +687,9 @@ def main():
                 # Their generator/use context is sheet-level rather than a simple
                 # one-cell/one-semantic-object relationship.
 
-                if entry["roles"]:
-                    # Prefer a neutral contract role as the canonical human-facing name.
-                    entry["canonical_name"] = entry["roles"][0]["contract_role"]
+                entry["canonical_name"] = canonical_asset_name(
+                    sheet_id, x, y, idx, entry["roles"]
+                )
 
                 for role in entry["roles"]:
                     if "animation" in role:
