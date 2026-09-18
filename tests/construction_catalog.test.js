@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('node:assert/strict'),C=require('../construction/catalog.js');
+const terrain={id:'terrain.g',type:'terrain',name:'Ground',dimensions:{cell:16},components:{topology:{'0000':'solo','0100':'left','0001':'right','0101':'middle'},topologyFallback:{strategy:'procedural',role:'fallback'}},ascii:{import:'X',export:'X'}};
+let cells=new Set(['0,0','1,0','2,0']);let p=C.resolveTerrain(terrain,cells,cells);assert.deepEqual(p.map(x=>x.role),['left','middle','right']);
+cells.delete('2,0');p=C.resolveTerrain(terrain,cells,['2,0']);assert.deepEqual(p.map(x=>[x.x,x.role]),[[1,'right']]);
+const pipe={id:'pipe',type:'resizable',name:'Pipe',dimensions:{minW:2,minH:2},components:{cap:[{role:'ml',x:0},{role:'mr',x:1}],body:[{role:'bl',x:0},{role:'br',x:1}]}};assert.deepEqual(C.construct(pipe,{w:2,h:3}).map(x=>x.role),['ml','mr','bl','br','bl','br']);
+const fixed={id:'sign',type:'fixed',name:'Sign',components:{parts:[{role:'a',x:0,y:0},{role:'b',x:1,y:0},{role:'c',x:0,y:1},{role:'d',x:1,y:1}]},ascii:null};assert.equal(C.construct(fixed).length,4);
+const mush={id:'mush',type:'parametric',name:'Platform',dimensions:{minW:3,minH:2},components:{cap:{left:'cl',middle:'cm',right:'cr'},stem:{left:'sl',middle:'sm',right:'sr'}}};assert.deepEqual(C.construct(mush,{w:4,h:3}).map(x=>x.role),['cl','cm','cm','cr','sl','sm','sm','sr','sl','sm','sm','sr']);
+const span={id:'bush',type:'span',name:'Bush',dimensions:{minW:2},components:{left:'l',middle:'m',right:'r'}};assert.deepEqual(C.construct(span,{w:5}).map(x=>x.role),['l','m','m','m','r']);
+const catalog={version:1,families:{'terrain.g':terrain,sign:fixed}};assert.deepEqual(C.validate(catalog),[]);assert.deepEqual(C.asciiMaps(catalog),{imports:{X:'terrain.g'},exports:{'terrain.g':'X'}});
+const themeA={constructionCatalog:{version:1,families:{pipe:Object.assign({},pipe,{assets:{body:'green'}}),other:{id:'other',type:'fixed',name:'Other',components:{parts:[]},assets:{body:'red'}}}}};assert.equal(C.resolveRole(themeA,'pipe','body'),'green');assert.equal(C.resolveRole(themeA,'other','body'),'red');assert.equal(C.resolveRole(themeA,null,'body'),null);
+assert.deepEqual(C.asciiMaps({version:1,families:{native:fixed}}),{imports:{},exports:{}});
+console.log('construction catalog tests passed');
