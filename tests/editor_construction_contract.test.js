@@ -20,3 +20,16 @@ assert.deepEqual(C.logicalSelection([ordinaryA,ordinaryB],allPipes,'pipe',isPipe
 assert.equal(C.asciiMaps(theme.constructionCatalog).imports.X,'terrain.overground');assert(!C.asciiMaps(theme.constructionCatalog).exports['pipe.vertical']);
 cp.execFileSync('python3',['scripts/sync_editor_catalog.py','--check']);for(const file of ['editor/editor.html','engine/engine.html']){const html=fs.readFileSync(file,'utf8');assert(!/<script[^>]+src=["'][^"']*construction\/catalog\.js/.test(html));assert(html.includes('BEGIN GENERATED CONSTRUCTION CATALOG'))}
 console.log('editor construction contract tests passed');
+
+// Auto terrain retiles around edits while explicit family tiles remain locked.
+state={sprites:[],collisions:[]};
+C.applyTerrainEdit(state,terrain,new Set(['0,0','1,0']),true);
+state.sprites=state.sprites.filter(s=>s.semanticCellX!==1);state.collisions=state.collisions.filter(s=>s.semanticCellX!==1);
+state.sprites.push({semanticFamily:terrain.id,semanticAuto:false,semanticCellX:1,semanticCellY:0,image:'manual.tile'});
+state.collisions.push({semanticFamily:terrain.id,semanticAuto:false,semanticCellX:1,semanticCellY:0,type:'ground'});
+C.applyTerrainEdit(state,terrain,new Set(['0,1']),true);
+assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).image,'manual.tile');
+assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).semanticAuto,false);
+C.applyTerrainEdit(state,terrain,new Set(['1,0']),false);
+assert(!state.sprites.some(s=>s.semanticCellX===1&&s.semanticCellY===0));
+console.log('terrain auto/manual contract passed');
