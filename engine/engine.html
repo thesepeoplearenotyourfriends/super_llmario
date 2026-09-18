@@ -2268,11 +2268,11 @@ function imageSpriteEffectiveCollision(s){
   if(!k || k === 'none' || k === 'visual' || k === 'decor') return null;
   return c;
 }
-function semanticRoleAsset(role){const families=ACTIVE_CART&&ACTIVE_CART.constructionCatalog&&ACTIVE_CART.constructionCatalog.families;if(!role||!isPlainObject(families))return null;for(const id of Object.keys(families)){const assets=families[id]&&families[id].assets;if(isPlainObject(assets)&&assets[role])return assets[role]}return null}
+function semanticRoleAsset(family,role){const families=ACTIVE_CART&&ACTIVE_CART.constructionCatalog&&ACTIVE_CART.constructionCatalog.families;if(!role||!isPlainObject(families))return null;if(family&&isPlainObject(families[family])&&isPlainObject(families[family].assets))return families[family].assets[role]||null;if(family)return null;const hits=[];for(const id of Object.keys(families)){const assets=families[id]&&families[id].assets;if(isPlainObject(assets)&&assets[role])hits.push(assets[role])}return hits.length===1?hits[0]:null}
 function imageSpriteFrame(s){
   if(!s || s.hidden || s._drop) return null;
   // Stored semantic pieces are authoritative; runtime only resolves role to theme art.
-  const id = semanticRoleAsset(s.semanticRole) || s.image || s.asset || s.id;
+  const id = semanticRoleAsset(s.semanticFamily,s.semanticRole) || s.image || s.asset || s.id;
   const rec = cartImageRecord(id);
   const img = rec && rec.img;
   const truth = themeTruthForImage(id) || {};
@@ -3547,7 +3547,7 @@ function drawImageSprite(s){
   const f = imageSpriteFrame(s);
   const img = f && (f.img || cartImage(f.id));
   if(!f) return;
-  if(!img){ if(spriteLooksClimbable(s)) drawDefaultLadderFrame(f,s); return; }
+  if(!img){ if(s.semanticFallback==='procedural'){ctx.save();ctx.fillStyle='#75451f';ctx.fillRect(Math.round(worldX(f.x)),Math.round(f.y),Math.round(f.w),Math.round(f.h));ctx.fillStyle='#6abf31';ctx.fillRect(Math.round(worldX(f.x)),Math.round(f.y),Math.round(f.w),Math.min(5,Math.round(f.h)));ctx.restore()}else if(spriteLooksClimbable(s)) drawDefaultLadderFrame(f,s); return; }
   const x = worldX(f.x);
   const y = f.y;
   if(x > W + 180 || x + f.w < -180) return;
@@ -3714,6 +3714,7 @@ function drawArcadePipe(x, baseY, h, scale, r){
   ctx.restore();
 }
 function drawNativePipe(p,r){
+  if(p.resolvedVisuals)return;
   const box=sceneryPipeSolid(p),x=Math.round(worldX(box.x)),y=Math.round(box.y),s=p.scale||1,d=box.direction||'up';
   if(x>W+120||x+box.w<-120)return;
   if(d === 'up'){

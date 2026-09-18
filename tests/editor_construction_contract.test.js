@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),C=require('../construction/catalog.js');
+const theme=JSON.parse(fs.readFileSync('themes/theme_marioai_nonempty.llmtheme.txt','utf8')),terrain=theme.constructionCatalog.families['terrain.overground'];
+let state={sprites:[],collisions:[]};
+C.applyTerrainEdit(state,terrain,new Set(['0,0']),true);C.applyTerrainEdit(state,terrain,new Set(['1,0']),true);
+assert.deepEqual(C.terrainOccupancy(state.sprites,terrain.id),new Set(['0,0','1,0']));assert.equal(state.sprites.find(x=>x.semanticCellX===0).semanticTopology,'0100');assert.equal(state.sprites.find(x=>x.semanticCellX===1).semanticTopology,'0001');
+C.applyTerrainEdit(state,terrain,new Set(['1,0']),false);assert.deepEqual(C.terrainOccupancy(state.sprites,terrain.id),new Set(['0,0']));assert.equal(state.sprites[0].semanticTopology,'0000');
+state={sprites:[],collisions:[]};const full=new Set();for(let y=0;y<3;y++)for(let x=0;x<3;x++)full.add(x+','+y);C.applyTerrainEdit(state,terrain,full,true);const center=state.sprites.find(x=>x.semanticCellX===1&&x.semanticCellY===1);assert.equal(center.semanticTopology,'1111');assert.equal(center.semanticFallback,'procedural');assert.equal(center.w,terrain.dimensions.cell);assert.equal(state.collisions.find(x=>x.semanticCellX===1&&x.semanticCellY===1).w,terrain.dimensions.cell);
+const pipe=theme.constructionCatalog.families['pipe.vertical'],short=C.construct(pipe,{w:2,h:2}),tall=C.construct(pipe,{w:2,h:5});assert.deepEqual(short.slice(0,2).map(x=>x.role),tall.slice(0,2).map(x=>x.role));assert.equal(tall.length-short.length,6);assert.equal(pipe.authoringBinding.noun,'pipe');
+const ladder=theme.constructionCatalog.families['ladder.vertical'];assert.equal(C.construct(ladder,{w:1,h:6}).length,6);assert.equal(ladder.authoringBinding.noun,'climbZone');
+const saved=JSON.parse(JSON.stringify({resourceScenery:{sprites:tall.map((x,i)=>({...x,constructionGroup:'persist',constructionSize:{w:2,h:5},x:i,y:0}))}}));assert(saved.resourceScenery.sprites.every(x=>x.constructionGroup==='persist'&&x.constructionSize.h===5));
+assert.equal(C.asciiMaps(theme.constructionCatalog).imports.X,'terrain.overground');assert.equal(C.asciiMaps(theme.constructionCatalog).exports['terrain.overground'],'X');assert(!C.asciiMaps(theme.constructionCatalog).exports['pipe.vertical']);
+const editor=fs.readFileSync('editor/editor.html','utf8'),engine=fs.readFileSync('engine/engine.html','utf8');assert(editor.includes('LLMarioConstruction.applyTerrainEdit'));assert(editor.includes('regenerateConstruction'));assert(editor.includes('constructionBinding'));assert(engine.includes('semanticRoleAsset(s.semanticFamily,s.semanticRole)'));assert(!engine.includes('resolveTerrain('));assert(!engine.includes('LLMarioConstruction.construct'));
+console.log('editor construction contract tests passed');

@@ -19223,22 +19223,11 @@
           "cell": 16
         },
         "components": {
-          "topology": {
-            "1000": "terrain.topology.1000",
-            "1100": "terrain.topology.1100",
-            "0100": "terrain.topology.0100",
-            "1110": "terrain.topology.1110",
-            "1010": "terrain.topology.1010",
-            "0110": "terrain.topology.0110",
-            "0101": "terrain.topology.0101",
-            "1101": "terrain.topology.1101",
-            "0010": "terrain.topology.0010",
-            "0011": "terrain.topology.0011",
-            "0001": "terrain.topology.0001",
-            "0111": "terrain.topology.0111",
-            "1011": "terrain.topology.1011"
-          },
-          "default": "terrain.topology.0101"
+          "topology": {},
+          "topologyFallback": {
+            "strategy": "procedural",
+            "role": "terrain.overground.procedural"
+          }
         },
         "assets": {
           "terrain.topology.1000": "map.terrain-autotile.overground.mask_1000",
@@ -19256,9 +19245,10 @@
           "terrain.topology.1011": "map.terrain-autotile.overground.mask_1011"
         },
         "ascii": {
-          "import": "#",
-          "export": "#"
-        }
+          "import": "X",
+          "export": "X"
+        },
+        "topologyVerification": "No top/right/bottom/left relationship is asserted from the historic mask suffix alone. All 16 editor topologies explicitly use topologyFallback until original source semantics or visual evidence verifies an asset mapping."
       },
       "pipe.vertical": {
         "id": "pipe.vertical",
@@ -19301,7 +19291,17 @@
           "pipe.body.left": "map.pipe-vertical.body.left",
           "pipe.body.right": "map.pipe-vertical.body.right"
         },
-        "ascii": null
+        "ascii": null,
+        "authoringBinding": {
+          "noun": "pipe",
+          "path": "resourceScenery.pipes",
+          "defaults": {
+            "direction": "up",
+            "solid": true,
+            "global": true,
+            "travel": false
+          }
+        }
       },
       "cannon.vertical": {
         "id": "cannon.vertical",
@@ -19368,7 +19368,19 @@
           "ladder.top": "map.ladder-top",
           "ladder.body": "map.ladder-body"
         },
-        "ascii": null
+        "ascii": null,
+        "authoringBinding": {
+          "noun": "climbZone",
+          "path": "resourceScenery.sprites",
+          "defaults": {
+            "kind": "ladder",
+            "climbable": true,
+            "collision": {
+              "kind": "climb"
+            },
+            "alpha": 0
+          }
+        }
       }
     }
   }
