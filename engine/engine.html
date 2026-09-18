@@ -800,6 +800,7 @@ function loadCartImageAssets(cart){
         rec.w = img.naturalWidth || img.width || 0;
         rec.h = img.naturalHeight || img.height || 0;
         rec.visibleBounds = measureOpaqueBounds(img, rec.w, rec.h);
+        rebuildThemedFamilyBounds();
         try{ requestAnimationFrame(draw); }catch(e){}
       };
       img.onerror = function(){ rec.failed = true; };
@@ -822,6 +823,29 @@ function measureOpaqueBounds(img, w, h){
     }
     return maxX<0 ? null : {x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1};
   }catch(e){ return null; }
+}
+const THEMED_FAMILY_BOUNDS = Object.create(null);
+function themedAssetFamily(id){
+  if(!id) return '';
+  const playerMark = '.player-motion.';
+  if(id.includes(playerMark)) return id.slice(0,id.indexOf(playerMark)+playerMark.length);
+  const groups = (ACTIVE_CART && ACTIVE_CART._animationGroups) || {};
+  for(const group of Object.keys(groups)) if(groups[group].some(f => f.asset === id)) return group;
+  return id;
+}
+function rebuildThemedFamilyBounds(){
+  for(const key of Object.keys(THEMED_FAMILY_BOUNDS)) delete THEMED_FAMILY_BOUNDS[key];
+  for(const id of Object.keys(CART_IMAGE_CACHE)){
+    const rec=CART_IMAGE_CACHE[id], b=rec&&rec.visibleBounds;
+    if(!rec.ready || !b) continue;
+    // Coordinates are relative to the source cell's bottom-center. This keeps
+    // authored per-frame offsets while allowing differently sized source cells.
+    const left=b.x-rec.w/2, right=b.x+b.w-rec.w/2;
+    const top=b.y-rec.h, bottom=b.y+b.h-rec.h;
+    const family=themedAssetFamily(id), u=THEMED_FAMILY_BOUNDS[family];
+    if(!u) THEMED_FAMILY_BOUNDS[family]={left,right,top,bottom};
+    else{ u.left=Math.min(u.left,left); u.right=Math.max(u.right,right); u.top=Math.min(u.top,top); u.bottom=Math.max(u.bottom,bottom); }
+  }
 }
 function cartImage(id){
   const rec = id && CART_IMAGE_CACHE[id];
@@ -878,11 +902,16 @@ function drawThemedAsset(id, box, opts){
   const rec = cartImageRecord(id);
   const naturalW = img.naturalWidth || img.width || boxW, naturalH = img.naturalHeight || img.height || boxH;
   const visible = (rec && rec.visibleBounds) || {x:0,y:0,w:naturalW,h:naturalH};
-  const fit = Math.min(boxW / Math.max(1,visible.w), boxH / Math.max(1,visible.h));
-  const w = Math.max(1,Math.round(visible.w * fit)), h = Math.max(1,Math.round(visible.h * fit));
+  const frameLeft=visible.x-naturalW/2, frameTop=visible.y-naturalH;
+  const family=THEMED_FAMILY_BOUNDS[themedAssetFamily(id)] || {left:frameLeft,right:frameLeft+visible.w,top:frameTop,bottom:frameTop+visible.h};
+  const familyW=Math.max(1,family.right-family.left), familyH=Math.max(1,family.bottom-family.top);
+  const fit = Math.min(boxW/familyW, boxH/familyH);
+  const w = Math.max(1,visible.w*fit), h = Math.max(1,visible.h*fit);
+  const dx=(frameLeft-(family.left+family.right)/2)*fit;
+  const dy=(frameTop-family.bottom)*fit;
   ctx.translate(x + boxW/2, y + boxH);
   ctx.scale(opts.mirror ? -1 : 1, opts.squash == null ? 1 : opts.squash);
-  ctx.drawImage(img, visible.x, visible.y, visible.w, visible.h, -w/2, -h, w, h);
+  ctx.drawImage(img, visible.x, visible.y, visible.w, visible.h, dx, dy, w, h);
   ctx.restore();
   ctx.globalAlpha = oldAlpha; ctx.imageSmoothingEnabled = oldSmooth;
   return true;
@@ -1159,7 +1188,7 @@ const stars = cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false}));
 const powerups = [];
 const coinBursts = [];
 const blockBursts = [];
-const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking'}));
+const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',_walkW:e.w,_walkH:e.h}));
 const signposts = cloneData(ACTIVE_CART.signposts);
 const portal = cloneData(ACTIVE_CART.portal);
 
@@ -1547,7 +1576,7 @@ function rebuildWorldFromCart(cart){
   replaceArray(floatingBlocks, cloneData(ACTIVE_CART.floatingBlocks));
   replaceArray(coins, cloneData(ACTIVE_CART.coins).map(c => ({...c,taken:false})));
   replaceArray(stars, cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false})));
-  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking'})));
+  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',_walkW:e.w,_walkH:e.h})));
   replaceArray(signposts, cloneData(ACTIVE_CART.signposts));
   Object.keys(portal).forEach(k => delete portal[k]);
   Object.assign(portal, cloneData(ACTIVE_CART.portal));
@@ -1710,7 +1739,12 @@ function reset(full){
     player.stars = 0;
     coins.forEach(c => c.taken = false);
     stars.forEach(s => s.taken = false);
-    enemies.forEach(e => { e.alive = true; e.flat = 0; e.state = 'walking'; e.shellVx = 0; });
+    enemies.forEach(e => {
+      const feet=e.y+e.h, walkW=e._walkW||e.w;
+      e.x-=(walkW-e.w)/2;
+      e.alive=true; e.flat=0; e.state='walking'; e.shellVx=0;
+      e.w=walkW; e.h=e._walkH||e.h; e.y=feet-e.h;
+    });
     powerups.length = 0;
     coinBursts.length = 0;
     blockBursts.length = 0;
@@ -2692,6 +2726,16 @@ function collectables(){
 function shellCapableEnemy(e){
   return /(?:^|_)(?:red|green)_koopa(?:_|$)/.test(String((e&&e.kind)||'').toLowerCase());
 }
+function enterKoopaShell(e, state){
+  const feet=e.y+e.h;
+  e._walkW=e._walkW||e.w; e._walkH=e._walkH||e.h;
+  e.w=Math.min(e._walkW,32);
+  e.h=Math.max(18,Math.round(e._walkH*.6));
+  e.x += (e._walkW-e.w)/2;
+  e.y=feet-e.h;
+  e.state=state||'shellStopped';
+  if(e.state === 'shellStopped') e.shellVx=0;
+}
 function stompEnemy(e){
   playSfx('stomp');
   if(shellCapableEnemy(e)){
@@ -2699,8 +2743,7 @@ function stompEnemy(e){
       e.state = 'shellStopped';
       e.shellVx = 0;
     }else if(e.state === 'walking'){
-      e.state = 'shellStopped';
-      e.shellVx = 0;
+      enterKoopaShell(e,'shellStopped');
     }
   }else{
     e.alive = false;
@@ -2715,12 +2758,16 @@ function updateEnemyMotion(e){
   const vx = e.state === 'shellMoving' ? e.shellVx : e.vx;
   const oldX = e.x;
   e.x += vx;
-  let blocked = e.x < e.min || e.x > e.max;
-  if(!blocked && e.state === 'shellMoving') blocked = hitSolids(e).some(s => !s._slope);
+  let blocked;
+  if(e.state === 'shellMoving'){
+    // A kicked shell leaves its former walking patrol and only rebounds from
+    // actual world/solid obstacles.
+    blocked=e.x<0 || e.x+e.w>WORLD_W || hitSolids(e).some(s => !s._slope);
+  }else blocked=e.x<e.min || e.x>e.max;
   if(blocked){
-    e.x = oldX;
-    if(e.state === 'shellMoving') e.shellVx *= -1;
-    else e.vx *= -1;
+    e.x=oldX;
+    if(e.state === 'shellMoving') e.shellVx*=-1;
+    else e.vx*=-1;
   }
 }
 
