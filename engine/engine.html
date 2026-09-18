@@ -1187,7 +1187,6 @@ const coins = cloneData(ACTIVE_CART.coins).map(c => ({...c,taken:false}));
 const stars = cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false}));
 const powerups = [];
 const projectiles = [];
-const enemyParticles = [];
 const coinBursts = [];
 const blockBursts = [];
 function freshEnemy(e){
@@ -1588,7 +1587,6 @@ function rebuildWorldFromCart(cart){
   Object.assign(portal, cloneData(ACTIVE_CART.portal));
   powerups.length = 0;
   projectiles.length = 0;
-  enemyParticles.length = 0;
   coinBursts.length = 0;
   blockBursts.length = 0;
   player.spawnX = ACTIVE_CART.playerSpawn.x;
@@ -1714,7 +1712,8 @@ const player = {
   runCharge: 0,
   pSpeed: false,
   flightFrames: 0,
-  fireCooldown: 0
+  fireCooldown: 0,
+  carryEnemy: null
 };
 
 function reset(full){
@@ -1735,6 +1734,7 @@ function reset(full){
   player.pSpeed = false;
   player.flightFrames = 0;
   player.fireCooldown = 0;
+  player.carryEnemy = null;
   player.w = 34;
   player.h = 48;
   cam = Math.max(0, Math.min(WORLD_W - W, player.x - 210));
@@ -1760,7 +1760,6 @@ function reset(full){
     });
     powerups.length = 0;
     projectiles.length = 0;
-    enemyParticles.length = 0;
     coinBursts.length = 0;
     blockBursts.length = 0;
     floatingBlocks.forEach(b => { b.used = !!b.startUsed; b.bump = 0; b.prevY = null; b.busted = !!b.startBusted; });
@@ -1775,6 +1774,7 @@ function loseLife(){
   player.vx = 0;
   player.vy = -4;
   player.climbing = false;
+  releaseHeldShell(false);
   shake = 8;
 }
 
@@ -1803,6 +1803,7 @@ function growPlayer(){
 function hurtPlayer(){
   if(player.inv > 0 || player.deadTimer || won) return;
   if(player.big){
+    releaseHeldShell(false);
     playSfx('hurt');
     if(player.form === 'fire' || player.form === 'raccoon') setPlayerForm('big');
     else setPlayerForm('small');
@@ -1818,7 +1819,7 @@ const ACTIONS = ['left','right','up','down','run','jump','pause'];
 const ACTION_LABELS = {left:'Left',right:'Right',up:'Up',down:'Down',run:'Run',jump:'Jump',pause:'Pause'};
 const DEFAULT_PAD_MAP = {left:14,right:15,up:12,down:13,run:0,jump:1,pause:9};
 const padMapKey = 'super_llmario_button_gamepad_map_v2';
-const input = {left:false,right:false,up:false,down:false,jump:false,jumpTap:false,run:false,runTap:false,pause:false,pauseTap:false};
+const input = {left:false,right:false,up:false,down:false,jump:false,jumpTap:false,run:false,runTap:false,runRelease:false,pause:false,pauseTap:false};
 const keyInput = {left:false,right:false,up:false,down:false,jump:false,run:false,pause:false};
 const padInput = {left:false,right:false,up:false,down:false,jump:false,run:false,pause:false};
 let padMap = Object.assign({}, DEFAULT_PAD_MAP, storageJSONGet(padMapKey, null) || {});
@@ -1833,6 +1834,7 @@ function composeInput(){
   for(const a of ACTIONS) input[a] = !!(keyInput[a] || padInput[a]);
   if(input.jump && !oldJump) input.jumpTap = true;
   if(input.run && !oldRun) input.runTap = true;
+  if(!input.run && oldRun) input.runRelease = true;
   if(input.pause && !oldPause) input.pauseTap = true;
 }
 function buttonLabel(i){ return i == null ? 'unmapped' : 'Button '+i; }
@@ -2765,6 +2767,26 @@ function enterKoopaShell(e, state){
   e.shellVy=0; e.shellOnGround=true;
   if(e.state === 'shellStopped') e.shellVx=0;
 }
+function carryShell(e){
+  if(!e || e.state!=='shellStopped' || player.carryEnemy) return false;
+  player.carryEnemy=e; e.state='shellHeld'; e.shellTimer=0; e.shellVx=0; e.shellVy=0;
+  playSfx('bonk');
+  return true;
+}
+function positionHeldShell(){
+  const e=player.carryEnemy;
+  if(!e || !e.alive){player.carryEnemy=null;return;}
+  e.x=player.face>0 ? player.x+player.w-3 : player.x-e.w+3;
+  e.y=player.y+player.h-e.h-7;
+}
+function releaseHeldShell(throwIt){
+  const e=player.carryEnemy;
+  if(!e) return false;
+  player.carryEnemy=null; e.state=throwIt?'shellMoving':'shellStopped'; e.shellTimer=0;
+  e.shellVx=throwIt ? player.face*6.2 : 0; e.shellVy=throwIt ? -1.2 : 0;
+  e.x=player.face>0 ? player.x+player.w+2 : player.x-e.w-2;
+  return true;
+}
 function reviveKoopa(e){
   const feet=e.y+e.h, center=e.x+e.w/2;
   e.w=e._walkW||e.w; e.h=e._walkH||e.h;
@@ -2848,9 +2870,11 @@ function updateEnemyMotion(e){
     else if(phase<rise+exposed) shown=1;
     else if(phase<rise+exposed+fall) shown=1-(phase-rise-exposed)/fall;
     e.exposure=Math.max(0,Math.min(1,shown)); e.x=e._originX; e.y=e._originY+e.h*(1-e.exposure);
-    if((phase<rise || (phase>=rise+exposed&&phase<rise+exposed+fall)) && tick%7===0) enemyParticles.push({x:e.x+e.w/2,y:e.y+5,vx:(Math.random()-.5)*.7,vy:-.8,life:22});
+    const transitioning=phase<rise || (phase>=rise+exposed&&phase<rise+exposed+fall);
+    e.fireEffect=transitioning ? {x:e._originX+e.w/2,y:e._originY+e.h-(e.h+12)*e.exposure,alpha:.45+.55*Math.sin(Math.PI*e.exposure)} : null;
     return;
   }
+  if(e.state === 'shellHeld') return;
   if(e.state === 'shellStopped' || e.state === 'shellMoving') updateShellVertical(e);
   if(!e.alive) return;
   if(e.wingFalling){
@@ -3107,8 +3131,12 @@ function update(){
   if(player.inv > 0) player.inv -= 1;
   if(player.pipeCooldown > 0) player.pipeCooldown -= 1;
   if(player.fireCooldown > 0) player.fireCooldown -= 1;
-  if(input.runTap) launchFireball();
+  const fireRequested=input.runTap;
+  const touchingHeldCandidate=enemies.find(e=>e.alive&&e.state==='shellStopped'&&aabb(player,e));
+  if(input.run && touchingHeldCandidate) carryShell(touchingHeldCandidate);
+  if(input.runRelease && player.carryEnemy) releaseHeldShell(true);
   input.runTap=false;
+  input.runRelease=false;
 
   if(player.deadTimer > 0){
     player.deadTimer -= 1;
@@ -3161,7 +3189,7 @@ function update(){
   }else{
     const running = !!input.run;
     const accel = running ? 0.50 : 0.36;
-    const max = running ? 4.35 : 2.95;
+    const max = running ? 4.60 : 3.10;
     const friction = player.onGround ? (running ? 0.84 : 0.78) : 0.96;
     const charging = player.onGround && running && Math.abs(player.vx) > 3.35 && ((input.left && player.vx < 0) || (input.right && player.vx > 0));
     if(charging) player.runCharge = Math.min(90, player.runCharge + 1);
@@ -3189,16 +3217,20 @@ function update(){
       player.vy += rowCameraConfig().stallGravity || 0.08;
       player.vy = Math.min(player.vy, rowCameraConfig().stallMaxVy || 1.35);
     }else{
-      const flying=player.form==='raccoon' && player.flightFrames>0 && player.pSpeed && input.jump;
-      player.vy += flying ? 0.18 : 0.52;
-      if(flying){ player.vy=Math.max(player.vy,-3.25); player.flightFrames--; }
+      const flying=player.form==='raccoon' && player.flightFrames>0;
+      if(flying){
+        const lift=(input.jump||input.up) ? -0.34 : (input.down ? 0.38 : 0.08);
+        player.vy=Math.max(-4.6,Math.min(3.2,player.vy+lift));
+        player.flightFrames--;
+      }else player.vy += 0.52;
       if(player.vy > 11.2) player.vy = 11.2;
     }
     resolvePlayer();
+    if(player.onGround) player.flightFrames=0;
   }
+  positionHeldShell();
   updatePowerups();
   updateProjectiles();
-  for(let i=enemyParticles.length-1;i>=0;i--){const p=enemyParticles[i];p.x+=p.vx;p.y+=p.vy;p.vy-=.01;if(--p.life<=0)enemyParticles.splice(i,1);}
   updateCoinBursts();
   updateBlockBursts();
 
@@ -3212,7 +3244,7 @@ function update(){
     updateEnemyMotion(e);
   }
   resolveMovingShellHits();
-  const enemyHits=enemies.filter(e => e.alive && (!flowerEnemy(e)||e.exposure>.55) && aabb(player,e));
+  const enemyHits=enemies.filter(e => e.alive && e.state!=='shellHeld' && (!flowerEnemy(e)||e.exposure>.55) && aabb(player,e));
   if(enemyHits.length){
     const stompHits = enemyHits.filter(e => !spikedEnemy(e) && !flowerEnemy(e) && stompVy > 1 && player.y + player.h - e.y < 16);
     if(stompHits.length){
@@ -3221,15 +3253,20 @@ function update(){
     }else{
       const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped');
       for(const e of kickable){
-        e.state = 'shellMoving';
-        e.shellTimer = 0;
-        const kickRight = player.x + player.w/2 < e.x + e.w/2;
-        e.shellVx = (kickRight ? 1 : -1) * 6.2;
-        e.x = kickRight ? player.x + player.w : player.x - e.w;
+        if(input.run) carryShell(e);
+        else{
+          e.state = 'shellMoving'; e.shellTimer = 0;
+          const kickRight = player.x + player.w/2 < e.x + e.w/2;
+          e.shellVx = (kickRight ? 1 : -1) * 6.2;
+          e.x = kickRight ? player.x + player.w : player.x - e.w;
+        }
       }
       if(enemyHits.some(e => !kickable.includes(e))) hurtPlayer();
     }
   }
+  // Resolve shell contact first: Run picks up a stopped shell instead of also
+  // firing. A fireball is created only when this press did not acquire one.
+  if(fireRequested && !player.carryEnemy) launchFireball();
 
   collectables();
 
@@ -4094,7 +4131,8 @@ function drawBlob(e){
   const stableShellFrame=group && e.state === 'shellStopped' && animationFrames(group).find(f => cartImageRecord(f.asset));
   const id=stableShellFrame ? stableShellFrame.asset : (group&&animationAsset(group,tick+(e.x||0),8));
   const squash=e.alive?1:Math.max(.24,e.flat/18);
-  if(id && drawThemedAsset(id,{x:e.x,y:e.y,w:e.w,h:e.h},{mirror:(e.state === 'shellMoving' ? e.shellVx : e.vx)<0,squash:squash})) return;
+  const box=shellCapableEnemy(e)&&e.state==='walking'?{x:e.x-5,y:e.y-12,w:e.w+10,h:e.h+12}:e;
+  if(id && drawThemedAsset(id,box,{mirror:(e.state === 'shellMoving' ? e.shellVx : e.vx)<0,squash:squash})) return;
   drawRecipe('enemies.'+(e.kind||'blob'), e);
 }
 function drawEnemyAttachments(e){
@@ -4105,7 +4143,8 @@ function drawEnemyAttachments(e){
 }
 function drawProjectiles(){
   for(const p of projectiles){if(!p.alive)continue;const id=animationAsset('projectile.fireball',tick+p.x,3);if(id)drawThemedAsset(id,p);else{ctx.fillStyle='#ff8b25';ctx.beginPath();ctx.arc(worldX(p.x+7),p.y+7,6,0,Math.PI*2);ctx.fill();}}
-  for(const p of enemyParticles){const id=animationAsset('projectile.fireball',tick+p.x,4);ctx.save();ctx.globalAlpha=Math.min(1,p.life/10);if(id)drawThemedAsset(id,{x:p.x-4,y:p.y-4,w:9,h:9});ctx.restore();}
+  const id=animationAsset('projectile.fireball',tick,4);
+  if(id) for(const e of enemies){if(!e.alive||!flowerEnemy(e)||!e.fireEffect)continue;const p=e.fireEffect;ctx.save();ctx.globalAlpha=p.alpha;drawThemedAsset(id,{x:p.x-5,y:p.y-5,w:10,h:10});ctx.restore();}
 }
 function prefabBlob(r,e){
   if(!e.alive && e.flat <= 0) return;
@@ -4131,7 +4170,10 @@ function playerMotionAsset(){
   const has=state=>available.includes(state);
   const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
   let states;
-  if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
+  if(player.carryEnemy){
+    const carry=available.filter(x=>/^carry_\d+$/.test(x)).sort();
+    states=!player.onGround?['carry_2_or_jump','carry_1','carry_0']:[carry[Math.floor(tick/7)%Math.max(1,carry.length)],'carry_0','idle_walk_0'];
+  }else if(player.big&&player.onGround&&input.down) states=['duck','idle_walk_0'];
   else if(!player.onGround) states=player.pSpeed?['fast_jump','jump']:['jump','fast_jump'];
   else if(reversing) states=['skid','idle_walk_0'];
   else if(player.pSpeed){
