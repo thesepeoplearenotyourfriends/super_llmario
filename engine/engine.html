@@ -1188,7 +1188,7 @@ const stars = cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false}));
 const powerups = [];
 const coinBursts = [];
 const blockBursts = [];
-const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',_walkW:e.w,_walkH:e.h}));
+const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,_walkW:e.w,_walkH:e.h}));
 const signposts = cloneData(ACTIVE_CART.signposts);
 const portal = cloneData(ACTIVE_CART.portal);
 
@@ -1576,7 +1576,7 @@ function rebuildWorldFromCart(cart){
   replaceArray(floatingBlocks, cloneData(ACTIVE_CART.floatingBlocks));
   replaceArray(coins, cloneData(ACTIVE_CART.coins).map(c => ({...c,taken:false})));
   replaceArray(stars, cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false})));
-  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',_walkW:e.w,_walkH:e.h})));
+  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,_walkW:e.w,_walkH:e.h})));
   replaceArray(signposts, cloneData(ACTIVE_CART.signposts));
   Object.keys(portal).forEach(k => delete portal[k]);
   Object.assign(portal, cloneData(ACTIVE_CART.portal));
@@ -1742,7 +1742,7 @@ function reset(full){
     enemies.forEach(e => {
       const feet=e.y+e.h, walkW=e._walkW||e.w;
       e.x-=(walkW-e.w)/2;
-      e.alive=true; e.flat=0; e.state='walking'; e.shellVx=0;
+      e.alive=true; e.flat=0; e.state='walking'; e.shellVx=0; e.shellTimer=0;
       e.w=walkW; e.h=e._walkH||e.h; e.y=feet-e.h;
     });
     powerups.length = 0;
@@ -2734,7 +2734,14 @@ function enterKoopaShell(e, state){
   e.x += (e._walkW-e.w)/2;
   e.y=feet-e.h;
   e.state=state||'shellStopped';
+  e.shellTimer=0;
   if(e.state === 'shellStopped') e.shellVx=0;
+}
+function reviveKoopa(e){
+  const feet=e.y+e.h, center=e.x+e.w/2;
+  e.w=e._walkW||e.w; e.h=e._walkH||e.h;
+  e.x=center-e.w/2; e.y=feet-e.h;
+  e.state='walking'; e.shellVx=0; e.shellTimer=0;
 }
 function stompEnemy(e){
   playSfx('stomp');
@@ -2742,8 +2749,11 @@ function stompEnemy(e){
     if(e.state === 'shellMoving'){
       e.state = 'shellStopped';
       e.shellVx = 0;
+      e.shellTimer = 0;
     }else if(e.state === 'walking'){
       enterKoopaShell(e,'shellStopped');
+    }else if(e.state === 'shellStopped'){
+      e.shellTimer = 0;
     }
   }else{
     e.alive = false;
@@ -2753,8 +2763,13 @@ function stompEnemy(e){
   player.vy = -8.6;
   shake = 3;
 }
+const KOOPA_REVIVE_FRAMES=420;
 function updateEnemyMotion(e){
-  if(e.state === 'shellStopped') return;
+  if(e.state === 'shellStopped'){
+    e.shellTimer=(e.shellTimer||0)+1;
+    if(e.shellTimer>=KOOPA_REVIVE_FRAMES) reviveKoopa(e);
+    return;
+  }
   const vx = e.state === 'shellMoving' ? e.shellVx : e.vx;
   const oldX = e.x;
   e.x += vx;
@@ -2768,6 +2783,20 @@ function updateEnemyMotion(e){
     e.x=oldX;
     if(e.state === 'shellMoving') e.shellVx*=-1;
     else e.vx*=-1;
+  }
+}
+
+function resolveMovingShellHits(){
+  for(const shell of enemies){
+    if(!shell.alive || shell.state !== 'shellMoving') continue;
+    for(const target of enemies){
+      if(target === shell || !target.alive || !aabb(shell,target)) continue;
+      target.alive=false;
+      target.flat=18;
+      playSfx('stomp');
+      player.coins+=2;
+      shake=Math.max(shake,3);
+    }
   }
 }
 
@@ -3042,13 +3071,13 @@ function update(){
   if(player.x < 0) player.x = 0;
   if(player.x > WORLD_W - player.w) player.x = WORLD_W - player.w;
 
-  const enemyHits = [];
   const stompVy = player.vy;
   for(const e of enemies){
     if(!e.alive){ if(e.flat > 0) e.flat -= 1; continue; }
     updateEnemyMotion(e);
-    if(aabb(player,e)) enemyHits.push(e);
   }
+  resolveMovingShellHits();
+  const enemyHits=enemies.filter(e => e.alive && aabb(player,e));
   if(enemyHits.length){
     const stompHits = enemyHits.filter(e => stompVy > 1 && player.y + player.h - e.y < 16);
     if(stompHits.length){
@@ -3058,6 +3087,7 @@ function update(){
       const kickable = enemyHits.filter(e => shellCapableEnemy(e) && e.state === 'shellStopped');
       for(const e of kickable){
         e.state = 'shellMoving';
+        e.shellTimer = 0;
         const kickRight = player.x + player.w/2 < e.x + e.w/2;
         e.shellVx = (kickRight ? 1 : -1) * 6.2;
         e.x = kickRight ? player.x + player.w : player.x - e.w;
