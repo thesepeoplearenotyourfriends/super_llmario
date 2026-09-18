@@ -1188,7 +1188,7 @@ const stars = cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false}));
 const powerups = [];
 const coinBursts = [];
 const blockBursts = [];
-const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,_walkW:e.w,_walkH:e.h}));
+const enemies = cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,shellVy:0,shellOnGround:true,_walkW:e.w,_walkH:e.h}));
 const signposts = cloneData(ACTIVE_CART.signposts);
 const portal = cloneData(ACTIVE_CART.portal);
 
@@ -1576,7 +1576,7 @@ function rebuildWorldFromCart(cart){
   replaceArray(floatingBlocks, cloneData(ACTIVE_CART.floatingBlocks));
   replaceArray(coins, cloneData(ACTIVE_CART.coins).map(c => ({...c,taken:false})));
   replaceArray(stars, cloneData(ACTIVE_CART.stars).map(s => ({...s,taken:false})));
-  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,_walkW:e.w,_walkH:e.h})));
+  replaceArray(enemies, cloneData(ACTIVE_CART.enemies).map(e => ({...e,alive:true,flat:0,state:'walking',shellTimer:0,shellVy:0,shellOnGround:true,_walkW:e.w,_walkH:e.h})));
   replaceArray(signposts, cloneData(ACTIVE_CART.signposts));
   Object.keys(portal).forEach(k => delete portal[k]);
   Object.assign(portal, cloneData(ACTIVE_CART.portal));
@@ -1742,7 +1742,7 @@ function reset(full){
     enemies.forEach(e => {
       const feet=e.y+e.h, walkW=e._walkW||e.w;
       e.x-=(walkW-e.w)/2;
-      e.alive=true; e.flat=0; e.state='walking'; e.shellVx=0; e.shellTimer=0;
+      e.alive=true; e.flat=0; e.state='walking'; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
       e.w=walkW; e.h=e._walkH||e.h; e.y=feet-e.h;
     });
     powerups.length = 0;
@@ -2735,13 +2735,14 @@ function enterKoopaShell(e, state){
   e.y=feet-e.h;
   e.state=state||'shellStopped';
   e.shellTimer=0;
+  e.shellVy=0; e.shellOnGround=true;
   if(e.state === 'shellStopped') e.shellVx=0;
 }
 function reviveKoopa(e){
   const feet=e.y+e.h, center=e.x+e.w/2;
   e.w=e._walkW||e.w; e.h=e._walkH||e.h;
   e.x=center-e.w/2; e.y=feet-e.h;
-  e.state='walking'; e.shellVx=0; e.shellTimer=0;
+  e.state='walking'; e.shellVx=0; e.shellVy=0; e.shellOnGround=true; e.shellTimer=0;
 }
 function stompEnemy(e){
   playSfx('stomp');
@@ -2764,9 +2765,49 @@ function stompEnemy(e){
   shake = 3;
 }
 const KOOPA_REVIVE_FRAMES=420;
+function updateShellVertical(e){
+  const prevY=e.y, wasOnGround=!!e.shellOnGround;
+  e.shellOnGround=false;
+  e.shellVy=Math.min(11.2,(e.shellVy||0)+0.52);
+  e.y+=e.shellVy;
+  const prevBottom=prevY+e.h;
+  let floor=null;
+  for(const s of hitSolids(e)){
+    if(s._slope || e.shellVy<0 || prevBottom>s.y+4) continue;
+    if(!floor || s.y<floor.y) floor=s;
+  }
+  if(floor){
+    e.y=floor.y-e.h;
+    e.shellVy=0;
+    e.shellOnGround=true;
+    e._slope=null;
+  }else{
+    const footCenter=e.x+e.w*.5, bottom=e.y+e.h;
+    let slopeFloor=null;
+    for(const plat of allSlopeSurfaces()){
+      const edgePad=finiteNumber(plat.edgePad)?plat.edgePad:1;
+      if(footCenter<plat.x-edgePad || footCenter>plat.x+(plat.w||1)+edgePad) continue;
+      if(e.x+e.w<=plat.x || e.x>=plat.x+plat.w) continue;
+      const sy=slopeSurfaceY(plat,Math.max(plat.x,Math.min(plat.x+(plat.w||1),footCenter)));
+      const closeEnough=bottom>=sy-(wasOnGround?28:14) && bottom<=sy+22;
+      if(e.shellVy>=-.2 && closeEnough && (prevBottom<=sy+22 || wasOnGround)){
+        if(!slopeFloor || sy<slopeFloor.y) slopeFloor={p:plat,y:sy};
+      }
+    }
+    if(slopeFloor){
+      e.y=slopeFloor.y-e.h;
+      e.shellVy=0;
+      e.shellOnGround=true;
+      e._slope=slopeFloor.p;
+    }else e._slope=null;
+  }
+  if(e.y>worldDeathY()){ e.alive=false; e.flat=0; }
+}
 function updateEnemyMotion(e){
+  if(e.state === 'shellStopped' || e.state === 'shellMoving') updateShellVertical(e);
+  if(!e.alive) return;
   if(e.state === 'shellStopped'){
-    e.shellTimer=(e.shellTimer||0)+1;
+    if(e.shellOnGround) e.shellTimer=(e.shellTimer||0)+1;
     if(e.shellTimer>=KOOPA_REVIVE_FRAMES) reviveKoopa(e);
     return;
   }
@@ -3950,7 +3991,9 @@ function enemyAnimationGroup(e){
 }
 function drawBlob(e){
   if(!e.alive && e.flat <= 0) return;
-  const group=enemyAnimationGroup(e), id=group&&animationAsset(group,tick+(e.x||0),8);
+  const group=enemyAnimationGroup(e);
+  const stableShellFrame=group && e.state === 'shellStopped' && animationFrames(group).find(f => cartImageRecord(f.asset));
+  const id=stableShellFrame ? stableShellFrame.asset : (group&&animationAsset(group,tick+(e.x||0),8));
   const squash=e.alive?1:Math.max(.24,e.flat/18);
   if(id && drawThemedAsset(id,{x:e.x,y:e.y,w:e.w,h:e.h},{mirror:(e.state === 'shellMoving' ? e.shellVx : e.vx)<0,squash:squash})) return;
   drawRecipe('enemies.'+(e.kind||'blob'), e);
