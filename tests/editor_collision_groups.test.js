@@ -6,8 +6,8 @@ function functionSource(name){
   const start=source.indexOf('function '+name+'(');assert.notEqual(start,-1,'missing '+name);let brace=source.indexOf('{',start),depth=0,quote='',escaped=false;
   for(let i=brace;i<source.length;i++){const ch=source[i];if(quote){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch===quote)quote='';continue}if(ch==='"'||ch==="'"||ch==='`'){quote=ch;continue}if(ch==='{')depth++;else if(ch==='}'&&!--depth)return source.slice(start,i+1)}throw new Error('unterminated '+name);
 }
-const names=['stableCollisionValue','collisionDisplaySignature','collisionRectsTouch','connectedCollisionGroups','uncoveredEdgeIntervals','isSemanticTerrainVisual'];
-const sandbox={plain:value=>!!value&&typeof value==='object'&&!Array.isArray(value)};vm.runInNewContext(names.map(functionSource).join('\n'),sandbox);
+const names=['stableCollisionValue','collisionDisplaySignature','collisionRectsTouch','connectedCollisionGroups','uncoveredEdgeIntervals','isTerrainArtwork'];
+const sandbox={plain:value=>!!value&&typeof value==='object'&&!Array.isArray(value),themePack:{constructionCatalog:{families:{overground:{type:'terrain'},pipe:{type:'parametric'}}}},cart:null,visualImageFor:it=>it.obj.image||'',semanticAssetCategory:key=>key.startsWith('map.terrain.')?'mapTile':key.startsWith('legacy_ground')?'terrain-tile-image':'scenery',mapTilePaletteCategory:key=>key.startsWith('map.terrain.')?'terrain':'decor'};vm.runInNewContext(names.map(functionSource).join('\n'),sandbox);
 
 const box=(x,y,details={type:'ground'})=>({x,y,w:16,h:16,it:{kind:'platform',obj:{x,y,w:16,h:16,id:'box-'+x+'-'+y,...details}}});
 const cells=[box(0,0),box(16,0),box(32,0),box(48,0),box(0,16),box(16,16),box(32,16),box(48,16),box(0,32),box(16,32),box(32,32,{type:'ice'}),box(48,32,{type:'ice'})];
@@ -28,8 +28,11 @@ assert.equal(slab.length,500);assert.deepEqual(Array.from(sandbox.connectedColli
 const drawBody=functionSource('drawMergedHitboxHelpers');assert(!drawBody.includes('connectedCollisionGroups('));assert(!drawBody.includes('uncoveredEdgeIntervals('));
 assert(source.includes('rebuildHelperDisplayCache();populateInsertCatalog()'),'map rebuild refreshes cached helper geometry');
 const moveBody=functionSource('setObjectRectXY');assert(moveBody.includes('if(isHitboxHelper(it))helperDisplayDirty=true'),'only helper movement invalidates helper display geometry');
-assert.equal(sandbox.isSemanticTerrainVisual({kind:'scenery',obj:{semanticFamily:'overground',semanticCellX:0,semanticCellY:0}}),true);
-assert.equal(sandbox.isSemanticTerrainVisual({kind:'scenery',obj:{semanticFamily:'pipe',constructionGroup:'pipe-1'}}),false,'non-terrain semantic constructions retain their ordinary outline');
+assert.equal(sandbox.isTerrainArtwork({kind:'scenery',obj:{semanticFamily:'overground',image:'any_asset'}}),true,'terrain family art needs no authoring-cell metadata');
+assert.equal(sandbox.isTerrainArtwork({kind:'scenery',obj:{image:'map.terrain.edge'}}),true,'map terrain art is recognized without semantic authoring metadata');
+assert.equal(sandbox.isTerrainArtwork({kind:'scenery',obj:{image:'legacy_ground_1'}}),true,'legacy terrain-category art is recognized');
+assert.equal(sandbox.isTerrainArtwork({kind:'scenery',obj:{image:'custom',terrainMapped:true,terrainType:'ground'}}),true,'manually mapped terrain art is recognized');
+assert.equal(sandbox.isTerrainArtwork({kind:'scenery',obj:{semanticFamily:'pipe',constructionGroup:'pipe-1',image:'pipe'}}),false,'non-terrain semantic constructions retain their ordinary outline');
 const sceneryBody=functionSource('drawScenery');
-assert(sceneryBody.includes('if(!isSemanticTerrainVisual(it))'),'generic scenery outlines are suppressed for painted semantic terrain');
+assert(sceneryBody.includes('if(!isTerrainArtwork(it))'),'generic scenery outlines are suppressed for all terrain artwork');
 console.log('editor collision display groups passed');
