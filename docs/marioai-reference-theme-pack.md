@@ -7,20 +7,44 @@
 The pack uses only six primary resource kinds: `ground`, `block`, `pickup`, `actor`, `decoration`, and `effect`. More specific meaning lives in ordinary fields.
 
 - **`atlases`** embeds each static MarioAI world sheet once, with its media type, cell size, checksum, and provenance. The pack is self-contained; source filenames are provenance rather than runtime lookup instructions.
-- **`resources`** inventories every nontransparent world-sheet cell. Each entry declares a kind, semantic role, larger membership, purpose, atlas rectangle, display size, normalized bottom-center anchor, and source provenance. A resource is a visual atom—not automatically something a map author can place.
+- **`resources`** inventories every nontransparent world-sheet cell. Each entry declares a kind, semantic role, declared family membership, purpose, atlas rectangle, display size, normalized bottom-center anchor, and source provenance. A resource is a visual atom—not automatically something a map author can place.
+- **`families`** declares every semantic membership target used by resources. This keeps `belongsTo` references inside a checkable semantic graph rather than treating them as arbitrary labels.
 - **`animations`** owns ordered frame references, per-frame offsets, timing, looping, display size, and anchor. Consumers request an animation by semantic ID; they do not discover adjacent sheet cells.
-- **`constructions`** assembles visual components into pipes, ladders, bushes, signs, mushroom platforms, and three terrain autotiles. Layout and neighbor-mask information lives here rather than in new pseudo-kinds.
-- **`objects`** binds themed presentation to engine nouns, capabilities, and visual states. The engine remains responsible for walking, jumping, bumping, breaking, collecting, transport, and all other behavior.
-- **`parameterSchemas`** declares reusable, editor-visible authored variables such as walker direction/range/speed, pipe direction/length/destination, reward contents, terrain extent/style, and moving-platform path/range/speed.
-- **`placeables`** is the authoring palette. Each complete placeable chooses an object and explicitly lists the instance parameters it exposes. Frames and construction pieces do not become placeable just because they exist.
+- **`constructions`** assembles visual components into backgrounds, pipes, ladders, bushes, signs, mushroom platforms, and three terrain autotiles. It records fixed layouts, repeatable axes, known source holes, and mirroring as presentation metadata rather than pseudo-kinds or duplicate resources.
+- **`objects`** binds presentation targets to a small engine-noun vocabulary, composable capabilities, and visual states. Moving-platform semantics belong to a distinct object definition, not to a placeable. The engine remains responsible for behavior.
+- **`parameterSchemas`** declares reusable, editor-visible authored variables. Generic `extent` fields let ladders, bushes, and platforms share value types without pretending to be pipes or terrain; walker, pipe, moving-platform, reward, and terrain semantics remain explicitly named.
+- **`placeables`** is the authoring palette. Each complete placeable chooses an object and explicitly lists the instance parameters it exposes. A placeable configures its object but never adds gameplay capabilities.
 - **`coverage`** records totals, sheet-by-sheet counts, explicit unresolved resources, and UI material deliberately outside this world-theme contract.
 - **`extended`** is reserved for genuinely private metadata and intentionally contains no ordinary gameplay/editor semantics.
 
-## Coverage and uncertainty
+## Coverage and reviewed backgrounds
 
-The pack accounts for **298 visually nonempty cells** across the ten world/presentation PNG sheets. The test independently decodes those static PNGs, counts alpha-bearing cells, and proves a one-to-one match with resource provenance. Font, logo, ending scene, and world-map artwork are explicitly excluded as engine/UI presentation rather than silently omitted.
+The pack accounts for **298 visually nonempty cells** across the ten world/presentation PNG sheets. The integrity test independently decodes those static PNGs, counts alpha-bearing cells, and proves a one-to-one match with resource provenance. Font, logo, ending scene, and world-map artwork are explicitly excluded as engine/UI presentation rather than silently omitted.
 
-Most source-backed actor, pickup, particle, construction, and terrain cells have direct semantic names. Seventy-four cells have no reliably established exact purpose: 62 background components plus a small set of unused/alternate map, enemy, player, and goal poses. They remain explicit resources with a declared unresolved-component purpose and larger membership; coordinates appear only under `provenance`. The `coverage.unresolvedExactPurpose` list makes the uncertainty machine-readable instead of inventing behavior or hiding the art.
+All **62 nonempty background-sheet cells now have human-reviewed semantics**. They describe two dome variants, a sky gradient, red/brown and yellow/brown arches, grey and green architectural families, rockpiles, wall companions, repeatable fills, and a green fringe. Fixed and extensible assemblies are declared as constructions. Mirroring/flipping is metadata, and transparent source cell 22 remains correctly absent. There are **zero unresolved background resources**.
+
+## Remaining unresolved resources
+
+Twelve non-background resources remain deliberately unresolved. Their family/context is known, but available evidence does not establish the exact pose/state. No speculative meaning or engine binding has been added.
+
+| Resource ID | Source sheet | Index | Known family/context | Reason unresolved |
+|---|---|---:|---|---|
+| `actor.unresolved-pose.002` | `enemysheet.png` | 2 | Red Koopa | Exact pose/state or use is not established. |
+| `actor.unresolved-pose.018` | `enemysheet.png` | 18 | Green Koopa | Exact pose/state or use is not established. |
+| `player.normal.unresolved-pose.08` | `mariosheet.png` | 8 | Normal/large player | Exact pose/state or use is not established. |
+| `player.normal.unresolved-pose.13` | `mariosheet.png` | 13 | Normal/large player | Exact pose/state or use is not established. |
+| `player.small.unresolved-pose.06` | `smallmariosheet.png` | 6 | Small player | Exact pose/state or use is not established. |
+| `player.small.unresolved-pose.10` | `smallmariosheet.png` | 10 | Small player | Exact pose/state or use is not established. |
+| `player.fire.unresolved-pose.08` | `firemariosheet.png` | 8 | Fire player | Exact pose/state or use is not established. |
+| `player.fire.unresolved-pose.13` | `firemariosheet.png` | 13 | Fire player | Exact pose/state or use is not established. |
+| `player.carrying.unresolved-pose.08` | `racoonmariosheet.png` | 8 | Carrying player | Exact pose/state or use is not established. |
+| `player.carrying.unresolved-pose.13` | `racoonmariosheet.png` | 13 | Carrying player | Exact pose/state or use is not established. |
+| `player.carrying.unresolved-pose.15` | `racoonmariosheet.png` | 15 | Carrying player | Exact pose/state or use is not established. |
+| `goal.unresolved-pose.02` | `princess.png` | 2 | Goal actor | Exact pose/state or use is not established. |
+
+## Semantic integrity
+
+The test protects the pack as a graph, not only as an inventory. It verifies embedded atlas identity and one-to-one nonempty-cell coverage; resource-to-family membership; animation-to-frame, construction-to-component, object-state-to-presentation, placeable-to-object, and placeable-to-parameter references; and the zero-unresolved-background invariant.
 
 ## Deliberately deferred
 

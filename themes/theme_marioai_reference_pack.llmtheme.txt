@@ -13,7 +13,55 @@
       "effect"
     ],
     "coordinates": "world pixels; anchors normalized from top-left (0,0) to bottom-right (1,1)",
-    "policy": "The engine owns behavior; this pack binds engine nouns, capabilities, and states to presentation."
+    "policy": "The engine owns behavior; this pack binds engine nouns, capabilities, and states to presentation.",
+    "engineVocabulary": {
+      "nouns": [
+        "actor",
+        "block",
+        "decoration",
+        "hazard",
+        "pickup",
+        "platform",
+        "player",
+        "projectile",
+        "structure",
+        "terrain",
+        "walker"
+      ],
+      "capabilities": [
+        "armored",
+        "autotile",
+        "breakable",
+        "bump",
+        "carry",
+        "climbable",
+        "coin",
+        "collectible",
+        "dispense",
+        "duck",
+        "emerge",
+        "extraLife",
+        "goalPresentation",
+        "grow",
+        "horizontalFlight",
+        "jump",
+        "move",
+        "movingPlatform",
+        "patrol",
+        "projectilePower",
+        "retract",
+        "run",
+        "shell",
+        "shoot",
+        "solid",
+        "solidTop",
+        "stompHazard",
+        "stompable",
+        "transport",
+        "walker",
+        "waveFlight"
+      ]
+    }
   },
   "attribution": {
     "source": "medovina/MarioAI resources",
@@ -136,8 +184,8 @@
     "actor.unresolved-pose.002": {
       "kind": "actor",
       "role": "actor.unresolved-pose.002",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "actor.unresolved-pose",
+      "purpose": "Nonempty red-Koopa-row pose whose exact state or use is not established.",
+      "belongsTo": "enemy.red_koopa",
       "image": {
         "atlas": "enemy",
         "rect": {
@@ -167,8 +215,8 @@
     "actor.unresolved-pose.018": {
       "kind": "actor",
       "role": "actor.unresolved-pose.018",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "actor.unresolved-pose",
+      "purpose": "Nonempty green-Koopa-row pose whose exact state or use is not established.",
+      "belongsTo": "enemy.green_koopa",
       "image": {
         "atlas": "enemy",
         "rect": {
@@ -195,1406 +243,11 @@
         }
       }
     },
-    "background.unresolved-component.000": {
+    "background.black_fill": {
       "kind": "decoration",
-      "role": "background.unresolved-component.000",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 0,
-        "cell": {
-          "x": 0,
-          "y": 0
-        }
-      }
-    },
-    "background.unresolved-component.001": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.001",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 32,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 1,
-        "cell": {
-          "x": 1,
-          "y": 0
-        }
-      }
-    },
-    "background.unresolved-component.002": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.002",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 2,
-        "cell": {
-          "x": 2,
-          "y": 0
-        }
-      }
-    },
-    "background.unresolved-component.003": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.003",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 3,
-        "cell": {
-          "x": 3,
-          "y": 0
-        }
-      }
-    },
-    "background.unresolved-component.004": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.004",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 128,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 4,
-        "cell": {
-          "x": 4,
-          "y": 0
-        }
-      }
-    },
-    "background.unresolved-component.006": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.006",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 192,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 6,
-        "cell": {
-          "x": 6,
-          "y": 0
-        }
-      }
-    },
-    "background.unresolved-component.007": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.007",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 224,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 7,
-        "cell": {
-          "x": 7,
-          "y": 0
-        }
-      }
-    },
-    "background.unresolved-component.008": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.008",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 32,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 8,
-        "cell": {
-          "x": 0,
-          "y": 1
-        }
-      }
-    },
-    "background.unresolved-component.009": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.009",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 32,
-          "y": 32,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 9,
-        "cell": {
-          "x": 1,
-          "y": 1
-        }
-      }
-    },
-    "background.unresolved-component.010": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.010",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 32,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 10,
-        "cell": {
-          "x": 2,
-          "y": 1
-        }
-      }
-    },
-    "background.unresolved-component.011": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.011",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 32,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 11,
-        "cell": {
-          "x": 3,
-          "y": 1
-        }
-      }
-    },
-    "background.unresolved-component.012": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.012",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 128,
-          "y": 32,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 12,
-        "cell": {
-          "x": 4,
-          "y": 1
-        }
-      }
-    },
-    "background.unresolved-component.014": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.014",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 192,
-          "y": 32,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 14,
-        "cell": {
-          "x": 6,
-          "y": 1
-        }
-      }
-    },
-    "background.unresolved-component.015": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.015",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 224,
-          "y": 32,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 15,
-        "cell": {
-          "x": 7,
-          "y": 1
-        }
-      }
-    },
-    "background.unresolved-component.016": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.016",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 64,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 16,
-        "cell": {
-          "x": 0,
-          "y": 2
-        }
-      }
-    },
-    "background.unresolved-component.017": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.017",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 32,
-          "y": 64,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 17,
-        "cell": {
-          "x": 1,
-          "y": 2
-        }
-      }
-    },
-    "background.unresolved-component.018": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.018",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 64,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 18,
-        "cell": {
-          "x": 2,
-          "y": 2
-        }
-      }
-    },
-    "background.unresolved-component.019": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.019",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 64,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 19,
-        "cell": {
-          "x": 3,
-          "y": 2
-        }
-      }
-    },
-    "background.unresolved-component.020": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.020",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 128,
-          "y": 64,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 20,
-        "cell": {
-          "x": 4,
-          "y": 2
-        }
-      }
-    },
-    "background.unresolved-component.023": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.023",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 224,
-          "y": 64,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 23,
-        "cell": {
-          "x": 7,
-          "y": 2
-        }
-      }
-    },
-    "background.unresolved-component.024": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.024",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 24,
-        "cell": {
-          "x": 0,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.025": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.025",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 32,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 25,
-        "cell": {
-          "x": 1,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.026": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.026",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 26,
-        "cell": {
-          "x": 2,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.027": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.027",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 27,
-        "cell": {
-          "x": 3,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.028": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.028",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 128,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 28,
-        "cell": {
-          "x": 4,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.029": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.029",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 160,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 29,
-        "cell": {
-          "x": 5,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.030": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.030",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 192,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 30,
-        "cell": {
-          "x": 6,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.031": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.031",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 224,
-          "y": 96,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 31,
-        "cell": {
-          "x": 7,
-          "y": 3
-        }
-      }
-    },
-    "background.unresolved-component.032": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.032",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 32,
-        "cell": {
-          "x": 0,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.033": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.033",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 32,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 33,
-        "cell": {
-          "x": 1,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.034": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.034",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 34,
-        "cell": {
-          "x": 2,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.035": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.035",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 35,
-        "cell": {
-          "x": 3,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.036": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.036",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 128,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 36,
-        "cell": {
-          "x": 4,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.037": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.037",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 160,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 37,
-        "cell": {
-          "x": 5,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.038": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.038",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 192,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 38,
-        "cell": {
-          "x": 6,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.039": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.039",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 224,
-          "y": 128,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 39,
-        "cell": {
-          "x": 7,
-          "y": 4
-        }
-      }
-    },
-    "background.unresolved-component.040": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.040",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 40,
-        "cell": {
-          "x": 0,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.041": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.041",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 32,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 41,
-        "cell": {
-          "x": 1,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.042": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.042",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 42,
-        "cell": {
-          "x": 2,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.043": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.043",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 43,
-        "cell": {
-          "x": 3,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.044": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.044",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 128,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 44,
-        "cell": {
-          "x": 4,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.045": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.045",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 160,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 45,
-        "cell": {
-          "x": 5,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.046": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.046",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 192,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 46,
-        "cell": {
-          "x": 6,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.047": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.047",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 224,
-          "y": 160,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 47,
-        "cell": {
-          "x": 7,
-          "y": 5
-        }
-      }
-    },
-    "background.unresolved-component.048": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.048",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 192,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 48,
-        "cell": {
-          "x": 0,
-          "y": 6
-        }
-      }
-    },
-    "background.unresolved-component.049": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.049",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
+      "role": "background.black_fill",
+      "purpose": "Intentional solid-black repeatable background fill.",
+      "belongsTo": "background.black_fill",
       "image": {
         "atlas": "background",
         "rect": {
@@ -1621,321 +274,11 @@
         }
       }
     },
-    "background.unresolved-component.050": {
+    "background.cave_arch_yellow_brown.bottom_left": {
       "kind": "decoration",
-      "role": "background.unresolved-component.050",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 192,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 50,
-        "cell": {
-          "x": 2,
-          "y": 6
-        }
-      }
-    },
-    "background.unresolved-component.051": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.051",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 192,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 51,
-        "cell": {
-          "x": 3,
-          "y": 6
-        }
-      }
-    },
-    "background.unresolved-component.052": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.052",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 128,
-          "y": 192,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 52,
-        "cell": {
-          "x": 4,
-          "y": 6
-        }
-      }
-    },
-    "background.unresolved-component.053": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.053",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 160,
-          "y": 192,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 53,
-        "cell": {
-          "x": 5,
-          "y": 6
-        }
-      }
-    },
-    "background.unresolved-component.054": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.054",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 192,
-          "y": 192,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 54,
-        "cell": {
-          "x": 6,
-          "y": 6
-        }
-      }
-    },
-    "background.unresolved-component.055": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.055",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 224,
-          "y": 192,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 55,
-        "cell": {
-          "x": 7,
-          "y": 6
-        }
-      }
-    },
-    "background.unresolved-component.056": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.056",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 0,
-          "y": 224,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 56,
-        "cell": {
-          "x": 0,
-          "y": 7
-        }
-      }
-    },
-    "background.unresolved-component.057": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.057",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 32,
-          "y": 224,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 57,
-        "cell": {
-          "x": 1,
-          "y": 7
-        }
-      }
-    },
-    "background.unresolved-component.058": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.058",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 64,
-          "y": 224,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 58,
-        "cell": {
-          "x": 2,
-          "y": 7
-        }
-      }
-    },
-    "background.unresolved-component.059": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.059",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
-      "image": {
-        "atlas": "background",
-        "rect": {
-          "x": 96,
-          "y": 224,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "bgsheet.png",
-        "index": 59,
-        "cell": {
-          "x": 3,
-          "y": 7
-        }
-      }
-    },
-    "background.unresolved-component.060": {
-      "kind": "decoration",
-      "role": "background.unresolved-component.060",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
+      "role": "background.cave_arch_yellow_brown.bottom_left",
+      "purpose": "Bottom-left component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
       "image": {
         "atlas": "background",
         "rect": {
@@ -1962,11 +305,11 @@
         }
       }
     },
-    "background.unresolved-component.061": {
+    "background.cave_arch_yellow_brown.bottom_right": {
       "kind": "decoration",
-      "role": "background.unresolved-component.061",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
+      "role": "background.cave_arch_yellow_brown.bottom_right",
+      "purpose": "Bottom-right component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
       "image": {
         "atlas": "background",
         "rect": {
@@ -1993,15 +336,263 @@
         }
       }
     },
-    "background.unresolved-component.062": {
+    "background.cave_arch_yellow_brown.lower_left": {
       "kind": "decoration",
-      "role": "background.unresolved-component.062",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
+      "role": "background.cave_arch_yellow_brown.lower_left",
+      "purpose": "Lower-left component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
       "image": {
         "atlas": "background",
         "rect": {
-          "x": 192,
+          "x": 128,
+          "y": 192,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 52,
+        "cell": {
+          "x": 4,
+          "y": 6
+        }
+      }
+    },
+    "background.cave_arch_yellow_brown.lower_right": {
+      "kind": "decoration",
+      "role": "background.cave_arch_yellow_brown.lower_right",
+      "purpose": "Lower-right component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 160,
+          "y": 192,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 53,
+        "cell": {
+          "x": 5,
+          "y": 6
+        }
+      }
+    },
+    "background.cave_arch_yellow_brown.middle_left": {
+      "kind": "decoration",
+      "role": "background.cave_arch_yellow_brown.middle_left",
+      "purpose": "Middle-left component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 128,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 44,
+        "cell": {
+          "x": 4,
+          "y": 5
+        }
+      }
+    },
+    "background.cave_arch_yellow_brown.middle_right": {
+      "kind": "decoration",
+      "role": "background.cave_arch_yellow_brown.middle_right",
+      "purpose": "Middle-right component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 160,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 45,
+        "cell": {
+          "x": 5,
+          "y": 5
+        }
+      }
+    },
+    "background.cave_arch_yellow_brown.top_left": {
+      "kind": "decoration",
+      "role": "background.cave_arch_yellow_brown.top_left",
+      "purpose": "Top-left component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 128,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 28,
+        "cell": {
+          "x": 4,
+          "y": 3
+        }
+      }
+    },
+    "background.cave_arch_yellow_brown.top_right": {
+      "kind": "decoration",
+      "role": "background.cave_arch_yellow_brown.top_right",
+      "purpose": "Top-right component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 160,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 29,
+        "cell": {
+          "x": 5,
+          "y": 3
+        }
+      }
+    },
+    "background.cave_arch_yellow_brown.upper_left": {
+      "kind": "decoration",
+      "role": "background.cave_arch_yellow_brown.upper_left",
+      "purpose": "Upper-left component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 128,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 36,
+        "cell": {
+          "x": 4,
+          "y": 4
+        }
+      }
+    },
+    "background.cave_arch_yellow_brown.upper_right": {
+      "kind": "decoration",
+      "role": "background.cave_arch_yellow_brown.upper_right",
+      "purpose": "Upper-right component of the fixed reversible 2x5 cave arch.",
+      "belongsTo": "background.cave_arch_yellow_brown",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 160,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 37,
+        "cell": {
+          "x": 5,
+          "y": 4
+        }
+      }
+    },
+    "background.dark_bars.fill": {
+      "kind": "decoration",
+      "role": "background.dark_bars.fill",
+      "purpose": "Repeatable decorative dark-bars background fill.",
+      "belongsTo": "background.dark_bars",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 0,
           "y": 224,
           "w": 32,
           "h": 32
@@ -2017,22 +608,394 @@
       },
       "provenance": {
         "sheet": "bgsheet.png",
-        "index": 62,
+        "index": 56,
         "cell": {
-          "x": 6,
+          "x": 0,
           "y": 7
         }
       }
     },
-    "background.unresolved-component.063": {
+    "background.dome.variant_0.bottom_left": {
       "kind": "decoration",
-      "role": "background.unresolved-component.063",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
+      "role": "background.dome.variant_0.bottom_left",
+      "purpose": "Bottom-left component of the fixed 2x3 dome background variant 0.",
+      "belongsTo": "background.dome.variant_0",
       "image": {
         "atlas": "background",
         "rect": {
-          "x": 224,
+          "x": 0,
+          "y": 64,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 16,
+        "cell": {
+          "x": 0,
+          "y": 2
+        }
+      }
+    },
+    "background.dome.variant_0.bottom_right": {
+      "kind": "decoration",
+      "role": "background.dome.variant_0.bottom_right",
+      "purpose": "Bottom-right component of the fixed 2x3 dome background variant 0.",
+      "belongsTo": "background.dome.variant_0",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 32,
+          "y": 64,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 17,
+        "cell": {
+          "x": 1,
+          "y": 2
+        }
+      }
+    },
+    "background.dome.variant_0.middle_left": {
+      "kind": "decoration",
+      "role": "background.dome.variant_0.middle_left",
+      "purpose": "Middle-left component of the fixed 2x3 dome background variant 0.",
+      "belongsTo": "background.dome.variant_0",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 0,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 8,
+        "cell": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    },
+    "background.dome.variant_0.middle_right": {
+      "kind": "decoration",
+      "role": "background.dome.variant_0.middle_right",
+      "purpose": "Middle-right component of the fixed 2x3 dome background variant 0.",
+      "belongsTo": "background.dome.variant_0",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 32,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 9,
+        "cell": {
+          "x": 1,
+          "y": 1
+        }
+      }
+    },
+    "background.dome.variant_0.top_left": {
+      "kind": "decoration",
+      "role": "background.dome.variant_0.top_left",
+      "purpose": "Top-left component of the fixed 2x3 dome background variant 0.",
+      "belongsTo": "background.dome.variant_0",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 0,
+        "cell": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    "background.dome.variant_0.top_right": {
+      "kind": "decoration",
+      "role": "background.dome.variant_0.top_right",
+      "purpose": "Top-right component of the fixed 2x3 dome background variant 0.",
+      "belongsTo": "background.dome.variant_0",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 32,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 1,
+        "cell": {
+          "x": 1,
+          "y": 0
+        }
+      }
+    },
+    "background.dome.variant_1.bottom_left": {
+      "kind": "decoration",
+      "role": "background.dome.variant_1.bottom_left",
+      "purpose": "Bottom-left component of the fixed 2x3 lighter dome background variant 1.",
+      "belongsTo": "background.dome.variant_1",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 64,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 18,
+        "cell": {
+          "x": 2,
+          "y": 2
+        }
+      }
+    },
+    "background.dome.variant_1.bottom_right": {
+      "kind": "decoration",
+      "role": "background.dome.variant_1.bottom_right",
+      "purpose": "Bottom-right component of the fixed 2x3 lighter dome background variant 1.",
+      "belongsTo": "background.dome.variant_1",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
+          "y": 64,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 19,
+        "cell": {
+          "x": 3,
+          "y": 2
+        }
+      }
+    },
+    "background.dome.variant_1.middle_left": {
+      "kind": "decoration",
+      "role": "background.dome.variant_1.middle_left",
+      "purpose": "Middle-left component of the fixed 2x3 lighter dome background variant 1.",
+      "belongsTo": "background.dome.variant_1",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 10,
+        "cell": {
+          "x": 2,
+          "y": 1
+        }
+      }
+    },
+    "background.dome.variant_1.middle_right": {
+      "kind": "decoration",
+      "role": "background.dome.variant_1.middle_right",
+      "purpose": "Middle-right component of the fixed 2x3 lighter dome background variant 1.",
+      "belongsTo": "background.dome.variant_1",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 11,
+        "cell": {
+          "x": 3,
+          "y": 1
+        }
+      }
+    },
+    "background.dome.variant_1.top_left": {
+      "kind": "decoration",
+      "role": "background.dome.variant_1.top_left",
+      "purpose": "Top-left component of the fixed 2x3 lighter dome background variant 1.",
+      "belongsTo": "background.dome.variant_1",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 2,
+        "cell": {
+          "x": 2,
+          "y": 0
+        }
+      }
+    },
+    "background.dome.variant_1.top_right": {
+      "kind": "decoration",
+      "role": "background.dome.variant_1.top_right",
+      "purpose": "Top-right component of the fixed 2x3 lighter dome background variant 1.",
+      "belongsTo": "background.dome.variant_1",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 3,
+        "cell": {
+          "x": 3,
+          "y": 0
+        }
+      }
+    },
+    "background.green.border_top": {
+      "kind": "decoration",
+      "role": "background.green.border_top",
+      "purpose": "Flippable green border with a lighter diamond/fringe pattern along its top edge.",
+      "belongsTo": "background.green",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
           "y": 224,
           "w": 32,
           "h": 32
@@ -2048,18 +1011,204 @@
       },
       "provenance": {
         "sheet": "bgsheet.png",
-        "index": 63,
+        "index": 59,
         "cell": {
-          "x": 7,
+          "x": 3,
           "y": 7
         }
       }
     },
-    "background.unresolved-component.066": {
+    "background.green_stone.arch.left": {
       "kind": "decoration",
-      "role": "background.unresolved-component.066",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
+      "role": "background.green_stone.arch.left",
+      "purpose": "Left cap of the horizontally extensible light-green arch.",
+      "belongsTo": "background.green_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 32,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 25,
+        "cell": {
+          "x": 1,
+          "y": 3
+        }
+      }
+    },
+    "background.green_stone.arch.middle": {
+      "kind": "decoration",
+      "role": "background.green_stone.arch.middle",
+      "purpose": "Repeatable middle of the horizontally extensible light-green arch.",
+      "belongsTo": "background.green_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 26,
+        "cell": {
+          "x": 2,
+          "y": 3
+        }
+      }
+    },
+    "background.green_stone.arch.right": {
+      "kind": "decoration",
+      "role": "background.green_stone.arch.right",
+      "purpose": "Right cap of the horizontally extensible light-green arch.",
+      "belongsTo": "background.green_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 27,
+        "cell": {
+          "x": 3,
+          "y": 3
+        }
+      }
+    },
+    "background.green_stone.column.bottom": {
+      "kind": "decoration",
+      "role": "background.green_stone.column.bottom",
+      "purpose": "Bottom of the vertically extensible light-green column.",
+      "belongsTo": "background.green_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
+          "y": 192,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 51,
+        "cell": {
+          "x": 3,
+          "y": 6
+        }
+      }
+    },
+    "background.green_stone.column.middle": {
+      "kind": "decoration",
+      "role": "background.green_stone.column.middle",
+      "purpose": "Repeatable middle of the vertically extensible light-green column.",
+      "belongsTo": "background.green_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 43,
+        "cell": {
+          "x": 3,
+          "y": 5
+        }
+      }
+    },
+    "background.green_stone.column.top": {
+      "kind": "decoration",
+      "role": "background.green_stone.column.top",
+      "purpose": "Top of the vertically extensible light-green column.",
+      "belongsTo": "background.green_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 96,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 35,
+        "cell": {
+          "x": 3,
+          "y": 4
+        }
+      }
+    },
+    "background.green_stone.fill": {
+      "kind": "decoration",
+      "role": "background.green_stone.fill",
+      "purpose": "Matching light-green background fill field.",
+      "belongsTo": "background.green_stone",
       "image": {
         "atlas": "background",
         "rect": {
@@ -2086,11 +1235,166 @@
         }
       }
     },
-    "background.unresolved-component.067": {
+    "background.green_stone_dark.arch.left": {
       "kind": "decoration",
-      "role": "background.unresolved-component.067",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "background.unresolved-set",
+      "role": "background.green_stone_dark.arch.left",
+      "purpose": "Left component of the dark-green arch.",
+      "belongsTo": "background.green_stone_dark",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 32,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 33,
+        "cell": {
+          "x": 1,
+          "y": 4
+        }
+      }
+    },
+    "background.green_stone_dark.arch.right": {
+      "kind": "decoration",
+      "role": "background.green_stone_dark.arch.right",
+      "purpose": "Right component of the dark-green arch.",
+      "belongsTo": "background.green_stone_dark",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 34,
+        "cell": {
+          "x": 2,
+          "y": 4
+        }
+      }
+    },
+    "background.green_stone_dark.column.bottom": {
+      "kind": "decoration",
+      "role": "background.green_stone_dark.column.bottom",
+      "purpose": "Bottom of the vertically extensible dark-green column.",
+      "belongsTo": "background.green_stone_dark",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 224,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 58,
+        "cell": {
+          "x": 2,
+          "y": 7
+        }
+      }
+    },
+    "background.green_stone_dark.column.middle": {
+      "kind": "decoration",
+      "role": "background.green_stone_dark.column.middle",
+      "purpose": "Repeatable middle of the vertically extensible dark-green column.",
+      "belongsTo": "background.green_stone_dark",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 192,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 50,
+        "cell": {
+          "x": 2,
+          "y": 6
+        }
+      }
+    },
+    "background.green_stone_dark.column.top": {
+      "kind": "decoration",
+      "role": "background.green_stone_dark.column.top",
+      "purpose": "Top of the vertically extensible dark-green column.",
+      "belongsTo": "background.green_stone_dark",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 64,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 42,
+        "cell": {
+          "x": 2,
+          "y": 5
+        }
+      }
+    },
+    "background.green_stone_dark.fill": {
+      "kind": "decoration",
+      "role": "background.green_stone_dark.fill",
+      "purpose": "Matching dark-green background fill field.",
+      "belongsTo": "background.green_stone_dark",
       "image": {
         "atlas": "background",
         "rect": {
@@ -2114,6 +1418,750 @@
         "cell": {
           "x": 3,
           "y": 8
+        }
+      }
+    },
+    "background.green_stone_dark.trim_line": {
+      "kind": "decoration",
+      "role": "background.green_stone_dark.trim_line",
+      "purpose": "Horizontally repeatable trim tying together the dark-green architecture.",
+      "belongsTo": "background.green_stone_dark",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 32,
+          "y": 224,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 57,
+        "cell": {
+          "x": 1,
+          "y": 7
+        }
+      }
+    },
+    "background.grey_stone.horizontal.left": {
+      "kind": "decoration",
+      "role": "background.grey_stone.horizontal.left",
+      "purpose": "Left of the grey-stone horizontal pair.",
+      "belongsTo": "background.grey_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 0,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 40,
+        "cell": {
+          "x": 0,
+          "y": 5
+        }
+      }
+    },
+    "background.grey_stone.horizontal.right": {
+      "kind": "decoration",
+      "role": "background.grey_stone.horizontal.right",
+      "purpose": "Right of the grey-stone horizontal pair.",
+      "belongsTo": "background.grey_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 32,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 41,
+        "cell": {
+          "x": 1,
+          "y": 5
+        }
+      }
+    },
+    "background.grey_stone.square": {
+      "kind": "decoration",
+      "role": "background.grey_stone.square",
+      "purpose": "Square grey-stone background component.",
+      "belongsTo": "background.grey_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 0,
+          "y": 192,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 48,
+        "cell": {
+          "x": 0,
+          "y": 6
+        }
+      }
+    },
+    "background.grey_stone.vertical.bottom": {
+      "kind": "decoration",
+      "role": "background.grey_stone.vertical.bottom",
+      "purpose": "Bottom of the grey-stone vertical pair.",
+      "belongsTo": "background.grey_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 0,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 32,
+        "cell": {
+          "x": 0,
+          "y": 4
+        }
+      }
+    },
+    "background.grey_stone.vertical.top": {
+      "kind": "decoration",
+      "role": "background.grey_stone.vertical.top",
+      "purpose": "Top of the grey-stone vertical pair.",
+      "belongsTo": "background.grey_stone",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 0,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 24,
+        "cell": {
+          "x": 0,
+          "y": 3
+        }
+      }
+    },
+    "background.red_brown_stone_arch.bottom": {
+      "kind": "decoration",
+      "role": "background.red_brown_stone_arch.bottom",
+      "purpose": "Bottom component of the reversible red/brown rocky arch; the adjacent source cell 22 is intentionally empty.",
+      "belongsTo": "background.red_brown_stone_arch",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 64,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 23,
+        "cell": {
+          "x": 7,
+          "y": 2
+        }
+      }
+    },
+    "background.red_brown_stone_arch.lower_extension_1": {
+      "kind": "decoration",
+      "role": "background.red_brown_stone_arch.lower_extension_1",
+      "purpose": "First lower extension of the red/brown rocky arch.",
+      "belongsTo": "background.red_brown_stone_arch",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 31,
+        "cell": {
+          "x": 7,
+          "y": 3
+        }
+      }
+    },
+    "background.red_brown_stone_arch.lower_extension_2": {
+      "kind": "decoration",
+      "role": "background.red_brown_stone_arch.lower_extension_2",
+      "purpose": "Second lower extension of the red/brown rocky arch.",
+      "belongsTo": "background.red_brown_stone_arch",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 39,
+        "cell": {
+          "x": 7,
+          "y": 4
+        }
+      }
+    },
+    "background.red_brown_stone_arch.middle_left": {
+      "kind": "decoration",
+      "role": "background.red_brown_stone_arch.middle_left",
+      "purpose": "Middle-left component of the reversible red/brown rocky arch.",
+      "belongsTo": "background.red_brown_stone_arch",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 192,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 14,
+        "cell": {
+          "x": 6,
+          "y": 1
+        }
+      }
+    },
+    "background.red_brown_stone_arch.middle_right": {
+      "kind": "decoration",
+      "role": "background.red_brown_stone_arch.middle_right",
+      "purpose": "Middle-right component of the reversible red/brown rocky arch.",
+      "belongsTo": "background.red_brown_stone_arch",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 15,
+        "cell": {
+          "x": 7,
+          "y": 1
+        }
+      }
+    },
+    "background.red_brown_stone_arch.top_left": {
+      "kind": "decoration",
+      "role": "background.red_brown_stone_arch.top_left",
+      "purpose": "Top-left component of the reversible red/brown rocky arch.",
+      "belongsTo": "background.red_brown_stone_arch",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 192,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 6,
+        "cell": {
+          "x": 6,
+          "y": 0
+        }
+      }
+    },
+    "background.red_brown_stone_arch.top_right": {
+      "kind": "decoration",
+      "role": "background.red_brown_stone_arch.top_right",
+      "purpose": "Top-right component of the reversible red/brown rocky arch.",
+      "belongsTo": "background.red_brown_stone_arch",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 7,
+        "cell": {
+          "x": 7,
+          "y": 0
+        }
+      }
+    },
+    "background.red_stone_wall.lower_left": {
+      "kind": "decoration",
+      "role": "background.red_stone_wall.lower_left",
+      "purpose": "Lower-left red/brown rocky-wall companion piece.",
+      "belongsTo": "background.red_stone_wall",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 192,
+          "y": 224,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 62,
+        "cell": {
+          "x": 6,
+          "y": 7
+        }
+      }
+    },
+    "background.red_stone_wall.lower_right": {
+      "kind": "decoration",
+      "role": "background.red_stone_wall.lower_right",
+      "purpose": "Lower-right red/brown rocky-wall companion piece.",
+      "belongsTo": "background.red_stone_wall",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 224,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 63,
+        "cell": {
+          "x": 7,
+          "y": 7
+        }
+      }
+    },
+    "background.red_stone_wall.middle_left": {
+      "kind": "decoration",
+      "role": "background.red_stone_wall.middle_left",
+      "purpose": "Middle-left red/brown rocky-wall companion piece.",
+      "belongsTo": "background.red_stone_wall",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 192,
+          "y": 192,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 54,
+        "cell": {
+          "x": 6,
+          "y": 6
+        }
+      }
+    },
+    "background.red_stone_wall.middle_right": {
+      "kind": "decoration",
+      "role": "background.red_stone_wall.middle_right",
+      "purpose": "Middle-right red/brown rocky-wall companion piece.",
+      "belongsTo": "background.red_stone_wall",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 192,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 55,
+        "cell": {
+          "x": 7,
+          "y": 6
+        }
+      }
+    },
+    "background.red_stone_wall.upper_left": {
+      "kind": "decoration",
+      "role": "background.red_stone_wall.upper_left",
+      "purpose": "Upper-left red/brown rocky-wall companion piece.",
+      "belongsTo": "background.red_stone_wall",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 192,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 46,
+        "cell": {
+          "x": 6,
+          "y": 5
+        }
+      }
+    },
+    "background.red_stone_wall.upper_right": {
+      "kind": "decoration",
+      "role": "background.red_stone_wall.upper_right",
+      "purpose": "Upper-right red/brown rocky-wall companion piece.",
+      "belongsTo": "background.red_stone_wall",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 224,
+          "y": 160,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 47,
+        "cell": {
+          "x": 7,
+          "y": 5
+        }
+      }
+    },
+    "background.rockpile.variant_plain": {
+      "kind": "decoration",
+      "role": "background.rockpile.variant_plain",
+      "purpose": "Plain tileable rockpile background.",
+      "belongsTo": "background.rockpile",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 192,
+          "y": 128,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 38,
+        "cell": {
+          "x": 6,
+          "y": 4
+        }
+      }
+    },
+    "background.rockpile.variant_sprig": {
+      "kind": "decoration",
+      "role": "background.rockpile.variant_sprig",
+      "purpose": "Tileable rockpile background with plant/sprig detail.",
+      "belongsTo": "background.rockpile",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 192,
+          "y": 96,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 30,
+        "cell": {
+          "x": 6,
+          "y": 3
+        }
+      }
+    },
+    "background.sky_gradient.bottom": {
+      "kind": "decoration",
+      "role": "background.sky_gradient.bottom",
+      "purpose": "Bottom component of the vertical sky gradient.",
+      "belongsTo": "background.sky_gradient",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 128,
+          "y": 64,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 20,
+        "cell": {
+          "x": 4,
+          "y": 2
+        }
+      }
+    },
+    "background.sky_gradient.top": {
+      "kind": "decoration",
+      "role": "background.sky_gradient.top",
+      "purpose": "Top component of the vertical sky gradient.",
+      "belongsTo": "background.sky_gradient",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 128,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 4,
+        "cell": {
+          "x": 4,
+          "y": 0
+        }
+      }
+    },
+    "background.sky_gradient.transition": {
+      "kind": "decoration",
+      "role": "background.sky_gradient.transition",
+      "purpose": "Transition component of the vertical sky gradient.",
+      "belongsTo": "background.sky_gradient",
+      "image": {
+        "atlas": "background",
+        "rect": {
+          "x": 128,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "bgsheet.png",
+        "index": 12,
+        "cell": {
+          "x": 4,
+          "y": 1
         }
       }
     },
@@ -4011,8 +4059,8 @@
     "goal.unresolved-pose.02": {
       "kind": "actor",
       "role": "goal.unresolved-pose.02",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "goal.unresolved-pose",
+      "purpose": "Nonempty goal-actor pose whose exact state or use is not established.",
+      "belongsTo": "goal.actor",
       "image": {
         "atlas": "goal",
         "rect": {
@@ -5902,8 +5950,8 @@
     "player.carrying.unresolved-pose.08": {
       "kind": "actor",
       "role": "player.carrying.unresolved-pose.08",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.carrying.unresolved-pose",
+      "purpose": "Nonempty player.carrying pose whose exact state or use is not established.",
+      "belongsTo": "player.carrying",
       "image": {
         "atlas": "player.carrying",
         "rect": {
@@ -5933,8 +5981,8 @@
     "player.carrying.unresolved-pose.13": {
       "kind": "actor",
       "role": "player.carrying.unresolved-pose.13",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.carrying.unresolved-pose",
+      "purpose": "Nonempty player.carrying pose whose exact state or use is not established.",
+      "belongsTo": "player.carrying",
       "image": {
         "atlas": "player.carrying",
         "rect": {
@@ -5964,8 +6012,8 @@
     "player.carrying.unresolved-pose.15": {
       "kind": "actor",
       "role": "player.carrying.unresolved-pose.15",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.carrying.unresolved-pose",
+      "purpose": "Nonempty player.carrying pose whose exact state or use is not established.",
+      "belongsTo": "player.carrying",
       "image": {
         "atlas": "player.carrying",
         "rect": {
@@ -6057,8 +6105,8 @@
     "player.fire.unresolved-pose.08": {
       "kind": "actor",
       "role": "player.fire.unresolved-pose.08",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.fire.unresolved-pose",
+      "purpose": "Nonempty player.fire pose whose exact state or use is not established.",
+      "belongsTo": "player.fire",
       "image": {
         "atlas": "player.fire",
         "rect": {
@@ -6088,8 +6136,8 @@
     "player.fire.unresolved-pose.13": {
       "kind": "actor",
       "role": "player.fire.unresolved-pose.13",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.fire.unresolved-pose",
+      "purpose": "Nonempty player.fire pose whose exact state or use is not established.",
+      "belongsTo": "player.fire",
       "image": {
         "atlas": "player.fire",
         "rect": {
@@ -6460,8 +6508,8 @@
     "player.normal.unresolved-pose.08": {
       "kind": "actor",
       "role": "player.normal.unresolved-pose.08",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.normal.unresolved-pose",
+      "purpose": "Nonempty player.normal pose whose exact state or use is not established.",
+      "belongsTo": "player.normal",
       "image": {
         "atlas": "player.normal",
         "rect": {
@@ -6491,8 +6539,8 @@
     "player.normal.unresolved-pose.13": {
       "kind": "actor",
       "role": "player.normal.unresolved-pose.13",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.normal.unresolved-pose",
+      "purpose": "Nonempty player.normal pose whose exact state or use is not established.",
+      "belongsTo": "player.normal",
       "image": {
         "atlas": "player.normal",
         "rect": {
@@ -7235,8 +7283,8 @@
     "player.small.unresolved-pose.06": {
       "kind": "actor",
       "role": "player.small.unresolved-pose.06",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.small.unresolved-pose",
+      "purpose": "Nonempty player.small pose whose exact state or use is not established.",
+      "belongsTo": "player.small",
       "image": {
         "atlas": "player.small",
         "rect": {
@@ -7266,8 +7314,8 @@
     "player.small.unresolved-pose.10": {
       "kind": "actor",
       "role": "player.small.unresolved-pose.10",
-      "purpose": "Exact source purpose is unresolved; retained as a nonempty visual component for inspection and future binding.",
-      "belongsTo": "player.small.unresolved-pose",
+      "purpose": "Nonempty player.small pose whose exact state or use is not established.",
+      "belongsTo": "player.small",
       "image": {
         "atlas": "player.small",
         "rect": {
@@ -9372,6 +9420,308 @@
       }
     }
   },
+  "families": {
+    "actor.unresolved-pose": {
+      "kind": "actor",
+      "purpose": "Visual resource family for actor.unresolved-pose."
+    },
+    "background.black_fill": {
+      "kind": "decoration",
+      "purpose": "Solid-black background-fill family."
+    },
+    "background.cave_arch_yellow_brown": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.cave_arch_yellow_brown."
+    },
+    "background.dark_bars": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.dark_bars."
+    },
+    "background.dome.variant_0": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.dome.variant_0."
+    },
+    "background.dome.variant_1": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.dome.variant_1."
+    },
+    "background.green": {
+      "kind": "decoration",
+      "purpose": "Green decorative background materials."
+    },
+    "background.green_stone": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.green_stone."
+    },
+    "background.green_stone_dark": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.green_stone_dark."
+    },
+    "background.grey_stone": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.grey_stone."
+    },
+    "background.red_brown_stone_arch": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.red_brown_stone_arch."
+    },
+    "background.red_stone_wall": {
+      "kind": "decoration",
+      "purpose": "Red/brown rocky-wall companion family associated visually with background.red_brown_stone_arch."
+    },
+    "background.rockpile": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.rockpile."
+    },
+    "background.sky_gradient": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for background.sky_gradient."
+    },
+    "bar.white": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for bar.white."
+    },
+    "block": {
+      "kind": "block",
+      "purpose": "Visual resource family for block."
+    },
+    "block.breakable": {
+      "kind": "block",
+      "purpose": "Visual resource family for block.breakable."
+    },
+    "block.brown_face": {
+      "kind": "block",
+      "purpose": "Visual resource family for block.brown_face."
+    },
+    "block.hidden": {
+      "kind": "block",
+      "purpose": "Visual resource family for block.hidden."
+    },
+    "block.question": {
+      "kind": "block",
+      "purpose": "Visual resource family for block.question."
+    },
+    "block.question.visual": {
+      "kind": "block",
+      "purpose": "Visual resource family for block.question.visual."
+    },
+    "bush": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for bush."
+    },
+    "cannon.vertical": {
+      "kind": "ground",
+      "purpose": "Visual resource family for cannon.vertical."
+    },
+    "effect.debris": {
+      "kind": "effect",
+      "purpose": "Visual resource family for effect.debris."
+    },
+    "effect.sparkle.general": {
+      "kind": "effect",
+      "purpose": "Visual resource family for effect.sparkle.general."
+    },
+    "effect.sparkle.pickup": {
+      "kind": "effect",
+      "purpose": "Visual resource family for effect.sparkle.pickup."
+    },
+    "enemy.flyer.wave": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.flyer.wave."
+    },
+    "enemy.green_koopa": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.green_koopa."
+    },
+    "enemy.hazard.emerging": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.hazard.emerging."
+    },
+    "enemy.overlay.wing": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.overlay.wing."
+    },
+    "enemy.projectile": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.projectile."
+    },
+    "enemy.red_koopa": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.red_koopa."
+    },
+    "enemy.walker.armored.green": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.walker.armored.green."
+    },
+    "enemy.walker.armored.green.shell": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.walker.armored.green.shell."
+    },
+    "enemy.walker.armored.red": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.walker.armored.red."
+    },
+    "enemy.walker.armored.red.shell": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.walker.armored.red.shell."
+    },
+    "enemy.walker.basic": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.walker.basic."
+    },
+    "enemy.walker.spiked": {
+      "kind": "actor",
+      "purpose": "Visual resource family for enemy.walker.spiked."
+    },
+    "foliage_canopy": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for foliage_canopy."
+    },
+    "goal.actor": {
+      "kind": "actor",
+      "purpose": "Visual resource family for goal.actor."
+    },
+    "goal.unresolved-pose": {
+      "kind": "actor",
+      "purpose": "Visual resource family for goal.unresolved-pose."
+    },
+    "hill.large": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for hill.large."
+    },
+    "hill.wide": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for hill.wide."
+    },
+    "ladder": {
+      "kind": "ground",
+      "purpose": "Visual resource family for ladder."
+    },
+    "log_column": {
+      "kind": "ground",
+      "purpose": "Visual resource family for log_column."
+    },
+    "mushroom_platform.cap": {
+      "kind": "ground",
+      "purpose": "Visual resource family for mushroom_platform.cap."
+    },
+    "mushroom_platform.stem": {
+      "kind": "ground",
+      "purpose": "Visual resource family for mushroom_platform.stem."
+    },
+    "pickup": {
+      "kind": "pickup",
+      "purpose": "Visual resource family for pickup."
+    },
+    "pickup.coin.visual": {
+      "kind": "pickup",
+      "purpose": "Visual resource family for pickup.coin.visual."
+    },
+    "pickup.powerup": {
+      "kind": "pickup",
+      "purpose": "Visual resource family for pickup.powerup."
+    },
+    "pickup.special": {
+      "kind": "pickup",
+      "purpose": "Visual resource family for pickup.special."
+    },
+    "pillar_glass.dark": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for pillar_glass.dark."
+    },
+    "pillar_glass.light": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for pillar_glass.light."
+    },
+    "pipe.narrow.vertical": {
+      "kind": "ground",
+      "purpose": "Visual resource family for pipe.narrow.vertical."
+    },
+    "pipe.vertical.body": {
+      "kind": "ground",
+      "purpose": "Visual resource family for pipe.vertical.body."
+    },
+    "pipe.vertical.mouth": {
+      "kind": "ground",
+      "purpose": "Visual resource family for pipe.vertical.mouth."
+    },
+    "platform": {
+      "kind": "ground",
+      "purpose": "Visual resource family for platform."
+    },
+    "player.carrying": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.carrying."
+    },
+    "player.carrying.unresolved-pose": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.carrying.unresolved-pose."
+    },
+    "player.fire": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.fire."
+    },
+    "player.fire.unresolved-pose": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.fire.unresolved-pose."
+    },
+    "player.normal": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.normal."
+    },
+    "player.normal.unresolved-pose": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.normal.unresolved-pose."
+    },
+    "player.powered": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.powered."
+    },
+    "player.small": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.small."
+    },
+    "player.small.unresolved-pose": {
+      "kind": "actor",
+      "purpose": "Visual resource family for player.small.unresolved-pose."
+    },
+    "projectile.fireball": {
+      "kind": "effect",
+      "purpose": "Visual resource family for projectile.fireball."
+    },
+    "sign.arrow_right": {
+      "kind": "decoration",
+      "purpose": "Visual resource family for sign.arrow_right."
+    },
+    "terrain.autotile.castle": {
+      "kind": "ground",
+      "purpose": "Visual resource family for terrain.autotile.castle."
+    },
+    "terrain.autotile.overground": {
+      "kind": "ground",
+      "purpose": "Visual resource family for terrain.autotile.overground."
+    },
+    "terrain.autotile.underground": {
+      "kind": "ground",
+      "purpose": "Visual resource family for terrain.autotile.underground."
+    },
+    "terrain.overground.dirt_fill": {
+      "kind": "ground",
+      "purpose": "Visual resource family for terrain.overground.dirt_fill."
+    },
+    "terrain.overground.grass_edge": {
+      "kind": "ground",
+      "purpose": "Visual resource family for terrain.overground.grass_edge."
+    },
+    "terrain.overground.grass_top": {
+      "kind": "ground",
+      "purpose": "Visual resource family for terrain.overground.grass_top."
+    },
+    "terrain.overground.rounded_corner": {
+      "kind": "ground",
+      "purpose": "Visual resource family for terrain.overground.rounded_corner."
+    }
+  },
   "animations": {
     "block.question.visual": {
       "frames": [
@@ -9411,6 +9761,36 @@
       "display": {
         "w": 16,
         "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "effect.debris": {
+      "frames": [
+        {
+          "resource": "effect.debris.variant_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "effect.debris.variant_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 80,
+        "loop": false
+      },
+      "display": {
+        "w": 8,
+        "h": 8,
         "anchor": {
           "x": 0.5,
           "y": 1
@@ -10126,6 +10506,232 @@
         }
       }
     },
+    "player.fire.carry": {
+      "frames": [
+        {
+          "resource": "player.powered.carry_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "player.powered.carry_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "player.powered.carry_2_jump",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.duck": {
+      "frames": [
+        {
+          "resource": "player.powered.duck",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.idle": {
+      "frames": [
+        {
+          "resource": "player.powered.idle_walk_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.jump": {
+      "frames": [
+        {
+          "resource": "player.powered.jump",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.run": {
+      "frames": [
+        {
+          "resource": "player.powered.fast_run_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "player.powered.fast_run_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "player.powered.fast_run_2",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.runJump": {
+      "frames": [
+        {
+          "resource": "player.powered.fast_jump",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.skid": {
+      "frames": [
+        {
+          "resource": "player.powered.skid",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.walk": {
+      "frames": [
+        {
+          "resource": "player.powered.idle_walk_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "player.powered.walk_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "player.powered.walk_2",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
     "player.normal.carry": {
       "frames": [
         {
@@ -10566,23 +11172,179 @@
     }
   },
   "constructions": {
-    "construction.pipe.vertical": {
-      "kind": "ground",
+    "construction.arrow-sign": {
+      "kind": "decoration",
       "components": {
-        "mouthLeft": "pipe.vertical.mouth.left",
-        "mouthRight": "pipe.vertical.mouth.right",
-        "bodyLeft": "pipe.vertical.body.left",
-        "bodyRight": "pipe.vertical.body.right"
+        "topLeft": "sign.arrow_right.top_left",
+        "topRight": "sign.arrow_right.top_right",
+        "bottomLeft": "sign.arrow_right.bottom_left",
+        "bottomRight": "sign.arrow_right.bottom_right"
       },
-      "layout": "two-column vertical, repeat body rows"
+      "layout": "2x2"
     },
-    "construction.ladder": {
-      "kind": "ground",
+    "construction.background.cave-arch-yellow-brown": {
+      "kind": "decoration",
+      "family": "background.cave_arch_yellow_brown",
       "components": {
-        "top": "ladder.top",
-        "body": "ladder.body"
+        "top_left": "background.cave_arch_yellow_brown.top_left",
+        "top_right": "background.cave_arch_yellow_brown.top_right",
+        "upper_left": "background.cave_arch_yellow_brown.upper_left",
+        "upper_right": "background.cave_arch_yellow_brown.upper_right",
+        "middle_left": "background.cave_arch_yellow_brown.middle_left",
+        "middle_right": "background.cave_arch_yellow_brown.middle_right",
+        "lower_left": "background.cave_arch_yellow_brown.lower_left",
+        "lower_right": "background.cave_arch_yellow_brown.lower_right",
+        "bottom_left": "background.cave_arch_yellow_brown.bottom_left",
+        "bottom_right": "background.cave_arch_yellow_brown.bottom_right"
       },
-      "layout": "one-column vertical, repeat body"
+      "layout": {
+        "type": "fixedGrid",
+        "columns": 2,
+        "rows": 5
+      },
+      "presentation": {
+        "mirrorable": true
+      }
+    },
+    "construction.background.dome.variant_0": {
+      "kind": "decoration",
+      "family": "background.dome.variant_0",
+      "components": {
+        "top_left": "background.dome.variant_0.top_left",
+        "top_right": "background.dome.variant_0.top_right",
+        "middle_left": "background.dome.variant_0.middle_left",
+        "middle_right": "background.dome.variant_0.middle_right",
+        "bottom_left": "background.dome.variant_0.bottom_left",
+        "bottom_right": "background.dome.variant_0.bottom_right"
+      },
+      "layout": {
+        "type": "fixedGrid",
+        "columns": 2,
+        "rows": 3
+      }
+    },
+    "construction.background.dome.variant_1": {
+      "kind": "decoration",
+      "family": "background.dome.variant_1",
+      "components": {
+        "top_left": "background.dome.variant_1.top_left",
+        "top_right": "background.dome.variant_1.top_right",
+        "middle_left": "background.dome.variant_1.middle_left",
+        "middle_right": "background.dome.variant_1.middle_right",
+        "bottom_left": "background.dome.variant_1.bottom_left",
+        "bottom_right": "background.dome.variant_1.bottom_right"
+      },
+      "layout": {
+        "type": "fixedGrid",
+        "columns": 2,
+        "rows": 3
+      }
+    },
+    "construction.background.green-stone-arch": {
+      "kind": "decoration",
+      "family": "background.green_stone",
+      "components": {
+        "left": "background.green_stone.arch.left",
+        "middle": "background.green_stone.arch.middle",
+        "right": "background.green_stone.arch.right"
+      },
+      "layout": {
+        "type": "extensibleRow",
+        "repeat": "middle"
+      }
+    },
+    "construction.background.green-stone-column": {
+      "kind": "decoration",
+      "family": "background.green_stone",
+      "components": {
+        "top": "background.green_stone.column.top",
+        "middle": "background.green_stone.column.middle",
+        "bottom": "background.green_stone.column.bottom"
+      },
+      "layout": {
+        "type": "extensibleColumn",
+        "repeat": "middle"
+      }
+    },
+    "construction.background.green-stone-dark-column": {
+      "kind": "decoration",
+      "family": "background.green_stone_dark",
+      "components": {
+        "top": "background.green_stone_dark.column.top",
+        "middle": "background.green_stone_dark.column.middle",
+        "bottom": "background.green_stone_dark.column.bottom"
+      },
+      "layout": {
+        "type": "extensibleColumn",
+        "repeat": "middle"
+      }
+    },
+    "construction.background.grey-stone-horizontal": {
+      "kind": "decoration",
+      "family": "background.grey_stone",
+      "components": {
+        "left": "background.grey_stone.horizontal.left",
+        "right": "background.grey_stone.horizontal.right"
+      },
+      "layout": {
+        "type": "fixedRow",
+        "order": [
+          "left",
+          "right"
+        ]
+      }
+    },
+    "construction.background.grey-stone-vertical": {
+      "kind": "decoration",
+      "family": "background.grey_stone",
+      "components": {
+        "top": "background.grey_stone.vertical.top",
+        "bottom": "background.grey_stone.vertical.bottom"
+      },
+      "layout": {
+        "type": "fixedColumn",
+        "order": [
+          "top",
+          "bottom"
+        ]
+      }
+    },
+    "construction.background.red-brown-stone-arch": {
+      "kind": "decoration",
+      "family": "background.red_brown_stone_arch",
+      "components": {
+        "top_left": "background.red_brown_stone_arch.top_left",
+        "top_right": "background.red_brown_stone_arch.top_right",
+        "middle_left": "background.red_brown_stone_arch.middle_left",
+        "middle_right": "background.red_brown_stone_arch.middle_right",
+        "bottom": "background.red_brown_stone_arch.bottom",
+        "lower_extension_1": "background.red_brown_stone_arch.lower_extension_1",
+        "lower_extension_2": "background.red_brown_stone_arch.lower_extension_2"
+      },
+      "layout": {
+        "type": "reviewedArch",
+        "sourceHole": 22
+      },
+      "presentation": {
+        "mirrorable": true
+      }
+    },
+    "construction.background.sky-gradient": {
+      "kind": "decoration",
+      "family": "background.sky_gradient",
+      "components": {
+        "top": "background.sky_gradient.top",
+        "transition": "background.sky_gradient.transition",
+        "bottom": "background.sky_gradient.bottom"
+      },
+      "layout": {
+        "type": "fixedColumn",
+        "order": [
+          "top",
+          "transition",
+          "bottom"
+        ]
+      }
     },
     "construction.bush": {
       "kind": "decoration",
@@ -10593,15 +11355,13 @@
       },
       "layout": "horizontal, repeat middle"
     },
-    "construction.arrow-sign": {
-      "kind": "decoration",
+    "construction.ladder": {
+      "kind": "ground",
       "components": {
-        "topLeft": "sign.arrow_right.top_left",
-        "topRight": "sign.arrow_right.top_right",
-        "bottomLeft": "sign.arrow_right.bottom_left",
-        "bottomRight": "sign.arrow_right.bottom_right"
+        "top": "ladder.top",
+        "body": "ladder.body"
       },
-      "layout": "2x2"
+      "layout": "one-column vertical, repeat body"
     },
     "construction.mushroom-platform": {
       "kind": "ground",
@@ -10615,34 +11375,15 @@
       },
       "layout": "three-column cap and repeatable stem"
     },
-    "construction.terrain.overground": {
+    "construction.pipe.vertical": {
       "kind": "ground",
-      "autotile": {
-        "neighborBits": [
-          "topLeft",
-          "topRight",
-          "bottomLeft",
-          "bottomRight"
-        ],
-        "variants": {
-          "1000": "terrain.autotile.overground.mask_1000",
-          "1100": "terrain.autotile.overground.mask_1100",
-          "0100": "terrain.autotile.overground.mask_0100",
-          "1110": "terrain.autotile.overground.mask_1110",
-          "1010": "terrain.autotile.overground.mask_1010",
-          "0110": "terrain.autotile.overground.mask_0110",
-          "1001": "terrain.autotile.overground.mask_0110",
-          "1111": "terrain.autotile.overground.mask_0110",
-          "0101": "terrain.autotile.overground.mask_0101",
-          "1101": "terrain.autotile.overground.mask_1101",
-          "0010": "terrain.autotile.overground.mask_0010",
-          "0011": "terrain.autotile.overground.mask_0011",
-          "0001": "terrain.autotile.overground.mask_0001",
-          "0111": "terrain.autotile.overground.mask_0111",
-          "1011": "terrain.autotile.overground.mask_1011"
-        }
+      "components": {
+        "mouthLeft": "pipe.vertical.mouth.left",
+        "mouthRight": "pipe.vertical.mouth.right",
+        "bodyLeft": "pipe.vertical.body.left",
+        "bodyRight": "pipe.vertical.body.right"
       },
-      "collision": "solidTerrain"
+      "layout": "two-column vertical, repeat body rows"
     },
     "construction.terrain.castle": {
       "kind": "ground",
@@ -10669,6 +11410,35 @@
           "0001": "terrain.autotile.castle.mask_0001",
           "0111": "terrain.autotile.castle.mask_0111",
           "1011": "terrain.autotile.castle.mask_1011"
+        }
+      },
+      "collision": "solidTerrain"
+    },
+    "construction.terrain.overground": {
+      "kind": "ground",
+      "autotile": {
+        "neighborBits": [
+          "topLeft",
+          "topRight",
+          "bottomLeft",
+          "bottomRight"
+        ],
+        "variants": {
+          "1000": "terrain.autotile.overground.mask_1000",
+          "1100": "terrain.autotile.overground.mask_1100",
+          "0100": "terrain.autotile.overground.mask_0100",
+          "1110": "terrain.autotile.overground.mask_1110",
+          "1010": "terrain.autotile.overground.mask_1010",
+          "0110": "terrain.autotile.overground.mask_0110",
+          "1001": "terrain.autotile.overground.mask_0110",
+          "1111": "terrain.autotile.overground.mask_0110",
+          "0101": "terrain.autotile.overground.mask_0101",
+          "1101": "terrain.autotile.overground.mask_1101",
+          "0010": "terrain.autotile.overground.mask_0010",
+          "0011": "terrain.autotile.overground.mask_0011",
+          "0001": "terrain.autotile.overground.mask_0001",
+          "0111": "terrain.autotile.overground.mask_0111",
+          "1011": "terrain.autotile.overground.mask_1011"
         }
       },
       "collision": "solidTerrain"
@@ -10779,10 +11549,11 @@
     },
     "koopa.red": {
       "kind": "actor",
-      "engineNoun": "armoredWalker",
+      "engineNoun": "walker",
       "capabilities": [
         "patrol",
         "stompable",
+        "armored",
         "shell"
       ],
       "visuals": {
@@ -10792,10 +11563,11 @@
     },
     "koopa.green": {
       "kind": "actor",
-      "engineNoun": "armoredWalker",
+      "engineNoun": "walker",
       "capabilities": [
         "patrol",
         "stompable",
+        "armored",
         "shell"
       ],
       "visuals": {
@@ -10816,8 +11588,9 @@
     },
     "waveGoomba": {
       "kind": "actor",
-      "engineNoun": "waveFlyer",
+      "engineNoun": "actor",
       "capabilities": [
+        "waveFlight",
         "patrol",
         "stompable"
       ],
@@ -10827,9 +11600,9 @@
     },
     "bulletBill": {
       "kind": "actor",
-      "engineNoun": "horizontalProjectile",
+      "engineNoun": "projectile",
       "capabilities": [
-        "projectile"
+        "horizontalFlight"
       ],
       "visuals": {
         "flight": "enemy.projectile.horizontal"
@@ -10837,7 +11610,7 @@
     },
     "flowerEnemy": {
       "kind": "actor",
-      "engineNoun": "emergingHazard",
+      "engineNoun": "hazard",
       "capabilities": [
         "emerge",
         "retract"
@@ -10848,9 +11621,10 @@
     },
     "coin": {
       "kind": "pickup",
-      "engineNoun": "coin",
+      "engineNoun": "pickup",
       "capabilities": [
-        "collectible"
+        "collectible",
+        "coin"
       ],
       "visuals": {
         "idle": "pickup.coin.visual"
@@ -10858,10 +11632,11 @@
     },
     "growMushroom": {
       "kind": "pickup",
-      "engineNoun": "movingPowerup",
+      "engineNoun": "pickup",
       "capabilities": [
         "collectible",
-        "walker"
+        "walker",
+        "grow"
       ],
       "visuals": {
         "idle": "pickup.powerup.grow"
@@ -10869,9 +11644,10 @@
     },
     "fireFlower": {
       "kind": "pickup",
-      "engineNoun": "powerup",
+      "engineNoun": "pickup",
       "capabilities": [
-        "collectible"
+        "collectible",
+        "projectilePower"
       ],
       "visuals": {
         "idle": "pickup.powerup.projectile"
@@ -10879,10 +11655,11 @@
     },
     "lifeMushroom": {
       "kind": "pickup",
-      "engineNoun": "lifePowerup",
+      "engineNoun": "pickup",
       "capabilities": [
         "collectible",
-        "walker"
+        "walker",
+        "extraLife"
       ],
       "visuals": {
         "idle": "pickup.special.green"
@@ -10890,7 +11667,7 @@
     },
     "questionBlock": {
       "kind": "block",
-      "engineNoun": "rewardBlock",
+      "engineNoun": "block",
       "capabilities": [
         "bump",
         "dispense"
@@ -10902,10 +11679,10 @@
     },
     "brick": {
       "kind": "block",
-      "engineNoun": "breakableBlock",
+      "engineNoun": "block",
       "capabilities": [
         "bump",
-        "break"
+        "breakable"
       ],
       "visuals": {
         "normal": "block.breakable",
@@ -10914,7 +11691,7 @@
     },
     "pipe": {
       "kind": "ground",
-      "engineNoun": "pipe",
+      "engineNoun": "structure",
       "capabilities": [
         "solid",
         "transport"
@@ -10925,9 +11702,9 @@
     },
     "ladder": {
       "kind": "ground",
-      "engineNoun": "climbable",
+      "engineNoun": "structure",
       "capabilities": [
-        "climb"
+        "climbable"
       ],
       "visuals": {
         "construction": "construction.ladder"
@@ -10935,7 +11712,7 @@
     },
     "ground": {
       "kind": "ground",
-      "engineNoun": "solidTerrain",
+      "engineNoun": "terrain",
       "capabilities": [
         "solid",
         "autotile"
@@ -10974,12 +11751,23 @@
     },
     "goalActor": {
       "kind": "actor",
-      "engineNoun": "goalActor",
+      "engineNoun": "actor",
       "capabilities": [
         "goalPresentation"
       ],
       "visuals": {
         "idle": "goal.actor.idle"
+      }
+    },
+    "movingMushroomPlatform": {
+      "kind": "ground",
+      "engineNoun": "platform",
+      "capabilities": [
+        "solidTop",
+        "movingPlatform"
+      ],
+      "visuals": {
+        "construction": "construction.mushroom-platform"
       }
     }
   },
@@ -11068,11 +11856,11 @@
     "rewardBlock": {
       "contents": {
         "type": "objectReference",
-        "allowedEngineNouns": [
+        "allowedObjects": [
           "coin",
-          "movingPowerup",
-          "powerup",
-          "lifePowerup"
+          "growMushroom",
+          "fireFlower",
+          "lifeMushroom"
         ]
       },
       "uses": {
@@ -11100,6 +11888,23 @@
           "underground"
         ],
         "default": "overground"
+      }
+    },
+    "extent": {
+      "length": {
+        "type": "integer",
+        "minimum": 1,
+        "unit": "cells"
+      },
+      "width": {
+        "type": "integer",
+        "minimum": 1,
+        "unit": "cells"
+      },
+      "height": {
+        "type": "integer",
+        "minimum": 1,
+        "unit": "cells"
       }
     }
   },
@@ -11203,7 +12008,7 @@
       "parameters": [
         "transform.x",
         "transform.y",
-        "pipe.length"
+        "extent.length"
       ]
     },
     "ground": {
@@ -11223,7 +12028,7 @@
       "parameters": [
         "transform.x",
         "transform.y",
-        "terrain.width"
+        "extent.width"
       ]
     },
     "bush": {
@@ -11232,7 +12037,7 @@
       "parameters": [
         "transform.x",
         "transform.y",
-        "terrain.width"
+        "extent.width"
       ]
     },
     "arrowSign": {
@@ -11273,14 +12078,11 @@
     },
     "movingMushroomPlatform": {
       "label": "Moving Mushroom Platform",
-      "object": "mushroomPlatform",
-      "capabilities": [
-        "movingPlatform"
-      ],
+      "object": "movingMushroomPlatform",
       "parameters": [
         "transform.x",
         "transform.y",
-        "terrain.width",
+        "extent.width",
         "movingPlatform.path",
         "movingPlatform.range",
         "movingPlatform.speed"
@@ -11304,68 +12106,6 @@
     "unresolvedExactPurpose": [
       "actor.unresolved-pose.002",
       "actor.unresolved-pose.018",
-      "background.unresolved-component.000",
-      "background.unresolved-component.001",
-      "background.unresolved-component.002",
-      "background.unresolved-component.003",
-      "background.unresolved-component.004",
-      "background.unresolved-component.006",
-      "background.unresolved-component.007",
-      "background.unresolved-component.008",
-      "background.unresolved-component.009",
-      "background.unresolved-component.010",
-      "background.unresolved-component.011",
-      "background.unresolved-component.012",
-      "background.unresolved-component.014",
-      "background.unresolved-component.015",
-      "background.unresolved-component.016",
-      "background.unresolved-component.017",
-      "background.unresolved-component.018",
-      "background.unresolved-component.019",
-      "background.unresolved-component.020",
-      "background.unresolved-component.023",
-      "background.unresolved-component.024",
-      "background.unresolved-component.025",
-      "background.unresolved-component.026",
-      "background.unresolved-component.027",
-      "background.unresolved-component.028",
-      "background.unresolved-component.029",
-      "background.unresolved-component.030",
-      "background.unresolved-component.031",
-      "background.unresolved-component.032",
-      "background.unresolved-component.033",
-      "background.unresolved-component.034",
-      "background.unresolved-component.035",
-      "background.unresolved-component.036",
-      "background.unresolved-component.037",
-      "background.unresolved-component.038",
-      "background.unresolved-component.039",
-      "background.unresolved-component.040",
-      "background.unresolved-component.041",
-      "background.unresolved-component.042",
-      "background.unresolved-component.043",
-      "background.unresolved-component.044",
-      "background.unresolved-component.045",
-      "background.unresolved-component.046",
-      "background.unresolved-component.047",
-      "background.unresolved-component.048",
-      "background.unresolved-component.049",
-      "background.unresolved-component.050",
-      "background.unresolved-component.051",
-      "background.unresolved-component.052",
-      "background.unresolved-component.053",
-      "background.unresolved-component.054",
-      "background.unresolved-component.055",
-      "background.unresolved-component.056",
-      "background.unresolved-component.057",
-      "background.unresolved-component.058",
-      "background.unresolved-component.059",
-      "background.unresolved-component.060",
-      "background.unresolved-component.061",
-      "background.unresolved-component.062",
-      "background.unresolved-component.063",
-      "background.unresolved-component.066",
-      "background.unresolved-component.067",
       "goal.unresolved-pose.02",
       "player.carrying.unresolved-pose.08",
       "player.carrying.unresolved-pose.13",
@@ -11383,7 +12123,16 @@
       "endscene.gif",
       "worldmap.png"
     ],
-    "statement": "Every visually nonempty cell in the ten world/presentation sheets is represented exactly once."
+    "statement": "Every visually nonempty cell in the ten world/presentation sheets is represented exactly once; all background cells have reviewed semantics, while listed non-background poses remain unresolved.",
+    "unresolvedBySourceSheet": {
+      "enemysheet.png": 2,
+      "mariosheet.png": 2,
+      "smallmariosheet.png": 2,
+      "firemariosheet.png": 2,
+      "racoonmariosheet.png": 3,
+      "princess.png": 1
+    },
+    "backgroundUnresolved": 0
   },
   "extended": {
     "status": "reference contract; no current consumer compatibility is promised"
