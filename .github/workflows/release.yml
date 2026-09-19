@@ -1,33 +1,48 @@
-name: Release standalone HTML
+name: Build latest standalone HTML
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: super-llmario-release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+
       - name: Build standalone release
         run: python3 scripts/build_release.py
+
       - name: Validate standalone release
         run: node --test tests/release_build.test.js
-      - name: Create or update GitHub Release and upload HTML
-        if: startsWith(github.ref, 'refs/tags/')
+
+      - name: Replace rolling GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --generate-notes
-          gh release upload "$GITHUB_REF_NAME" dist/super_llmario.html --clobber
+          gh release delete latest --cleanup-tag --yes || true
+
+          gh release create latest \
+            dist/super_llmario.html \
+            --target "$GITHUB_SHA" \
+            --title "Super LLMario — Latest" \
+            --notes "Automatically built from the latest main branch." \
+            --latest
