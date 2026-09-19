@@ -1646,8 +1646,8 @@ function normalizeCart(raw){
   }
   for(const block of cart.floatingBlocks){
     if(!isPlainObject(block)) continue;
-    block.w = LEVEL_FUNDAMENTALS.block.w;
-    block.h = LEVEL_FUNDAMENTALS.block.h;
+    if(!finiteNumber(block.w)) block.w = LEVEL_FUNDAMENTALS.block.w;
+    if(!finiteNumber(block.h)) block.h = LEVEL_FUNDAMENTALS.block.h;
   }
   if(!isPlainObject(cart.portal)) throw new Error('Cartridge missing portal object.');
   // IMPORTANT: resourceScenery is map content, not theme/default engine garnish.
