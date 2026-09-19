@@ -49,7 +49,7 @@ for(const id of ['map.terrain.overground.grass_top.alt_middle','map.terrain.over
 assert(manual.size>auto.size);
 console.log('terrain brush and explicit family inventory contracts passed');
 const editorSource=fs.readFileSync('editor/editor.html','utf8');
-assert(editorSource.includes("const semantic=cart&&activeSemanticTerrain();if(semantic)"));
+assert(editorSource.includes("const semantic=cart&&activeSemanticTerrain();if(stampMode&&semantic)"));
 assert(editorSource.includes("const semantic=activeSemanticTerrain();if(semantic){terrainStrokeMode=false"));
 assert(!editorSource.includes("if(activeSemanticTerrain()){terrainStrokeMode=true"));
 console.log('terrain palette mode contract passed');
