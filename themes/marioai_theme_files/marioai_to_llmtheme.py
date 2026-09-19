@@ -123,6 +123,21 @@ def construction_catalog() -> dict:
     }}
 
 
+def authoring_catalog() -> dict:
+    """Declare complete map-authoring operations; raw assets are inventory only."""
+    return {"version": 1, "entries": [
+      {"id":"coin","name":"Coin","category":"items","operation":"object","kind":"coin","preview":"map.pickup.coin.visual.frame_0"},
+      {"id":"question_block","name":"Question Block","category":"blocks","operation":"object","kind":"rewardBox","preview":"map.block.question.visual.frame_0","dimensions":{"w":24,"h":24}},
+      {"id":"brick","name":"Brick","category":"blocks","operation":"object","kind":"bustBrick","preview":"map.block.brick_solid","dimensions":{"w":24,"h":24}},
+      {"id":"goomba","name":"Goomba","category":"enemies","operation":"object","kind":"enemy","animation":"enemy.goomba.walk","preview":"enemy.enemy-walker.basic.frame_0","dimensions":{"w":34,"h":34}},
+      {"id":"overground_terrain","name":"Overground Terrain","category":"terrain","operation":"terrainBrush","kind":"terrain","family":"terrain.overground","preview":"map.terrain.overground.grass_top.middle"},
+      {"id":"pipe","name":"Pipe","category":"system","operation":"construction","kind":"pipe","family":"pipe.vertical","preview":"map.pipe.vertical.mouth.left"},
+      {"id":"ladder","name":"Ladder","category":"system","operation":"construction","kind":"climbZone","family":"ladder.vertical","preview":"map.ladder.top"},
+      {"id":"bush","name":"Bush","category":"decor","operation":"construction","kind":"decoration","family":"bush.span","preview":"map.bush.middle"},
+      {"id":"mushroom_platform","name":"Mushroom Platform","category":"platforms","operation":"construction","kind":"oneWayPlatform","family":"mushroom.platform","preview":"map.mushroom_platform.cap.middle"}
+    ]}
+
+
 def make_theme(src: Path) -> tuple[dict, dict]:
     tiles = src / "tiles.dat"
     if not tiles.is_file(): raise FileNotFoundError("missing required file: tiles.dat")
@@ -167,7 +182,7 @@ def make_theme(src: Path) -> tuple[dict, dict]:
       "collisionTruth":{"source":"MarioAI tiles.dat","tileSize":16,"assets":collisions},"sourceIndex":dict(source_index),
       "marioAI":{"tileSize":16,"mapTiles":map_tiles,"autotile":metadata["autotile"],"sheets":metadata["sheets"]},
       "summary":{"themeSourceCells":len(entries),"themeNonEmptyAssets":len(images),"themeEmptyCellsDiscarded":len(entries)-len(images),"embeddedImageAssets":len(images),"animationGroupCount":len(animations),"includeUIFont":False},
-      "recipes":{"platforms":{},"blocks":{}},"defaults":{"hud":{},"messages":{"welcome":["MarioAI-derived theme loaded."],"win":"Clear!"},"audio":{},"placement":{"grid":16}},"constructionCatalog":construction_catalog()}
+      "authoringCatalog":authoring_catalog(),"recipes":{"platforms":{},"blocks":{}},"defaults":{"hud":{},"messages":{"welcome":["MarioAI-derived theme loaded."],"win":"Clear!"},"audio":{},"placement":{"grid":16}},"constructionCatalog":construction_catalog()}
     manifest={"format":"marioai-tile-manifest-v1","tileSize":16,"source":"medovina/MarioAI src/engine/resources","tiles":map_tiles}
     return theme, manifest
 

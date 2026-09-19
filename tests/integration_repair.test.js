@@ -105,12 +105,14 @@ c=context({themePack:theme,cart:{assetCatalog:theme.assetCatalog},images:{},terr
 load(c,editor,['semanticAssetCategory','mapTilePaletteCategory','paletteCategoryForAsset','shortNameForValue','paletteMeta']);
 assert.equal(vm.runInContext('paletteMeta',c)('terrainAsset:'+mappedBlock,mappedBlock).cat,'blocks');
 
-// Every explicit manual-family asset has one family card and no generic duplicate.
-c=context({themePack:theme,cart:{assets:theme.assets,assetCatalog:theme.assetCatalog,recipes:{platforms:{},blocks:{}}},plain:o=>!!o&&typeof o==='object'&&!Array.isArray(o),animationGroupsForTheme:()=>({}),isSupportedWalkerAnimation:()=>false,platformTemplateMap:()=>new Map(),terrainMapForAsset:id=>theme.collisionTruth.assets[id]||null});
-load(c,editor,['semanticAssetCategory','mapTilePaletteCategory','paletteCategoryForAsset','primaryPaletteAsset','recipeImageKeys','insertOptionEntries']);
+// MarioAI's declared authoring vocabulary replaces raw manual-family asset cards.
+c=context({themePack:theme,cart:{assets:theme.assets,assetCatalog:theme.assetCatalog,recipes:{platforms:{},blocks:{}}}});
+load(c,editor,['insertOptionEntries']);
 const paletteEntries=vm.runInContext('insertOptionEntries',c)(),manualAssets=theme.constructionCatalog.families['terrain.overground'].manualAssets;
 assert.equal(manualAssets.length,19);
-for(const asset of manualAssets){const matches=paletteEntries.filter(e=>e.value.endsWith(':'+asset)||e.value==='asset:'+asset);assert.equal(matches.length,1,asset);assert.equal(matches[0].value,'terrainFamilyAsset:terrain.overground:'+asset)}
+assert.equal(paletteEntries.length,theme.authoringCatalog.entries.length);
+for(const asset of manualAssets)assert(!paletteEntries.some(e=>e.value.includes(asset)),asset+' leaked into the declared palette');
+assert(paletteEntries.some(e=>e.value==='authoring:overground_terrain'));
 
 // Input precedence and transient tool cleanup remain explicit editor contracts.
 assert(editor.includes("if(e.button===0&&spacePanHeld){drag={mode:'pan'"));
