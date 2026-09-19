@@ -23,4 +23,8 @@ const wide=box(32,0);wide.w=32;wide.it.obj.w=32;wide.signature=sandbox.collision
 assert.equal(wide.signature,cells[0].signature,'display geometry does not split otherwise identical adjacent collision');
 assert.equal(sandbox.connectedCollisionGroups([cells[0],cells[1],wide]).length,1);
 assert(source.includes('if(!isHitboxHelper(it))drawSelection(it)'),'selection does not redraw each helper cell');
+const slab=[];for(let y=0;y<20;y++)for(let x=0;x<25;x++){const cell=box(x*16,y*16);cell.signature=sandbox.collisionDisplaySignature(cell.it,cell);slab.push(cell)}
+assert.equal(slab.length,500);assert.deepEqual(Array.from(sandbox.connectedCollisionGroups(slab),g=>g.length),[500],'large uniform slab remains one display group');
+const drawBody=functionSource('drawMergedHitboxHelpers');assert(!drawBody.includes('connectedCollisionGroups('));assert(!drawBody.includes('uncoveredEdgeIntervals('));
+assert(source.includes('rebuildHelperDisplayCache();populateInsertCatalog()'),'map rebuild refreshes cached helper geometry');
 console.log('editor collision display groups passed');
