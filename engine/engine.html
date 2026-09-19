@@ -313,7 +313,7 @@ window.addEventListener('unhandledrejection', e => {
 
    Current engine baseline:
    - player collision box: 34x48 px
-   - platform/floating block visual unit: usually 42 px
+   - floating/bonk block unit: 24 px (terrain dimensions stay independent)
    - standing jump peak: roughly 105-115 px above takeoff
    - running jump peak: roughly 115-130 px above takeoff
    - comfortable standing gap: about 120-145 px
@@ -325,7 +325,7 @@ window.addEventListener('unhandledrejection', e => {
    ============================================================ */
 const LEVEL_FUNDAMENTALS = {
   player:{w:34,h:48},
-  block:{w:42,h:42},
+  block:{w:24,h:24},
   jump:{standingPeak:112,runningPeak:126,standingGap:[120,145],runningGap:[165,205]},
   vertical:{bonkBottom:[85,115],highBonkBottom:[115,135],signClearance:60},
   notes:'Cartridge levels should use these as design rails, not strict rules.'
@@ -529,21 +529,21 @@ const DEMO_CART = {
     {x:4085,y:372,w:180,h:82,type:'ground'}
   ],
   floatingBlocks:[
-    {x:940,y:170,w:42,h:42,style:'glow',bob:0,powerup:'mushroom',message:['Mushroom block!','Grow, then bust brick blocks.']},
-    {x:990,y:170,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true},
-    {x:1180,y:188,w:42,h:42,style:'glow',bob:0,message:['Standing jump marker.','Can you bonk this cleanly?']},
-    {x:1230,y:188,w:42,h:42,style:'glow',bob:0,message:['Run-jump marker.','Speed should matter here.']},
-    {x:1420,y:302,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true},
-    {x:1470,y:302,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true},
-    {x:1520,y:302,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true},
-    {x:1570,y:302,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true},
-    {x:1770,y:268,w:42,h:42,style:'glow',bob:0,message:['Short landing test.','Not every jump is max distance.']},
-    {x:2860,y:242,w:42,h:42,style:'glow',bob:0,message:['Second half!','Longer meadow run.']},
-    {x:2910,y:242,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true},
-    {x:3230,y:262,w:42,h:42,style:'glow',bob:0},
-    {x:3280,y:262,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true},
-    {x:3715,y:188,w:42,h:42,style:'glow',bob:0,message:['Crest jump.','Keep the run clean.']},
-    {x:3765,y:188,w:42,h:42,style:'brick',bob:0,bustable:true,requiresBig:true}
+    {x:958,y:188,w:24,h:24,style:'glow',bob:0,powerup:'mushroom',message:['Mushroom block!','Grow, then bust brick blocks.']},
+    {x:990,y:188,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true},
+    {x:1198,y:206,w:24,h:24,style:'glow',bob:0,message:['Standing jump marker.','Can you bonk this cleanly?']},
+    {x:1230,y:206,w:24,h:24,style:'glow',bob:0,message:['Run-jump marker.','Speed should matter here.']},
+    {x:1456,y:320,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true},
+    {x:1488,y:320,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true},
+    {x:1520,y:320,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true},
+    {x:1552,y:320,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true},
+    {x:1779,y:286,w:24,h:24,style:'glow',bob:0,message:['Short landing test.','Not every jump is max distance.']},
+    {x:2878,y:260,w:24,h:24,style:'glow',bob:0,message:['Second half!','Longer meadow run.']},
+    {x:2910,y:260,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true},
+    {x:3248,y:280,w:24,h:24,style:'glow',bob:0},
+    {x:3280,y:280,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true},
+    {x:3733,y:206,w:24,h:24,style:'glow',bob:0,message:['Crest jump.','Keep the run clean.']},
+    {x:3765,y:206,w:24,h:24,style:'brick',bob:0,bustable:true,requiresBig:true}
   ],
   coins:[
     {x:292,y:292},{x:456,y:335},{x:505,y:335},{x:555,y:335},
@@ -1302,7 +1302,7 @@ function nearestSurfacePlacement(cart, desiredCenterX, halfWidth, radius){
 }
 function nearestSurfaceUnderBlock(cart, b){
   if(!finiteNumber(b.x) || !finiteNumber(b.y)) return null;
-  const w = finiteNumber(b.w) ? b.w : 42;
+  const w = finiteNumber(b.w) ? b.w : 24;
   const cx = b.x + w/2;
   const surfaces = cartPlatformSurfaces(cart);
   let best = null;
@@ -1311,7 +1311,7 @@ function nearestSurfaceUnderBlock(cart, b){
     const centerInside = cx >= p.x && cx <= p.x + p.w;
     const nearEdge = horizontalOverlap > Math.min(14, w * 0.45);
     if(!centerInside && !nearEdge) continue;
-    const bottom = b.y + (finiteNumber(b.h) ? b.h : 42);
+    const bottom = b.y + (finiteNumber(b.h) ? b.h : 24);
     const dy = Math.abs(p.y - bottom);
     const overlapScore = centerInside ? 0 : 30;
     const score = overlapScore + dy;
@@ -1399,7 +1399,7 @@ function normalizeFloatingBlockPlacements(cart, report){
   for(const b of cart.floatingBlocks){
     if(!isPlainObject(b) || b.anchor === 'raw') continue;
     if(!finiteNumber(b.x) || !finiteNumber(b.y)) continue;
-    const h = finiteNumber(b.h) ? b.h : 42;
+    const h = finiteNumber(b.h) ? b.h : 24;
     const surface = nearestSurfaceUnderBlock(cart, b);
     if(!surface) continue;
     const bottom = b.y + h;
@@ -1643,6 +1643,11 @@ function normalizeCart(raw){
   if(!cart.playerSpawn || typeof cart.playerSpawn.x !== 'number' || typeof cart.playerSpawn.y !== 'number') throw new Error('Cartridge missing playerSpawn.x / playerSpawn.y.');
   for(const name of ['platforms','floatingBlocks','coins','stars','enemies','signposts']){
     if(!Array.isArray(cart[name])) throw new Error('Cartridge field '+name+' must be an array.');
+  }
+  for(const block of cart.floatingBlocks){
+    if(!isPlainObject(block)) continue;
+    if(!finiteNumber(block.w)) block.w = LEVEL_FUNDAMENTALS.block.w;
+    if(!finiteNumber(block.h)) block.h = LEVEL_FUNDAMENTALS.block.h;
   }
   if(!isPlainObject(cart.portal)) throw new Error('Cartridge missing portal object.');
   // IMPORTANT: resourceScenery is map content, not theme/default engine garnish.
@@ -2789,8 +2794,8 @@ function spawnBlockBurst(b){
     blockBursts.push({
       x:cx + side * (5 + row * 2),
       y:cy - 6 + row * 5,
-      w:Math.max(6, Math.min(14, (b.w || 42) * (0.18 + (i%3)*0.035))),
-      h:Math.max(5, Math.min(12, (b.h || 42) * (0.14 + (row%3)*0.035))),
+      w:Math.max(6, Math.min(14, (b.w || 24) * (0.18 + (i%3)*0.035))),
+      h:Math.max(5, Math.min(12, (b.h || 24) * (0.14 + (row%3)*0.035))),
       vx:side * (1.25 + row * 0.22 + Math.random() * 0.9),
       vy:-3.8 - Math.random() * 1.7 + row * 0.45,
       rot:(Math.random() - 0.5) * 0.9,
