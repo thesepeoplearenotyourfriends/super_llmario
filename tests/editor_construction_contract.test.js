@@ -31,14 +31,31 @@ state.collisions.push({semanticFamily:terrain.id,semanticAuto:false,semanticCell
 C.applyTerrainEdit(state,terrain,new Set(['0,1']),true);
 assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).image,'manual.tile');
 assert.equal(state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0).semanticAuto,false);
-// An Auto stroke crossing the locked cell preserves it and resolves both neighbors around its occupancy.
+// An Auto stroke crossing the locked cell replaces it and resolves both neighbors around its occupancy.
 C.applyTerrainEdit(state,terrain,new Set(['1,0','2,0']),true);
 const locked=state.sprites.find(s=>s.semanticCellX===1&&s.semanticCellY===0),left=state.sprites.find(s=>s.semanticCellX===0&&s.semanticCellY===0),right=state.sprites.find(s=>s.semanticCellX===2&&s.semanticCellY===0);
-assert.equal(locked.image,'manual.tile');assert.equal(locked.semanticAuto,false);
+assert.equal(locked.image,'map.terrain.overground.grass_top.middle');assert.equal(locked.semanticAuto,true);
 assert.equal(left.semanticTopology,'0110');assert.equal(right.semanticTopology,'0001');
 C.applyTerrainEdit(state,terrain,new Set(['1,0']),false);
 assert(!state.sprites.some(s=>s.semanticCellX===1&&s.semanticCellY===0));
 console.log('terrain auto/manual contract passed');
+
+// Auto owns a traversed terrain cell: duplicates and legacy inventory sprites are replaced, not stacked.
+const terrainVisualAt=(state,x,y)=>state.sprites.filter(s=>(s.semanticFamily===terrain.id||(terrain.manualAssets||[]).includes(s.image))&&((s.semanticCellX===x&&s.semanticCellY===y)||(s.semanticCellX==null&&s.semanticCellY==null&&s.x===x*16&&s.y===y*16)));
+const terrainCollisionAt=(state,x,y)=>state.collisions.filter(s=>s.semanticFamily===terrain.id&&s.semanticCellX===x&&s.semanticCellY===y);
+state={sprites:[
+  {semanticFamily:terrain.id,semanticAuto:true,semanticCellX:0,semanticCellY:0,image:'map.terrain.overground.grass_top.left',x:0,y:0},
+  {semanticFamily:terrain.id,semanticAuto:true,semanticCellX:0,semanticCellY:0,image:'map.terrain.overground.grass_top.right',x:0,y:0},
+  {semanticFamily:terrain.id,semanticAuto:false,semanticCellX:0,semanticCellY:0,image:'map.terrain.overground.grass_top.alt_middle',x:0,y:0},
+  {image:'map.terrain.overground.dirt_fill.variant_0',x:0,y:0,w:16,h:16},
+  {image:'map.terrain.overground.rounded_corner.bottom_left',x:0,y:0,w:16,h:16},
+  {kind:'coin',x:0,y:0,w:16,h:16}
+],collisions:Array.from({length:5},()=>({semanticFamily:terrain.id,semanticAuto:true,semanticCellX:0,semanticCellY:0,x:0,y:0,w:16,h:16,type:'ground'}))};
+const autoPaintOrigin=()=>C.applyTerrainEdit(state,terrain,new Set(['0,0']),true);
+autoPaintOrigin();assert.equal(terrainVisualAt(state,0,0).length,1);assert.equal(terrainCollisionAt(state,0,0).length,1);assert.equal(terrainVisualAt(state,0,0)[0].image,'map.terrain.overground.grass_top.middle');
+for(let i=0;i<5;i++)autoPaintOrigin();assert.equal(terrainVisualAt(state,0,0).length,1);assert.equal(terrainCollisionAt(state,0,0).length,1);
+Object.assign(terrainVisualAt(state,0,0)[0],{semanticAuto:false,image:'map.terrain.overground.grass_top.alt_middle'});autoPaintOrigin();assert.equal(terrainVisualAt(state,0,0).length,1);assert.equal(terrainVisualAt(state,0,0)[0].semanticAuto,true);assert.equal(terrainVisualAt(state,0,0)[0].image,'map.terrain.overground.grass_top.middle');assert.equal(state.sprites.filter(s=>s.kind==='coin').length,1);
+console.log('terrain cell ownership contract passed');
 
 // Terrain brush interpolation follows traversed cells rather than filling bounds.
 const irregular=C.terrainStrokeCells([{x:1,y:1},{x:33,y:33},{x:65,y:33}],16);
