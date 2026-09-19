@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: super-llmario-release
@@ -16,6 +18,10 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - uses: actions/checkout@v4
@@ -46,3 +52,20 @@ jobs:
             --title "Super LLMario — Latest" \
             --notes "Automatically built from the latest main branch." \
             --latest
+
+      - name: Prepare Pages
+        run: |
+          mkdir -p dist/pages
+          cp dist/super_llmario.html dist/pages/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/pages
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
