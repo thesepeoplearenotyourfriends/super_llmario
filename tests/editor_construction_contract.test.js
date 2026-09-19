@@ -57,6 +57,16 @@ for(let i=0;i<5;i++)autoPaintOrigin();assert.equal(terrainVisualAt(state,0,0).le
 Object.assign(terrainVisualAt(state,0,0)[0],{semanticAuto:false,image:'map.terrain.overground.grass_top.alt_middle'});autoPaintOrigin();assert.equal(terrainVisualAt(state,0,0).length,1);assert.equal(terrainVisualAt(state,0,0)[0].semanticAuto,true);assert.equal(terrainVisualAt(state,0,0)[0].image,'map.terrain.overground.grass_top.middle');assert.equal(state.sprites.filter(s=>s.kind==='coin').length,1);
 console.log('terrain cell ownership contract passed');
 
+// Repainting an edge cell must not emit a second copy two cells away.
+state={sprites:[],collisions:[]};
+C.applyTerrainEdit(state,terrain,new Set(['0,0','1,0','2,0']),true);
+for(let i=0;i<5;i++)C.applyTerrainEdit(state,terrain,new Set(['0,0']),true);
+for(const x of [0,1,2]){
+  assert.equal(state.sprites.filter(s=>s.semanticFamily===terrain.id&&s.semanticCellX===x&&s.semanticCellY===0).length,1);
+  assert.equal(state.collisions.filter(s=>s.semanticFamily===terrain.id&&s.semanticCellX===x&&s.semanticCellY===0).length,1);
+}
+console.log('terrain retile radius contract passed');
+
 // Terrain brush interpolation follows traversed cells rather than filling bounds.
 const irregular=C.terrainStrokeCells([{x:1,y:1},{x:33,y:33},{x:65,y:33}],16);
 assert.deepEqual(irregular,new Set(['0,0','1,1','2,2','3,2','4,2']));
