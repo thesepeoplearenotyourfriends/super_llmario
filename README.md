@@ -2,9 +2,17 @@
 
 
 
+## Play or edit
+
+**Want to play?** Download [`super_llmario.html` from the latest GitHub Release](https://github.com/thesepeoplearenotyourfriends/super_llmario/releases/latest/download/super_llmario.html) and open that one file. The Release HTML is the self-contained, to-go build and starts with the MarioAI semantic reference experience.
+
+**Want to edit or mess around?** Clone this repository. The checkout is the editable workshop: engine, editor, themes, and maps remain independent source files. `engine/engine.html` stays standalone by booting its small engine-owned Physics Test Plains demo; use its load menu to open repository theme/map files. Run `python3 scripts/build_release.py` only when you need the packed `dist/super_llmario.html` release artifact.
+
+Repository source is not packed merely for distribution convenience. Canonical themes and maps stay in their normal files; packing belongs exclusively to the release build.
+
 **CURRENT GAMEPLAY STATE:**
 
-Normal engine startup uses the bundled MarioAI semantic theme and MarioAI reference map split documents. The engine-owned Physics Test Plains / Jump Test `DEMO_CART` remains a known-good legacy compatibility/demo fallback with:
+The downloadable Release HTML starts with the packed MarioAI semantic theme and MarioAI reference map. Editable `engine/engine.html` starts with the engine-owned Physics Test Plains / Jump Test `DEMO_CART`, a known-good legacy compatibility/demo level with:
 
 * working run/jump/fall tuning
 * standing and running jumps that feel fair

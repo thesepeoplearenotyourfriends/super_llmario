@@ -1,10 +1,9 @@
 'use strict';
-const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),childProcess=require('node:child_process');
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const engine=fs.readFileSync('engine/engine.html','utf8');
 
 function fn(source,name){const start=source.indexOf('function '+name+'(');assert(start>=0,'missing '+name);let paren=source.indexOf('(',start),pd=0,brace=-1;for(let i=paren;i<source.length;i++){if(source[i]==='(')pd++;else if(source[i]===')'&&!--pd){brace=source.indexOf('{',i);break}}let depth=0,quote='',escape=false;for(let i=brace;i<source.length;i++){const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue}if(ch==='"'||ch==="'"||ch==='`'){quote=ch;continue}if(ch==='{')depth++;else if(ch==='}'&&!--depth)return source.slice(start,i+1)}throw Error('unterminated '+name)}
 function constObject(source,name){const start=source.indexOf('const '+name+' =');assert(start>=0,'missing '+name);const brace=source.indexOf('{',start);let depth=0,quote='',escape=false;for(let i=brace;i<source.length;i++){const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue}if(ch==='"'||ch==="'"){quote=ch;continue}if(ch==='{')depth++;else if(ch==='}'&&!--depth)return vm.runInNewContext('('+source.slice(brace,i+1)+')')}throw Error('unterminated '+name)}
-function generatedDoc(source,name){const line=source.split('\n').find(value=>value.startsWith('const '+name+' = JSON.parse('));assert(line,'missing '+name);return vm.runInNewContext(line.slice(line.indexOf('=')+1,-1))}
 const cloneData=x=>JSON.parse(JSON.stringify(x));
 function mergeCartValue(base,incoming){if(Array.isArray(incoming))return cloneData(incoming);if(incoming&&typeof incoming==='object'){const out=base&&typeof base==='object'&&!Array.isArray(base)?cloneData(base):{};for(const k of Object.keys(incoming))out[k]=mergeCartValue(out[k],incoming[k]);return out}return incoming===undefined?cloneData(base):incoming}
 const defaults=constObject(engine,'ENGINE_DEFAULT_AUDIO');
@@ -14,16 +13,13 @@ vm.runInContext(['buildCartFromThemeAndMap','normalizeCart'].map(n=>fn(engine,n)
 const build=vm.runInContext('buildCartFromThemeAndMap',c),normalize=vm.runInContext('normalizeCart',c);
 const mapBase={format:'llmario-map-v1',theme:'test-theme',title:'Test',world:{width:100,groundY:90},playerSpawn:{x:1,y:2},platforms:[],floatingBlocks:[],coins:[],stars:[],enemies:[],signposts:[],portal:{x:80,y:20,w:10,h:20}};
 
-// Standalone startup embeds the authoritative split documents and composes
-// them through the existing split builder before the first animation frame.
-const defaultTheme=generatedDoc(engine,'DEFAULT_THEME_DOC'),defaultMap=generatedDoc(engine,'DEFAULT_MAP_DOC');
+// Editable source keeps canonical split documents external and boots the
+// durable demo; release packaging is tested separately.
 const sourceTheme=JSON.parse(fs.readFileSync('themes/theme_marioai_nonempty.llmtheme.txt','utf8')),sourceMap=JSON.parse(fs.readFileSync('maps/map_marioai_reference.llmmap.txt','utf8'));
-assert.deepEqual(cloneData(defaultTheme),sourceTheme);assert.deepEqual(cloneData(defaultMap),sourceMap);
-assert.equal(defaultTheme.id,'marioai-semantic-nonempty');assert.equal(defaultMap.theme,defaultTheme.id);
-const startup=engine.indexOf("if(!applyThemeMapIfReady()) throw new Error('Bundled default theme/map failed to initialize.')"),loop=engine.indexOf('engineBooted = true;\nloop();');
-assert(startup>=0&&startup<loop);assert(engine.includes('let ACTIVE_CART = DEMO_CART;'));assert(engine.includes('const base = raw.splitSource ? {audio:ENGINE_DEFAULT_AUDIO} : DEMO_CART;'));
-const defaultCart=build(defaultTheme,defaultMap);assert.deepEqual(cloneData(defaultCart.recipes),cloneData(defaultTheme.recipes));assert.notEqual(defaultCart.recipes.hero&&defaultCart.recipes.hero.prefab,'physicsMascot');
-childProcess.execFileSync('python',['scripts/sync_engine_default_content.py','--check'],{stdio:'pipe'});
+assert(!engine.includes(sourceTheme.title));assert(!engine.includes(sourceMap.title));
+assert(engine.includes('const PACKED_THEMES = [];'));assert(engine.includes('const PACKED_MAPS = [];'));
+assert(engine.includes('let ACTIVE_CART = DEMO_CART;'));assert(engine.includes('bootPackedReleaseOrDemo();'));assert(engine.includes('const base = raw.splitSource ? {audio:ENGINE_DEFAULT_AUDIO} : DEMO_CART;'));
+const defaultCart=build(sourceTheme,sourceMap);assert.deepEqual(cloneData(defaultCart.recipes),cloneData(sourceTheme.recipes));assert.notEqual(defaultCart.recipes.hero&&defaultCart.recipes.hero.prefab,'physicsMascot');
 
 // Split documents own their complete visual identity and map scenery.
 let cart=build({format:'llmario-theme-pack-v1',id:'test-theme',recipes:{hero:{prefab:'themeHero'}}},{...mapBase,resourceScenery:{shrubs:[{x:9}]}});
