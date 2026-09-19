@@ -99,7 +99,7 @@ Current built-in SFX hooks include:
 The audio system is intentionally ready for future music, but full MIDI parser/drop-folder/song scheduling is not part of the current baseline.
 
 CURRENT GAMEPLAY STATE:
-Normal engine startup uses the bundled MarioAI semantic theme and MarioAI reference map split documents. The engine-owned Physics Test Plains / Jump Test `DEMO_CART` remains a known-good legacy compatibility/demo fallback with:
+The GitHub Release HTML starts with the packed MarioAI semantic theme and MarioAI reference map split documents. Editable `engine/engine.html` starts with the engine-owned Physics Test Plains / Jump Test `DEMO_CART`, which remains a known-good legacy compatibility/demo fallback with:
 
 * working run/jump/fall tuning
 * standing and running jumps that feel fair
@@ -196,6 +196,8 @@ that operation rather than allowing the PR to become blocked.
 ## Standalone runtime invariant
 
 engine/engine.html and editor/editor.html are standalone applications.
+
+The repository is editable source/workshop form. The GitHub Release HTML is the self-contained/to-go build produced by `scripts/build_release.py`. Nothing should be embedded into editable engine source merely for distribution convenience; distribution packing belongs to the release build.
 
 Do not introduce runtime fetch(), XMLHttpRequest, dynamic import(), script/link
 dependencies, or any other runtime loading of sibling repository files unless
