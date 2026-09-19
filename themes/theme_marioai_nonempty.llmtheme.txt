@@ -19801,6 +19801,16 @@
             "right": "map.mushroom_platform.stem.right"
           }
         },
+        "authoringBinding": {
+          "noun": "oneWayPlatform",
+          "path": [
+            "platforms"
+          ],
+          "depth": 4,
+          "defaults": {
+            "collisionOnly": true
+          }
+        },
         "ascii": null
       }
     }
