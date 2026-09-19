@@ -30,10 +30,10 @@ assert.deepEqual(cloneData(cart.recipes),{hero:{prefab:'themeHero'}});
 assert.deepEqual(cloneData(cart.resourceScenery.shrubs),[{x:9}]);
 assert.deepEqual(cloneData(cart.resourceScenery.trees),[]);
 
-// Floating blocks without authored geometry use the 24px world unit, while
-// deliberate custom dimensions remain untouched.
+// Every floating block uses the canonical 24px world footprint, including
+// existing maps whose source artwork dimensions leaked into block geometry.
 cart=normalize({...mapBase,format:'llmcart-toybox-recipe',floatingBlocks:[{x:10,y:20},{x:40,y:20,w:32,h:18}]});
-assert.deepEqual(cloneData(cart.floatingBlocks),[{x:10,y:20,w:24,h:24},{x:40,y:20,w:32,h:18}]);
+assert.deepEqual(cloneData(cart.floatingBlocks),[{x:10,y:20,w:24,h:24},{x:40,y:20,w:24,h:24}]);
 
 // Engine defaults survive absent/partial theme audio, while map keys win last.
 cart=build({format:'llmario-theme-pack-v1',id:'test-theme',recipes:{}},mapBase);
