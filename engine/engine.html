@@ -3916,7 +3916,14 @@ function drawPlatform(p){
     prefabSlopePlatform({}, p);
     return;
   }
-  drawRecipe('platforms.'+(p.type || 'ground'), p);
+  if(!drawRecipe('platforms.'+(p.type || 'ground'), p)) drawDefaultPlatform(p);
+}
+function drawDefaultPlatform(p){
+  const x=Math.round(worldX(p.x)),y=Math.round(p.y),w=Math.round(p.w||84),h=Math.round(p.h||42);
+  if(x>W+120||x+w<-120)return;
+  ctx.fillStyle='#6b6258';ctx.fillRect(x,y,w,h);
+  ctx.fillStyle='#aaa197';ctx.fillRect(x,y,w,Math.min(6,h));
+  ctx.strokeStyle='#403b36';ctx.lineWidth=2;ctx.strokeRect(x+1,y+1,Math.max(0,w-2),Math.max(0,h-2));
 }
 function prefabImageSlopePlatform(r,p){
   const x = worldX(p.x);
@@ -4543,6 +4550,7 @@ function drawFlowers(){
   const colors = fr.colors || ['#e2fcff','#ffd9fb','#ffe778','#a7f8ff'];
   let n = 0;
   for(const p of platforms){
+    if(p.collisionOnly || p.editorHitbox || p.editorCollisionOnly) continue;
     const step = p.w > 180 ? 58 : 52;
     const start = p.x + 22;
     const end = p.x + p.w - 20;
@@ -4621,7 +4629,7 @@ function drawRowCameraOverlay(){
   }
   ctx.restore();
 }
-function drawHUD(){ drawRecipe('hud'); }
+function drawHUD(){ if(!drawRecipe('hud')) prefabHud({}); }
 function prefabHud(r){
   const g = ctx.createLinearGradient(0,0,0,52); g.addColorStop(0,r.top||'#0a84e6'); g.addColorStop(1,r.bottom||'#04306d');
   rr(2,2,W-4,52,14,g,r.edge||'#91eeff',2);
