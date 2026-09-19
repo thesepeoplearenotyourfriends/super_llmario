@@ -19624,7 +19624,11 @@
             "0110": "map.terrain.overground.grass_top.left",
             "0011": "map.terrain.overground.grass_top.right",
             "0111": "map.terrain.overground.grass_top.middle",
-            "1111": "map.terrain.overground.dirt_fill.variant_0"
+            "1000": "map.terrain.overground.dirt_fill.variant_1",
+            "1100": "map.terrain.overground.dirt_fill.variant_1",
+            "1001": "map.terrain.overground.dirt_fill.variant_1",
+            "1101": "map.terrain.overground.dirt_fill.variant_1",
+            "1111": "map.terrain.overground.dirt_fill.variant_1"
           },
           "topologyFallback": {
             "strategy": "procedural",

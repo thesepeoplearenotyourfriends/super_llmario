@@ -19,4 +19,8 @@ assert.equal(sandbox.collisionRectsTouch(cells[0],cells[1]),true);
 assert.equal(sandbox.collisionRectsTouch(cells[0],cells[5]),false,'corner-only contact is not edge adjacency');
 assert.equal(JSON.stringify(sandbox.uncoveredEdgeIntervals([cells[0],cells[1]],'v',16,0,16,1)),'[]','shared edge is omitted from the group outline');
 assert.equal(JSON.stringify(sandbox.uncoveredEdgeIntervals([cells[0],cells[1]],'h',0,0,16,-1)),'[[0,16]]','outer edge remains in the group outline');
+const wide=box(32,0);wide.w=32;wide.it.obj.w=32;wide.signature=sandbox.collisionDisplaySignature(wide.it,wide);
+assert.equal(wide.signature,cells[0].signature,'display geometry does not split otherwise identical adjacent collision');
+assert.equal(sandbox.connectedCollisionGroups([cells[0],cells[1],wide]).length,1);
+assert(source.includes('if(!isHitboxHelper(it))drawSelection(it)'),'selection does not redraw each helper cell');
 console.log('editor collision display groups passed');
