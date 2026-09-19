@@ -99,7 +99,7 @@ Current built-in SFX hooks include:
 The audio system is intentionally ready for future music, but full MIDI parser/drop-folder/song scheduling is not part of the current baseline.
 
 CURRENT GAMEPLAY STATE:
-Current built-in cartridge is the Physics Test Plains / Jump Test style level. It is a known-good gameplay baseline with:
+Normal engine startup uses the bundled MarioAI semantic theme and MarioAI reference map split documents. The engine-owned Physics Test Plains / Jump Test `DEMO_CART` remains a known-good legacy compatibility/demo fallback with:
 
 * working run/jump/fall tuning
 * standing and running jumps that feel fair

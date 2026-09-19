@@ -9,8 +9,30 @@ const theme=JSON.parse(fs.readFileSync('themes/theme_marioai_nonempty.llmtheme.t
 const fixture=JSON.parse(fs.readFileSync('tests/fixtures/raw_bush.llmmap.txt','utf8'));
 const engineAudio=constObject(engine,'ENGINE_DEFAULT_AUDIO');
 
+// Player animation families keep their identity, while rendering scale is
+// shared by gameplay size class. Different opaque frame extents therefore do
+// not produce a skin-specific source-pixel scale.
+const imageDraws=[];
+let c=context({ACTIVE_CART:{_animationGroups:{}},CART_IMAGE_CACHE:{
+  'mario.player-motion.idle_walk_0':{ready:true,w:32,h:32,visibleBounds:{x:5,y:3,w:20,h:28},img:{naturalWidth:32,naturalHeight:32}},
+  'firemario.player-motion.idle_walk_0':{ready:true,w:32,h:32,visibleBounds:{x:3,y:1,w:26,h:30},img:{naturalWidth:32,naturalHeight:32}},
+  'racoonmario.player-motion.idle_walk_0':{ready:true,w:32,h:32,visibleBounds:{x:1,y:2,w:30,h:29},img:{naturalWidth:32,naturalHeight:32}},
+  'smallmario.player-motion.idle_walk_0':{ready:true,w:16,h:16,visibleBounds:{x:2,y:1,w:12,h:15},img:{naturalWidth:16,naturalHeight:16}}
+},worldX:x=>x,ctx:{imageSmoothingEnabled:false,globalAlpha:1,save(){},restore(){},translate(){},scale(){},drawImage(...args){imageDraws.push(args)}}});
+vm.runInContext('const THEMED_FAMILY_BOUNDS=Object.create(null)',c);load(c,engine,['themedAssetFamily','themedScaleFamily','rebuildThemedFamilyBounds','cartImage','cartImageRecord','drawThemedAsset']);
+const scaleFamily=vm.runInContext('themedScaleFamily',c);
+for(const prefix of ['mario','firemario','racoonmario'])assert.equal(scaleFamily(prefix+'.player-motion.idle_walk_0'),'player-big');
+assert.equal(scaleFamily('smallmario.player-motion.idle_walk_0'),'player-small');
+assert.notEqual(scaleFamily('enemy.green_koopa.walk.frame_0'),'player-big');
+vm.runInContext('rebuildThemedFamilyBounds()',c);
+for(const id of ['mario.player-motion.idle_walk_0','firemario.player-motion.idle_walk_0','racoonmario.player-motion.idle_walk_0'])vm.runInContext('drawThemedAsset',c)(id,{x:0,y:0,w:38,h:60});
+vm.runInContext('drawThemedAsset',c)('smallmario.player-motion.idle_walk_0',{x:0,y:0,w:34,h:48});
+const sourcePixelScales=imageDraws.map(args=>args[7]/args[3]);
+assert(sourcePixelScales.slice(0,3).every(scale=>Math.abs(scale-sourcePixelScales[0])<1e-9));
+assert.notEqual(sourcePixelScales[3],sourcePixelScales[0]);
+
 // Cartbench's real save/reload functions retain an ordinary explicit canonical sprite.
-let c=context({themePack:theme,fileName:'fixture',mapFileName:'fixture',plain:o=>!!o&&typeof o==='object'&&!Array.isArray(o),cleanExportBaseName:s=>String(s).replace(/[^a-z0-9_-]+/ig,'_')});
+c=context({themePack:theme,fileName:'fixture',mapFileName:'fixture',plain:o=>!!o&&typeof o==='object'&&!Array.isArray(o),cleanExportBaseName:s=>String(s).replace(/[^a-z0-9_-]+/ig,'_')});
 load(c,editor,['themeIdFromSource','buildThinMapFromCart','cartFromThemeAndMap']);
 c.cartFromThemeAndMap=vm.runInContext('cartFromThemeAndMap',c);c.buildThinMapFromCart=vm.runInContext('buildThinMapFromCart',c);
 const loaded=c.cartFromThemeAndMap(theme,fixture),saved=c.buildThinMapFromCart(loaded);
@@ -44,6 +66,17 @@ c=context({player:{big:true},ACTIVE_CART:{recipes:{}},blockBursts:[],shake:0,boo
 
 // Attachment handedness follows the canonical source wing: left plain, right mirrored.
 const wingDraws=[];c=context({tick:0,animationAsset:()=> 'enemy.wing.flap.frame_0',drawThemedAsset:(id,box,opts)=>wingDraws.push({id,box,opts})});load(c,engine,['drawEnemyAttachments']);vm.runInContext('drawEnemyAttachments',c)({alive:true,winged:true,state:'walking',x:40,y:60,w:34});assert.equal(wingDraws[0].opts,undefined);assert.equal(wingDraws[1].opts.mirror,true);
+
+// Walking and knocked-out Koopas use the same full-silhouette render box;
+// actual shell states remain on their smaller collision/render box.
+const koopaDraws=[];c=context({tick:0,flowerEnemy:()=>false,shellCapableEnemy:e=>e.kind.includes('koopa'),enemyAnimationGroup:()=> 'enemy.green_koopa.walk',animationFrames:()=>[],cartImageRecord:()=>null,animationAsset:()=> 'enemy.green_koopa.walk.frame_0',drawThemedAsset:(id,box)=>{koopaDraws.push({...box});return true},drawRecipe:()=>{}});load(c,engine,['drawBlob']);
+for(const kind of ['green_koopa','red_koopa']){
+  const walking={kind,alive:true,flat:0,state:'walking',x:20,y:30,w:28,h:38,vx:1};
+  vm.runInContext('drawBlob',c)(walking);
+  vm.runInContext('drawBlob',c)({...walking,state:'knockedOut'});
+  assert.deepEqual(koopaDraws.at(-1),koopaDraws.at(-2));
+}
+const visualShell={kind:'green_koopa',alive:true,flat:0,state:'shellMoving',x:20,y:40,w:28,h:24,shellVx:2};vm.runInContext('drawBlob',c)(visualShell);const shellBox=koopaDraws.at(-1);assert.deepEqual([shellBox.x,shellBox.y,shellBox.w,shellBox.h],[20,40,28,24]);
 
 // Swept relative-motion classification handles stationary, rising, and falling enemies.
 c=context({player:{y:60,h:48},finiteNumber:Number.isFinite});load(c,engine,['isStompContact']);const stompContact=vm.runInContext('isStompContact',c),koopa={y:100};assert(stompContact(koopa,50,100));c.player.y=56;koopa.y=94;assert(stompContact(koopa,50,100));c.player.y=60;koopa.y=106;assert(stompContact(koopa,50,100));c.player.y=84;koopa.y=100;assert.equal(stompContact(koopa,80,100),false);c.player.y=116;assert.equal(stompContact(koopa,120,100),false);
