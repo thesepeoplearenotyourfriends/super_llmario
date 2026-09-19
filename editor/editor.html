@@ -601,7 +601,7 @@ function roundish(v){return Math.round(v*100)/100}
 function grid(){return Math.max(0,num(els.snapMode.value,0))}
 function snap(v,spacing=grid(),rounder=Math.round){return spacing>0?rounder(v/spacing)*spacing:roundish(v)}
 function snapPoint(x,y,spacing=grid(),rounder=Math.round){return {x:snap(x,spacing,rounder),y:snap(y,spacing,rounder)}}
-function setObjectRectXY(it,x,y,useSnap=false){if(useSnap){const p=snapPoint(x,y);x=p.x;y=p.y}const o=it.obj,sz=visualSize(it),a=anchorFor(it);o.x=roundish(x+sz.w*a.x);const base=roundish(y+sz.h*a.y);if(it.kind==='scenery'&&o.surfaceY!=null&&o.surface&&(!('y'in o)||Math.abs(num(o.y))<1)){o.surfaceY=roundish(base-num(o.yOffset,0));}else{o.y=base}helperDisplayDirty=true}
+function setObjectRectXY(it,x,y,useSnap=false){if(useSnap){const p=snapPoint(x,y);x=p.x;y=p.y}const o=it.obj,sz=visualSize(it),a=anchorFor(it);o.x=roundish(x+sz.w*a.x);const base=roundish(y+sz.h*a.y);if(it.kind==='scenery'&&o.surfaceY!=null&&o.surface&&(!('y'in o)||Math.abs(num(o.y))<1)){o.surfaceY=roundish(base-num(o.yOffset,0));}else{o.y=base}if(isHitboxHelper(it))helperDisplayDirty=true}
 function worldBounds(){let w=num(cart&&cart.world&&cart.world.width,0),h=num(cart&&cart.world&&cart.world.height,0);for(const it of objects){const r=objectRect(it);w=Math.max(w,r.x+r.w+200);h=Math.max(h,r.y+r.h+160)}return {w:Math.max(1200,w||2400),h:Math.max(700,h||900)}}
 function rowsList(){return cart&&cart.world&&Array.isArray(cart.world.rows)?cart.world.rows:[]}
 function rowY(r,i){return hasNum(r.cameraY)?num(r.cameraY):(hasNum(r.y)?num(r.y):i*rowGap())}
