@@ -4,7 +4,7 @@
 
 **CURRENT GAMEPLAY STATE:**
 
-Current built-in cartridge is the Physics Test Plains / Jump Test style level. It is a known-good gameplay baseline with:
+Normal engine startup uses the bundled MarioAI semantic theme and MarioAI reference map split documents. The engine-owned Physics Test Plains / Jump Test `DEMO_CART` remains a known-good legacy compatibility/demo fallback with:
 
 * working run/jump/fall tuning
 * standing and running jumps that feel fair
