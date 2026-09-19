@@ -181,68 +181,6 @@
     }
   },
   "resources": {
-    "actor.unresolved-pose.002": {
-      "kind": "actor",
-      "role": "actor.unresolved-pose.002",
-      "purpose": "Nonempty red-Koopa-row pose whose exact state or use is not established.",
-      "belongsTo": "enemy.red_koopa",
-      "image": {
-        "atlas": "enemy",
-        "rect": {
-          "x": 32,
-          "y": 0,
-          "w": 16,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 16,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "enemysheet.png",
-        "index": 2,
-        "cell": {
-          "x": 2,
-          "y": 0
-        }
-      }
-    },
-    "actor.unresolved-pose.018": {
-      "kind": "actor",
-      "role": "actor.unresolved-pose.018",
-      "purpose": "Nonempty green-Koopa-row pose whose exact state or use is not established.",
-      "belongsTo": "enemy.green_koopa",
-      "image": {
-        "atlas": "enemy",
-        "rect": {
-          "x": 32,
-          "y": 32,
-          "w": 16,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 16,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "enemysheet.png",
-        "index": 18,
-        "cell": {
-          "x": 2,
-          "y": 1
-        }
-      }
-    },
     "background.black_fill": {
       "kind": "decoration",
       "role": "background.black_fill",
@@ -3591,6 +3529,37 @@
         }
       }
     },
+    "enemy.walker.armored.green.turnaround": {
+      "kind": "actor",
+      "role": "enemy.walker.armored.green.turnaround",
+      "purpose": "Green Koopa turnaround frame used by the existing walker presentation when changing direction.",
+      "belongsTo": "enemy.green_koopa",
+      "image": {
+        "atlas": "enemy",
+        "rect": {
+          "x": 32,
+          "y": 32,
+          "w": 16,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 16,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "enemysheet.png",
+        "index": 18,
+        "cell": {
+          "x": 2,
+          "y": 1
+        }
+      }
+    },
     "enemy.walker.armored.red.frame_0": {
       "kind": "actor",
       "role": "enemy.walker.armored.red.frame_0",
@@ -3773,6 +3742,37 @@
         "index": 6,
         "cell": {
           "x": 6,
+          "y": 0
+        }
+      }
+    },
+    "enemy.walker.armored.red.turnaround": {
+      "kind": "actor",
+      "role": "enemy.walker.armored.red.turnaround",
+      "purpose": "Red Koopa turnaround frame used by the existing walker presentation when changing direction.",
+      "belongsTo": "enemy.red_koopa",
+      "image": {
+        "atlas": "enemy",
+        "rect": {
+          "x": 32,
+          "y": 0,
+          "w": 16,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 16,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "enemysheet.png",
+        "index": 2,
+        "cell": {
+          "x": 2,
           "y": 0
         }
       }
@@ -3994,41 +3994,10 @@
         }
       }
     },
-    "goal.actor.frame_0": {
+    "goal.actor.celebration.frame_0": {
       "kind": "actor",
-      "role": "goal.actor.frame_0",
-      "purpose": "A frame or component of goal.actor.",
-      "belongsTo": "goal.actor",
-      "image": {
-        "atlas": "goal",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "princess.png",
-        "index": 0,
-        "cell": {
-          "x": 0,
-          "y": 0
-        }
-      }
-    },
-    "goal.actor.frame_1": {
-      "kind": "actor",
-      "role": "goal.actor.frame_1",
-      "purpose": "A frame or component of goal.actor.",
+      "role": "goal.actor.celebration.frame_0",
+      "purpose": "First princess/goal-actor celebration or jump-for-joy frame.",
       "belongsTo": "goal.actor",
       "image": {
         "atlas": "goal",
@@ -4056,10 +4025,10 @@
         }
       }
     },
-    "goal.unresolved-pose.02": {
+    "goal.actor.celebration.frame_1": {
       "kind": "actor",
-      "role": "goal.unresolved-pose.02",
-      "purpose": "Nonempty goal-actor pose whose exact state or use is not established.",
+      "role": "goal.actor.celebration.frame_1",
+      "purpose": "Second princess/goal-actor celebration or jump-for-joy frame.",
       "belongsTo": "goal.actor",
       "image": {
         "atlas": "goal",
@@ -4083,6 +4052,37 @@
         "index": 2,
         "cell": {
           "x": 2,
+          "y": 0
+        }
+      }
+    },
+    "goal.actor.idle": {
+      "kind": "actor",
+      "role": "goal.actor.idle",
+      "purpose": "Standing idle presentation for the princess/goal actor.",
+      "belongsTo": "goal.actor",
+      "image": {
+        "atlas": "goal",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "princess.png",
+        "index": 0,
+        "cell": {
+          "x": 0,
           "y": 0
         }
       }
@@ -5761,6 +5761,37 @@
         }
       }
     },
+    "player.carrying.fast_jump.alternate_tail": {
+      "kind": "actor",
+      "role": "player.carrying.fast_jump.alternate_tail",
+      "purpose": "Alternate tail-position frame for the carrying/raccoon-player fast-jump or airborne state; runtime selection and timing are intentionally unspecified.",
+      "belongsTo": "player.carrying",
+      "image": {
+        "atlas": "player.carrying",
+        "rect": {
+          "x": 480,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "racoonmariosheet.png",
+        "index": 15,
+        "cell": {
+          "x": 15,
+          "y": 0
+        }
+      }
+    },
     "player.carrying.fast_run_0": {
       "kind": "actor",
       "role": "player.carrying.fast_run_0",
@@ -5916,6 +5947,37 @@
         }
       }
     },
+    "player.carrying.kick": {
+      "kind": "actor",
+      "role": "player.carrying.kick",
+      "purpose": "Carrying/raccoon-player kicking an object pose.",
+      "belongsTo": "player.carrying",
+      "image": {
+        "atlas": "player.carrying",
+        "rect": {
+          "x": 416,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "racoonmariosheet.png",
+        "index": 13,
+        "cell": {
+          "x": 13,
+          "y": 0
+        }
+      }
+    },
     "player.carrying.skid": {
       "kind": "actor",
       "role": "player.carrying.skid",
@@ -5947,10 +6009,10 @@
         }
       }
     },
-    "player.carrying.unresolved-pose.08": {
+    "player.carrying.slide": {
       "kind": "actor",
-      "role": "player.carrying.unresolved-pose.08",
-      "purpose": "Nonempty player.carrying pose whose exact state or use is not established.",
+      "role": "player.carrying.slide",
+      "purpose": "Carrying/raccoon-player ground-slide or butt-slide pose.",
       "belongsTo": "player.carrying",
       "image": {
         "atlas": "player.carrying",
@@ -5974,68 +6036,6 @@
         "index": 8,
         "cell": {
           "x": 8,
-          "y": 0
-        }
-      }
-    },
-    "player.carrying.unresolved-pose.13": {
-      "kind": "actor",
-      "role": "player.carrying.unresolved-pose.13",
-      "purpose": "Nonempty player.carrying pose whose exact state or use is not established.",
-      "belongsTo": "player.carrying",
-      "image": {
-        "atlas": "player.carrying",
-        "rect": {
-          "x": 416,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "racoonmariosheet.png",
-        "index": 13,
-        "cell": {
-          "x": 13,
-          "y": 0
-        }
-      }
-    },
-    "player.carrying.unresolved-pose.15": {
-      "kind": "actor",
-      "role": "player.carrying.unresolved-pose.15",
-      "purpose": "Nonempty player.carrying pose whose exact state or use is not established.",
-      "belongsTo": "player.carrying",
-      "image": {
-        "atlas": "player.carrying",
-        "rect": {
-          "x": 480,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "racoonmariosheet.png",
-        "index": 15,
-        "cell": {
-          "x": 15,
           "y": 0
         }
       }
@@ -6098,68 +6098,6 @@
         "index": 2,
         "cell": {
           "x": 2,
-          "y": 0
-        }
-      }
-    },
-    "player.fire.unresolved-pose.08": {
-      "kind": "actor",
-      "role": "player.fire.unresolved-pose.08",
-      "purpose": "Nonempty player.fire pose whose exact state or use is not established.",
-      "belongsTo": "player.fire",
-      "image": {
-        "atlas": "player.fire",
-        "rect": {
-          "x": 256,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "firemariosheet.png",
-        "index": 8,
-        "cell": {
-          "x": 8,
-          "y": 0
-        }
-      }
-    },
-    "player.fire.unresolved-pose.13": {
-      "kind": "actor",
-      "role": "player.fire.unresolved-pose.13",
-      "purpose": "Nonempty player.fire pose whose exact state or use is not established.",
-      "belongsTo": "player.fire",
-      "image": {
-        "atlas": "player.fire",
-        "rect": {
-          "x": 416,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "firemariosheet.png",
-        "index": 13,
-        "cell": {
-          "x": 13,
           "y": 0
         }
       }
@@ -6474,6 +6412,37 @@
         }
       }
     },
+    "player.normal.kick": {
+      "kind": "actor",
+      "role": "player.normal.kick",
+      "purpose": "Normal/large player kicking an object pose.",
+      "belongsTo": "player.normal",
+      "image": {
+        "atlas": "player.normal",
+        "rect": {
+          "x": 416,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "mariosheet.png",
+        "index": 13,
+        "cell": {
+          "x": 13,
+          "y": 0
+        }
+      }
+    },
     "player.normal.skid": {
       "kind": "actor",
       "role": "player.normal.skid",
@@ -6505,10 +6474,10 @@
         }
       }
     },
-    "player.normal.unresolved-pose.08": {
+    "player.normal.slide": {
       "kind": "actor",
-      "role": "player.normal.unresolved-pose.08",
-      "purpose": "Nonempty player.normal pose whose exact state or use is not established.",
+      "role": "player.normal.slide",
+      "purpose": "Normal/large player ground-slide or butt-slide pose.",
       "belongsTo": "player.normal",
       "image": {
         "atlas": "player.normal",
@@ -6532,37 +6501,6 @@
         "index": 8,
         "cell": {
           "x": 8,
-          "y": 0
-        }
-      }
-    },
-    "player.normal.unresolved-pose.13": {
-      "kind": "actor",
-      "role": "player.normal.unresolved-pose.13",
-      "purpose": "Nonempty player.normal pose whose exact state or use is not established.",
-      "belongsTo": "player.normal",
-      "image": {
-        "atlas": "player.normal",
-        "rect": {
-          "x": 416,
-          "y": 0,
-          "w": 32,
-          "h": 32
-        }
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "mariosheet.png",
-        "index": 13,
-        "cell": {
-          "x": 13,
           "y": 0
         }
       }
@@ -6939,6 +6877,37 @@
         }
       }
     },
+    "player.powered.kick": {
+      "kind": "actor",
+      "role": "player.powered.kick",
+      "purpose": "Fire/powered-player kicking an object pose.",
+      "belongsTo": "player.powered",
+      "image": {
+        "atlas": "player.fire",
+        "rect": {
+          "x": 416,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "firemariosheet.png",
+        "index": 13,
+        "cell": {
+          "x": 13,
+          "y": 0
+        }
+      }
+    },
     "player.powered.skid": {
       "kind": "actor",
       "role": "player.powered.skid",
@@ -6966,6 +6935,37 @@
         "index": 9,
         "cell": {
           "x": 9,
+          "y": 0
+        }
+      }
+    },
+    "player.powered.slide": {
+      "kind": "actor",
+      "role": "player.powered.slide",
+      "purpose": "Fire/powered-player ground-slide or butt-slide pose.",
+      "belongsTo": "player.powered",
+      "image": {
+        "atlas": "player.fire",
+        "rect": {
+          "x": 256,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "firemariosheet.png",
+        "index": 8,
+        "cell": {
+          "x": 8,
           "y": 0
         }
       }
@@ -7249,6 +7249,37 @@
         }
       }
     },
+    "player.small.kick": {
+      "kind": "actor",
+      "role": "player.small.kick",
+      "purpose": "Small-player kicking an object pose.",
+      "belongsTo": "player.small",
+      "image": {
+        "atlas": "player.small",
+        "rect": {
+          "x": 160,
+          "y": 0,
+          "w": 16,
+          "h": 16
+        }
+      },
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "smallmariosheet.png",
+        "index": 10,
+        "cell": {
+          "x": 10,
+          "y": 0
+        }
+      }
+    },
     "player.small.skid": {
       "kind": "actor",
       "role": "player.small.skid",
@@ -7280,10 +7311,10 @@
         }
       }
     },
-    "player.small.unresolved-pose.06": {
+    "player.small.slide": {
       "kind": "actor",
-      "role": "player.small.unresolved-pose.06",
-      "purpose": "Nonempty player.small pose whose exact state or use is not established.",
+      "role": "player.small.slide",
+      "purpose": "Small-player ground-slide or butt-slide pose.",
       "belongsTo": "player.small",
       "image": {
         "atlas": "player.small",
@@ -7307,37 +7338,6 @@
         "index": 6,
         "cell": {
           "x": 6,
-          "y": 0
-        }
-      }
-    },
-    "player.small.unresolved-pose.10": {
-      "kind": "actor",
-      "role": "player.small.unresolved-pose.10",
-      "purpose": "Nonempty player.small pose whose exact state or use is not established.",
-      "belongsTo": "player.small",
-      "image": {
-        "atlas": "player.small",
-        "rect": {
-          "x": 160,
-          "y": 0,
-          "w": 16,
-          "h": 16
-        }
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "smallmariosheet.png",
-        "index": 10,
-        "cell": {
-          "x": 10,
           "y": 0
         }
       }
@@ -9421,10 +9421,6 @@
     }
   },
   "families": {
-    "actor.unresolved-pose": {
-      "kind": "actor",
-      "purpose": "Visual resource family for actor.unresolved-pose."
-    },
     "background.black_fill": {
       "kind": "decoration",
       "purpose": "Solid-black background-fill family."
@@ -9581,10 +9577,6 @@
       "kind": "actor",
       "purpose": "Visual resource family for goal.actor."
     },
-    "goal.unresolved-pose": {
-      "kind": "actor",
-      "purpose": "Visual resource family for goal.unresolved-pose."
-    },
     "hill.large": {
       "kind": "decoration",
       "purpose": "Visual resource family for hill.large."
@@ -9653,25 +9645,9 @@
       "kind": "actor",
       "purpose": "Visual resource family for player.carrying."
     },
-    "player.carrying.unresolved-pose": {
-      "kind": "actor",
-      "purpose": "Visual resource family for player.carrying.unresolved-pose."
-    },
-    "player.fire": {
-      "kind": "actor",
-      "purpose": "Visual resource family for player.fire."
-    },
-    "player.fire.unresolved-pose": {
-      "kind": "actor",
-      "purpose": "Visual resource family for player.fire.unresolved-pose."
-    },
     "player.normal": {
       "kind": "actor",
       "purpose": "Visual resource family for player.normal."
-    },
-    "player.normal.unresolved-pose": {
-      "kind": "actor",
-      "purpose": "Visual resource family for player.normal.unresolved-pose."
     },
     "player.powered": {
       "kind": "actor",
@@ -9680,10 +9656,6 @@
     "player.small": {
       "kind": "actor",
       "purpose": "Visual resource family for player.small."
-    },
-    "player.small.unresolved-pose": {
-      "kind": "actor",
-      "purpose": "Visual resource family for player.small.unresolved-pose."
     },
     "projectile.fireball": {
       "kind": "effect",
@@ -10019,6 +9991,29 @@
         }
       }
     },
+    "enemy.green_koopa.turnaround": {
+      "frames": [
+        {
+          "resource": "enemy.walker.armored.green.turnaround",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
+      },
+      "display": {
+        "w": 16,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
     "enemy.green_koopa.walk": {
       "frames": [
         {
@@ -10083,6 +10078,29 @@
       "timing": {
         "frameMs": 120,
         "loop": true
+      },
+      "display": {
+        "w": 16,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "enemy.red_koopa.turnaround": {
+      "frames": [
+        {
+          "resource": "enemy.walker.armored.red.turnaround",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
       },
       "display": {
         "w": 16,
@@ -10213,17 +10231,40 @@
         }
       }
     },
-    "goal.actor.idle": {
+    "goal.actor.celebration": {
       "frames": [
         {
-          "resource": "goal.actor.frame_0",
+          "resource": "goal.actor.celebration.frame_0",
           "offset": {
             "x": 0,
             "y": 0
           }
         },
         {
-          "resource": "goal.actor.frame_1",
+          "resource": "goal.actor.celebration.frame_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "goal.actor.idle": {
+      "frames": [
+        {
+          "resource": "goal.actor.idle",
           "offset": {
             "x": 0,
             "y": 0
@@ -10386,6 +10427,29 @@
         }
       }
     },
+    "player.carrying.kick": {
+      "frames": [
+        {
+          "resource": "player.carrying.kick",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
     "player.carrying.run": {
       "frames": [
         {
@@ -10431,11 +10495,19 @@
             "x": 0,
             "y": 0
           }
+        },
+        {
+          "resource": "player.carrying.fast_jump.alternate_tail",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
         }
       ],
       "timing": {
-        "frameMs": 120,
-        "loop": true
+        "mode": "runtimeSelected",
+        "sequenceKnown": false,
+        "note": "Both frames present the same fast-jump/airborne state; a consumer may refine selection or timing."
       },
       "display": {
         "w": 32,
@@ -10459,6 +10531,29 @@
       "timing": {
         "frameMs": 120,
         "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.carrying.slide": {
+      "frames": [
+        {
+          "resource": "player.carrying.slide",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
       },
       "display": {
         "w": 32,
@@ -10612,6 +10707,29 @@
         }
       }
     },
+    "player.fire.kick": {
+      "frames": [
+        {
+          "resource": "player.powered.kick",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
     "player.fire.run": {
       "frames": [
         {
@@ -10685,6 +10803,29 @@
       "timing": {
         "frameMs": 120,
         "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.fire.slide": {
+      "frames": [
+        {
+          "resource": "player.powered.slide",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
       },
       "display": {
         "w": 32,
@@ -10831,6 +10972,29 @@
         }
       }
     },
+    "player.normal.kick": {
+      "frames": [
+        {
+          "resource": "player.normal.kick",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
     "player.normal.run": {
       "frames": [
         {
@@ -10904,6 +11068,29 @@
       "timing": {
         "frameMs": 120,
         "loop": true
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.normal.slide": {
+      "frames": [
+        {
+          "resource": "player.normal.slide",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
       },
       "display": {
         "w": 32,
@@ -11020,6 +11207,29 @@
         }
       }
     },
+    "player.small.kick": {
+      "frames": [
+        {
+          "resource": "player.small.kick",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
+      },
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
     "player.small.run": {
       "frames": [
         {
@@ -11086,6 +11296,29 @@
       "timing": {
         "frameMs": 120,
         "loop": true
+      },
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    },
+    "player.small.slide": {
+      "frames": [
+        {
+          "resource": "player.small.slide",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "timing": {
+        "frameMs": 120,
+        "loop": false
       },
       "display": {
         "w": 16,
@@ -11490,7 +11723,9 @@
         "jump": "player.small.jump",
         "runJump": "player.small.runJump",
         "skid": "player.small.skid",
-        "carry": "player.small.carry"
+        "carry": "player.small.carry",
+        "slide": "player.small.slide",
+        "kick": "player.small.kick"
       }
     },
     "player.normal": {
@@ -11511,7 +11746,9 @@
         "runJump": "player.normal.runJump",
         "skid": "player.normal.skid",
         "duck": "player.normal.duck",
-        "carry": "player.normal.carry"
+        "carry": "player.normal.carry",
+        "slide": "player.normal.slide",
+        "kick": "player.normal.kick"
       }
     },
     "player.fire": {
@@ -11533,7 +11770,9 @@
         "runJump": "player.fire.runJump",
         "skid": "player.fire.skid",
         "duck": "player.fire.duck",
-        "carry": "player.fire.carry"
+        "carry": "player.fire.carry",
+        "slide": "player.fire.slide",
+        "kick": "player.fire.kick"
       }
     },
     "goomba": {
@@ -11558,7 +11797,8 @@
       ],
       "visuals": {
         "walk": "enemy.red_koopa.walk",
-        "shell": "enemy.red_koopa.shell"
+        "shell": "enemy.red_koopa.shell",
+        "turnaround": "enemy.red_koopa.turnaround"
       }
     },
     "koopa.green": {
@@ -11572,7 +11812,8 @@
       ],
       "visuals": {
         "walk": "enemy.green_koopa.walk",
-        "shell": "enemy.green_koopa.shell"
+        "shell": "enemy.green_koopa.shell",
+        "turnaround": "enemy.green_koopa.turnaround"
       }
     },
     "spiky": {
@@ -11756,7 +11997,8 @@
         "goalPresentation"
       ],
       "visuals": {
-        "idle": "goal.actor.idle"
+        "idle": "goal.actor.idle",
+        "celebration": "goal.actor.celebration"
       }
     },
     "movingMushroomPlatform": {
@@ -11768,6 +12010,29 @@
       ],
       "visuals": {
         "construction": "construction.mushroom-platform"
+      }
+    },
+    "player.carrying": {
+      "kind": "actor",
+      "engineNoun": "player",
+      "capabilities": [
+        "move",
+        "jump",
+        "run",
+        "duck",
+        "carry"
+      ],
+      "visuals": {
+        "idle": "player.carrying.idle",
+        "walk": "player.carrying.walk",
+        "run": "player.carrying.run",
+        "jump": "player.carrying.jump",
+        "runJump": "player.carrying.runJump",
+        "skid": "player.carrying.skid",
+        "duck": "player.carrying.duck",
+        "carry": "player.carrying.carry",
+        "slide": "player.carrying.slide",
+        "kick": "player.carrying.kick"
       }
     }
   },
@@ -12103,36 +12368,17 @@
       "racoonmariosheet.png": 16,
       "smallmariosheet.png": 11
     },
-    "unresolvedExactPurpose": [
-      "actor.unresolved-pose.002",
-      "actor.unresolved-pose.018",
-      "goal.unresolved-pose.02",
-      "player.carrying.unresolved-pose.08",
-      "player.carrying.unresolved-pose.13",
-      "player.carrying.unresolved-pose.15",
-      "player.fire.unresolved-pose.08",
-      "player.fire.unresolved-pose.13",
-      "player.normal.unresolved-pose.08",
-      "player.normal.unresolved-pose.13",
-      "player.small.unresolved-pose.06",
-      "player.small.unresolved-pose.10"
-    ],
+    "unresolvedExactPurpose": [],
     "excludedEngineUi": [
       "font.gif",
       "logo.gif",
       "endscene.gif",
       "worldmap.png"
     ],
-    "statement": "Every visually nonempty cell in the ten world/presentation sheets is represented exactly once; all background cells have reviewed semantics, while listed non-background poses remain unresolved.",
-    "unresolvedBySourceSheet": {
-      "enemysheet.png": 2,
-      "mariosheet.png": 2,
-      "smallmariosheet.png": 2,
-      "firemariosheet.png": 2,
-      "racoonmariosheet.png": 3,
-      "princess.png": 1
-    },
-    "backgroundUnresolved": 0
+    "statement": "All 298 visually nonempty cells in the ten world/presentation sheets are semantically accounted for; runtime integration details may still be refined.",
+    "unresolvedBySourceSheet": {},
+    "backgroundUnresolved": 0,
+    "unresolvedResources": 0
   },
   "extended": {
     "status": "reference contract; no current consumer compatibility is promised"

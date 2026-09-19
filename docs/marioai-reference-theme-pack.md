@@ -23,28 +23,17 @@ The pack accounts for **298 visually nonempty cells** across the ten world/prese
 
 All **62 nonempty background-sheet cells now have human-reviewed semantics**. They describe two dome variants, a sky gradient, red/brown and yellow/brown arches, grey and green architectural families, rockpiles, wall companions, repeatable fills, and a green fringe. Fixed and extensible assemblies are declared as constructions. Mirroring/flipping is metadata, and transparent source cell 22 remains correctly absent. There are **zero unresolved background resources**.
 
-## Remaining unresolved resources
+## Semantic completion
 
-Twelve non-background resources remain deliberately unresolved. Their family/context is known, but available evidence does not establish the exact pose/state. No speculative meaning or engine binding has been added.
+All **298 visually nonempty world/presentation resources are semantically accounted for**. The final reviewed resources identify the red and green Koopa turnaround frames; slide and kick states for normal, small, fire, and carrying-player forms; the carrying/raccoon alternate-tail airborne frame; and the goal actor’s second celebration frame. Both total and background unresolved counts are zero, and no resource ID contains `unresolved`.
 
-| Resource ID | Source sheet | Index | Known family/context | Reason unresolved |
-|---|---|---:|---|---|
-| `actor.unresolved-pose.002` | `enemysheet.png` | 2 | Red Koopa | Exact pose/state or use is not established. |
-| `actor.unresolved-pose.018` | `enemysheet.png` | 18 | Green Koopa | Exact pose/state or use is not established. |
-| `player.normal.unresolved-pose.08` | `mariosheet.png` | 8 | Normal/large player | Exact pose/state or use is not established. |
-| `player.normal.unresolved-pose.13` | `mariosheet.png` | 13 | Normal/large player | Exact pose/state or use is not established. |
-| `player.small.unresolved-pose.06` | `smallmariosheet.png` | 6 | Small player | Exact pose/state or use is not established. |
-| `player.small.unresolved-pose.10` | `smallmariosheet.png` | 10 | Small player | Exact pose/state or use is not established. |
-| `player.fire.unresolved-pose.08` | `firemariosheet.png` | 8 | Fire player | Exact pose/state or use is not established. |
-| `player.fire.unresolved-pose.13` | `firemariosheet.png` | 13 | Fire player | Exact pose/state or use is not established. |
-| `player.carrying.unresolved-pose.08` | `racoonmariosheet.png` | 8 | Carrying player | Exact pose/state or use is not established. |
-| `player.carrying.unresolved-pose.13` | `racoonmariosheet.png` | 13 | Carrying player | Exact pose/state or use is not established. |
-| `player.carrying.unresolved-pose.15` | `racoonmariosheet.png` | 15 | Carrying player | Exact pose/state or use is not established. |
-| `goal.unresolved-pose.02` | `princess.png` | 2 | Goal actor | Exact pose/state or use is not established. |
+The carrying/raccoon fast-jump presentation declares both known tail-position frames for the same airborne state, but marks their selection as runtime-defined rather than inventing a frame sequence or timing. Semantic completion therefore does not claim that every future runtime presentation detail is settled.
+
+The goal strip is represented as one standing/idle resource followed by a two-frame celebration animation. It remains goal/end-scene presentation and is not added to the general placeable palette.
 
 ## Semantic integrity
 
-The test protects the pack as a graph, not only as an inventory. It verifies embedded atlas identity and one-to-one nonempty-cell coverage; resource-to-family membership; animation-to-frame, construction-to-component, object-state-to-presentation, placeable-to-object, and placeable-to-parameter references; and the zero-unresolved-background invariant.
+The test protects the pack as a graph, not only as an inventory. It verifies embedded atlas identity and one-to-one nonempty-cell coverage; resource-to-family membership; animation-to-frame, construction-to-component, object-state-to-presentation, placeable-to-object, and placeable-to-parameter references; and the zero-unresolved invariant for both background and total resources.
 
 ## Deliberately deferred
 

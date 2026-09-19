@@ -50,8 +50,9 @@ assert.deepEqual(new Set(pack.contract.resourceKinds), kinds);
 assert.equal(Object.keys(pack.resources).length, pack.coverage.nonemptyWorldResources);
 assert.equal(pack.coverage.nonemptyWorldResources, 298);
 assert.equal(pack.coverage.backgroundUnresolved, 0);
-assert.equal(pack.coverage.unresolvedExactPurpose.length, 12);
-assert(!pack.coverage.unresolvedExactPurpose.some(id => id.startsWith('background.')));
+assert.equal(pack.coverage.unresolvedResources, 0);
+assert.equal(pack.coverage.unresolvedExactPurpose.length, 0);
+assert(!Object.keys(pack.resources).some(id => id.includes('unresolved')));
 
 const reviewedBackgrounds = {
   0:'background.dome.variant_0.top_left', 1:'background.dome.variant_0.top_right',
@@ -93,6 +94,28 @@ for (const [index, id] of Object.entries(reviewedBackgrounds)) {
 }
 assert(!Object.values(pack.resources).some(resource => resource.provenance.sheet === 'bgsheet.png' && resource.role.includes('unresolved')));
 
+const completedResources = {
+  'enemysheet.png:2':'enemy.walker.armored.red.turnaround',
+  'enemysheet.png:18':'enemy.walker.armored.green.turnaround',
+  'mariosheet.png:8':'player.normal.slide',
+  'mariosheet.png:13':'player.normal.kick',
+  'smallmariosheet.png:6':'player.small.slide',
+  'smallmariosheet.png:10':'player.small.kick',
+  'firemariosheet.png:8':'player.powered.slide',
+  'firemariosheet.png:13':'player.powered.kick',
+  'racoonmariosheet.png:8':'player.carrying.slide',
+  'racoonmariosheet.png:13':'player.carrying.kick',
+  'racoonmariosheet.png:15':'player.carrying.fast_jump.alternate_tail',
+  'princess.png:0':'goal.actor.idle',
+  'princess.png:1':'goal.actor.celebration.frame_0',
+  'princess.png:2':'goal.actor.celebration.frame_1',
+};
+for (const [source, id] of Object.entries(completedResources)) {
+  const [sheet, index] = source.split(':');
+  assert.equal(pack.resources[id]?.provenance.sheet, sheet, `${id}: wrong source sheet`);
+  assert.equal(pack.resources[id]?.provenance.index, Number(index), `${id}: wrong source index`);
+}
+
 const provenance = new Set();
 for (const [id, resource] of Object.entries(pack.resources)) {
   assert(kinds.has(resource.kind), `${id}: invalid primary kind`);
@@ -105,11 +128,6 @@ for (const [id, resource] of Object.entries(pack.resources)) {
   assert(!provenance.has(key), `${id}: duplicate source cell ${key}`);
   provenance.add(key);
 }
-assert.deepEqual(
-  Object.keys(pack.resources).filter(id => id.includes('unresolved')).sort(),
-  [...pack.coverage.unresolvedExactPurpose].sort(),
-  'coverage must enumerate every and only unresolved resource',
-);
 
 let independentlyCounted = 0;
 for (const atlas of Object.values(pack.atlases)) {
@@ -132,9 +150,22 @@ assert.equal(independentlyCounted, 298);
 
 for (const [id, animation] of Object.entries(pack.animations)) {
   assert(animation.frames.length, `${id}: empty animation`);
-  assert(animation.timing.frameMs > 0, `${id}: invalid timing`);
+  const timedSequence = animation.timing.frameMs > 0;
+  const runtimeSelected = animation.timing.mode === 'runtimeSelected' && animation.timing.sequenceKnown === false;
+  assert(timedSequence || runtimeSelected, `${id}: timing must be explicit or explicitly runtime-selected`);
   for (const frame of animation.frames) assert(pack.resources[frame.resource], `${id}: missing frame ${frame.resource}`);
 }
+assert.deepEqual(
+  pack.animations['player.carrying.runJump'].frames.map(frame => frame.resource),
+  ['player.carrying.fast_jump', 'player.carrying.fast_jump.alternate_tail'],
+);
+assert.equal(pack.animations['player.carrying.runJump'].timing.mode, 'runtimeSelected');
+assert.deepEqual(
+  pack.animations['goal.actor.celebration'].frames.map(frame => frame.resource),
+  ['goal.actor.celebration.frame_0', 'goal.actor.celebration.frame_1'],
+);
+assert.equal(pack.objects['koopa.red'].visuals.turnaround, 'enemy.red_koopa.turnaround');
+assert.equal(pack.objects['koopa.green'].visuals.turnaround, 'enemy.green_koopa.turnaround');
 for (const [id, construction] of Object.entries(pack.constructions)) {
   if (construction.family) assert(pack.families[construction.family], `${id}: missing family ${construction.family}`);
   for (const resource of Object.values(construction.components || {})) assert(pack.resources[resource], `${id}: missing component ${resource}`);
@@ -170,4 +201,5 @@ for (const [id, placeable] of Object.entries(pack.placeables)) {
     assert(pack.parameterSchemas[schema]?.[field], `${id}: unknown parameter ${parameter}`);
   }
 }
+assert(!Object.values(pack.placeables).some(placeable => placeable.object === 'goalActor'), 'goal actor must not enter the general placeable palette');
 console.log(`MarioAI reference pack: ${independentlyCounted} nonempty resources, ${Object.keys(pack.animations).length} animations, ${Object.keys(pack.placeables).length} placeables`);
