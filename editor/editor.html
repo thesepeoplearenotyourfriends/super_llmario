@@ -239,7 +239,7 @@ return {validate,construct,pipeLayout,resolveTerrain,terrainRole,terrainStrokeCe
   <div class="box panel select needsCart">
     <h3>Collision contour</h3>
     <label class="check"><input id="showContour" type="checkbox"> Show effective solid rectangles + seam warnings</label>
-    <div class="mini"><span class="contourKey">cyan</span> = effective rectangular collision · <span class="seamKey">coral</span> = gap/lip of 8 px or less. Slopes remain individual outlines; this diagnostic never changes map data.</div>
+    <div class="mini"><span class="contourKey">cyan</span> = effective rectangular collision; edge-adjacent boxes with identical details share one outline and label · <span class="seamKey">coral</span> = gap/lip of 8 px or less. Slopes remain individual outlines; this diagnostic never changes map data.</div>
   </div>
 
   <div class="box panel rows needsCart">
@@ -821,9 +821,27 @@ function effectiveCollisionRect(it){
   if(it.kind!=='scenery')return null;const map=sceneryCollisionMap(it);if(!map)return null;const c=map.collision||{},k=[map.kind,map.type,collisionKind(c)].join(' ').toLowerCase();if(/slope|line|climb|ladder|vine/.test(k))return null;
   const visual=objectRect(it),top=/top/.test(k);return {x:visual.x+num(c.x||c.offsetX||map.hitboxX||map.offsetX,0),y:visual.y+num(c.y||c.offsetY||map.hitboxY,0),w:num(c.w||map.w,visual.w),h:top?num(c.h||map.h,Math.max(4,visual.h*.2)):num(c.h||map.h,visual.h)};
 }
-function effectiveSolidRects(list){return list.map(effectiveCollisionRect).filter(Boolean)}
+function stableCollisionValue(value){if(Array.isArray(value))return value.map(stableCollisionValue);if(!plain(value))return value;const out={};for(const key of Object.keys(value).sort())out[key]=stableCollisionValue(value[key]);return out}
+function collisionDisplaySignature(it,r){
+  const ignored=new Set(['id','x','y','row','semanticCellX','semanticCellY','constructionGroup','editorNote']),details={};
+  for(const [key,value] of Object.entries(it.obj||{}))if(!ignored.has(key)&&!key.startsWith('__')&&key!=='image'&&key!=='style'&&key!=='skin'&&key!=='semanticTopology')details[key]=value;
+  return JSON.stringify(stableCollisionValue({kind:it.kind,w:r.w,h:r.h,details}));
+}
+function effectiveSolidRects(list){return list.map(it=>{const rect=effectiveCollisionRect(it);return rect&&Object.assign({it,signature:collisionDisplaySignature(it,rect)},rect)}).filter(Boolean)}
+function collisionRectsTouch(a,b){const eps=.001,xOverlap=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x),yOverlap=Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y);return Math.abs(a.x+a.w-b.x)<=eps&&yOverlap>eps||Math.abs(b.x+b.w-a.x)<=eps&&yOverlap>eps||Math.abs(a.y+a.h-b.y)<=eps&&xOverlap>eps||Math.abs(b.y+b.h-a.y)<=eps&&xOverlap>eps}
+function connectedCollisionGroups(rects){
+  const groups=[],seen=new Set();
+  for(let start=0;start<rects.length;start++){if(seen.has(start))continue;const group=[],todo=[start];seen.add(start);while(todo.length){const i=todo.pop(),a=rects[i];group.push(a);for(let j=0;j<rects.length;j++)if(!seen.has(j)&&a.signature===rects[j].signature&&collisionRectsTouch(a,rects[j])){seen.add(j);todo.push(j)}}groups.push(group)}return groups;
+}
+function uncoveredEdgeIntervals(group,axis,fixed,start,end,side){
+  let open=[[start,end]];for(const r of group){const neighbor=axis==='h'?(side<0?Math.abs(r.y+r.h-fixed)<.001:Math.abs(r.y-fixed)<.001):(side<0?Math.abs(r.x+r.w-fixed)<.001:Math.abs(r.x-fixed)<.001);if(!neighbor)continue;const lo=axis==='h'?r.x:r.y,hi=lo+(axis==='h'?r.w:r.h),next=[];for(const [a,b] of open){if(hi<=a||lo>=b)next.push([a,b]);else{if(lo>a)next.push([a,Math.min(lo,b)]);if(hi<b)next.push([Math.max(hi,a),b])}}open=next}return open;
+}
+function traceCollisionGroup(group){
+  ctx.beginPath();for(const r of group){for(const [a,b] of uncoveredEdgeIntervals(group,'h',r.y,r.x,r.x+r.w,-1)){const p=w2s(a,r.y),q=w2s(b,r.y);ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y)}for(const [a,b] of uncoveredEdgeIntervals(group,'h',r.y+r.h,r.x,r.x+r.w,1)){const p=w2s(a,r.y+r.h),q=w2s(b,r.y+r.h);ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y)}for(const [a,b] of uncoveredEdgeIntervals(group,'v',r.x,r.y,r.y+r.h,-1)){const p=w2s(r.x,a),q=w2s(r.x,b);ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y)}for(const [a,b] of uncoveredEdgeIntervals(group,'v',r.x+r.w,r.y,r.y+r.h,1)){const p=w2s(r.x+r.w,a),q=w2s(r.x+r.w,b);ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y)}}ctx.stroke();
+}
+function collisionGroupLabel(group){const first=group[0],role=collisionRole(first.it).text.replace(/^[^·]+·\s*/,''),total=group.length;return role+(total>1?' × '+total:'')}
 function drawCollisionContour(list){
-  const rs=effectiveSolidRects(list),D=devicePixelRatio;ctx.save();ctx.strokeStyle='rgba(114,236,255,.92)';ctx.lineWidth=Math.max(1.5,2*D);ctx.setLineDash([7*D,4*D]);for(const r of rs){const a=w2s(r.x,r.y);ctx.strokeRect(a.x,a.y,r.w*view.z*D,r.h*view.z*D)}ctx.setLineDash([]);
+  const rs=effectiveSolidRects(list),groups=connectedCollisionGroups(rs),D=devicePixelRatio;ctx.save();ctx.strokeStyle='rgba(114,236,255,.92)';ctx.lineWidth=Math.max(1.5,2*D);ctx.setLineDash([7*D,4*D]);for(const group of groups){traceCollisionGroup(group);const r=group.reduce((b,q)=>({x:Math.min(b.x,q.x),y:Math.min(b.y,q.y),w:Math.max(b.x+b.w,q.x+q.w)-Math.min(b.x,q.x),h:Math.max(b.y+b.h,q.y+q.h)-Math.min(b.y,q.y)}),group[0]),a=w2s(r.x,r.y),label=collisionGroupLabel(group);ctx.setLineDash([]);ctx.font=`${10*D}px sans-serif`;const tw=ctx.measureText(label).width+8*D;ctx.fillStyle='rgba(0,0,0,.78)';ctx.fillRect(a.x+3*D,a.y+3*D,tw,14*D);ctx.fillStyle='rgba(114,236,255,.98)';ctx.fillText(label,a.x+7*D,a.y+14*D);ctx.setLineDash([7*D,4*D])}ctx.setLineDash([]);
   ctx.strokeStyle='#ff8d72';ctx.fillStyle='rgba(255,141,114,.2)';ctx.lineWidth=Math.max(2,3*D);for(let i=0;i<rs.length;i++)for(let j=i+1;j<rs.length;j++){const a=rs[i],b=rs[j],gap=b.x-(a.x+a.w),back=a.x-(b.x+b.w),g=gap>=0?gap:back>=0?back:null;if(g==null||g>8)continue;const overlap=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x);if(overlap>0)continue;const lip=Math.abs(a.y-b.y);if(lip>8)continue;const x=gap>=0?a.x+a.w:b.x+b.w,y=Math.min(a.y,b.y),p=w2s(x,y);ctx.beginPath();ctx.arc(p.x,p.y,7*D,0,Math.PI*2);ctx.fill();ctx.stroke()}
   ctx.restore();
 }
