@@ -9,11 +9,26 @@ const legacy=fs.readFileSync('engine/engine.html','utf8');
 const theme=JSON.parse(fs.readFileSync('themes/theme_marioai_reference_pack.llmtheme.txt','utf8'));
 const fixture=JSON.parse(fs.readFileSync('tests/fixtures/reference_static_scene.llmmap.txt','utf8'));
 const boundarySource=html.match(/<script id="referencePackBoundary">([\s\S]*?)<\/script>/)[1];
+const applicationSource=html.match(/<script>\s*([\s\S]*?)<\/script><\/body>/)[1];
 const context={globalThis:{}};
 vm.runInNewContext(boundarySource,context);
 const api=context.globalThis.ReferencePackBoundary;
 const plain=value=>JSON.parse(JSON.stringify(value));
 const validMap={format:'llmario-reference-editor-map',mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},instances:[],markers:{start:null,goal:null}};
+
+function engineHarness(){
+  const operations={fillRect:0,drawImage:0};
+  const ctx={setTransform(){},save(){},restore(){},translate(){},scale(){},rotate(){},fillRect(){operations.fillRect++},drawImage(){operations.drawImage++}};
+  const elements={
+    screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},
+    themeButton:{},mapButton:{},fitButton:{},themeFile:{files:[],value:''},mapFile:{files:[],value:''}
+  };
+  class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
+  const window={ReferencePackBoundary:api};
+  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(){},addEventListener(){},Map,Set,Math,Promise,console};
+  vm.runInNewContext(applicationSource,domContext);
+  return{engine:window.ReferenceEngine,elements,operations};
+}
 
 test('compiles the actual reference theme and representative editor map',()=>{
   const result=api.compileReferenceRuntime(theme,fixture);
@@ -85,6 +100,55 @@ test('reports unsupported content without throwing or drawing substitutes',()=>{
   assert(result.diagnostics.some(x=>x.code==='malformed-value'));
   assert(result.diagnostics.some(x=>x.code==='invalid-layer'));
   assert.equal(result.runtime.instances.length,fixture.instances.length);
+});
+
+test('invalid public map and theme loads clear an already rendered scene and retain diagnostics',async()=>{
+  const {engine,elements,operations}=engineHarness();
+  await engine.loadReferenceTheme(theme);
+  engine.loadReferenceEditorMap(fixture);
+  assert(engine.state.runtime);
+  assert.equal(elements.empty.hidden,true);
+  assert(operations.drawImage>0);
+
+  operations.fillRect=operations.drawImage=0;
+  const mapErrors=engine.loadReferenceEditorMap({...fixture,format:'old-map'});
+  assert(mapErrors.length);
+  assert.equal(engine.state.runtime,null);
+  assert.equal(engine.state.map,null);
+  assert.equal(elements.empty.hidden,false);
+  assert.match(elements.diagnostics.textContent,/unsupported map format/);
+  assert(operations.fillRect>0);
+  assert.equal(operations.drawImage,0);
+
+  engine.loadReferenceEditorMap(fixture);
+  assert(engine.state.runtime);
+  assert(engine.state.atlases.size>0);
+  operations.fillRect=operations.drawImage=0;
+  const themeErrors=await engine.loadReferenceTheme({...theme,format:'old-theme'});
+  assert(themeErrors.length);
+  assert.equal(engine.state.runtime,null);
+  assert.equal(engine.state.theme,null);
+  assert.equal(engine.state.atlases.size,0);
+  assert.equal(elements.empty.hidden,false);
+  assert.match(elements.diagnostics.textContent,/unsupported theme format/);
+  assert(operations.fillRect>0);
+  assert.equal(operations.drawImage,0);
+});
+
+test('file parse failures use the same scene invalidation path',async()=>{
+  const {engine,elements,operations}=engineHarness();
+  await engine.loadReferenceTheme(theme);
+  engine.loadReferenceEditorMap(fixture);
+  assert(engine.state.runtime);
+  operations.fillRect=operations.drawImage=0;
+  elements.mapFile.files=[{text:async()=>'{'}];
+  await elements.mapFile.onchange();
+  assert.equal(engine.state.runtime,null);
+  assert.equal(engine.state.map,null);
+  assert.equal(elements.empty.hidden,false);
+  assert.match(elements.diagnostics.textContent,/map is not valid JSON/);
+  assert(operations.fillRect>0);
+  assert.equal(operations.drawImage,0);
 });
 
 test('accepts only the current reference documents and rejects old fallbacks',()=>{
