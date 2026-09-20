@@ -176,9 +176,11 @@ assert.strictEqual(irregular.length,new Set(irregular.map(x=>x.join(','))).size,
 assert(irregular.some(([x,y])=>x===32&&y===32),'irregular segments traverse intervening cells');
 const solidItem={...item('solidBlock'),values:{'solidBlock.style':'stone'}},brickItem={...item('brick'),values:{'block.style':'classic'}};
 const at=(brush,x,y,sceneLayer)=>({item:brush,values:{...structuredClone(brush.values),'transform.x':x,'transform.y':y},...(sceneLayer?{sceneLayer}:{})});
-const squareBounds=instance=>({x:instance.values['transform.x']-8,y:instance.values['transform.y']-8,w:16,h:16});
+const squareBounds=instance=>({x:instance.values['transform.x']-8,y:instance.values['transform.y']-16,w:16,h:16});
 assert(semantics.squareStampOccupied(theme,[at(solidItem,16,16)],brickItem,{x:16,y:16},squareBounds),'Brick cannot overwrite Block');
 assert(semantics.squareStampOccupied(theme,[at(brickItem,16,16)],solidItem,{x:16,y:16},squareBounds),'Block cannot overwrite Brick');
+assert(!semantics.squareStampOccupied(theme,[at(brickItem,16,16)],solidItem,{x:16,y:0},squareBounds),
+  'bottom-anchored vertical neighbors touch without falsely overlapping');
 assert(!semantics.squareStampOccupied(theme,[at(brickItem,16,16,'foreground')],solidItem,{x:16,y:16},squareBounds),
   'effective scene layers retain intentional cross-layer placement');
 const cloneA=structuredClone(brickItem.values),cloneB=structuredClone(brickItem.values);
@@ -189,8 +191,14 @@ stampHistory.push({instances:[at(brickItem,0,0),at(brickItem,16,0),at(brickItem,
 assert.strictEqual(stampHistory.state().index,1,'a multi-cell stamp is one history entry');
 assert.strictEqual(stampHistory.undo().instances.length,0,'one undo removes the complete stamp');
 assert.strictEqual(stampHistory.redo().instances.length,3,'one redo restores the complete stamp');
-const noOpHistory=semantics.createHistory({instances:[at(brickItem,0,0)]});
-assert.strictEqual(noOpHistory.state().index,0,'an all-occupied/no-op gesture creates no history by default');
+const occupiedDocument={instances:[at(brickItem,0,0),at(solidItem,16,0),at(brickItem,32,0)]};
+const noOpHistory=semantics.createHistory(occupiedDocument),occupiedInstances=[...occupiedDocument.instances];
+const occupiedAdded=semantics.stampSquareCells(theme,occupiedInstances,brickItem,brickItem.values,
+  {x:0,y:0},{x:32,y:0},new Set(),squareBounds);
+if(occupiedAdded)noOpHistory.push({instances:occupiedInstances});
+assert.strictEqual(occupiedAdded,0,'an all-occupied stamp gesture places no instances');
+assert.deepStrictEqual(occupiedInstances,occupiedDocument.instances,'an all-occupied stamp gesture leaves the document unchanged');
+assert.strictEqual(noOpHistory.state().index,0,'an all-occupied stamp gesture creates no history entry');
 const stampCamera={x:91,y:-37,zoom:2.75},stampWorld={x:80,y:48};
 assert.deepStrictEqual(plain(semantics.screenToWorld(semantics.worldToScreen(stampWorld,stampCamera),stampCamera)),stampWorld,
   'stamp coordinates survive active camera zoom and pan');
