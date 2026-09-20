@@ -11422,7 +11422,8 @@
         "walker.direction",
         "walker.patrolRange",
         "walker.speed"
-      ]
+      ],
+      "previewVisual": "walk"
     },
     "koopaGreen": {
       "label": "Green Koopa",
@@ -11433,7 +11434,8 @@
         "walker.direction",
         "walker.patrolRange",
         "walker.speed"
-      ]
+      ],
+      "previewVisual": "walk"
     },
     "spiky": {
       "label": "Spiky",
@@ -11465,7 +11467,8 @@
         "transform.y",
         "rewardBlock.contents",
         "rewardBlock.uses"
-      ]
+      ],
+      "previewVisual": "normal"
     },
     "brick": {
       "label": "Brick",
@@ -11473,7 +11476,8 @@
       "parameters": [
         "transform.x",
         "transform.y"
-      ]
+      ],
+      "previewVisual": "normal"
     },
     "pipe": {
       "label": "Pipe",
@@ -11485,7 +11489,10 @@
         "pipe.length",
         "pipe.travelEnabled",
         "pipe.destination"
-      ]
+      ],
+      "initialValues": {
+        "pipe.length": 2
+      }
     },
     "ladder": {
       "label": "Ladder",
@@ -11494,7 +11501,10 @@
         "transform.x",
         "transform.y",
         "extent.length"
-      ]
+      ],
+      "initialValues": {
+        "extent.length": 2
+      }
     },
     "ground": {
       "label": "Ground",
@@ -11505,7 +11515,11 @@
         "terrain.width",
         "terrain.height",
         "terrain.style"
-      ]
+      ],
+      "initialValues": {
+        "terrain.width": 2,
+        "terrain.height": 2
+      }
     },
     "mushroomPlatform": {
       "label": "Mushroom Platform",
@@ -11514,7 +11528,10 @@
         "transform.x",
         "transform.y",
         "extent.width"
-      ]
+      ],
+      "initialValues": {
+        "extent.width": 3
+      }
     },
     "bush": {
       "label": "Bush",
@@ -11523,7 +11540,10 @@
         "transform.x",
         "transform.y",
         "extent.width"
-      ]
+      ],
+      "initialValues": {
+        "extent.width": 3
+      }
     },
     "arrowSign": {
       "label": "Arrow Sign",
@@ -11571,7 +11591,10 @@
         "movingPlatform.path",
         "movingPlatform.range",
         "movingPlatform.speed"
-      ]
+      ],
+      "initialValues": {
+        "extent.width": 3
+      }
     }
   },
   "coverage": {
