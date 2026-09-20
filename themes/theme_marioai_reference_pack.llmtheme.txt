@@ -9763,7 +9763,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -9793,7 +9792,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -9830,7 +9828,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -9867,7 +9864,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -9911,7 +9907,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -9941,7 +9936,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -9985,7 +9979,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10015,7 +10008,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10059,7 +10051,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10089,7 +10080,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10119,7 +10109,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10149,7 +10138,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10179,7 +10167,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10209,7 +10196,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10253,7 +10239,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10290,7 +10275,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10327,7 +10311,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10364,7 +10347,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10401,7 +10383,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10438,7 +10419,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10475,7 +10455,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10505,7 +10484,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10535,7 +10513,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10579,7 +10556,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10623,7 +10599,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     },
@@ -10667,7 +10642,6 @@
         }
       },
       "sequence": {
-        "ordering": "source-established",
         "frameTiming": "unspecified"
       }
     }
@@ -11213,7 +11187,7 @@
       ],
       "visuals": {
         "normal": "block.question.idle",
-        "used": "block.hidden.revealed.frame_0"
+        "used": "block.hidden.revealed"
       }
     },
     "brick": {
@@ -11224,7 +11198,7 @@
         "breakable"
       ],
       "visuals": {
-        "normal": "block.breakable.idle.frame_0",
+        "normal": "block.breakable.idle",
         "breaking": "effect.debris"
       }
     },

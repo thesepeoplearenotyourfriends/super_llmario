@@ -173,7 +173,6 @@ assert.equal(independentlyCounted, 298);
 
 for (const [id, animation] of Object.entries(pack.animations)) {
   assert(animation.frames.length > 1, `${id}: static resources must not be wrapped as animations`);
-  assert.equal(animation.sequence.ordering, 'source-established', `${id}: animation ordering must be supported`);
   assert.equal(animation.sequence.frameTiming, 'unspecified', `${id}: exact source timing is not established`);
   assert(!animation.timing && animation.sequence.loop === undefined, `${id}: must not fabricate timing or looping`);
   for (const frame of animation.frames) assert(pack.resources[frame.resource], `${id}: missing frame ${frame.resource}`);
@@ -196,6 +195,8 @@ assert.deepEqual(
 );
 assert.equal(pack.objects['koopa.red'].visuals.turnaround, 'enemy.walker.armored.red.turnaround');
 assert.equal(pack.objects['koopa.green'].visuals.turnaround, 'enemy.walker.armored.green.turnaround');
+assert.equal(pack.objects.brick.visuals.normal, 'block.breakable.idle');
+assert.equal(pack.objects.questionBlock.visuals.used, 'block.hidden.revealed');
 for (const [id, construction] of Object.entries(pack.constructions)) {
   if (construction.family) assert(pack.families[construction.family], `${id}: missing family ${construction.family}`);
   for (const resource of Object.values(construction.components || {})) assert(pack.resources[resource], `${id}: missing component ${resource}`);
