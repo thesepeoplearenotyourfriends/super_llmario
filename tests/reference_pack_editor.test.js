@@ -11,7 +11,7 @@ assert(newEditor.includes('Contract gaps needed by a preview'), 'editor reports 
 assert(!/\bfetch\s*\(|XMLHttpRequest|import\s*\(/.test(newEditor), 'standalone editor has no runtime repository dependency');
 assert.strictEqual(theme.format, 'llmario-theme-pack-reference');
 assert(Object.keys(theme.placeables).length > 0, 'reference theme declares a palette');
-assert.deepStrictEqual(theme.sceneLayers, ['background','world','actors','foreground']);
+assert.deepStrictEqual(theme.sceneLayers, ['sky','background','world','actors','foreground']);
 assert.strictEqual(theme.placeables.bush.authoringGroup, 'Deco');
 assert.strictEqual(theme.placeables.hill.authoringGroup, 'Deco');
 for (const id of ['koopaRed','koopaGreen','ground']) assert.strictEqual(theme.placeables[id].authoringGroup, 'World');
@@ -33,7 +33,8 @@ assert.deepStrictEqual(decoIds.sort(), ['backgroundDome','backgroundFill','bush'
   'Deco contains audited concepts rather than source-cell palette noise');
 for(const id of decoIds) {
   const object=theme.objects[theme.placeables[id].object];
-  assert.strictEqual(object.defaultSceneLayer,'background',`${id} defaults to the background layer`);
+  assert.strictEqual(object.defaultSceneLayer,['backgroundFill','skyGradient'].includes(id)?'sky':'background',
+    `${id} defaults to its authored scenery depth`);
   assert.strictEqual(object.collisionMode,undefined,`${id} does not infer collision from appearance`);
   assert.deepStrictEqual(object.capabilities,[],`${id} has no inferred gameplay capability`);
 }
@@ -51,6 +52,10 @@ const plain = value => JSON.parse(JSON.stringify(value));
 const item=(id)=>({id,definition:theme.placeables[id],object:theme.objects[theme.placeables[id].object]});
 const bush={item:item('bush'),values:{'transform.x':100,'transform.y':100,'extent.width':3}};
 const koopa={item:item('koopaRed'),values:{'transform.x':100,'transform.y':100}};
+const sky={item:item('skyGradient'),values:{'transform.x':100,'transform.y':100,'extent.width':2,'extent.height':3}};
+const ground={item:item('ground'),values:{'transform.x':100,'transform.y':100,'terrain.width':2,'terrain.height':1,'terrain.style':'overground'}};
+assert.deepStrictEqual(semantics.orderedInstances(theme,[koopa,ground,bush,sky]).map(x=>x.item.id),
+  ['skyGradient','bush','ground','koopaRed'],'five-band ordering is driven by the scene catalog');
 assert.deepStrictEqual(semantics.orderedInstances(theme,[bush,koopa]).map(x=>x.item.id),['bush','koopaRed'],
   'Bush placed before Koopa renders behind it');
 assert.deepStrictEqual(semantics.orderedInstances(theme,[koopa,bush]).map(x=>x.item.id),['bush','koopaRed'],
@@ -186,7 +191,7 @@ assert.deepStrictEqual(indices(layout('construction.background.dome.variant_0'))
 assert.deepStrictEqual(indices(layout('construction.background.dome.variant_1')),[2,3,10,11,18,19]);
 assert.strictEqual(semantics.visualTarget(theme.objects.backgroundDome,{'dome.variant':'variant_1'}).target,
   'construction.background.dome.variant_1');
-assert.deepStrictEqual(indices(layout('construction.background.sky-gradient')),[4,12,20]);
+assert.deepStrictEqual(indices(layout('construction.background.sky-gradient',1,3)),[4,12,20]);
 assert.deepStrictEqual(indices(layout('construction.background.grey-stone-vertical')),[24,32]);
 assert.deepStrictEqual(indices(layout('construction.background.grey-stone-horizontal')),[40,41],
   'fixedRow is supported by the same exported helper used by live rendering');
@@ -362,7 +367,9 @@ assert.deepStrictEqual(plain(interaction),{selected:null,brush:null},'empty canv
 interaction=semantics.selectionTransition(interaction,{type:'palette',item:brush});
 assert.deepStrictEqual(plain(interaction),{selected:null,brush},'palette selection clears unrelated instance selection');
 interaction=semantics.selectionTransition(interaction,{type:'empty',instance:placed});
-assert.deepStrictEqual(plain(interaction),{selected:placed,brush},'an active brush places and selects its new instance');
+assert.deepStrictEqual(plain(interaction),{selected:null,brush},'brush placement does not create stale destructive selection');
+interaction=semantics.selectionTransition(interaction,{type:'empty',instance:{id:'second'}});
+assert.deepStrictEqual(plain(interaction),{selected:null,brush},'repeated placement remains active with true select-none state');
 interaction=semantics.selectionTransition(interaction,{type:'object',instance:other});
 assert.deepStrictEqual(plain(interaction),{selected:other,brush:null},'object selection exits placement without stale brush state');
 
@@ -372,6 +379,22 @@ const modelFor=(placeable,values)=>{
 };
 const resize=(model,values,bounds,pointer,cell={w:32,h:32},origin={x:48,y:96})=>
   plain(semantics.resizeValues(model,values,bounds,pointer,cell,origin));
+for(const [id,placeable] of Object.entries(theme.placeables)) {
+  const dimensionPaths=placeable.parameters.filter(path=>/\.(?:width|height|length)$/.test(path));
+  if(!dimensionPaths.length)continue;
+  const targets=new Set(Object.values(theme.objects[placeable.object].visuals));
+  for(const target of targets) {
+    const construction=theme.constructions[target];
+    assert(construction,`${id} spatial parameters resolve to a construction`);
+    const declaredPaths=Object.values(construction.resize||{}).map(axis=>axis.path);
+    for(const path of dimensionPaths) assert(declaredPaths.includes(path),`${id} declares resize metadata for ${path}`);
+    for(const axis of Object.values(construction.resize||{})) {
+      assert(axis.minimum>=1,`${id} resize axis has a valid minimum`);
+      assert.strictEqual(axis.anchor,'opposite',`${id} resize axis declares its stable anchor`);
+      assert.strictEqual(axis.unit,'nativeCell',`${id} resize axis uses construction-native geometry`);
+    }
+  }
+}
 let values={'transform.x':48,'transform.y':96,'extent.width':3,'extent.height':3,'backgroundFill.material':'black'};
 let model=modelFor('backgroundFill',values);
 let changed=resize(model,values,{x:0,y:0,w:96,h:96},{x:160,y:128});
@@ -392,6 +415,19 @@ model=modelFor('ground',values);changed=resize(model,values,{x:0,y:0,w:32,h:32},
 assert.deepStrictEqual({w:changed['terrain.width'],h:changed['terrain.height'],x:changed['transform.x'],y:changed['transform.y']},{w:3,h:3,x:24,y:64});
 assert.strictEqual(semantics.rectangleAutotiles(changed['terrain.width'],changed['terrain.height'],overground)[4].mask,'1111',
   'resized autotile rectangles continue through the semantic neighbor-mask resolver');
+for(const width of [2,3]) {
+  const row=plain(semantics.rectangleAutotiles(width,1,overground));
+  const expected=width===2?['1000','0100']:['1000','1100','0100'];
+  assert.deepStrictEqual(row.map(x=>x.mask),expected,`${width}x1 ground keeps the declared top row masks`);
+  assert(row.every(x=>x.id===overground[x.mask]),`${width}x1 ground resolves visible resources across its width`);
+}
+const singleton=plain(semantics.rectangleAutotiles(1,1,overground));
+assert.deepStrictEqual(singleton,[{x:0,y:0,mask:'singleton'}],
+  '1x1 ground preserves a diagnosable undeclared singleton rather than inventing a 0000 relationship');
+const oneRowGeometry=plain(semantics.constructionGeometry(
+  {cells:semantics.rectangleAutotiles(3,1,overground),columns:3,rows:1},id=>theme.resources[id].display));
+assert.deepStrictEqual({w:oneRowGeometry.w,h:oneRowGeometry.h},{w:48,h:16},
+  'one-row ground retains native 16px geometry and hit bounds');
 assert.strictEqual(modelFor('hill',{'hill.shape':'large'}),null,'fixed Hill geometry rejects resize');
 values={'transform.x':48,'transform.y':32,'extent.width':3};model=modelFor('lightGreenArch',values);
 changed=resize(model,values,{x:0,y:0,w:96,h:32},{x:1,y:0});
@@ -403,6 +439,45 @@ changed=resize(semantics.resizeModel(theme.constructions['construction.backgroun
   semantics.screenToWorld(zoomPointer,camera));
 assert.deepStrictEqual({w:changed['extent.width'],h:changed['extent.height']},{w:5,h:4},
   'resizing while zoomed converts the pointer back to the same world extents');
+
+const skyConstruction=theme.constructions['construction.background.sky-gradient'];
+const skyDefault=plain(semantics.constructionLayout(skyConstruction.components,skyConstruction.layout,1,3));
+assert.deepStrictEqual(skyDefault.cells.map(x=>x.part),['top','transition','bottom']);
+const wideSky=plain(semantics.constructionLayout(skyConstruction.components,skyConstruction.layout,3,3));
+assert.strictEqual(wideSky.cells.length,9,'Sky Gradient repeats all three bands horizontally');
+const tallSky=plain(semantics.constructionLayout(skyConstruction.components,skyConstruction.layout,2,6));
+assert.deepStrictEqual(tallSky.cells.filter(x=>x.x===0).map(x=>x.part),
+  ['top','top','top','transition','bottom','bottom'],
+  'odd extra rows deterministically favor the blue top while preserving one center band');
+assert.strictEqual(semantics.constructionLayout(skyConstruction.components,skyConstruction.layout,2,2),null,
+  'Sky Gradient rejects a height that cannot preserve all three bands');
+const skyGeometry=plain(semantics.constructionGeometry(wideSky,id=>theme.resources[id].display));
+assert.deepStrictEqual({w:skyGeometry.w,h:skyGeometry.h,cellW:skyGeometry.cellW,cellH:skyGeometry.cellH},
+  {w:96,h:96,cellW:32,cellH:32},'Sky Gradient uses native 32px geometry for rendering and selection');
+assert.deepStrictEqual({axes:modelFor('skyGradient',{'extent.width':1,'extent.height':3}).axes,
+  minHeight:modelFor('skyGradient',{'extent.width':1,'extent.height':3}).minHeight},{axes:'xy',minHeight:3});
+assert.strictEqual(modelFor('pipe',{'pipe.length':3}).heightPath,'pipe.length','pipe length is a vertical resize axis');
+assert.strictEqual(modelFor('ladder',{'extent.length':3}).heightPath,'extent.length','ladder length is a vertical resize axis');
+const pipeModel=modelFor('pipe',{'pipe.length':2}),pipeOrigin={x:100,y:100};
+const pipeLocalBounds={x:-16,y:-32,w:32,h:32},pipeCell={w:16,h:16};
+for(const [direction,pointer,expectedOrigin,cursor] of [
+  ['up',{x:100,y:132},{x:100,y:132},'ns-resize'],
+  ['right',{x:68,y:100},{x:68,y:100},'ew-resize'],
+  ['down',{x:100,y:68},{x:100,y:68},'ns-resize'],
+  ['left',{x:132,y:100},{x:132,y:100},'ew-resize'],
+]) {
+  const values={'transform.x':100,'transform.y':100,'pipe.length':2,'pipe.direction':direction};
+  const pipePresentation=semantics.authoredPresentation(true,false,values);
+  assert.deepStrictEqual(plain(semantics.resizeHandleWorld(pipeModel,pipeLocalBounds,pipePresentation,pipeOrigin)),pipeOrigin,
+    `${direction} pipe resize handle stays on its local base anchor`);
+  const changed=plain(semantics.resizePresentedValues(pipeModel,values,pipeLocalBounds,pointer,pipeCell,pipeOrigin,pipePresentation));
+  assert.deepStrictEqual({length:changed['pipe.length'],x:changed['transform.x'],y:changed['transform.y']},
+    {length:4,...expectedOrigin},`${direction} pipe resizes along its rotated local length while preserving the mouth edge`);
+  assert.strictEqual(semantics.resizeCursor(pipeModel,pipePresentation),cursor,`${direction} pipe advertises its world resize axis`);
+  assert.deepStrictEqual(plain(semantics.worldToLocal(
+    semantics.localToWorld({x:7,y:-19},pipePresentation,pipeOrigin),pipePresentation,pipeOrigin)),{x:7,y:-19},
+    `${direction} pipe local/world resize transforms round-trip`);
+}
 
 // A copied fixture protects the explicit requirement that the old editor remains untouched.
 assert(oldEditor.includes('LLMario Cartbench v0.30 Pipe Topology'));
