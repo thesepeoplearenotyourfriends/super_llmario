@@ -171,12 +171,39 @@ for (const atlas of Object.values(pack.atlases)) {
 }
 assert.equal(independentlyCounted, 298);
 
+const loopModes = new Set(['once', 'repeat', 'ping-pong']);
+function validateLoop(value, label) {
+  assert(typeof value === 'boolean' || loopModes.has(value), `${label}: loop must be boolean or a declared mode`);
+}
+function validateTiming(value, label) {
+  assert(value && typeof value === 'object' && !Array.isArray(value), `${label}: timing must be an object`);
+  assert(Object.keys(value).length, `${label}: timing must not be empty`);
+  for (const [key, timingValue] of Object.entries(value)) {
+    if (key === 'loop') {
+      validateLoop(timingValue, `${label}.loop`);
+    } else if (typeof timingValue === 'number') {
+      assert(Number.isFinite(timingValue) && timingValue > 0, `${label}.${key}: timing number must be positive and finite`);
+    } else if (Array.isArray(timingValue)) {
+      assert(timingValue.length && timingValue.every(item => Number.isFinite(item) && item > 0), `${label}.${key}: timing array must contain positive finite numbers`);
+    } else if (typeof timingValue === 'string') {
+      assert(timingValue.length, `${label}.${key}: timing mode must not be empty`);
+    } else {
+      assert.fail(`${label}.${key}: unsupported timing value`);
+    }
+  }
+}
+function validateOptionalPlayback(id, animation) {
+  if (animation.timing !== undefined) validateTiming(animation.timing, `${id}.timing`);
+  if (animation.loop !== undefined) validateLoop(animation.loop, `${id}.loop`);
+}
 for (const [id, animation] of Object.entries(pack.animations)) {
   assert(animation.frames.length > 1, `${id}: static resources must not be wrapped as animations`);
-  assert.equal(animation.sequence.frameTiming, 'unspecified', `${id}: exact source timing is not established`);
-  assert(!animation.timing && animation.sequence.loop === undefined, `${id}: must not fabricate timing or looping`);
+  validateOptionalPlayback(id, animation);
   for (const frame of animation.frames) assert(pack.resources[frame.resource], `${id}: missing frame ${frame.resource}`);
 }
+assert.doesNotThrow(() => validateOptionalPlayback('valid playback', {timing:{frameMs:80}, loop:'repeat'}));
+assert.throws(() => validateOptionalPlayback('bad timing', {timing:{frameMs:0}}), /positive and finite/);
+assert.throws(() => validateOptionalPlayback('bad loop', {loop:'forever'}), /declared mode/);
 assert.deepEqual(
   pack.frameGroups['player.carrying.airborne_tail_states'].resources,
   ['player.carrying.fast_jump', 'player.carrying.fast_jump.alternate_tail'],

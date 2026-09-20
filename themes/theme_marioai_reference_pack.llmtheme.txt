@@ -9761,9 +9761,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "effect.debris": {
@@ -9790,9 +9787,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "effect.sparkle.general": {
@@ -9826,9 +9820,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "effect.sparkle.pickup": {
@@ -9862,9 +9853,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.flower": {
@@ -9905,9 +9893,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.goomba.walk": {
@@ -9934,9 +9919,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.green_koopa.shell": {
@@ -9977,9 +9959,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.green_koopa.walk": {
@@ -10006,9 +9985,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.red_koopa.shell": {
@@ -10049,9 +10025,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.red_koopa.walk": {
@@ -10078,9 +10051,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.spiky.walk": {
@@ -10107,9 +10077,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.wave_goomba.walk": {
@@ -10136,9 +10103,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "enemy.wing.flap": {
@@ -10165,9 +10129,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "goal.actor.celebration": {
@@ -10194,9 +10155,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "pickup.coin.spin": {
@@ -10237,9 +10195,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.carrying.run": {
@@ -10273,9 +10228,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.carrying.walk": {
@@ -10309,9 +10261,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.fire.run": {
@@ -10345,9 +10294,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.fire.walk": {
@@ -10381,9 +10327,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.normal.run": {
@@ -10417,9 +10360,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.normal.walk": {
@@ -10453,9 +10393,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.small.run": {
@@ -10482,9 +10419,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "player.small.walk": {
@@ -10511,9 +10445,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "projectile.fireball": {
@@ -10554,9 +10485,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "block.breakable.idle": {
@@ -10597,9 +10525,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     },
     "block.rotating.spin": {
@@ -10640,9 +10565,6 @@
           "x": 0.5,
           "y": 1
         }
-      },
-      "sequence": {
-        "frameTiming": "unspecified"
       }
     }
   },
