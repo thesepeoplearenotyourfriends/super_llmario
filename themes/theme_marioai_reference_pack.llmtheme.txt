@@ -31,13 +31,10 @@
       "capabilities": [
         "armored",
         "autotile",
-        "breakable",
-        "bump",
         "carry",
         "climbable",
         "coin",
         "collectible",
-        "dispense",
         "duck",
         "emerge",
         "extraLife",
@@ -61,6 +58,14 @@
         "walker",
         "waveFlight"
       ]
+    },
+    "bumpTriggerTypes": {
+      "dispenseContents": {
+        "effect": "dispense the explicitly configured reward object"
+      },
+      "temporarySpin": {
+        "effect": "run an explicitly configured temporary non-colliding spin phase"
+      }
     }
   },
   "attribution": {
@@ -11173,28 +11178,35 @@
     "questionBlock": {
       "kind": "block",
       "engineNoun": "block",
-      "capabilities": [
-        "bump",
-        "dispense"
-      ],
+      "capabilities": [],
       "visuals": {
         "normal": "block.question.idle",
         "used": "block.hidden.revealed"
-      }
+      },
+      "bumpable": true,
+      "bumpTriggers": [
+        {
+          "type": "dispenseContents",
+          "contentsParameter": "rewardBlock.contents"
+        }
+      ],
+      "breakable": false,
+      "collisionMode": "solid"
     },
     "brick": {
       "kind": "block",
       "engineNoun": "block",
-      "capabilities": [
-        "bump",
-        "breakable"
-      ],
+      "capabilities": [],
       "visuals": {
         "normal": "block.breakable.idle",
         "breaking": "effect.debris",
         "classic": "block.breakable.idle"
       },
-      "visualSelector": "block.style"
+      "visualSelector": "block.style",
+      "bumpable": true,
+      "bumpTriggers": [],
+      "breakable": true,
+      "collisionMode": "solid"
     },
     "pipe": {
       "kind": "ground",
@@ -11302,17 +11314,36 @@
         "stone": "block.stone",
         "wood": "block.wood",
         "glassBlue": "block.glass_blue"
-      }
+      },
+      "bumpable": false,
+      "bumpTriggers": [],
+      "breakable": false,
+      "collisionMode": "solid"
     },
     "rotatingBlock": {
       "kind": "block",
       "engineNoun": "block",
-      "capabilities": [
-        "bump"
-      ],
+      "capabilities": [],
       "visuals": {
         "spin": "block.rotating.spin"
-      }
+      },
+      "bumpable": true,
+      "breakable": false,
+      "collisionMode": "solid",
+      "bumpTriggers": [
+        {
+          "type": "temporarySpin",
+          "presentation": "block.rotating.spin",
+          "collisionWhileActive": "none",
+          "duration": {
+            "source": "engineDefault"
+          },
+          "completion": {
+            "stopPresentation": true,
+            "restoreCollision": true
+          }
+        }
+      ]
     }
   },
   "parameterSchemas": {

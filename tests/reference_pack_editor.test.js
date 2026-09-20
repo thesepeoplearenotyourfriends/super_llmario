@@ -17,6 +17,7 @@ const context = { structuredClone, globalThis: {} };
 vm.runInNewContext(semanticSource, context);
 const semantics = context.globalThis.ReferencePackSemantics;
 const schema = theme.parameterSchemas;
+const plain = value => JSON.parse(JSON.stringify(value));
 
 assert.strictEqual(semantics.initialValue('rewardBlock.contents', schema.rewardBlock.contents), undefined,
   'allowed object references do not become authored defaults');
@@ -71,9 +72,37 @@ assert.strictEqual(theme.objects.rotatingBlock.visuals.spin, 'block.rotating.spi
 assert.strictEqual(theme.placeables.rotatingBlock.object, 'rotatingBlock');
 assert(!Object.values(theme.placeables).some(p => /^block\.rotating\.frame_/.test(p.object)),
   'rotating block runtime frames are not separate palette objects');
-assert(newEditor.includes('function drawPatrolRange(inst)'), 'selected patrol actors have an editor-only range gizmo');
-assert(newEditor.includes("authoredSize('extent.height')"), 'mushroom construction consumes authored height');
-const plain = value => JSON.parse(JSON.stringify(value));
+const mushroomCells = plain(semantics.stemConstructionCells(4,5));
+assert.strictEqual(mushroomCells.length, 20, 'mushroom width and height produce the full cell rectangle');
+assert.strictEqual(mushroomCells.filter(c => c.y === 0 && c.part.startsWith('cap')).length, 4);
+assert.strictEqual(mushroomCells.filter(c => c.y > 0 && c.part.startsWith('stem')).length, 16);
+assert.deepStrictEqual([...new Set(mushroomCells.map(c => c.y))], [0,1,2,3,4]);
+assert.deepStrictEqual(plain(semantics.patrolRangeSegment(theme.objects.goomba,
+  {'transform.x':100,'transform.y':80,'walker.patrolRange':24})), {x1:76,x2:124,y:80});
+assert.strictEqual(semantics.patrolRangeSegment(theme.objects.coin,
+  {'transform.x':100,'transform.y':80,'walker.patrolRange':24}), null,
+  'range geometry is limited to explicitly patrol-capable actors');
+const bodyBounds={w:24,h:40,anchorX:.5,anchorY:1}, wingBounds={w:16,h:32,anchorX:.5,anchorY:1};
+const attachments=theme.objects['koopa.red'].attachments, facing=semantics.authoredPresentation(false,true,{'walker.direction':'right'}),origin={x:100,y:200};
+const withoutWings=plain(semantics.composedAabb(bodyBounds,facing,origin,attachments,
+  {'flight.hasWings':false,'flight.flying':true},()=>wingBounds));
+const withWings=plain(semantics.composedAabb(bodyBounds,facing,origin,attachments,
+  {'flight.hasWings':true,'flight.flying':false},()=>wingBounds));
+assert.deepStrictEqual(withoutWings,{x:88,y:160,w:24,h:40}, 'flying alone does not enable wing presentation or bounds');
+assert(withWings.w>withoutWings.w&&withWings.h>withoutWings.h, 'hasWings alone expands composed hit/selection bounds');
+const bumpOnly=plain(semantics.blockSemantics({bumpable:true})),triggerOnly=plain(semantics.blockSemantics({bumpTriggers:[{type:'switch'}]}));
+assert.deepStrictEqual(bumpOnly.bumpTriggers,[], 'bumpable does not imply triggers');
+assert.strictEqual(triggerOnly.bumpable,false, 'bump triggers do not imply bumpable');
+assert.deepStrictEqual(triggerOnly.bumpTriggers,[{type:'switch'}]);
+const rotating=plain(semantics.blockSemantics(theme.objects.rotatingBlock));
+assert.strictEqual(rotating.bumpable,true);
+assert.deepStrictEqual(rotating.bumpTriggers,[{type:'temporarySpin',presentation:'block.rotating.spin',collisionWhileActive:'none',duration:{source:'engineDefault'},completion:{stopPresentation:true,restoreCollision:true}}]);
+const question=plain(semantics.blockSemantics(theme.objects.questionBlock));
+assert.deepStrictEqual(question.bumpTriggers,[{type:'dispenseContents',contentsParameter:'rewardBlock.contents'}]);
+const brick=plain(semantics.blockSemantics(theme.objects.brick));
+assert.strictEqual(brick.bumpable,true);assert.strictEqual(brick.breakable,true);assert.deepStrictEqual(brick.bumpTriggers,[]);
+assert.deepStrictEqual(plain(semantics.blockSemantics({visuals:{spin:'block.rotating.spin'}})),
+  {bumpable:false,bumpTriggers:[],breakable:false,collisionMode:null}, 'visual resources create no gameplay semantics');
 const pipeBounds = {w:32,h:80,anchorX:.5,anchorY:1};
 assert.deepStrictEqual(plain(semantics.transformedAabb(pipeBounds,semantics.authoredPresentation(true,false,{'pipe.direction':'up'}),{x:100,y:200})),
   {x:84,y:120,w:32,h:80}, 'up pipe bounds retain the authored bottom-center anchor');
