@@ -158,6 +158,16 @@ const layout = (id,width,height) => {
   return plain(semantics.constructionLayout(construction.components,construction.layout,width,height));
 };
 const indices = result => result.cells.map(cell=>sourceIndices(cell.id));
+for(const id of ['construction.hill.large','construction.background.dome.variant_0',
+  'construction.background.dome.variant_1','construction.background.cave-arch-yellow-brown']) {
+  const construction=theme.constructions[id],assembled=layout(id);
+  assert.strictEqual(assembled.cells.length,construction.layout.columns*construction.layout.rows,
+    `${id} consumes its declared fixedGrid rows and columns`);
+}
+assert.strictEqual(semantics.constructionLayout({a:'one',b:'two'},{type:'fixedGrid',columns:2,rows:2}),null,
+  'fixedGrid rejects a declared shape that does not match its component count');
+assert.strictEqual(semantics.constructionLayout({a:'one',b:'two'},{type:'fixedGrid',columns:2}),null,
+  'fixedGrid rows are required rather than inert metadata');
 assert.deepStrictEqual(indices(layout('construction.background.dome.variant_0')),[0,1,8,9,16,17]);
 assert.deepStrictEqual(indices(layout('construction.background.dome.variant_1')),[2,3,10,11,18,19]);
 assert.strictEqual(semantics.visualTarget(theme.objects.backgroundDome,{'dome.variant':'variant_1'}).target,
