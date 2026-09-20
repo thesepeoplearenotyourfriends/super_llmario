@@ -1,0 +1,21 @@
+{
+  "format": "llmario-reference-editor-map",
+  "mapVersion": 1,
+  "theme": {
+    "id": "marioai-reference-complete",
+    "packVersion": 1
+  },
+  "instances": [
+    { "placeable": "skyGradient", "values": { "transform.x": 160, "transform.y": 240, "extent.width": 10, "extent.height": 5 } },
+    { "placeable": "backgroundDome", "values": { "transform.x": 96, "transform.y": 208, "dome.variant": "variant_0" } },
+    { "placeable": "ground", "values": { "transform.x": 160, "transform.y": 272, "terrain.width": 8, "terrain.height": 2, "terrain.style": "overground" } },
+    { "placeable": "pipe", "values": { "transform.x": 224, "transform.y": 240, "pipe.direction": "right", "pipe.length": 3, "pipe.travelEnabled": false } },
+    { "placeable": "ladder", "values": { "transform.x": 64, "transform.y": 256, "extent.length": 4 } },
+    { "placeable": "goomba", "values": { "transform.x": 144, "transform.y": 240, "walker.direction": "left", "walker.patrolRange": 32 } },
+    { "placeable": "arrowSign", "values": { "transform.x": 272, "transform.y": 240 }, "sceneLayer": "foreground" }
+  ],
+  "markers": {
+    "start": { "x": 32, "y": 240 },
+    "goal": { "x": 304, "y": 240 }
+  }
+}
