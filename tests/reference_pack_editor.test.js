@@ -57,6 +57,9 @@ assert.strictEqual(semantics.pickInstance(theme,[bush,koopa],point,overlap),bush
   'overlapping objects hit-test the foreground-overridden Bush first');
 for (const path of bush.item.definition.parameters) bush.values[path]=path==='bush.variant'?'variant_1':7;
 assert.strictEqual(bush.sceneLayer,'foreground','ordinary position, dimension, and visual edits retain the instance override');
+semantics.setSceneLayerOverride(bush,'background');
+assert(!Object.hasOwn(bush,'sceneLayer'),'choosing the object default removes the instance override');
+assert.strictEqual(semantics.sceneLayerFor(theme,bush),'background','the instance resumes consuming the object default');
 const red={item:item('koopaRed'),values:{'transform.x':10,'transform.y':10}},green={item:item('koopaGreen'),values:{'transform.x':20,'transform.y':20}};
 assert.deepStrictEqual(semantics.orderedInstances(theme,[green,red]).map(x=>x.item.id),['koopaGreen','koopaRed'],
   'same-layer order stays stable instead of sorting by species or position');
