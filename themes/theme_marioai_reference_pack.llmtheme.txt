@@ -1773,11 +1773,11 @@
         }
       }
     },
-    "background.red_stone_wall.lower_left": {
+    "background.maroon_fill.source_0": {
       "kind": "decoration",
-      "role": "background.red_stone_wall.lower_left",
-      "purpose": "Lower-left red/brown rocky-wall companion piece.",
-      "belongsTo": "background.red_stone_wall",
+      "role": "background.maroon_fill.source_0",
+      "purpose": "Uniform opaque maroon (#250000) fill source; both preserved source cells are byte-identical.",
+      "belongsTo": "background.maroon_fill",
       "image": {
         "atlas": "background",
         "rect": {
@@ -1804,11 +1804,11 @@
         }
       }
     },
-    "background.red_stone_wall.lower_right": {
+    "background.maroon_fill.source_1": {
       "kind": "decoration",
-      "role": "background.red_stone_wall.lower_right",
-      "purpose": "Lower-right red/brown rocky-wall companion piece.",
-      "belongsTo": "background.red_stone_wall",
+      "role": "background.maroon_fill.source_1",
+      "purpose": "Uniform opaque maroon (#250000) fill source; both preserved source cells are byte-identical.",
+      "belongsTo": "background.maroon_fill",
       "image": {
         "atlas": "background",
         "rect": {
@@ -4067,11 +4067,11 @@
         }
       }
     },
-    "hill.large.bottom_left": {
+    "hill.small.left": {
       "kind": "decoration",
-      "role": "hill.large.bottom_left",
-      "purpose": "A frame or component of hill.large.",
-      "belongsTo": "hill.large",
+      "role": "hill.small.left",
+      "purpose": "One half of the fixed 2x1 small Hill/shrub shape.",
+      "belongsTo": "hill.small",
       "image": {
         "atlas": "map",
         "rect": {
@@ -4098,11 +4098,11 @@
         }
       }
     },
-    "hill.large.bottom_right": {
+    "hill.small.right": {
       "kind": "decoration",
-      "role": "hill.large.bottom_right",
-      "purpose": "A frame or component of hill.large.",
-      "belongsTo": "hill.large",
+      "role": "hill.small.right",
+      "purpose": "One half of the fixed 2x1 small Hill/shrub shape.",
+      "belongsTo": "hill.small",
       "image": {
         "atlas": "map",
         "rect": {
@@ -4129,10 +4129,10 @@
         }
       }
     },
-    "hill.large.lower_left": {
+    "hill.large.bottom_left": {
       "kind": "decoration",
-      "role": "hill.large.lower_left",
-      "purpose": "A frame or component of hill.large.",
+      "role": "hill.large.bottom_left",
+      "purpose": "Bottom component of the fixed 2x3 large Hill.",
       "belongsTo": "hill.large",
       "image": {
         "atlas": "map",
@@ -4160,10 +4160,10 @@
         }
       }
     },
-    "hill.large.lower_right": {
+    "hill.large.bottom_right": {
       "kind": "decoration",
-      "role": "hill.large.lower_right",
-      "purpose": "A frame or component of hill.large.",
+      "role": "hill.large.bottom_right",
+      "purpose": "Bottom component of the fixed 2x3 large Hill.",
       "belongsTo": "hill.large",
       "image": {
         "atlas": "map",
@@ -9433,6 +9433,18 @@
     }
   },
   "families": {
+    "background.fill": {
+      "kind": "decoration",
+      "purpose": "Authorable rectangular fills backed by audited uniform opaque source materials."
+    },
+    "background.maroon_fill": {
+      "kind": "decoration",
+      "purpose": "Uniform opaque maroon (#250000) fill represented by byte-identical source cells 62 and 63."
+    },
+    "hill.small": {
+      "kind": "decoration",
+      "purpose": "Components of the audited fixed 2x1 small Hill/shrub."
+    },
     "background.black_fill": {
       "kind": "decoration",
       "purpose": "Solid-black background-fill family."
@@ -9475,7 +9487,7 @@
     },
     "background.red_stone_wall": {
       "kind": "decoration",
-      "purpose": "Red/brown rocky-wall companion family associated visually with background.red_brown_stone_arch."
+      "purpose": "Preserved source fragments at indices 46, 47, 54, and 55; their assembly remains unresolved."
     },
     "background.rockpile": {
       "kind": "decoration",
@@ -9591,11 +9603,11 @@
     },
     "hill.large": {
       "kind": "decoration",
-      "purpose": "Visual resource family for hill.large."
+      "purpose": "Components of the audited fixed 2x3 large Hill."
     },
     "hill.wide": {
       "kind": "decoration",
-      "purpose": "Visual resource family for hill.wide."
+      "purpose": "Preserved raw source family; indices 73, 74, 75, 89, 90, 91, 104, 105, 120, and 121 have no validated assembly."
     },
     "ladder": {
       "kind": "ground",
@@ -10607,6 +10619,80 @@
     }
   },
   "constructions": {
+    "construction.background.fill.dark_green": {
+      "kind": "decoration",
+      "family": "background.fill",
+      "components": {
+        "fill": "background.green_stone_dark.fill"
+      },
+      "layout": {
+        "type": "repeatRect",
+        "repeat": "fill"
+      }
+    },
+    "construction.background.fill.light_green": {
+      "kind": "decoration",
+      "family": "background.fill",
+      "components": {
+        "fill": "background.green_stone.fill"
+      },
+      "layout": {
+        "type": "repeatRect",
+        "repeat": "fill"
+      }
+    },
+    "construction.background.fill.maroon": {
+      "kind": "decoration",
+      "family": "background.fill",
+      "components": {
+        "fill": "background.maroon_fill.source_0"
+      },
+      "layout": {
+        "type": "repeatRect",
+        "repeat": "fill"
+      }
+    },
+    "construction.background.fill.black": {
+      "kind": "decoration",
+      "family": "background.fill",
+      "components": {
+        "fill": "background.black_fill"
+      },
+      "layout": {
+        "type": "repeatRect",
+        "repeat": "fill"
+      }
+    },
+    "construction.background.green-stone-dark-arch": {
+      "kind": "decoration",
+      "family": "background.green_stone_dark",
+      "components": {
+        "left": "background.green_stone_dark.arch.left",
+        "right": "background.green_stone_dark.arch.right"
+      },
+      "layout": {
+        "type": "fixedRow",
+        "order": [
+          "left",
+          "right"
+        ]
+      }
+    },
+    "construction.hill.small": {
+      "kind": "decoration",
+      "family": "hill.small",
+      "components": {
+        "left": "hill.small.left",
+        "right": "hill.small.right"
+      },
+      "layout": {
+        "type": "fixedRow",
+        "order": [
+          "left",
+          "right"
+        ]
+      }
+    },
     "construction.arrow-sign": {
       "kind": "decoration",
       "components": {
@@ -10685,7 +10771,8 @@
       },
       "layout": {
         "type": "extensibleRow",
-        "repeat": "middle"
+        "repeat": "middle",
+        "minimum": 3
       }
     },
     "construction.background.green-stone-column": {
@@ -10698,7 +10785,8 @@
       },
       "layout": {
         "type": "extensibleColumn",
-        "repeat": "middle"
+        "repeat": "middle",
+        "minimum": 3
       }
     },
     "construction.background.green-stone-dark-column": {
@@ -10711,7 +10799,8 @@
       },
       "layout": {
         "type": "extensibleColumn",
-        "repeat": "middle"
+        "repeat": "middle",
+        "minimum": 3
       }
     },
     "construction.background.grey-stone-horizontal": {
@@ -10959,16 +11048,15 @@
       "components": {
         "topLeft": "hill.large.top_left",
         "topRight": "hill.large.top_right",
-        "upperLeft": "hill.large.upper_left",
-        "upperRight": "hill.large.upper_right",
-        "lowerLeft": "hill.large.lower_left",
-        "lowerRight": "hill.large.lower_right",
+        "middleLeft": "hill.large.upper_left",
+        "middleRight": "hill.large.upper_right",
         "bottomLeft": "hill.large.bottom_left",
         "bottomRight": "hill.large.bottom_right"
       },
       "layout": {
         "type": "fixedGrid",
-        "columns": 2
+        "columns": 2,
+        "rows": 3
       }
     },
     "construction.hill.wide": {
@@ -10987,59 +11075,8 @@
         "bottomRight": "hill.wide.bottom_right"
       },
       "layout": {
-        "type": "explicitGrid",
-        "cells": [
-          {
-            "part": "topLeft",
-            "x": 0,
-            "y": 0
-          },
-          {
-            "part": "topMiddle",
-            "x": 1,
-            "y": 0
-          },
-          {
-            "part": "topRight",
-            "x": 2,
-            "y": 0
-          },
-          {
-            "part": "middleLeft",
-            "x": 0,
-            "y": 1
-          },
-          {
-            "part": "middle",
-            "x": 1,
-            "y": 1
-          },
-          {
-            "part": "middleRight",
-            "x": 2,
-            "y": 1
-          },
-          {
-            "part": "lowerLeft",
-            "x": 0,
-            "y": 2
-          },
-          {
-            "part": "lowerRight",
-            "x": 2,
-            "y": 2
-          },
-          {
-            "part": "bottomLeft",
-            "x": 0,
-            "y": 3
-          },
-          {
-            "part": "bottomRight",
-            "x": 2,
-            "y": 3
-          }
-        ]
+        "type": "unresolved",
+        "reason": "Source indices 73, 74, 75, 89, 90, 91, 104, 105, 120, and 121 do not have a validated assembly."
       }
     },
     "construction.cannon.vertical": {
@@ -11061,6 +11098,107 @@
     }
   },
   "objects": {
+    "backgroundFill": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visualSelector": "backgroundFill.material",
+      "visuals": {
+        "black": "construction.background.fill.black",
+        "maroon": "construction.background.fill.maroon",
+        "light_green": "construction.background.fill.light_green",
+        "dark_green": "construction.background.fill.dark_green"
+      }
+    },
+    "rockpile": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visualSelector": "rockpile.appearance",
+      "visuals": {
+        "sprig": "background.rockpile.variant_sprig",
+        "plain": "background.rockpile.variant_plain"
+      }
+    },
+    "yellowBrownCave": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visuals": {
+        "construction": "construction.background.cave-arch-yellow-brown"
+      }
+    },
+    "darkGreenColumn": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visuals": {
+        "construction": "construction.background.green-stone-dark-column"
+      }
+    },
+    "darkGreenArch": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visuals": {
+        "construction": "construction.background.green-stone-dark-arch"
+      }
+    },
+    "lightGreenColumn": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visuals": {
+        "construction": "construction.background.green-stone-column"
+      }
+    },
+    "lightGreenArch": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visuals": {
+        "construction": "construction.background.green-stone-arch"
+      }
+    },
+    "greyStone": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visualSelector": "greyStone.shape",
+      "visuals": {
+        "vertical": "construction.background.grey-stone-vertical",
+        "horizontal": "construction.background.grey-stone-horizontal",
+        "square": "background.grey_stone.square"
+      }
+    },
+    "skyGradient": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visuals": {
+        "construction": "construction.background.sky-gradient"
+      }
+    },
+    "backgroundDome": {
+      "defaultSceneLayer": "background",
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visualSelector": "dome.variant",
+      "visuals": {
+        "variant_0": "construction.background.dome.variant_0",
+        "variant_1": "construction.background.dome.variant_1"
+      }
+    },
     "player.small": {
       "kind": "actor",
       "engineNoun": "player",
@@ -11519,7 +11657,7 @@
       "visualSelector": "hill.shape",
       "visuals": {
         "large": "construction.hill.large",
-        "wide": "construction.hill.wide"
+        "small": "construction.hill.small"
       }
     },
     "verticalCannon": {
@@ -11553,6 +11691,49 @@
     }
   },
   "parameterSchemas": {
+    "backgroundFill": {
+      "material": {
+        "type": "enum",
+        "values": [
+          "black",
+          "maroon",
+          "light_green",
+          "dark_green"
+        ],
+        "default": "black"
+      }
+    },
+    "rockpile": {
+      "appearance": {
+        "type": "enum",
+        "values": [
+          "sprig",
+          "plain"
+        ],
+        "default": "sprig"
+      }
+    },
+    "greyStone": {
+      "shape": {
+        "type": "enum",
+        "values": [
+          "vertical",
+          "horizontal",
+          "square"
+        ],
+        "default": "vertical"
+      }
+    },
+    "dome": {
+      "variant": {
+        "type": "enum",
+        "values": [
+          "variant_0",
+          "variant_1"
+        ],
+        "default": "variant_0"
+      }
+    },
     "transform": {
       "x": {
         "type": "number",
@@ -11735,13 +11916,125 @@
         "type": "enum",
         "values": [
           "large",
-          "wide"
+          "small"
         ],
         "default": "large"
       }
     }
   },
   "placeables": {
+    "backgroundFill": {
+      "authoringGroup": "Deco",
+      "label": "Background Fill",
+      "object": "backgroundFill",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "extent.width",
+        "extent.height",
+        "backgroundFill.material"
+      ],
+      "initialValues": {
+        "extent.width": 3,
+        "extent.height": 3
+      }
+    },
+    "rockpile": {
+      "authoringGroup": "Deco",
+      "label": "Rockpile",
+      "object": "rockpile",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "rockpile.appearance"
+      ]
+    },
+    "yellowBrownCave": {
+      "authoringGroup": "Deco",
+      "label": "Yellow / Brown Cave",
+      "object": "yellowBrownCave",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
+    },
+    "darkGreenColumn": {
+      "authoringGroup": "Deco",
+      "label": "Dark-green Column",
+      "object": "darkGreenColumn",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "extent.height"
+      ],
+      "initialValues": {
+        "extent.height": 3
+      }
+    },
+    "darkGreenArch": {
+      "authoringGroup": "Deco",
+      "label": "Dark-green Arch",
+      "object": "darkGreenArch",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
+    },
+    "lightGreenColumn": {
+      "authoringGroup": "Deco",
+      "label": "Light-green Column",
+      "object": "lightGreenColumn",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "extent.height"
+      ],
+      "initialValues": {
+        "extent.height": 3
+      }
+    },
+    "lightGreenArch": {
+      "authoringGroup": "Deco",
+      "label": "Light-green Arch",
+      "object": "lightGreenArch",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "extent.width"
+      ],
+      "initialValues": {
+        "extent.width": 3
+      }
+    },
+    "greyStone": {
+      "authoringGroup": "Deco",
+      "label": "Grey Stone",
+      "object": "greyStone",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "greyStone.shape"
+      ]
+    },
+    "skyGradient": {
+      "authoringGroup": "Deco",
+      "label": "Sky Gradient",
+      "object": "skyGradient",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
+    },
+    "backgroundDome": {
+      "authoringGroup": "Deco",
+      "label": "Dome",
+      "object": "backgroundDome",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "dome.variant"
+      ]
+    },
     "coin": {
       "authoringGroup": "World",
       "label": "Coin",
@@ -12004,17 +12297,51 @@
       "racoonmariosheet.png": 16,
       "smallmariosheet.png": 11
     },
-    "unresolvedExactPurpose": [],
+    "unresolvedExactPurpose": [
+      "bgsheet.png indices 6, 7, 14, 15, 23, 31, and 39: related red/brown arch fragments, but no validated assembly (cell 22 is transparent)",
+      "bgsheet.png indices 46, 47, 54, and 55: related wall fragments, but no validated assembly",
+      "bgsheet.png indices 56, 57, and 59: bars, trim, and border identities are preserved, but authoring/repetition behavior is not validated",
+      "mapsheet.png indices 73, 74, 75, 89, 90, 91, 104, 105, 120, and 121: related Hill-family resources with no validated assembly"
+    ],
     "excludedEngineUi": [
       "font.gif",
       "logo.gif",
       "endscene.gif",
       "worldmap.png"
     ],
-    "statement": "All 298 visually nonempty cells in the ten world/presentation sheets are semantically accounted for; runtime integration details may still be refined.",
-    "unresolvedBySourceSheet": {},
-    "backgroundUnresolved": 0,
-    "unresolvedResources": 0
+    "statement": "All 298 visually nonempty source cells remain inventoried. Audited material identity and authorable construction semantics are tracked separately; unresolved assemblies remain explicitly non-authorable.",
+    "unresolvedBySourceSheet": {
+      "bgsheet.png": [
+        6,
+        7,
+        14,
+        15,
+        23,
+        31,
+        39,
+        46,
+        47,
+        54,
+        55,
+        56,
+        57,
+        59
+      ],
+      "mapsheet.png": [
+        73,
+        74,
+        75,
+        89,
+        90,
+        91,
+        104,
+        105,
+        120,
+        121
+      ]
+    },
+    "backgroundUnresolved": 14,
+    "unresolvedResources": 24
   },
   "extended": {
     "status": "reference contract; no current consumer compatibility is promised"
