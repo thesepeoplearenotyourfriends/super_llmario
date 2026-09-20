@@ -68,7 +68,11 @@ assert.strictEqual(schema.flight.hasWings.default, false);
 assert.strictEqual(schema.flight.flying.default, false);
 assert(!theme.contract.engineVocabulary.capabilities.includes('flightPresentation'));
 assert(!newEditor.includes('koopaWings'), 'attachment placement is interpreted from data, not a named editor special case');
-assert.strictEqual(theme.objects.rotatingBlock.visuals.spin, 'block.rotating.spin');
+assert.strictEqual(theme.objects.rotatingBlock.visuals.idle, 'block.rotating.frame_0');
+assert.strictEqual(theme.resources[theme.objects.rotatingBlock.visuals.idle].provenance.index, 36,
+  'rotating-block idle uses the audited full resting face');
+assert.strictEqual(theme.objects.rotatingBlock.visuals.spinning, 'block.rotating.spin');
+assert.strictEqual(theme.placeables.rotatingBlock.previewVisual, 'idle');
 assert.strictEqual(theme.placeables.rotatingBlock.object, 'rotatingBlock');
 assert(!Object.values(theme.placeables).some(p => /^block\.rotating\.frame_/.test(p.object)),
   'rotating block runtime frames are not separate palette objects');
@@ -96,13 +100,17 @@ assert.strictEqual(triggerOnly.bumpable,false, 'bump triggers do not imply bumpa
 assert.deepStrictEqual(triggerOnly.bumpTriggers,[{type:'switch'}]);
 const rotating=plain(semantics.blockSemantics(theme.objects.rotatingBlock));
 assert.strictEqual(rotating.bumpable,true);
-assert.deepStrictEqual(rotating.bumpTriggers,[{type:'temporarySpin',presentation:'block.rotating.spin',collisionWhileActive:'none',duration:{source:'engineDefault'},completion:{stopPresentation:true,restoreCollision:true}}]);
+assert.deepStrictEqual(rotating.bumpTriggers,[{type:'temporarySpin',collisionWhileActive:'none',duration:{source:'engineDefault'},completion:{returnState:'idle',restoreCollision:true},enterState:'spinning'}]);
+assert.strictEqual(theme.objects.rotatingBlock.visuals[rotating.bumpTriggers[0].enterState], 'block.rotating.spin',
+  'behavior selects a semantic state whose visual mapping owns the animation');
 const question=plain(semantics.blockSemantics(theme.objects.questionBlock));
 assert.deepStrictEqual(question.bumpTriggers,[{type:'dispenseContents',contentsParameter:'rewardBlock.contents'}]);
 const brick=plain(semantics.blockSemantics(theme.objects.brick));
 assert.strictEqual(brick.bumpable,true);assert.strictEqual(brick.breakable,true);assert.deepStrictEqual(brick.bumpTriggers,[]);
 assert.deepStrictEqual(plain(semantics.blockSemantics({visuals:{spin:'block.rotating.spin'}})),
   {bumpable:false,bumpTriggers:[],breakable:false,collisionMode:null}, 'visual resources create no gameplay semantics');
+assert.deepStrictEqual(theme.objects.solidBlock.capabilities,[]);
+assert.strictEqual(theme.objects.solidBlock.collisionMode,'solid', 'solid collision has one canonical representation');
 const pipeBounds = {w:32,h:80,anchorX:.5,anchorY:1};
 assert.deepStrictEqual(plain(semantics.transformedAabb(pipeBounds,semantics.authoredPresentation(true,false,{'pipe.direction':'up'}),{x:100,y:200})),
   {x:84,y:120,w:32,h:80}, 'up pipe bounds retain the authored bottom-center anchor');

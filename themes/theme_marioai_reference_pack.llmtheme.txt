@@ -11306,9 +11306,7 @@
     "solidBlock": {
       "kind": "block",
       "engineNoun": "block",
-      "capabilities": [
-        "solid"
-      ],
+      "capabilities": [],
       "visualSelector": "solidBlock.style",
       "visuals": {
         "stone": "block.stone",
@@ -11325,7 +11323,8 @@
       "engineNoun": "block",
       "capabilities": [],
       "visuals": {
-        "spin": "block.rotating.spin"
+        "idle": "block.rotating.frame_0",
+        "spinning": "block.rotating.spin"
       },
       "bumpable": true,
       "breakable": false,
@@ -11333,15 +11332,15 @@
       "bumpTriggers": [
         {
           "type": "temporarySpin",
-          "presentation": "block.rotating.spin",
           "collisionWhileActive": "none",
           "duration": {
             "source": "engineDefault"
           },
           "completion": {
-            "stopPresentation": true,
+            "returnState": "idle",
             "restoreCollision": true
-          }
+          },
+          "enterState": "spinning"
         }
       ]
     }
@@ -11699,7 +11698,8 @@
       "parameters": [
         "transform.x",
         "transform.y"
-      ]
+      ],
+      "previewVisual": "idle"
     }
   },
   "coverage": {
