@@ -46,6 +46,10 @@ function pngAlpha(data) {
 }
 
 assert.equal(pack.format, 'llmario-theme-pack-reference');
+assert.deepEqual(pack.sceneLayers, ['sky','background','world','actors','foreground']);
+assert.equal(pack.objects.skyGradient.defaultSceneLayer, 'sky');
+assert.equal(pack.objects.backgroundFill.defaultSceneLayer, 'sky');
+assert.equal(pack.objects.hill.defaultSceneLayer, 'background');
 assert.deepEqual(new Set(pack.contract.resourceKinds), kinds);
 assert.equal(Object.keys(pack.resources).length, pack.coverage.nonemptyWorldResources);
 assert.equal(pack.coverage.nonemptyWorldResources, 298);
@@ -231,6 +235,13 @@ for (const [id, placeable] of Object.entries(pack.placeables)) {
   for (const parameter of placeable.parameters) {
     const [schema, field] = parameter.split('.');
     assert(pack.parameterSchemas[schema]?.[field], `${id}: unknown parameter ${parameter}`);
+  }
+  const dimensionPaths = placeable.parameters.filter(parameter => /\.(?:width|height|length)$/.test(parameter));
+  if (dimensionPaths.length) {
+    for (const target of Object.values(pack.objects[placeable.object].visuals)) {
+      const declared = Object.values(pack.constructions[target]?.resize || {}).map(axis => axis.path);
+      for (const parameter of dimensionPaths) assert(declared.includes(parameter), `${id}: ${parameter} lacks construction resize metadata`);
+    }
   }
 }
 assert(!Object.values(pack.placeables).some(placeable => placeable.object === 'goalActor'), 'goal actor must not enter the general placeable palette');

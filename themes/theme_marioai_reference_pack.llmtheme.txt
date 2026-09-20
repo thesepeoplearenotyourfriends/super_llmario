@@ -74,6 +74,7 @@
     "repository": "https://github.com/medovina/MarioAI"
   },
   "sceneLayers": [
+    "sky",
     "background",
     "world",
     "actors",
@@ -10628,6 +10629,20 @@
       "layout": {
         "type": "repeatRect",
         "repeat": "fill"
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "extent.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.fill.light_green": {
@@ -10639,6 +10654,20 @@
       "layout": {
         "type": "repeatRect",
         "repeat": "fill"
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "extent.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.fill.maroon": {
@@ -10650,6 +10679,20 @@
       "layout": {
         "type": "repeatRect",
         "repeat": "fill"
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "extent.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.fill.black": {
@@ -10661,6 +10704,20 @@
       "layout": {
         "type": "repeatRect",
         "repeat": "fill"
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "extent.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.green-stone-dark-arch": {
@@ -10773,6 +10830,14 @@
         "type": "extensibleRow",
         "repeat": "middle",
         "minimum": 3
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 3,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.green-stone-column": {
@@ -10787,6 +10852,14 @@
         "type": "extensibleColumn",
         "repeat": "middle",
         "minimum": 3
+      },
+      "resize": {
+        "y": {
+          "path": "extent.height",
+          "minimum": 3,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.green-stone-dark-column": {
@@ -10801,6 +10874,14 @@
         "type": "extensibleColumn",
         "repeat": "middle",
         "minimum": 3
+      },
+      "resize": {
+        "y": {
+          "path": "extent.height",
+          "minimum": 3,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.grey-stone-horizontal": {
@@ -10862,12 +10943,26 @@
         "bottom": "background.sky_gradient.bottom"
       },
       "layout": {
-        "type": "fixedColumn",
-        "order": [
-          "top",
-          "transition",
-          "bottom"
-        ]
+        "type": "edgeExpandedRect",
+        "top": "top",
+        "center": "transition",
+        "bottom": "bottom",
+        "minimum": 3,
+        "oddExtra": "top"
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "extent.height",
+          "minimum": 3,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.bush": {
@@ -10889,7 +10984,15 @@
         "top": "ladder.top",
         "body": "ladder.body"
       },
-      "layout": "one-column vertical, repeat body"
+      "layout": "one-column vertical, repeat body",
+      "resize": {
+        "y": {
+          "path": "extent.length",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
+      }
     },
     "construction.mushroom-platform": {
       "kind": "ground",
@@ -10901,7 +11004,21 @@
         "stemMiddle": "mushroom_platform.stem.middle",
         "stemRight": "mushroom_platform.stem.right"
       },
-      "layout": "three-column cap and repeatable stem"
+      "layout": "three-column cap and repeatable stem",
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "extent.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
+      }
     },
     "construction.pipe.vertical": {
       "kind": "ground",
@@ -10911,7 +11028,15 @@
         "bodyLeft": "pipe.vertical.body.left",
         "bodyRight": "pipe.vertical.body.right"
       },
-      "layout": "two-column vertical, repeat body rows"
+      "layout": "two-column vertical, repeat body rows",
+      "resize": {
+        "y": {
+          "path": "pipe.length",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
+      }
     },
     "construction.terrain.castle": {
       "kind": "ground",
@@ -10940,7 +11065,21 @@
           "1011": "terrain.autotile.castle.mask_1011"
         }
       },
-      "collision": "solidTerrain"
+      "collision": "solidTerrain",
+      "resize": {
+        "x": {
+          "path": "terrain.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "terrain.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
+      }
     },
     "construction.terrain.overground": {
       "kind": "ground",
@@ -10969,7 +11108,21 @@
           "1011": "terrain.autotile.overground.mask_1011"
         }
       },
-      "collision": "solidTerrain"
+      "collision": "solidTerrain",
+      "resize": {
+        "x": {
+          "path": "terrain.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "terrain.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
+      }
     },
     "construction.terrain.underground": {
       "kind": "ground",
@@ -10998,7 +11151,21 @@
           "1011": "terrain.autotile.underground.mask_1011"
         }
       },
-      "collision": "solidTerrain"
+      "collision": "solidTerrain",
+      "resize": {
+        "x": {
+          "path": "terrain.width",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        },
+        "y": {
+          "path": "terrain.height",
+          "minimum": 1,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
+      }
     },
     "construction.background.bush.variant_0": {
       "kind": "decoration",
@@ -11011,6 +11178,14 @@
       "layout": {
         "type": "extensibleRow",
         "repeat": "middle"
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 2,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.background.bush.variant_1": {
@@ -11024,6 +11199,14 @@
       "layout": {
         "type": "extensibleRow",
         "repeat": "middle"
+      },
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 2,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
       }
     },
     "construction.white-platform": {
@@ -11040,7 +11223,15 @@
           "right"
         ]
       },
-      "note": "Visual resource reuse only: ladder.body is platform material here and does not confer climb behavior."
+      "note": "Visual resource reuse only: ladder.body is platform material here and does not confer climb behavior.",
+      "resize": {
+        "x": {
+          "path": "extent.width",
+          "minimum": 2,
+          "anchor": "opposite",
+          "unit": "nativeCell"
+        }
+      }
     },
     "construction.hill.large": {
       "kind": "decoration",
@@ -11099,7 +11290,7 @@
   },
   "objects": {
     "backgroundFill": {
-      "defaultSceneLayer": "background",
+      "defaultSceneLayer": "sky",
       "kind": "decoration",
       "engineNoun": "decoration",
       "capabilities": [],
@@ -11180,7 +11371,7 @@
       }
     },
     "skyGradient": {
-      "defaultSceneLayer": "background",
+      "defaultSceneLayer": "sky",
       "kind": "decoration",
       "engineNoun": "decoration",
       "capabilities": [],
@@ -12022,8 +12213,14 @@
       "object": "skyGradient",
       "parameters": [
         "transform.x",
-        "transform.y"
-      ]
+        "transform.y",
+        "extent.width",
+        "extent.height"
+      ],
+      "initialValues": {
+        "extent.width": 1,
+        "extent.height": 3
+      }
     },
     "backgroundDome": {
       "authoringGroup": "Deco",
