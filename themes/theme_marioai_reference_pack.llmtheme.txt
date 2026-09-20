@@ -9761,7 +9761,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "effect.debris": {
       "frames": [
@@ -9787,7 +9788,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "effect.sparkle.general": {
       "frames": [
@@ -9820,7 +9822,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "effect.sparkle.pickup": {
       "frames": [
@@ -9853,7 +9856,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.flower": {
       "frames": [
@@ -9893,7 +9897,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.goomba.walk": {
       "frames": [
@@ -9919,7 +9924,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.green_koopa.shell": {
       "frames": [
@@ -9959,7 +9965,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.green_koopa.walk": {
       "frames": [
@@ -9985,7 +9992,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.red_koopa.shell": {
       "frames": [
@@ -10025,7 +10033,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.red_koopa.walk": {
       "frames": [
@@ -10051,7 +10060,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.spiky.walk": {
       "frames": [
@@ -10077,7 +10087,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.wave_goomba.walk": {
       "frames": [
@@ -10103,7 +10114,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.wing.flap": {
       "frames": [
@@ -10129,7 +10141,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "goal.actor.celebration": {
       "frames": [
@@ -10155,7 +10168,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "pickup.coin.spin": {
       "frames": [
@@ -10195,7 +10209,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.carrying.run": {
       "frames": [
@@ -10228,7 +10243,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.carrying.walk": {
       "frames": [
@@ -10261,7 +10277,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.fire.run": {
       "frames": [
@@ -10294,7 +10311,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.fire.walk": {
       "frames": [
@@ -10327,7 +10345,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.normal.run": {
       "frames": [
@@ -10360,7 +10379,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.normal.walk": {
       "frames": [
@@ -10393,7 +10413,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.small.run": {
       "frames": [
@@ -10419,7 +10440,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "player.small.walk": {
       "frames": [
@@ -10445,7 +10467,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "projectile.fireball": {
       "frames": [
@@ -10485,7 +10508,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "block.breakable.idle": {
       "frames": [
@@ -10525,7 +10549,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "block.rotating.spin": {
       "frames": [
@@ -10565,7 +10590,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     }
   },
   "constructions": {
