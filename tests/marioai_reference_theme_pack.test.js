@@ -194,7 +194,7 @@ assert.deepEqual(
 assert.equal(pack.objects['koopa.red'].visuals.turnaround, 'enemy.walker.armored.red.turnaround');
 assert.equal(pack.objects['koopa.green'].visuals.turnaround, 'enemy.walker.armored.green.turnaround');
 assert.equal(pack.objects.brick.visuals.normal, 'block.breakable.idle');
-assert.equal(pack.objects.questionBlock.visuals.used, 'block.hidden.revealed');
+assert(!pack.objects.questionBlock.visuals.used, 'question-block used art is not borrowed from the hidden-block state family');
 for (const [id, construction] of Object.entries(pack.constructions)) {
   if (construction.family) assert(pack.families[construction.family], `${id}: missing family ${construction.family}`);
   for (const resource of Object.values(construction.components || {})) assert(pack.resources[resource], `${id}: missing component ${resource}`);

@@ -2108,37 +2108,6 @@
         }
       }
     },
-    "bar.white.left_cap": {
-      "kind": "decoration",
-      "role": "bar.white.left_cap",
-      "purpose": "A frame or component of bar.white.",
-      "belongsTo": "bar.white",
-      "image": {
-        "atlas": "map",
-        "rect": {
-          "x": 192,
-          "y": 48,
-          "w": 16,
-          "h": 16
-        }
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "sheet": "mapsheet.png",
-        "index": 60,
-        "cell": {
-          "x": 12,
-          "y": 3
-        }
-      }
-    },
     "block.breakable.idle.frame_0": {
       "kind": "block",
       "role": "block.breakable.idle.frame_0",
@@ -9423,6 +9392,38 @@
           "y": 9
         }
       }
+    },
+    "bar.white.left_cap": {
+      "kind": "decoration",
+      "role": "bar.white.left_cap",
+      "purpose": "A frame or component of bar.white.",
+      "belongsTo": "bar.white",
+      "image": {
+        "atlas": "map",
+        "rect": {
+          "x": 192,
+          "y": 48,
+          "w": 16,
+          "h": 16
+        }
+      },
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "mapsheet.png",
+        "index": 60,
+        "cell": {
+          "x": 12,
+          "y": 3
+        }
+      },
+      "id": "bar.white.left_cap"
     }
   },
   "families": {
@@ -10929,6 +10930,128 @@
         "type": "extensibleRow",
         "repeat": "middle"
       }
+    },
+    "construction.white-platform": {
+      "kind": "ground",
+      "components": {
+        "left": "bar.white.left_cap",
+        "middle": "ladder.body",
+        "right": "bar.white.left_cap"
+      },
+      "layout": {
+        "type": "extensibleRow",
+        "repeat": "middle",
+        "mirror": [
+          "right"
+        ]
+      },
+      "note": "Visual resource reuse only: ladder.body is platform material here and does not confer climb behavior."
+    },
+    "construction.hill.large": {
+      "kind": "decoration",
+      "family": "hill.large",
+      "components": {
+        "topLeft": "hill.large.top_left",
+        "topRight": "hill.large.top_right",
+        "upperLeft": "hill.large.upper_left",
+        "upperRight": "hill.large.upper_right",
+        "lowerLeft": "hill.large.lower_left",
+        "lowerRight": "hill.large.lower_right",
+        "bottomLeft": "hill.large.bottom_left",
+        "bottomRight": "hill.large.bottom_right"
+      },
+      "layout": {
+        "type": "fixedGrid",
+        "columns": 2
+      }
+    },
+    "construction.hill.wide": {
+      "kind": "decoration",
+      "family": "hill.wide",
+      "components": {
+        "topLeft": "hill.wide.top_left",
+        "topMiddle": "hill.wide.top_middle",
+        "topRight": "hill.wide.top_right",
+        "middleLeft": "hill.wide.middle_left",
+        "middle": "hill.wide.middle",
+        "middleRight": "hill.wide.middle_right",
+        "lowerLeft": "hill.wide.lower_left",
+        "lowerRight": "hill.wide.lower_right",
+        "bottomLeft": "hill.wide.bottom_left",
+        "bottomRight": "hill.wide.bottom_right"
+      },
+      "layout": {
+        "type": "explicitGrid",
+        "cells": [
+          {
+            "part": "topLeft",
+            "x": 0,
+            "y": 0
+          },
+          {
+            "part": "topMiddle",
+            "x": 1,
+            "y": 0
+          },
+          {
+            "part": "topRight",
+            "x": 2,
+            "y": 0
+          },
+          {
+            "part": "middleLeft",
+            "x": 0,
+            "y": 1
+          },
+          {
+            "part": "middle",
+            "x": 1,
+            "y": 1
+          },
+          {
+            "part": "middleRight",
+            "x": 2,
+            "y": 1
+          },
+          {
+            "part": "lowerLeft",
+            "x": 0,
+            "y": 2
+          },
+          {
+            "part": "lowerRight",
+            "x": 2,
+            "y": 2
+          },
+          {
+            "part": "bottomLeft",
+            "x": 0,
+            "y": 3
+          },
+          {
+            "part": "bottomRight",
+            "x": 2,
+            "y": 3
+          }
+        ]
+      }
+    },
+    "construction.cannon.vertical": {
+      "kind": "ground",
+      "family": "cannon.vertical",
+      "components": {
+        "muzzle": "cannon.vertical.muzzle",
+        "neck": "cannon.vertical.neck",
+        "body": "cannon.vertical.body"
+      },
+      "layout": {
+        "type": "fixedColumn",
+        "order": [
+          "muzzle",
+          "neck",
+          "body"
+        ]
+      }
     }
   },
   "objects": {
@@ -11180,8 +11303,7 @@
       "engineNoun": "block",
       "capabilities": [],
       "visuals": {
-        "normal": "block.question.idle",
-        "used": "block.hidden.revealed"
+        "normal": "block.question.idle"
       },
       "bumpable": true,
       "bumpTriggers": [
@@ -11257,8 +11379,10 @@
       "kind": "decoration",
       "engineNoun": "decoration",
       "capabilities": [],
+      "visualSelector": "bush.variant",
       "visuals": {
-        "construction": "construction.bush"
+        "variant_0": "construction.background.bush.variant_0",
+        "variant_1": "construction.background.bush.variant_1"
       }
     },
     "arrowSign": {
@@ -11343,6 +11467,63 @@
           "enterState": "spinning"
         }
       ]
+    },
+    "whitePlatform": {
+      "kind": "ground",
+      "engineNoun": "platform",
+      "capabilities": [],
+      "collisionMode": "oneWay",
+      "visuals": {
+        "idle": "construction.white-platform"
+      },
+      "runtimeHooks": {
+        "movement": {
+          "status": "unimplemented",
+          "parameters": [
+            "movingPlatform.path",
+            "movingPlatform.range",
+            "movingPlatform.speed"
+          ],
+          "optional": true
+        }
+      }
+    },
+    "hill": {
+      "kind": "decoration",
+      "engineNoun": "decoration",
+      "capabilities": [],
+      "visualSelector": "hill.shape",
+      "visuals": {
+        "large": "construction.hill.large",
+        "wide": "construction.hill.wide"
+      }
+    },
+    "verticalCannon": {
+      "kind": "ground",
+      "engineNoun": "structure",
+      "capabilities": [],
+      "visuals": {
+        "idle": "construction.cannon.vertical"
+      },
+      "runtimeHooks": {
+        "firing": {
+          "status": "unimplemented"
+        }
+      }
+    },
+    "hiddenRevealedBlock": {
+      "kind": "block",
+      "engineNoun": "block",
+      "capabilities": [],
+      "visuals": {
+        "preview": "block.hidden.revealed.frame_0"
+      },
+      "runtimeHooks": {
+        "visualAnimation": {
+          "status": "unimplemented",
+          "frameGroup": "block.hidden.revealed"
+        }
+      }
     }
   },
   "parameterSchemas": {
@@ -11512,6 +11693,26 @@
         ],
         "default": "stone"
       }
+    },
+    "bush": {
+      "variant": {
+        "type": "enum",
+        "values": [
+          "variant_0",
+          "variant_1"
+        ],
+        "default": "variant_1"
+      }
+    },
+    "hill": {
+      "shape": {
+        "type": "enum",
+        "values": [
+          "large",
+          "wide"
+        ],
+        "default": "large"
+      }
     }
   },
   "placeables": {
@@ -11669,7 +11870,8 @@
       "parameters": [
         "transform.x",
         "transform.y",
-        "extent.width"
+        "extent.width",
+        "bush.variant"
       ],
       "initialValues": {
         "extent.width": 3
@@ -11700,6 +11902,46 @@
         "transform.y"
       ],
       "previewVisual": "idle"
+    },
+    "whitePlatform": {
+      "label": "White Platform",
+      "object": "whitePlatform",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "extent.width",
+        "movingPlatform.path",
+        "movingPlatform.range",
+        "movingPlatform.speed"
+      ],
+      "initialValues": {
+        "extent.width": 3
+      }
+    },
+    "hill": {
+      "label": "Hill",
+      "object": "hill",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "hill.shape"
+      ]
+    },
+    "verticalCannon": {
+      "label": "Vertical Cannon",
+      "object": "verticalCannon",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
+    },
+    "hiddenRevealedBlock": {
+      "label": "Hidden / Revealed Block",
+      "object": "hiddenRevealedBlock",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
     }
   },
   "coverage": {

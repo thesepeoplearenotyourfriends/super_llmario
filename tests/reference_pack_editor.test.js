@@ -47,6 +47,81 @@ assert.deepStrictEqual(theme.placeables.ladder.initialValues, {'extent.length':2
 assert.deepStrictEqual(theme.placeables.ground.initialValues, {'terrain.width':2,'terrain.height':2});
 assert.deepStrictEqual(theme.placeables.mushroomPlatform.initialValues, {'extent.width':3,'extent.height':3});
 assert.deepStrictEqual(theme.placeables.bush.initialValues, {'extent.width':3});
+assert.deepStrictEqual(theme.objects.bush.visuals, {
+  variant_0:'construction.background.bush.variant_0',
+  variant_1:'construction.background.bush.variant_1',
+}, 'one Bush concept owns both audited appearances');
+assert(theme.placeables.bush.parameters.includes('bush.variant'));
+assert.strictEqual(semantics.visualTarget(theme.objects.bush, {'bush.variant':'variant_0'}).target,
+  'construction.background.bush.variant_0');
+assert.strictEqual(semantics.visualTarget(theme.objects.bush, {'bush.variant':'variant_1'}).target,
+  'construction.background.bush.variant_1');
+assert.deepStrictEqual(theme.constructions['construction.ladder'].components,
+  {top:'ladder.top',body:'ladder.body'}, 'ladder construction remains unchanged');
+assert.deepStrictEqual(theme.constructions['construction.white-platform'].components, {
+  left:'bar.white.left_cap',middle:'ladder.body',right:'bar.white.left_cap',
+}, 'white platform reuses ladder art as presentation material without changing the ladder');
+assert.deepStrictEqual(theme.constructions['construction.white-platform'].layout.mirror, ['right']);
+for (const width of [2,3,5]) {
+  const assembled=plain(semantics.constructionLayout(
+    theme.constructions['construction.white-platform'].components,
+    theme.constructions['construction.white-platform'].layout,width));
+  assert.strictEqual(assembled.cells.length,width);
+  assert.deepStrictEqual(assembled.cells.map(cell=>cell.x),Array.from({length:width},(_,i)=>i));
+  assert.deepStrictEqual(assembled.cells.filter(cell=>cell.mirror).map(cell=>cell.part),['right'],
+    `only the right cap is mirrored at width ${width}`);
+}
+assert.deepStrictEqual(theme.placeables.whitePlatform.initialValues, {'extent.width':3});
+for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform.speed'])
+  assert(theme.placeables.whitePlatform.parameters.includes(path), `white platform exposes optional ${path}`);
+assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.status, 'unimplemented');
+assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.optional, true);
+assert.deepStrictEqual(theme.objects.hill.visuals, {
+  large:'construction.hill.large',wide:'construction.hill.wide',
+});
+const largeHill=plain(semantics.constructionLayout(
+  theme.constructions['construction.hill.large'].components,
+  theme.constructions['construction.hill.large'].layout));
+assert.deepStrictEqual(largeHill.cells.map(({x,y})=>[x,y]),
+  [[0,0],[1,0],[0,1],[1,1],[0,2],[1,2],[0,3],[1,3]]);
+const wideHill=plain(semantics.constructionLayout(
+  theme.constructions['construction.hill.wide'].components,
+  theme.constructions['construction.hill.wide'].layout));
+assert.deepStrictEqual(wideHill.cells.map(({x,y})=>[x,y]),
+  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[2,2],[0,3],[2,3]]);
+assert(theme.placeables.hill.parameters.includes('hill.shape'));
+assert.strictEqual(theme.objects.hill.collisionMode, undefined, 'hills remain presentation-only');
+assert.deepStrictEqual(theme.constructions['construction.cannon.vertical'].layout.order,
+  ['muzzle','neck','body']);
+const cannonCells=plain(semantics.constructionLayout(
+  theme.constructions['construction.cannon.vertical'].components,
+  theme.constructions['construction.cannon.vertical'].layout));
+assert.deepStrictEqual(cannonCells.cells.map(({id,x,y})=>({id,x,y})),[
+  {id:'cannon.vertical.muzzle',x:0,y:0},
+  {id:'cannon.vertical.neck',x:0,y:1},
+  {id:'cannon.vertical.body',x:0,y:2},
+]);
+assert.strictEqual(theme.objects.verticalCannon.runtimeHooks.firing.status, 'unimplemented');
+assert.deepStrictEqual(theme.placeables.verticalCannon.parameters,['transform.x','transform.y']);
+assert.deepStrictEqual(theme.objects.hiddenRevealedBlock.visuals,
+  {preview:'block.hidden.revealed.frame_0'}, 'the authoring preview is one deterministic audited frame');
+assert.deepStrictEqual(theme.objects.hiddenRevealedBlock.runtimeHooks,
+  {visualAnimation:{status:'unimplemented',frameGroup:'block.hidden.revealed'}},
+  'future frame cycling is an explicit socket without invented order or timing');
+assert.strictEqual(theme.objects.hiddenRevealedBlock.collisionMode, undefined,
+  'the visual family does not imply collision behavior');
+assert.strictEqual(theme.constructions['construction.block.hidden'], undefined,
+  'no transparent hidden presentation is invented');
+assert.strictEqual(theme.parameterSchemas.hiddenBlock, undefined,
+  'resource naming does not invent authored state or timing parameters');
+assert.deepStrictEqual(theme.placeables.hiddenRevealedBlock.parameters,['transform.x','transform.y']);
+assert.deepStrictEqual(theme.frameGroups['block.hidden.revealed'].resources,[
+  'block.hidden.revealed.frame_0','block.hidden.revealed.frame_1',
+  'block.hidden.revealed.frame_2','block.hidden.revealed.frame_3',
+]);
+assert.strictEqual(theme.frameGroups['block.hidden.revealed'].sequenceKnown,false);
+assert.strictEqual(theme.frameGroups['block.hidden.revealed'].timingKnown,false);
+assert(!theme.objects.questionBlock.visuals.used, 'hidden reveal art is not question-block used art');
 assert(!theme.placeables.movingMushroomPlatform, 'moving mushroom platform is not a separate palette species');
 for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform.speed'])
   assert(theme.placeables.mushroomPlatform.parameters.includes(path), `mushroom platform exposes optional ${path}`);
