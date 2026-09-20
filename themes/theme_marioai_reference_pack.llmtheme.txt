@@ -11052,16 +11052,6 @@
           "body"
         ]
       }
-    },
-    "construction.block.hidden": {
-      "kind": "block",
-      "components": {},
-      "layout": {
-        "type": "empty",
-        "w": 16,
-        "h": 16
-      },
-      "note": "The hidden presentation is intentionally transparent but retains deterministic authoring bounds."
     }
   },
   "objects": {
@@ -11525,16 +11515,13 @@
       "kind": "block",
       "engineNoun": "block",
       "capabilities": [],
-      "visualSelector": "hiddenBlock.previewState",
       "visuals": {
-        "hidden": "construction.block.hidden",
-        "revealed": "block.hidden.revealed.frame_0"
+        "preview": "block.hidden.revealed.frame_0"
       },
-      "collisionMode": "solid",
       "runtimeHooks": {
-        "revealCycle": {
+        "visualAnimation": {
           "status": "unimplemented",
-          "durationParameter": "hiddenBlock.revealDuration"
+          "frameGroup": "block.hidden.revealed"
         }
       }
     }
@@ -11725,24 +11712,6 @@
           "wide"
         ],
         "default": "large"
-      }
-    },
-    "hiddenBlock": {
-      "previewState": {
-        "type": "enum",
-        "values": [
-          "hidden",
-          "revealed"
-        ],
-        "default": "revealed",
-        "semantics": "authoring-preview-state"
-      },
-      "revealDuration": {
-        "type": "number",
-        "minimum": 0,
-        "unit": "seconds",
-        "engineDefault": true,
-        "semantics": "future-runtime-hook"
       }
     }
   },
@@ -11971,9 +11940,7 @@
       "object": "hiddenRevealedBlock",
       "parameters": [
         "transform.x",
-        "transform.y",
-        "hiddenBlock.previewState",
-        "hiddenBlock.revealDuration"
+        "transform.y"
       ]
     }
   },

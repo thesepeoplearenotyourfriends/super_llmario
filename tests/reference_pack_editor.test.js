@@ -103,13 +103,24 @@ assert.deepStrictEqual(cannonCells.cells.map(({id,x,y})=>({id,x,y})),[
 ]);
 assert.strictEqual(theme.objects.verticalCannon.runtimeHooks.firing.status, 'unimplemented');
 assert.deepStrictEqual(theme.placeables.verticalCannon.parameters,['transform.x','transform.y']);
-assert.strictEqual(theme.objects.hiddenRevealedBlock.visuals.revealed, 'block.hidden.revealed.frame_0');
-assert.strictEqual(theme.objects.hiddenRevealedBlock.runtimeHooks.revealCycle.status, 'unimplemented');
-assert.strictEqual(theme.objects.hiddenRevealedBlock.runtimeHooks.revealCycle.stateParameter, undefined,
-  'editor preview state is not consumed as runtime state');
-assert.deepStrictEqual(plain(semantics.constructionLayout({},
-  theme.constructions['construction.block.hidden'].layout)),{cells:[],w:16,h:16});
-assert(theme.placeables.hiddenRevealedBlock.parameters.includes('hiddenBlock.revealDuration'));
+assert.deepStrictEqual(theme.objects.hiddenRevealedBlock.visuals,
+  {preview:'block.hidden.revealed.frame_0'}, 'the authoring preview is one deterministic audited frame');
+assert.deepStrictEqual(theme.objects.hiddenRevealedBlock.runtimeHooks,
+  {visualAnimation:{status:'unimplemented',frameGroup:'block.hidden.revealed'}},
+  'future frame cycling is an explicit socket without invented order or timing');
+assert.strictEqual(theme.objects.hiddenRevealedBlock.collisionMode, undefined,
+  'the visual family does not imply collision behavior');
+assert.strictEqual(theme.constructions['construction.block.hidden'], undefined,
+  'no transparent hidden presentation is invented');
+assert.strictEqual(theme.parameterSchemas.hiddenBlock, undefined,
+  'resource naming does not invent authored state or timing parameters');
+assert.deepStrictEqual(theme.placeables.hiddenRevealedBlock.parameters,['transform.x','transform.y']);
+assert.deepStrictEqual(theme.frameGroups['block.hidden.revealed'].resources,[
+  'block.hidden.revealed.frame_0','block.hidden.revealed.frame_1',
+  'block.hidden.revealed.frame_2','block.hidden.revealed.frame_3',
+]);
+assert.strictEqual(theme.frameGroups['block.hidden.revealed'].sequenceKnown,false);
+assert.strictEqual(theme.frameGroups['block.hidden.revealed'].timingKnown,false);
 assert(!theme.objects.questionBlock.visuals.used, 'hidden reveal art is not question-block used art');
 assert(!theme.placeables.movingMushroomPlatform, 'moving mushroom platform is not a separate palette species');
 for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform.speed'])
