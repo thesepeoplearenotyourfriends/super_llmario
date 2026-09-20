@@ -11,6 +11,27 @@ assert(newEditor.includes('Contract gaps needed by a preview'), 'editor reports 
 assert(!/\bfetch\s*\(|XMLHttpRequest|import\s*\(/.test(newEditor), 'standalone editor has no runtime repository dependency');
 assert.strictEqual(theme.format, 'llmario-theme-pack-reference');
 assert(Object.keys(theme.placeables).length > 0, 'reference theme declares a palette');
+assert.deepStrictEqual(theme.sceneLayers, ['background','world','actors','foreground']);
+assert.strictEqual(theme.placeables.bush.authoringGroup, 'Deco');
+assert.strictEqual(theme.placeables.hill.authoringGroup, 'Deco');
+for (const id of ['koopaRed','koopaGreen','ground']) assert.strictEqual(theme.placeables[id].authoringGroup, 'World');
+for (const [id,placeable] of Object.entries(theme.placeables)) {
+  assert(['World','Deco'].includes(placeable.authoringGroup), `${id} has an explicit authoring group`);
+  assert(!Object.hasOwn(placeable,'defaultSceneLayer'), `${id} does not duplicate its object's scene-layer default`);
+  assert(theme.sceneLayers.includes(theme.objects[placeable.object].defaultSceneLayer),
+    `${id} consumes its authored object's scene-layer default`);
+}
+assert(!Object.keys(theme.placeables).some(id=>id.startsWith('background.')),
+  'raw background resources are not palette concepts');
+const rawBackgroundResources=Object.keys(theme.resources).filter(id=>id.startsWith('background.'));
+assert(rawBackgroundResources.length>0,'fixture contains raw background resources to guard');
+assert(rawBackgroundResources.every(id=>!Object.hasOwn(theme.placeables,id)),
+  'no raw background resource can become a palette card');
+assert.deepStrictEqual(Object.entries(theme.placeables).filter(([,p])=>p.authoringGroup==='Deco').map(([id])=>id),
+  ['bush','hill'],'Deco contains authored constructions rather than background cells');
+assert(newEditor.includes("Object.entries(state.theme.placeables)"), 'palette inventory comes from placeables');
+assert(!/buildPalette\(\)[^]*Object\.entries\(state\.theme\.resources\)/.test(newEditor),
+  'palette building never enumerates raw resources');
 
 const semanticSource = newEditor.match(/<script id="contractSemantics">([\s\S]*?)<\/script>/)[1];
 const context = { structuredClone, globalThis: {} };
@@ -18,6 +39,33 @@ vm.runInNewContext(semanticSource, context);
 const semantics = context.globalThis.ReferencePackSemantics;
 const schema = theme.parameterSchemas;
 const plain = value => JSON.parse(JSON.stringify(value));
+
+const item=(id)=>({id,definition:theme.placeables[id],object:theme.objects[theme.placeables[id].object]});
+const bush={item:item('bush'),values:{'transform.x':100,'transform.y':100,'extent.width':3}};
+const koopa={item:item('koopaRed'),values:{'transform.x':100,'transform.y':100}};
+assert.deepStrictEqual(semantics.orderedInstances(theme,[bush,koopa]).map(x=>x.item.id),['bush','koopaRed'],
+  'Bush placed before Koopa renders behind it');
+assert.deepStrictEqual(semantics.orderedInstances(theme,[koopa,bush]).map(x=>x.item.id),['bush','koopaRed'],
+  'Bush placed after Koopa still renders behind it');
+const overlap=()=>({x:90,y:70,w:30,h:40}),point={x:100,y:100};
+assert.strictEqual(semantics.pickInstance(theme,[bush,koopa],point,overlap),koopa,
+  'overlapping Bush and Koopa hit-test the normally frontmost Koopa');
+bush.sceneLayer='foreground';
+assert.deepStrictEqual(semantics.orderedInstances(theme,[bush,koopa]).map(x=>x.item.id),['koopaRed','bush'],
+  'instance foreground override renders Bush over Koopa');
+assert.strictEqual(semantics.pickInstance(theme,[bush,koopa],point,overlap),bush,
+  'overlapping objects hit-test the foreground-overridden Bush first');
+for (const path of bush.item.definition.parameters) bush.values[path]=path==='bush.variant'?'variant_1':7;
+assert.strictEqual(bush.sceneLayer,'foreground','ordinary position, dimension, and visual edits retain the instance override');
+semantics.setSceneLayerOverride(bush,'background');
+assert(!Object.hasOwn(bush,'sceneLayer'),'choosing the object default removes the instance override');
+assert.strictEqual(semantics.sceneLayerFor(theme,bush),'background','the instance resumes consuming the object default');
+const red={item:item('koopaRed'),values:{'transform.x':10,'transform.y':10}},green={item:item('koopaGreen'),values:{'transform.x':20,'transform.y':20}};
+assert.deepStrictEqual(semantics.orderedInstances(theme,[green,red]).map(x=>x.item.id),['koopaGreen','koopaRed'],
+  'same-layer order stays stable instead of sorting by species or position');
+red.values['transform.x']=999;red.values['flight.hasWings']=true;
+assert.deepStrictEqual(semantics.orderedInstances(theme,[green,red]).map(x=>x.item.id),['koopaGreen','koopaRed'],
+  'same-layer movement and parameter edits cannot change relative depth');
 
 assert.strictEqual(semantics.initialValue('rewardBlock.contents', schema.rewardBlock.contents), undefined,
   'allowed object references do not become authored defaults');
