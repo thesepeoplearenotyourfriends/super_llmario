@@ -12323,6 +12323,11 @@
       "authoringGroup": "World",
       "label": "Brick",
       "object": "brick",
+      "stamp": {
+        "mode": "squareCell",
+        "family": "block",
+        "footprint": {"w": 16, "h": 16}
+      },
       "parameters": [
         "transform.x",
         "transform.y",
@@ -12429,6 +12434,11 @@
       "authoringGroup": "World",
       "label": "Solid Block",
       "object": "solidBlock",
+      "stamp": {
+        "mode": "squareCell",
+        "family": "block",
+        "footprint": {"w": 16, "h": 16}
+      },
       "parameters": [
         "transform.x",
         "transform.y",
