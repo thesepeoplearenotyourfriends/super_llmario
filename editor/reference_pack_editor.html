@@ -51,7 +51,26 @@ function autotilePreview(id,construction){
   return Array.isArray(a.neighborBits)&&a.neighborBits.length===4&&a.variants&&typeof a.variants==='object'
     ?{supported:true}:{supported:false,gap:`${id}: autotile requires four neighborBits and mask variants.`};
 }
-root.ReferencePackSemantics={initialValue,visualTarget,controlEnabled,autotilePreview};
+function rectangleAutotiles(width,height,variants){
+  const cells=[];
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    const mask=[x<width-1&&y<height-1,x>0&&y<height-1,x<width-1&&y>0,x>0&&y>0].map(Number).join('');
+    cells.push({x,y,mask,id:variants[mask]});
+  }
+  return cells;
+}
+function authoredPresentation(isPipe,isActor,values={}){
+  const quarterTurns=isPipe?({up:0,right:1,down:2,left:3}[values['pipe.direction']]||0):0;
+  return{quarterTurns,rotation:quarterTurns*Math.PI/2,mirror:isActor&&values['walker.direction']==='left'};
+}
+function transformedAabb(bounds,presentation,origin={x:0,y:0}){
+  const left=-bounds.anchorX*bounds.w,right=(1-bounds.anchorX)*bounds.w,top=-bounds.anchorY*bounds.h,bottom=(1-bounds.anchorY)*bounds.h;
+  const angle=presentation.quarterTurns*Math.PI/2,cos=Math.round(Math.cos(angle)),sin=Math.round(Math.sin(angle)),mirror=presentation.mirror?-1:1;
+  const points=[[left,top],[right,top],[right,bottom],[left,bottom]].map(([x,y])=>{x*=mirror;return{x:origin.x+x*cos-y*sin,y:origin.y+x*sin+y*cos}});
+  const xs=points.map(p=>p.x),ys=points.map(p=>p.y),x=Math.min(...xs),y=Math.min(...ys);
+  return{x,y,w:Math.max(...xs)-x,h:Math.max(...ys)-y};
+}
+root.ReferencePackSemantics={initialValue,visualTarget,controlEnabled,autotilePreview,rectangleAutotiles,authoredPresentation,transformedAabb};
 })(typeof window==='object'?window:globalThis);
 </script>
 <script>
@@ -85,7 +104,7 @@ function targetBounds(id,values,seen=new Set(),report=false){if(!id||seen.has(id
 function constructionTiles(id,values,report=true){const c=state.theme.constructions[id],parts=c?.components||{},layout=c?.layout;let cells=[];
   const push=(key,x,y)=>{if(parts[key])cells.push({id:parts[key],x,y})};
   const authoredSize=path=>{const value=values[path];if(Number.isInteger(value)&&value>=1)return value;if(report)addIssue(`${id}: ${path} has no authored or schema-default value; construction size not invented.`);return null};
-  if(c?.autotile){const decision=semantics.autotilePreview(id,c);if(!decision.supported){if(report)addIssue(decision.gap);return null}const w=authoredSize('terrain.width'),h=authoredSize('terrain.height');if(w===null||h===null)return null;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const mask=[x<w-1&&y<h-1,x>0&&y<h-1,x<w-1&&y>0,x>0&&y>0].map(Boolean).map(Number).join(''),target=c.autotile.variants[mask];if(target)cells.push({id:target,x,y});else if(report)addIssue(`${id}: no autotile resource for occupied-neighbor mask ${mask}.`)}}
+  if(c?.autotile){const decision=semantics.autotilePreview(id,c);if(!decision.supported){if(report)addIssue(decision.gap);return null}const w=authoredSize('terrain.width'),h=authoredSize('terrain.height');if(w===null||h===null)return null;for(const cell of semantics.rectangleAutotiles(w,h,c.autotile.variants)){if(cell.id)cells.push(cell);else if(report)addIssue(`${id}: no autotile resource for occupied-neighbor mask ${cell.mask}.`)}}
   else if(layout==='2x2'){push('topLeft',0,0);push('topRight',1,0);push('bottomLeft',0,1);push('bottomRight',1,1)}
   else if(layout==='two-column vertical, repeat body rows'){const n=authoredSize('pipe.length');if(n===null)return null;push('mouthLeft',0,0);push('mouthRight',1,0);for(let y=1;y<n;y++){push('bodyLeft',0,y);push('bodyRight',1,y)}}
   else if(layout==='one-column vertical, repeat body'){const n=authoredSize('extent.length');if(n===null)return null;push('top',0,0);for(let y=1;y<n;y++)push('body',0,y)}
@@ -97,10 +116,10 @@ function constructionTiles(id,values,report=true){const c=state.theme.constructi
   else {if(report)addIssue(`${id}: layout ${JSON.stringify(layout)} has no deterministic rendering rule in the theme contract.`);return null}
   let cellW=0,cellH=0;for(const tile of cells){const b=targetBounds(tile.id,values,new Set());if(!b){if(report)addIssue(`${id}: component ${tile.id} is not a renderable declared target.`);continue}cellW=Math.max(cellW,b.w);cellH=Math.max(cellH,b.h)}if(!cellW||!cellH)return null;return{cells,w:(Math.max(0,...cells.map(x=>x.x))+1)*cellW,h:(Math.max(0,...cells.map(x=>x.y))+1)*cellH,cellW,cellH}}
 function drawResource(c,id,x,y,scale=1){const b=resourceBox(id);if(!b){addIssue(`${id}: resource lacks numeric display dimensions.`);return}const image=b.resource.image,img=state.atlases.get(image?.atlas),r=image?.rect;if(!img||!r){addIssue(`${id}: resource image target is unavailable.`);return}c.imageSmoothingEnabled=false;c.drawImage(img,r.x,r.y,r.w,r.h,x-b.ax*b.w*scale,y-b.ay*b.h*scale,b.w*scale,b.h*scale)}
-function presentation(item,values){const direction=values['pipe.direction'],quarter={up:0,right:1,down:2,left:3}[direction]||0;return{rotation:item.object===state.theme.objects.pipe?quarter*Math.PI/2:0,mirror:item.object.kind==='actor'&&values['walker.direction']==='left'}}
+function presentation(item,values){return semantics.authoredPresentation(item.object===state.theme.objects.pipe,item.object.kind==='actor',values)}
 function drawObject(c,item,values,box){const target=itemTarget(item,values,false);if(!target)return;const p=presentation(item,values);c.save();c.translate(box.x,box.y);c.rotate(p.rotation);c.scale(p.mirror?-1:1,1);drawTarget(c,target,values,{...box,x:0,y:0},new Set());c.restore()}
 function drawTarget(c,id,values,box,seen){if(!id)return;if(seen.has(id)){addIssue(`${id}: cyclic visual target.`);return}seen.add(id);const kind=targetKind(id),bounds=targetBounds(id,values,new Set()),scale=bounds?Math.min(box.maxW/bounds.w,box.maxH/bounds.h,box.scale||Infinity):1;if(kind==='resource')drawResource(c,id,box.x,box.y,scale);else if(kind==='animation'){const frame=state.theme.animations[id].frames?.[0];if(frame)drawResource(c,frame.resource,box.x+(frame.offset?.x||0)*scale,box.y+(frame.offset?.y||0)*scale,scale);else addIssue(`${id}: animation has no first frame for a static authoring preview.`)}else if(kind==='frameGroup'){const resources=state.theme.frameGroups[id].resources||[];if(resources.length===1)drawResource(c,resources[0],box.x,box.y,scale);else addIssue(`${id}: frameGroup does not declare which of its ${resources.length} runtime-selected resources represents an authored preview.`)}else if(kind==='construction'){const tiles=constructionTiles(id,values);if(tiles){const left=box.x-tiles.w*scale/2,top=box.y-tiles.h*scale;for(const tile of tiles.cells)drawResource(c,tile.id,left+(tile.x+.5)*tiles.cellW*scale,top+(tile.y+1)*tiles.cellH*scale,scale)}}else addIssue(`${id}: visual target is absent from resource, animation, frameGroup, and construction dictionaries.`);seen.delete(id)}
-function instanceBounds(inst){const b=targetBounds(itemTarget(inst.item,inst.values,false),inst.values,new Set())||{w:16,h:16,anchorX:.5,anchorY:1},rot=presentation(inst.item,inst.values).rotation,w=rot%Math.PI?b.h:b.w,h=rot%Math.PI?b.w:b.h;return{x:inst.values['transform.x']-w/2,y:inst.values['transform.y']-h,w,h}}
+function instanceBounds(inst){const b=targetBounds(itemTarget(inst.item,inst.values,false),inst.values,new Set())||{w:16,h:16,anchorX:.5,anchorY:1};return semantics.transformedAabb(b,presentation(inst.item,inst.values),{x:inst.values['transform.x'],y:inst.values['transform.y']})}
 function resize(){const r=stage.getBoundingClientRect();state.dpr=Math.max(1,devicePixelRatio||1);canvas.width=Math.round(r.width*state.dpr);canvas.height=Math.round(r.height*state.dpr);draw()}
 function grid(c,w,h){c.fillStyle='#0b151a';c.fillRect(0,0,w,h);c.strokeStyle='#16262d';c.lineWidth=1;for(let x=0;x<w;x+=16){c.beginPath();c.moveTo(x+.5,0);c.lineTo(x+.5,h);c.stroke()}for(let y=0;y<h;y+=16){c.beginPath();c.moveTo(0,y+.5);c.lineTo(w,y+.5);c.stroke()}c.strokeStyle='#223942';for(let x=0;x<w;x+=64){c.beginPath();c.moveTo(x+.5,0);c.lineTo(x+.5,h);c.stroke()}for(let y=0;y<h;y+=64){c.beginPath();c.moveTo(0,y+.5);c.lineTo(w,y+.5);c.stroke()}}
 function draw(){const w=canvas.width/state.dpr,h=canvas.height/state.dpr;ctx.setTransform(state.dpr,0,0,state.dpr,0,0);grid(ctx,w,h);if(!state.theme)return;for(const inst of state.instances){drawObject(ctx,inst.item,inst.values,{x:inst.values['transform.x'],y:inst.values['transform.y'],maxW:Infinity,maxH:Infinity,scale:1});if(inst===state.selected){const b=instanceBounds(inst);ctx.strokeStyle='#f2c14e';ctx.lineWidth=2;ctx.strokeRect(b.x-3,b.y-3,b.w+6,b.h+6)}}}
