@@ -2134,11 +2134,11 @@
         }
       }
     },
-    "block.breakable": {
+    "block.breakable.idle.frame_0": {
       "kind": "block",
-      "role": "block.breakable",
-      "purpose": "A frame or component of block.",
-      "belongsTo": "block",
+      "role": "block.breakable.idle.frame_0",
+      "purpose": "Source-backed visual component of block.breakable.idle.",
+      "belongsTo": "block.breakable.idle",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2165,11 +2165,11 @@
         }
       }
     },
-    "block.breakable.coin": {
+    "block.breakable.idle.frame_1": {
       "kind": "block",
-      "role": "block.breakable.coin",
-      "purpose": "A frame or component of block.breakable.",
-      "belongsTo": "block.breakable",
+      "role": "block.breakable.idle.frame_1",
+      "purpose": "Source-backed visual component of block.breakable.idle.",
+      "belongsTo": "block.breakable.idle",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2196,11 +2196,11 @@
         }
       }
     },
-    "block.breakable.powerup": {
+    "block.breakable.idle.frame_2": {
       "kind": "block",
-      "role": "block.breakable.powerup",
-      "purpose": "A frame or component of block.breakable.",
-      "belongsTo": "block.breakable",
+      "role": "block.breakable.idle.frame_2",
+      "purpose": "Source-backed visual component of block.breakable.idle.",
+      "belongsTo": "block.breakable.idle",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2227,11 +2227,11 @@
         }
       }
     },
-    "block.brick_solid": {
+    "block.breakable.idle.frame_3": {
       "kind": "block",
-      "role": "block.brick_solid",
-      "purpose": "A frame or component of block.",
-      "belongsTo": "block",
+      "role": "block.breakable.idle.frame_3",
+      "purpose": "Source-backed visual component of block.breakable.idle.",
+      "belongsTo": "block.breakable.idle",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2258,11 +2258,11 @@
         }
       }
     },
-    "block.brown_face.variant_1": {
+    "block.hidden.revealed.frame_1": {
       "kind": "block",
-      "role": "block.brown_face.variant_1",
-      "purpose": "A frame or component of block.brown_face.",
-      "belongsTo": "block.brown_face",
+      "role": "block.hidden.revealed.frame_1",
+      "purpose": "Source-backed visual component of block.hidden.revealed.",
+      "belongsTo": "block.hidden.revealed",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2289,11 +2289,11 @@
         }
       }
     },
-    "block.brown_face.variant_2": {
+    "block.hidden.revealed.frame_2": {
       "kind": "block",
-      "role": "block.brown_face.variant_2",
-      "purpose": "A frame or component of block.brown_face.",
-      "belongsTo": "block.brown_face",
+      "role": "block.hidden.revealed.frame_2",
+      "purpose": "Source-backed visual component of block.hidden.revealed.",
+      "belongsTo": "block.hidden.revealed",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2320,11 +2320,11 @@
         }
       }
     },
-    "block.brown_face.variant_3": {
+    "block.hidden.revealed.frame_3": {
       "kind": "block",
-      "role": "block.brown_face.variant_3",
-      "purpose": "A frame or component of block.brown_face.",
-      "belongsTo": "block.brown_face",
+      "role": "block.hidden.revealed.frame_3",
+      "purpose": "Source-backed visual component of block.hidden.revealed.",
+      "belongsTo": "block.hidden.revealed",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2382,11 +2382,11 @@
         }
       }
     },
-    "block.hidden.revealed": {
+    "block.hidden.revealed.frame_0": {
       "kind": "block",
-      "role": "block.hidden.revealed",
-      "purpose": "A frame or component of block.hidden.",
-      "belongsTo": "block.hidden",
+      "role": "block.hidden.revealed.frame_0",
+      "purpose": "Source-backed visual component of block.hidden.revealed.",
+      "belongsTo": "block.hidden.revealed",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2413,10 +2413,10 @@
         }
       }
     },
-    "block.question.coin": {
+    "block.question.frame_1": {
       "kind": "block",
-      "role": "block.question.coin",
-      "purpose": "A frame or component of block.question.",
+      "role": "block.question.frame_1",
+      "purpose": "Source-backed visual component of block.question.",
       "belongsTo": "block.question",
       "image": {
         "atlas": "map",
@@ -2444,10 +2444,10 @@
         }
       }
     },
-    "block.question.multicoin": {
+    "block.question.frame_3": {
       "kind": "block",
-      "role": "block.question.multicoin",
-      "purpose": "A frame or component of block.question.",
+      "role": "block.question.frame_3",
+      "purpose": "Source-backed visual component of block.question.",
       "belongsTo": "block.question",
       "image": {
         "atlas": "map",
@@ -2475,10 +2475,10 @@
         }
       }
     },
-    "block.question.powerup": {
+    "block.question.frame_2": {
       "kind": "block",
-      "role": "block.question.powerup",
-      "purpose": "A frame or component of block.question.",
+      "role": "block.question.frame_2",
+      "purpose": "Source-backed visual component of block.question.",
       "belongsTo": "block.question",
       "image": {
         "atlas": "map",
@@ -2506,11 +2506,11 @@
         }
       }
     },
-    "block.question.visual.frame_0": {
+    "block.question.frame_0": {
       "kind": "block",
-      "role": "block.question.visual.frame_0",
-      "purpose": "A frame or component of block.question.visual.",
-      "belongsTo": "block.question.visual",
+      "role": "block.question.frame_0",
+      "purpose": "Source-backed visual component of block.question.",
+      "belongsTo": "block.question",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2599,11 +2599,11 @@
         }
       }
     },
-    "block.yellow_face": {
+    "block.rotating.frame_0": {
       "kind": "block",
-      "role": "block.yellow_face",
-      "purpose": "A frame or component of block.",
-      "belongsTo": "block",
+      "role": "block.rotating.frame_0",
+      "purpose": "Source-backed visual component of block.rotating.",
+      "belongsTo": "block.rotating",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2630,11 +2630,11 @@
         }
       }
     },
-    "bush.left": {
+    "background.bush.variant_1.left": {
       "kind": "decoration",
-      "role": "bush.left",
-      "purpose": "A frame or component of bush.",
-      "belongsTo": "bush",
+      "role": "background.bush.variant_1.left",
+      "purpose": "Source-backed visual component of background.bush.variant_1.",
+      "belongsTo": "background.bush.variant_1",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2661,11 +2661,11 @@
         }
       }
     },
-    "bush.middle": {
+    "background.bush.variant_1.middle": {
       "kind": "decoration",
-      "role": "bush.middle",
-      "purpose": "A frame or component of bush.",
-      "belongsTo": "bush",
+      "role": "background.bush.variant_1.middle",
+      "purpose": "Source-backed visual component of background.bush.variant_1.",
+      "belongsTo": "background.bush.variant_1",
       "image": {
         "atlas": "map",
         "rect": {
@@ -2692,11 +2692,11 @@
         }
       }
     },
-    "bush.right": {
+    "background.bush.variant_1.right": {
       "kind": "decoration",
-      "role": "bush.right",
-      "purpose": "A frame or component of bush.",
-      "belongsTo": "bush",
+      "role": "background.bush.variant_1.right",
+      "purpose": "Source-backed visual component of background.bush.variant_1.",
+      "belongsTo": "background.bush.variant_1",
       "image": {
         "atlas": "map",
         "rect": {
@@ -3901,11 +3901,11 @@
         }
       }
     },
-    "foliage_canopy.left": {
+    "background.bush.variant_0.left": {
       "kind": "decoration",
-      "role": "foliage_canopy.left",
-      "purpose": "A frame or component of foliage_canopy.",
-      "belongsTo": "foliage_canopy",
+      "role": "background.bush.variant_0.left",
+      "purpose": "Source-backed visual component of background.bush.variant_0.",
+      "belongsTo": "background.bush.variant_0",
       "image": {
         "atlas": "map",
         "rect": {
@@ -3932,11 +3932,11 @@
         }
       }
     },
-    "foliage_canopy.middle": {
+    "background.bush.variant_0.middle": {
       "kind": "decoration",
-      "role": "foliage_canopy.middle",
-      "purpose": "A frame or component of foliage_canopy.",
-      "belongsTo": "foliage_canopy",
+      "role": "background.bush.variant_0.middle",
+      "purpose": "Source-backed visual component of background.bush.variant_0.",
+      "belongsTo": "background.bush.variant_0",
       "image": {
         "atlas": "map",
         "rect": {
@@ -3963,11 +3963,11 @@
         }
       }
     },
-    "foliage_canopy.right": {
+    "background.bush.variant_0.right": {
       "kind": "decoration",
-      "role": "foliage_canopy.right",
-      "purpose": "A frame or component of foliage_canopy.",
-      "belongsTo": "foliage_canopy",
+      "role": "background.bush.variant_0.right",
+      "purpose": "Source-backed visual component of background.bush.variant_0.",
+      "belongsTo": "background.bush.variant_0",
       "image": {
         "atlas": "map",
         "rect": {
@@ -4986,11 +4986,11 @@
         }
       }
     },
-    "pickup.coin": {
+    "pickup.coin.frame_2": {
       "kind": "pickup",
-      "role": "pickup.coin",
-      "purpose": "A frame or component of pickup.",
-      "belongsTo": "pickup",
+      "role": "pickup.coin.frame_2",
+      "purpose": "Source-backed visual component of pickup.coin.",
+      "belongsTo": "pickup.coin",
       "image": {
         "atlas": "map",
         "rect": {
@@ -5017,11 +5017,11 @@
         }
       }
     },
-    "pickup.coin.visual.frame_0": {
+    "pickup.coin.frame_0": {
       "kind": "pickup",
-      "role": "pickup.coin.visual.frame_0",
-      "purpose": "A frame or component of pickup.coin.visual.",
-      "belongsTo": "pickup.coin.visual",
+      "role": "pickup.coin.frame_0",
+      "purpose": "Source-backed visual component of pickup.coin.",
+      "belongsTo": "pickup.coin",
       "image": {
         "atlas": "map",
         "rect": {
@@ -5048,11 +5048,11 @@
         }
       }
     },
-    "pickup.coin.visual.frame_1": {
+    "pickup.coin.frame_1": {
       "kind": "pickup",
-      "role": "pickup.coin.visual.frame_1",
-      "purpose": "A frame or component of pickup.coin.visual.",
-      "belongsTo": "pickup.coin.visual",
+      "role": "pickup.coin.frame_1",
+      "purpose": "Source-backed visual component of pickup.coin.",
+      "belongsTo": "pickup.coin",
       "image": {
         "atlas": "map",
         "rect": {
@@ -5079,11 +5079,11 @@
         }
       }
     },
-    "pickup.coin.visual.frame_3": {
+    "pickup.coin.frame_3": {
       "kind": "pickup",
-      "role": "pickup.coin.visual.frame_3",
-      "purpose": "A frame or component of pickup.coin.visual.",
-      "belongsTo": "pickup.coin.visual",
+      "role": "pickup.coin.frame_3",
+      "purpose": "Source-backed visual component of pickup.coin.",
+      "belongsTo": "pickup.coin",
       "image": {
         "atlas": "map",
         "rect": {
@@ -5513,11 +5513,11 @@
         }
       }
     },
-    "platform.thin_brown": {
-      "kind": "ground",
-      "role": "platform.thin_brown",
-      "purpose": "A frame or component of platform.",
-      "belongsTo": "platform",
+    "block.rotating.frame_3": {
+      "kind": "block",
+      "role": "block.rotating.frame_3",
+      "purpose": "Source-backed visual component of block.rotating.",
+      "belongsTo": "block.rotating",
       "image": {
         "atlas": "map",
         "rect": {
@@ -5544,11 +5544,11 @@
         }
       }
     },
-    "platform.yellow_face": {
-      "kind": "ground",
-      "role": "platform.yellow_face",
-      "purpose": "A frame or component of platform.",
-      "belongsTo": "platform",
+    "block.rotating.frame_2": {
+      "kind": "block",
+      "role": "block.rotating.frame_2",
+      "purpose": "Source-backed visual component of block.rotating.",
+      "belongsTo": "block.rotating",
       "image": {
         "atlas": "map",
         "rect": {
@@ -5575,11 +5575,11 @@
         }
       }
     },
-    "platform.yellow_striped": {
-      "kind": "ground",
-      "role": "platform.yellow_striped",
-      "purpose": "A frame or component of platform.",
-      "belongsTo": "platform",
+    "block.rotating.frame_1": {
+      "kind": "block",
+      "role": "block.rotating.frame_1",
+      "purpose": "Source-backed visual component of block.rotating.",
+      "belongsTo": "block.rotating",
       "image": {
         "atlas": "map",
         "rect": {
@@ -7497,11 +7497,11 @@
         }
       }
     },
-    "sign.arrow_right.bottom_left": {
+    "decoration.sign_arrow_right.bottom_left": {
       "kind": "decoration",
-      "role": "sign.arrow_right.bottom_left",
-      "purpose": "A frame or component of sign.arrow_right.",
-      "belongsTo": "sign.arrow_right",
+      "role": "decoration.sign_arrow_right.bottom_left",
+      "purpose": "Source-backed visual component of decoration.sign_arrow_right.",
+      "belongsTo": "decoration.sign_arrow_right",
       "image": {
         "atlas": "map",
         "rect": {
@@ -7528,11 +7528,11 @@
         }
       }
     },
-    "sign.arrow_right.bottom_right": {
+    "decoration.sign_arrow_right.bottom_right": {
       "kind": "decoration",
-      "role": "sign.arrow_right.bottom_right",
-      "purpose": "A frame or component of sign.arrow_right.",
-      "belongsTo": "sign.arrow_right",
+      "role": "decoration.sign_arrow_right.bottom_right",
+      "purpose": "Source-backed visual component of decoration.sign_arrow_right.",
+      "belongsTo": "decoration.sign_arrow_right",
       "image": {
         "atlas": "map",
         "rect": {
@@ -7559,11 +7559,11 @@
         }
       }
     },
-    "sign.arrow_right.top_left": {
+    "decoration.sign_arrow_right.top_left": {
       "kind": "decoration",
-      "role": "sign.arrow_right.top_left",
-      "purpose": "A frame or component of sign.arrow_right.",
-      "belongsTo": "sign.arrow_right",
+      "role": "decoration.sign_arrow_right.top_left",
+      "purpose": "Source-backed visual component of decoration.sign_arrow_right.",
+      "belongsTo": "decoration.sign_arrow_right",
       "image": {
         "atlas": "map",
         "rect": {
@@ -7590,11 +7590,11 @@
         }
       }
     },
-    "sign.arrow_right.top_right": {
+    "decoration.sign_arrow_right.top_right": {
       "kind": "decoration",
-      "role": "sign.arrow_right.top_right",
-      "purpose": "A frame or component of sign.arrow_right.",
-      "belongsTo": "sign.arrow_right",
+      "role": "decoration.sign_arrow_right.top_right",
+      "purpose": "Source-backed visual component of decoration.sign_arrow_right.",
+      "belongsTo": "decoration.sign_arrow_right",
       "image": {
         "atlas": "map",
         "rect": {
@@ -7621,10 +7621,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_0001": {
+    "terrain.castle.bottom_right": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_0001",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.bottom_right",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7652,10 +7652,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_0010": {
+    "terrain.castle.bottom_left": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_0010",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.bottom_left",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7683,10 +7683,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_0011": {
+    "terrain.castle.bottom_middle": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_0011",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.bottom_middle",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7714,10 +7714,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_0100": {
+    "terrain.castle.top_right": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_0100",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.top_right",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7745,10 +7745,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_0101": {
+    "terrain.castle.middle_right": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_0101",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.middle_right",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7776,10 +7776,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_0110": {
+    "terrain.castle.fill": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_0110",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.fill",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7838,10 +7838,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_1000": {
+    "terrain.castle.top_left": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_1000",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.top_left",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7869,10 +7869,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_1010": {
+    "terrain.castle.middle_left": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_1010",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.middle_left",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -7931,10 +7931,10 @@
         }
       }
     },
-    "terrain.autotile.castle.mask_1100": {
+    "terrain.castle.top_middle": {
       "kind": "ground",
-      "role": "terrain.autotile.castle.mask_1100",
-      "purpose": "A frame or component of terrain.autotile.castle.",
+      "role": "terrain.castle.top_middle",
+      "purpose": "Source-backed visual component of terrain.autotile.castle.",
       "belongsTo": "terrain.autotile.castle",
       "image": {
         "atlas": "map",
@@ -8427,10 +8427,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_0001": {
+    "terrain.underground.bottom_right": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_0001",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.bottom_right",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8458,10 +8458,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_0010": {
+    "terrain.underground.bottom_left": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_0010",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.bottom_left",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8489,10 +8489,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_0011": {
+    "terrain.underground.bottom_middle": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_0011",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.bottom_middle",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8520,10 +8520,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_0100": {
+    "terrain.underground.top_right": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_0100",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.top_right",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8551,10 +8551,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_0101": {
+    "terrain.underground.middle_right": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_0101",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.middle_right",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8582,10 +8582,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_0110": {
+    "terrain.underground.fill": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_0110",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.fill",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8644,10 +8644,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_1000": {
+    "terrain.underground.top_left": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_1000",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.top_left",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8675,10 +8675,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_1010": {
+    "terrain.underground.middle_left": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_1010",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.middle_left",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -8737,10 +8737,10 @@
         }
       }
     },
-    "terrain.autotile.underground.mask_1100": {
+    "terrain.underground.top_middle": {
       "kind": "ground",
-      "role": "terrain.autotile.underground.mask_1100",
-      "purpose": "A frame or component of terrain.autotile.underground.",
+      "role": "terrain.underground.top_middle",
+      "purpose": "Source-backed visual component of terrain.autotile.underground.",
       "belongsTo": "terrain.autotile.underground",
       "image": {
         "atlas": "map",
@@ -9692,44 +9692,68 @@
     "terrain.overground.rounded_corner": {
       "kind": "ground",
       "purpose": "Visual resource family for terrain.overground.rounded_corner."
+    },
+    "block.hidden.revealed": {
+      "kind": "block",
+      "purpose": "Four identical source-backed slots for the temporarily revealed hidden-block state; selection and timing are unspecified."
+    },
+    "block.breakable.idle": {
+      "kind": "block",
+      "purpose": "Visual frames of the breakable block idle gleam."
+    },
+    "block.rotating": {
+      "kind": "block",
+      "purpose": "Visual frames of the reusable rotating block spin; behavior remains engine-owned."
+    },
+    "pickup.coin": {
+      "kind": "pickup",
+      "purpose": "Visual frames of the coin rotation."
+    },
+    "background.bush.variant_0": {
+      "kind": "decoration",
+      "purpose": "Components of background bush variant 0."
+    },
+    "background.bush.variant_1": {
+      "kind": "decoration",
+      "purpose": "Components of background bush variant 1."
+    },
+    "decoration.sign_arrow_right": {
+      "kind": "decoration",
+      "purpose": "Components of the fixed white right-arrow sign."
     }
   },
   "animations": {
-    "block.question.visual": {
+    "block.question.idle": {
       "frames": [
         {
-          "resource": "block.question.visual.frame_0",
+          "resource": "block.question.frame_0",
           "offset": {
             "x": 0,
             "y": 0
           }
         },
         {
-          "resource": "block.question.coin",
+          "resource": "block.question.frame_1",
           "offset": {
             "x": 0,
             "y": 0
           }
         },
         {
-          "resource": "block.question.powerup",
+          "resource": "block.question.frame_2",
           "offset": {
             "x": 0,
             "y": 0
           }
         },
         {
-          "resource": "block.question.multicoin",
+          "resource": "block.question.frame_3",
           "offset": {
             "x": 0,
             "y": 0
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 16,
@@ -9737,7 +9761,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "effect.debris": {
       "frames": [
@@ -9756,10 +9781,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 80,
-        "loop": false
-      },
       "display": {
         "w": 8,
         "h": 8,
@@ -9767,37 +9788,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "effect.sparkle.default": {
-      "frames": [
-        {
-          "resource": "effect.debris.variant_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "effect.debris.variant_1",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 8,
-        "h": 8,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "effect.sparkle.general": {
       "frames": [
@@ -9823,10 +9815,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 8,
         "h": 8,
@@ -9834,7 +9822,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "effect.sparkle.pickup": {
       "frames": [
@@ -9860,10 +9849,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 8,
         "h": 8,
@@ -9871,7 +9856,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.flower": {
       "frames": [
@@ -9904,10 +9890,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -9915,7 +9897,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.goomba.walk": {
       "frames": [
@@ -9934,10 +9917,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -9945,7 +9924,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.green_koopa.shell": {
       "frames": [
@@ -9978,10 +9958,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -9989,30 +9965,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "enemy.green_koopa.turnaround": {
-      "frames": [
-        {
-          "resource": "enemy.walker.armored.green.turnaround",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
       },
-      "display": {
-        "w": 16,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "enemy.green_koopa.walk": {
       "frames": [
@@ -10031,10 +9985,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -10042,7 +9992,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.red_koopa.shell": {
       "frames": [
@@ -10075,10 +10026,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -10086,30 +10033,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "enemy.red_koopa.turnaround": {
-      "frames": [
-        {
-          "resource": "enemy.walker.armored.red.turnaround",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
       },
-      "display": {
-        "w": 16,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "enemy.red_koopa.walk": {
       "frames": [
@@ -10128,10 +10053,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -10139,7 +10060,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.spiky.walk": {
       "frames": [
@@ -10158,10 +10080,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -10169,7 +10087,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.wave_goomba.walk": {
       "frames": [
@@ -10188,10 +10107,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -10199,7 +10114,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "enemy.wing.flap": {
       "frames": [
@@ -10218,10 +10134,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 32,
@@ -10229,7 +10141,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "goal.actor.celebration": {
       "frames": [
@@ -10248,10 +10161,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 32,
         "h": 32,
@@ -10259,66 +10168,40 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
-    "goal.actor.idle": {
+    "pickup.coin.spin": {
       "frames": [
         {
-          "resource": "goal.actor.idle",
+          "resource": "pickup.coin.frame_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "pickup.coin.frame_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "pickup.coin.frame_2",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "pickup.coin.frame_3",
           "offset": {
             "x": 0,
             "y": 0
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "pickup.coin.visual": {
-      "frames": [
-        {
-          "resource": "pickup.coin.visual.frame_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "pickup.coin.visual.frame_1",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "pickup.coin",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "pickup.coin.visual.frame_3",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 16,
@@ -10326,129 +10209,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.carrying.carry": {
-      "frames": [
-        {
-          "resource": "player.carrying.carry_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "player.carrying.carry_1",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.carrying.duck": {
-      "frames": [
-        {
-          "resource": "player.carrying.duck",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.carrying.idle": {
-      "frames": [
-        {
-          "resource": "player.carrying.idle_walk_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.carrying.jump": {
-      "frames": [
-        {
-          "resource": "player.carrying.jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.carrying.kick": {
-      "frames": [
-        {
-          "resource": "player.carrying.kick",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.carrying.run": {
       "frames": [
@@ -10474,10 +10236,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 32,
         "h": 32,
@@ -10485,84 +10243,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.carrying.runJump": {
-      "frames": [
-        {
-          "resource": "player.carrying.fast_jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "player.carrying.fast_jump.alternate_tail",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "mode": "runtimeSelected",
-        "sequenceKnown": false,
-        "note": "Both frames present the same fast-jump/airborne state; a consumer may refine selection or timing."
       },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.carrying.skid": {
-      "frames": [
-        {
-          "resource": "player.carrying.skid",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.carrying.slide": {
-      "frames": [
-        {
-          "resource": "player.carrying.slide",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.carrying.walk": {
       "frames": [
@@ -10588,10 +10270,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 32,
         "h": 32,
@@ -10599,136 +10277,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.fire.carry": {
-      "frames": [
-        {
-          "resource": "player.powered.carry_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "player.powered.carry_1",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "player.powered.carry_2_jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.fire.duck": {
-      "frames": [
-        {
-          "resource": "player.powered.duck",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.fire.idle": {
-      "frames": [
-        {
-          "resource": "player.powered.idle_walk_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.fire.jump": {
-      "frames": [
-        {
-          "resource": "player.powered.jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.fire.kick": {
-      "frames": [
-        {
-          "resource": "player.powered.kick",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.fire.run": {
       "frames": [
@@ -10754,10 +10304,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 32,
         "h": 32,
@@ -10765,76 +10311,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.fire.runJump": {
-      "frames": [
-        {
-          "resource": "player.powered.fast_jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.fire.skid": {
-      "frames": [
-        {
-          "resource": "player.powered.skid",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.fire.slide": {
-      "frames": [
-        {
-          "resource": "player.powered.slide",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.fire.walk": {
       "frames": [
@@ -10860,10 +10338,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 32,
         "h": 32,
@@ -10871,129 +10345,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.normal.carry": {
-      "frames": [
-        {
-          "resource": "player.normal.carry_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        },
-        {
-          "resource": "player.normal.carry_1",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.normal.duck": {
-      "frames": [
-        {
-          "resource": "player.normal.duck",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.normal.idle": {
-      "frames": [
-        {
-          "resource": "player.normal.idle_walk_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.normal.jump": {
-      "frames": [
-        {
-          "resource": "player.normal.jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.normal.kick": {
-      "frames": [
-        {
-          "resource": "player.normal.kick",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.normal.run": {
       "frames": [
@@ -11019,10 +10372,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 32,
         "h": 32,
@@ -11030,76 +10379,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.normal.runJump": {
-      "frames": [
-        {
-          "resource": "player.normal.fast_jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.normal.skid": {
-      "frames": [
-        {
-          "resource": "player.normal.skid",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.normal.slide": {
-      "frames": [
-        {
-          "resource": "player.normal.slide",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 32,
-        "h": 32,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.normal.walk": {
       "frames": [
@@ -11125,10 +10406,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 32,
         "h": 32,
@@ -11136,99 +10413,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.small.carry": {
-      "frames": [
-        {
-          "resource": "player.small.carry_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.small.idle": {
-      "frames": [
-        {
-          "resource": "player.small.idle_walk_0",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.small.jump": {
-      "frames": [
-        {
-          "resource": "player.small.jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.small.kick": {
-      "frames": [
-        {
-          "resource": "player.small.kick",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.small.run": {
       "frames": [
@@ -11247,10 +10433,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 16,
@@ -11258,76 +10440,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
-    },
-    "player.small.runJump": {
-      "frames": [
-        {
-          "resource": "player.small.fast_jump",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
       },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.small.skid": {
-      "frames": [
-        {
-          "resource": "player.small.skid",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
-    },
-    "player.small.slide": {
-      "frames": [
-        {
-          "resource": "player.small.slide",
-          "offset": {
-            "x": 0,
-            "y": 0
-          }
-        }
-      ],
-      "timing": {
-        "frameMs": 120,
-        "loop": false
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      }
+      "frameTiming": "unspecified"
     },
     "player.small.walk": {
       "frames": [
@@ -11346,10 +10460,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 16,
         "h": 16,
@@ -11357,7 +10467,8 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
     },
     "projectile.fireball": {
       "frames": [
@@ -11390,10 +10501,6 @@
           }
         }
       ],
-      "timing": {
-        "frameMs": 120,
-        "loop": true
-      },
       "display": {
         "w": 8,
         "h": 8,
@@ -11401,17 +10508,100 @@
           "x": 0.5,
           "y": 1
         }
-      }
+      },
+      "frameTiming": "unspecified"
+    },
+    "block.breakable.idle": {
+      "frames": [
+        {
+          "resource": "block.breakable.idle.frame_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "block.breakable.idle.frame_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "block.breakable.idle.frame_2",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "block.breakable.idle.frame_3",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "frameTiming": "unspecified"
+    },
+    "block.rotating.spin": {
+      "frames": [
+        {
+          "resource": "block.rotating.frame_0",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "block.rotating.frame_1",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "block.rotating.frame_2",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "resource": "block.rotating.frame_3",
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "frameTiming": "unspecified"
     }
   },
   "constructions": {
     "construction.arrow-sign": {
       "kind": "decoration",
       "components": {
-        "topLeft": "sign.arrow_right.top_left",
-        "topRight": "sign.arrow_right.top_right",
-        "bottomLeft": "sign.arrow_right.bottom_left",
-        "bottomRight": "sign.arrow_right.bottom_right"
+        "topLeft": "decoration.sign_arrow_right.top_left",
+        "topRight": "decoration.sign_arrow_right.top_right",
+        "bottomLeft": "decoration.sign_arrow_right.bottom_left",
+        "bottomRight": "decoration.sign_arrow_right.bottom_right"
       },
       "layout": "2x2"
     },
@@ -11581,12 +10771,16 @@
     },
     "construction.bush": {
       "kind": "decoration",
+      "family": "background.bush.variant_1",
       "components": {
-        "left": "bush.left",
-        "middle": "bush.middle",
-        "right": "bush.right"
+        "left": "background.bush.variant_1.left",
+        "middle": "background.bush.variant_1.middle",
+        "right": "background.bush.variant_1.right"
       },
-      "layout": "horizontal, repeat middle"
+      "layout": {
+        "type": "extensibleRow",
+        "repeat": "middle"
+      }
     },
     "construction.ladder": {
       "kind": "ground",
@@ -11628,19 +10822,19 @@
           "bottomRight"
         ],
         "variants": {
-          "1000": "terrain.autotile.castle.mask_1000",
-          "1100": "terrain.autotile.castle.mask_1100",
-          "0100": "terrain.autotile.castle.mask_0100",
+          "1000": "terrain.castle.top_left",
+          "1100": "terrain.castle.top_middle",
+          "0100": "terrain.castle.top_right",
           "1110": "terrain.autotile.castle.mask_1110",
-          "1010": "terrain.autotile.castle.mask_1010",
-          "0110": "terrain.autotile.castle.mask_0110",
-          "1001": "terrain.autotile.castle.mask_0110",
-          "1111": "terrain.autotile.castle.mask_0110",
-          "0101": "terrain.autotile.castle.mask_0101",
+          "1010": "terrain.castle.middle_left",
+          "0110": "terrain.castle.fill",
+          "1001": "terrain.castle.fill",
+          "1111": "terrain.castle.fill",
+          "0101": "terrain.castle.middle_right",
           "1101": "terrain.autotile.castle.mask_1101",
-          "0010": "terrain.autotile.castle.mask_0010",
-          "0011": "terrain.autotile.castle.mask_0011",
-          "0001": "terrain.autotile.castle.mask_0001",
+          "0010": "terrain.castle.bottom_left",
+          "0011": "terrain.castle.bottom_middle",
+          "0001": "terrain.castle.bottom_right",
           "0111": "terrain.autotile.castle.mask_0111",
           "1011": "terrain.autotile.castle.mask_1011"
         }
@@ -11686,24 +10880,50 @@
           "bottomRight"
         ],
         "variants": {
-          "1000": "terrain.autotile.underground.mask_1000",
-          "1100": "terrain.autotile.underground.mask_1100",
-          "0100": "terrain.autotile.underground.mask_0100",
+          "1000": "terrain.underground.top_left",
+          "1100": "terrain.underground.top_middle",
+          "0100": "terrain.underground.top_right",
           "1110": "terrain.autotile.underground.mask_1110",
-          "1010": "terrain.autotile.underground.mask_1010",
-          "0110": "terrain.autotile.underground.mask_0110",
-          "1001": "terrain.autotile.underground.mask_0110",
-          "1111": "terrain.autotile.underground.mask_0110",
-          "0101": "terrain.autotile.underground.mask_0101",
+          "1010": "terrain.underground.middle_left",
+          "0110": "terrain.underground.fill",
+          "1001": "terrain.underground.fill",
+          "1111": "terrain.underground.fill",
+          "0101": "terrain.underground.middle_right",
           "1101": "terrain.autotile.underground.mask_1101",
-          "0010": "terrain.autotile.underground.mask_0010",
-          "0011": "terrain.autotile.underground.mask_0011",
-          "0001": "terrain.autotile.underground.mask_0001",
+          "0010": "terrain.underground.bottom_left",
+          "0011": "terrain.underground.bottom_middle",
+          "0001": "terrain.underground.bottom_right",
           "0111": "terrain.autotile.underground.mask_0111",
           "1011": "terrain.autotile.underground.mask_1011"
         }
       },
       "collision": "solidTerrain"
+    },
+    "construction.background.bush.variant_0": {
+      "kind": "decoration",
+      "family": "background.bush.variant_0",
+      "components": {
+        "left": "background.bush.variant_0.left",
+        "middle": "background.bush.variant_0.middle",
+        "right": "background.bush.variant_0.right"
+      },
+      "layout": {
+        "type": "extensibleRow",
+        "repeat": "middle"
+      }
+    },
+    "construction.background.bush.variant_1": {
+      "kind": "decoration",
+      "family": "background.bush.variant_1",
+      "components": {
+        "left": "background.bush.variant_1.left",
+        "middle": "background.bush.variant_1.middle",
+        "right": "background.bush.variant_1.right"
+      },
+      "layout": {
+        "type": "extensibleRow",
+        "repeat": "middle"
+      }
     }
   },
   "objects": {
@@ -11717,13 +10937,13 @@
         "carry"
       ],
       "visuals": {
-        "idle": "player.small.idle",
+        "idle": "player.small.idle_walk_0",
         "walk": "player.small.walk",
         "run": "player.small.run",
         "jump": "player.small.jump",
-        "runJump": "player.small.runJump",
+        "runJump": "player.small.fast_jump",
         "skid": "player.small.skid",
-        "carry": "player.small.carry",
+        "carry": "player.small.carry_0",
         "slide": "player.small.slide",
         "kick": "player.small.kick"
       }
@@ -11739,11 +10959,11 @@
         "carry"
       ],
       "visuals": {
-        "idle": "player.normal.idle",
+        "idle": "player.normal.idle_walk_0",
         "walk": "player.normal.walk",
         "run": "player.normal.run",
         "jump": "player.normal.jump",
-        "runJump": "player.normal.runJump",
+        "runJump": "player.normal.fast_jump",
         "skid": "player.normal.skid",
         "duck": "player.normal.duck",
         "carry": "player.normal.carry",
@@ -11763,16 +10983,16 @@
         "shoot"
       ],
       "visuals": {
-        "idle": "player.fire.idle",
+        "idle": "player.powered.idle_walk_0",
         "walk": "player.fire.walk",
         "run": "player.fire.run",
-        "jump": "player.fire.jump",
-        "runJump": "player.fire.runJump",
-        "skid": "player.fire.skid",
-        "duck": "player.fire.duck",
+        "jump": "player.powered.jump",
+        "runJump": "player.powered.fast_jump",
+        "skid": "player.powered.skid",
+        "duck": "player.powered.duck",
         "carry": "player.fire.carry",
-        "slide": "player.fire.slide",
-        "kick": "player.fire.kick"
+        "slide": "player.powered.slide",
+        "kick": "player.powered.kick"
       }
     },
     "goomba": {
@@ -11798,7 +11018,7 @@
       "visuals": {
         "walk": "enemy.red_koopa.walk",
         "shell": "enemy.red_koopa.shell",
-        "turnaround": "enemy.red_koopa.turnaround"
+        "turnaround": "enemy.walker.armored.red.turnaround"
       }
     },
     "koopa.green": {
@@ -11813,7 +11033,7 @@
       "visuals": {
         "walk": "enemy.green_koopa.walk",
         "shell": "enemy.green_koopa.shell",
-        "turnaround": "enemy.green_koopa.turnaround"
+        "turnaround": "enemy.walker.armored.green.turnaround"
       }
     },
     "spiky": {
@@ -11868,7 +11088,7 @@
         "coin"
       ],
       "visuals": {
-        "idle": "pickup.coin.visual"
+        "idle": "pickup.coin.spin"
       }
     },
     "growMushroom": {
@@ -11914,7 +11134,7 @@
         "dispense"
       ],
       "visuals": {
-        "normal": "block.question.visual",
+        "normal": "block.question.idle",
         "used": "block.hidden.revealed"
       }
     },
@@ -11926,7 +11146,7 @@
         "breakable"
       ],
       "visuals": {
-        "normal": "block.breakable",
+        "normal": "block.breakable.idle",
         "breaking": "effect.debris"
       }
     },
@@ -12023,11 +11243,11 @@
         "carry"
       ],
       "visuals": {
-        "idle": "player.carrying.idle",
+        "idle": "player.carrying.idle_walk_0",
         "walk": "player.carrying.walk",
         "run": "player.carrying.run",
         "jump": "player.carrying.jump",
-        "runJump": "player.carrying.runJump",
+        "runJump": "player.carrying.airborne_tail_states",
         "skid": "player.carrying.skid",
         "duck": "player.carrying.duck",
         "carry": "player.carrying.carry",
@@ -12382,5 +11602,57 @@
   },
   "extended": {
     "status": "reference contract; no current consumer compatibility is promised"
+  },
+  "frameGroups": {
+    "block.hidden.revealed": {
+      "resources": [
+        "block.hidden.revealed.frame_0",
+        "block.hidden.revealed.frame_1",
+        "block.hidden.revealed.frame_2",
+        "block.hidden.revealed.frame_3"
+      ],
+      "selection": "source-state-slots",
+      "sequenceKnown": false,
+      "timingKnown": false,
+      "note": "Four visually identical source slots are preserved one-to-one; playback and state-slot selection are unspecified."
+    },
+    "player.normal.carry": {
+      "resources": [
+        "player.normal.carry_0",
+        "player.normal.carry_1"
+      ],
+      "selection": "runtime-selected",
+      "sequenceKnown": false,
+      "timingKnown": false
+    },
+    "player.fire.carry": {
+      "resources": [
+        "player.powered.carry_0",
+        "player.powered.carry_1",
+        "player.powered.carry_2_jump"
+      ],
+      "selection": "runtime-selected",
+      "sequenceKnown": false,
+      "timingKnown": false
+    },
+    "player.carrying.carry": {
+      "resources": [
+        "player.carrying.carry_0",
+        "player.carrying.carry_1"
+      ],
+      "selection": "runtime-selected",
+      "sequenceKnown": false,
+      "timingKnown": false
+    },
+    "player.carrying.airborne_tail_states": {
+      "resources": [
+        "player.carrying.fast_jump",
+        "player.carrying.fast_jump.alternate_tail"
+      ],
+      "selection": "runtime-selected",
+      "sequenceKnown": false,
+      "timingKnown": false,
+      "note": "Related airborne/tail-state resources from racoonmariosheet.png indices 7 and 15; exact runtime selection is unknown."
+    }
   }
 }

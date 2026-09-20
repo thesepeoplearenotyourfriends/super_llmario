@@ -94,6 +94,29 @@ for (const [index, id] of Object.entries(reviewedBackgrounds)) {
 }
 assert(!Object.values(pack.resources).some(resource => resource.provenance.sheet === 'bgsheet.png' && resource.role.includes('unresolved')));
 
+const auditedMapCells = {
+  4:'block.hidden.revealed.frame_0', 5:'block.hidden.revealed.frame_1', 6:'block.hidden.revealed.frame_2', 7:'block.hidden.revealed.frame_3',
+  16:'block.breakable.idle.frame_0', 17:'block.breakable.idle.frame_1', 18:'block.breakable.idle.frame_2', 19:'block.breakable.idle.frame_3',
+  20:'block.question.frame_0', 21:'block.question.frame_1', 22:'block.question.frame_2', 23:'block.question.frame_3',
+  32:'pickup.coin.frame_0', 33:'pickup.coin.frame_1', 34:'pickup.coin.frame_2', 35:'pickup.coin.frame_3',
+  36:'block.rotating.frame_0', 37:'block.rotating.frame_1', 38:'block.rotating.frame_2', 39:'block.rotating.frame_3',
+  67:'decoration.sign_arrow_right.top_left', 68:'decoration.sign_arrow_right.top_right',
+  80:'background.bush.variant_0.left', 81:'background.bush.variant_0.middle', 82:'background.bush.variant_0.right',
+  83:'decoration.sign_arrow_right.bottom_left', 84:'decoration.sign_arrow_right.bottom_right',
+  96:'background.bush.variant_1.left', 97:'background.bush.variant_1.middle', 98:'background.bush.variant_1.right',
+  136:'terrain.castle.top_left', 137:'terrain.castle.top_middle', 138:'terrain.castle.top_right',
+  140:'terrain.underground.top_left', 141:'terrain.underground.top_middle', 142:'terrain.underground.top_right',
+  152:'terrain.castle.middle_left', 153:'terrain.castle.fill', 154:'terrain.castle.middle_right',
+  156:'terrain.underground.middle_left', 157:'terrain.underground.fill', 158:'terrain.underground.middle_right',
+  168:'terrain.castle.bottom_left', 169:'terrain.castle.bottom_middle', 170:'terrain.castle.bottom_right',
+  172:'terrain.underground.bottom_left', 173:'terrain.underground.bottom_middle', 174:'terrain.underground.bottom_right',
+};
+for (const [index, id] of Object.entries(auditedMapCells)) {
+  assert.equal(pack.resources[id]?.provenance.sheet, 'mapsheet.png', `${id}: wrong source sheet`);
+  assert.equal(pack.resources[id]?.provenance.index, Number(index), `${id}: wrong source index`);
+}
+assert(!Object.keys(pack.resources).some(id => /^block\.question\.(coin|powerup|multicoin)$/.test(id)), 'question frames must not imply rewards');
+
 const completedResources = {
   'enemysheet.png:2':'enemy.walker.armored.red.turnaround',
   'enemysheet.png:18':'enemy.walker.armored.green.turnaround',
@@ -149,23 +172,29 @@ for (const atlas of Object.values(pack.atlases)) {
 assert.equal(independentlyCounted, 298);
 
 for (const [id, animation] of Object.entries(pack.animations)) {
-  assert(animation.frames.length, `${id}: empty animation`);
-  const timedSequence = animation.timing.frameMs > 0;
-  const runtimeSelected = animation.timing.mode === 'runtimeSelected' && animation.timing.sequenceKnown === false;
-  assert(timedSequence || runtimeSelected, `${id}: timing must be explicit or explicitly runtime-selected`);
+  assert(animation.frames.length > 1, `${id}: static resources must not be wrapped as animations`);
   for (const frame of animation.frames) assert(pack.resources[frame.resource], `${id}: missing frame ${frame.resource}`);
 }
 assert.deepEqual(
-  pack.animations['player.carrying.runJump'].frames.map(frame => frame.resource),
+  pack.frameGroups['player.carrying.airborne_tail_states'].resources,
   ['player.carrying.fast_jump', 'player.carrying.fast_jump.alternate_tail'],
 );
-assert.equal(pack.animations['player.carrying.runJump'].timing.mode, 'runtimeSelected');
+assert.equal(pack.frameGroups['player.carrying.airborne_tail_states'].selection, 'runtime-selected');
+assert.equal(pack.frameGroups['player.carrying.airborne_tail_states'].sequenceKnown, false);
+for (const [id, group] of Object.entries(pack.frameGroups)) {
+  assert(group.resources.length > 1, `${id}: frame group must contain related resources`);
+  assert.equal(group.sequenceKnown, false, `${id}: uncertain group must not claim a sequence`);
+  assert.equal(group.timingKnown, false, `${id}: uncertain group must not claim timing`);
+  for (const resource of group.resources) assert(pack.resources[resource], `${id}: missing grouped resource ${resource}`);
+}
 assert.deepEqual(
   pack.animations['goal.actor.celebration'].frames.map(frame => frame.resource),
   ['goal.actor.celebration.frame_0', 'goal.actor.celebration.frame_1'],
 );
-assert.equal(pack.objects['koopa.red'].visuals.turnaround, 'enemy.red_koopa.turnaround');
-assert.equal(pack.objects['koopa.green'].visuals.turnaround, 'enemy.green_koopa.turnaround');
+assert.equal(pack.objects['koopa.red'].visuals.turnaround, 'enemy.walker.armored.red.turnaround');
+assert.equal(pack.objects['koopa.green'].visuals.turnaround, 'enemy.walker.armored.green.turnaround');
+assert.equal(pack.objects.brick.visuals.normal, 'block.breakable.idle');
+assert.equal(pack.objects.questionBlock.visuals.used, 'block.hidden.revealed');
 for (const [id, construction] of Object.entries(pack.constructions)) {
   if (construction.family) assert(pack.families[construction.family], `${id}: missing family ${construction.family}`);
   for (const resource of Object.values(construction.components || {})) assert(pack.resources[resource], `${id}: missing component ${resource}`);
@@ -174,6 +203,7 @@ for (const [id, construction] of Object.entries(pack.constructions)) {
 const presentationTargets = new Set([
   ...Object.keys(pack.resources),
   ...Object.keys(pack.animations),
+  ...Object.keys(pack.frameGroups),
   ...Object.keys(pack.constructions),
 ]);
 for (const [id, object] of Object.entries(pack.objects)) {
