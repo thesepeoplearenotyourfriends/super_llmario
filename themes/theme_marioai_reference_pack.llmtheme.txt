@@ -41,6 +41,7 @@
         "duck",
         "emerge",
         "extraLife",
+        "flightPresentation",
         "goalPresentation",
         "grow",
         "horizontalFlight",
@@ -11013,13 +11014,22 @@
         "patrol",
         "stompable",
         "armored",
-        "shell"
+        "shell",
+        "flightPresentation"
       ],
       "visuals": {
         "walk": "enemy.red_koopa.walk",
         "shell": "enemy.red_koopa.shell",
         "turnaround": "enemy.walker.armored.red.turnaround"
-      }
+      },
+      "attachments": [
+        {
+          "enabledBy": "flight.winged",
+          "target": "enemy.wing.flap",
+          "layer": "behind",
+          "placement": "koopaWings"
+        }
+      ]
     },
     "koopa.green": {
       "kind": "actor",
@@ -11028,13 +11038,22 @@
         "patrol",
         "stompable",
         "armored",
-        "shell"
+        "shell",
+        "flightPresentation"
       ],
       "visuals": {
         "walk": "enemy.green_koopa.walk",
         "shell": "enemy.green_koopa.shell",
         "turnaround": "enemy.walker.armored.green.turnaround"
-      }
+      },
+      "attachments": [
+        {
+          "enabledBy": "flight.winged",
+          "target": "enemy.wing.flap",
+          "layer": "behind",
+          "placement": "koopaWings"
+        }
+      ]
     },
     "spiky": {
       "kind": "actor",
@@ -11147,8 +11166,10 @@
       ],
       "visuals": {
         "normal": "block.breakable.idle",
-        "breaking": "effect.debris"
-      }
+        "breaking": "effect.debris",
+        "classic": "block.breakable.idle"
+      },
+      "visualSelector": "block.style"
     },
     "pipe": {
       "kind": "ground",
@@ -11188,7 +11209,8 @@
       "kind": "ground",
       "engineNoun": "platform",
       "capabilities": [
-        "solidTop"
+        "solidTop",
+        "movingPlatform"
       ],
       "visuals": {
         "construction": "construction.mushroom-platform"
@@ -11221,17 +11243,6 @@
         "celebration": "goal.actor.celebration"
       }
     },
-    "movingMushroomPlatform": {
-      "kind": "ground",
-      "engineNoun": "platform",
-      "capabilities": [
-        "solidTop",
-        "movingPlatform"
-      ],
-      "visuals": {
-        "construction": "construction.mushroom-platform"
-      }
-    },
     "player.carrying": {
       "kind": "actor",
       "engineNoun": "player",
@@ -11253,6 +11264,19 @@
         "carry": "player.carrying.carry",
         "slide": "player.carrying.slide",
         "kick": "player.carrying.kick"
+      }
+    },
+    "solidBlock": {
+      "kind": "block",
+      "engineNoun": "block",
+      "capabilities": [
+        "solid"
+      ],
+      "visualSelector": "solidBlock.style",
+      "visuals": {
+        "stone": "block.stone",
+        "wood": "block.wood",
+        "glassBlue": "block.glass_blue"
       }
     }
   },
@@ -11391,6 +11415,32 @@
         "minimum": 1,
         "unit": "cells"
       }
+    },
+    "flight": {
+      "winged": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "block": {
+      "style": {
+        "type": "enum",
+        "values": [
+          "classic"
+        ],
+        "default": "classic"
+      }
+    },
+    "solidBlock": {
+      "style": {
+        "type": "enum",
+        "values": [
+          "stone",
+          "wood",
+          "glassBlue"
+        ],
+        "default": "stone"
+      }
     }
   },
   "placeables": {
@@ -11421,7 +11471,8 @@
         "transform.y",
         "walker.direction",
         "walker.patrolRange",
-        "walker.speed"
+        "walker.speed",
+        "flight.winged"
       ],
       "previewVisual": "walk"
     },
@@ -11433,7 +11484,8 @@
         "transform.y",
         "walker.direction",
         "walker.patrolRange",
-        "walker.speed"
+        "walker.speed",
+        "flight.winged"
       ],
       "previewVisual": "walk"
     },
@@ -11475,9 +11527,9 @@
       "object": "brick",
       "parameters": [
         "transform.x",
-        "transform.y"
-      ],
-      "previewVisual": "normal"
+        "transform.y",
+        "block.style"
+      ]
     },
     "pipe": {
       "label": "Pipe",
@@ -11527,10 +11579,15 @@
       "parameters": [
         "transform.x",
         "transform.y",
-        "extent.width"
+        "extent.width",
+        "extent.height",
+        "movingPlatform.path",
+        "movingPlatform.range",
+        "movingPlatform.speed"
       ],
       "initialValues": {
-        "extent.width": 3
+        "extent.width": 3,
+        "extent.height": 3
       }
     },
     "bush": {
@@ -11553,48 +11610,14 @@
         "transform.y"
       ]
     },
-    "growMushroom": {
-      "label": "Growth Mushroom",
-      "object": "growMushroom",
+    "solidBlock": {
+      "label": "Solid Block",
+      "object": "solidBlock",
       "parameters": [
         "transform.x",
         "transform.y",
-        "walker.direction",
-        "walker.speed"
+        "solidBlock.style"
       ]
-    },
-    "fireFlower": {
-      "label": "Fire Flower",
-      "object": "fireFlower",
-      "parameters": [
-        "transform.x",
-        "transform.y"
-      ]
-    },
-    "lifeMushroom": {
-      "label": "Life Mushroom",
-      "object": "lifeMushroom",
-      "parameters": [
-        "transform.x",
-        "transform.y",
-        "walker.direction",
-        "walker.speed"
-      ]
-    },
-    "movingMushroomPlatform": {
-      "label": "Moving Mushroom Platform",
-      "object": "movingMushroomPlatform",
-      "parameters": [
-        "transform.x",
-        "transform.y",
-        "extent.width",
-        "movingPlatform.path",
-        "movingPlatform.range",
-        "movingPlatform.speed"
-      ],
-      "initialValues": {
-        "extent.width": 3
-      }
     }
   },
   "coverage": {

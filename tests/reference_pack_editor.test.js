@@ -31,7 +31,10 @@ assert.strictEqual(semantics.visualTarget(theme.objects.questionBlock, {}, theme
   'block.question.idle', 'explicit placeable preview metadata resolves a multi-state object');
 assert.strictEqual(theme.placeables.koopaRed.previewVisual, 'walk');
 assert.strictEqual(theme.placeables.koopaGreen.previewVisual, 'walk');
-assert.strictEqual(theme.placeables.brick.previewVisual, 'normal');
+assert.strictEqual(semantics.visualTarget(theme.objects.brick, {'block.style':'classic'}).target,
+  'block.breakable.idle', 'block behavior and authored visual style resolve independently');
+assert.strictEqual(semantics.visualTarget(theme.objects.solidBlock, {'solidBlock.style':'wood'}).target,
+  'block.wood', 'solid block appearances are styles of one behavior object');
 assert.strictEqual(semantics.visualTarget(theme.objects.ground, {'terrain.style':'castle'}).target,
   'construction.terrain.castle', 'an authored selector chooses its matching visual');
 
@@ -41,9 +44,23 @@ assert.strictEqual(semantics.autotilePreview('construction.terrain.overground',
 assert.deepStrictEqual(theme.placeables.pipe.initialValues, {'pipe.length':2});
 assert.deepStrictEqual(theme.placeables.ladder.initialValues, {'extent.length':2});
 assert.deepStrictEqual(theme.placeables.ground.initialValues, {'terrain.width':2,'terrain.height':2});
-assert.deepStrictEqual(theme.placeables.mushroomPlatform.initialValues, {'extent.width':3});
+assert.deepStrictEqual(theme.placeables.mushroomPlatform.initialValues, {'extent.width':3,'extent.height':3});
 assert.deepStrictEqual(theme.placeables.bush.initialValues, {'extent.width':3});
-assert.deepStrictEqual(theme.placeables.movingMushroomPlatform.initialValues, {'extent.width':3});
+assert(!theme.placeables.movingMushroomPlatform, 'moving mushroom platform is not a separate palette species');
+for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform.speed'])
+  assert(theme.placeables.mushroomPlatform.parameters.includes(path), `mushroom platform exposes optional ${path}`);
+for (const id of ['growMushroom','fireFlower','lifeMushroom']) {
+  assert(theme.objects[id], `${id} remains a defined reward object`);
+  assert(!theme.placeables[id], `${id} is not directly placeable`);
+  assert(schema.rewardBlock.contents.allowedObjects.includes(id), `${id} remains selectable as block contents`);
+}
+for (const id of ['koopaRed','koopaGreen']) {
+  assert(theme.placeables[id].parameters.includes('flight.winged'), `${id} exposes authored wings`);
+  assert.deepStrictEqual(theme.objects[theme.placeables[id].object].attachments,
+    [{enabledBy:'flight.winged',target:'enemy.wing.flap',layer:'behind',placement:'koopaWings'}]);
+}
+assert(newEditor.includes('function drawPatrolRange(inst)'), 'selected patrol actors have an editor-only range gizmo');
+assert(newEditor.includes("authoredSize('extent.height')"), 'mushroom construction consumes authored height');
 const plain = value => JSON.parse(JSON.stringify(value));
 const pipeBounds = {w:32,h:80,anchorX:.5,anchorY:1};
 assert.deepStrictEqual(plain(semantics.transformedAabb(pipeBounds,semantics.authoredPresentation(true,false,{'pipe.direction':'up'}),{x:100,y:200})),
