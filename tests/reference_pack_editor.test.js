@@ -168,6 +168,20 @@ assert.strictEqual(semantics.constructionLayout({a:'one',b:'two'},{type:'fixedGr
   'fixedGrid rejects a declared shape that does not match its component count');
 assert.strictEqual(semantics.constructionLayout({a:'one',b:'two'},{type:'fixedGrid',columns:2}),null,
   'fixedGrid rows are required rather than inert metadata');
+for (const bad of [
+  {type:'fixedGrid',columns:0,rows:2},
+  {type:'fixedGrid',columns:2,rows:-1},
+  {type:'fixedGrid',columns:1.5,rows:2},
+  {type:'fixedGrid',columns:2,rows:1.5},
+]) assert.strictEqual(semantics.constructionLayout({a:'one',b:'two'},bad),null,
+  'fixedGrid dimensions must be positive integers');
+const diagnosed=semantics.fixedGridResult({a:'one',b:'two'},{type:'fixedGrid',columns:2,rows:2});
+assert.strictEqual(diagnosed.resolved,null);
+assert.match(diagnosed.issue,/positive integer columns\/rows/,
+  'the live renderer resolver returns an actionable issue instead of exposing a null .cells access');
+assert.deepStrictEqual(plain(semantics.fixedGridResult({first:'one',second:'two'},
+  {type:'fixedGrid',columns:2,rows:1}).resolved.cells.map(x=>x.part)),['first','second'],
+  'fixedGrid component insertion order is its documented row-major placement order');
 assert.deepStrictEqual(indices(layout('construction.background.dome.variant_0')),[0,1,8,9,16,17]);
 assert.deepStrictEqual(indices(layout('construction.background.dome.variant_1')),[2,3,10,11,18,19]);
 assert.strictEqual(semantics.visualTarget(theme.objects.backgroundDome,{'dome.variant':'variant_1'}).target,
@@ -331,6 +345,64 @@ assert.strictEqual(semantics.controlEnabled('pipe.destination', schema.pipe.dest
   {'pipe.travelEnabled':false}), false, 'enabledWhen disables a control when its condition is false');
 assert.strictEqual(semantics.controlEnabled('pipe.destination', schema.pipe.destination,
   {'pipe.travelEnabled':true}), true, 'enabledWhen enables a control when its condition is true');
+
+const camera={x:80,y:-20,zoom:2},world={x:48,y:96};
+assert.deepStrictEqual(plain(semantics.screenToWorld(semantics.worldToScreen(world,camera),camera)),world,
+  'the centralized world/screen transform round-trips at zoom');
+const cursor={x:310,y:140},zoomed=semantics.zoomAt(camera,cursor,3.5);
+assert.deepStrictEqual(plain(semantics.screenToWorld(cursor,zoomed)),plain(semantics.screenToWorld(cursor,camera)),
+  'pointer-centered zoom preserves the world point below the pointer');
+assert.strictEqual(semantics.cameraView({x:NaN,y:Infinity,zoom:100}).zoom,4,'camera zoom is finite and clamped');
+assert.strictEqual(semantics.snap(41),48,'authored positions snap to the 16px world grid');
+
+const brush={id:'brush'},placed={id:'placed'},other={id:'other'};
+let interaction={selected:other,brush:null};
+interaction=semantics.selectionTransition(interaction,{type:'empty'});
+assert.deepStrictEqual(plain(interaction),{selected:null,brush:null},'empty canvas clears destructive selection state');
+interaction=semantics.selectionTransition(interaction,{type:'palette',item:brush});
+assert.deepStrictEqual(plain(interaction),{selected:null,brush},'palette selection clears unrelated instance selection');
+interaction=semantics.selectionTransition(interaction,{type:'empty',instance:placed});
+assert.deepStrictEqual(plain(interaction),{selected:placed,brush},'an active brush places and selects its new instance');
+interaction=semantics.selectionTransition(interaction,{type:'object',instance:other});
+assert.deepStrictEqual(plain(interaction),{selected:other,brush:null},'object selection exits placement without stale brush state');
+
+const modelFor=(placeable,values)=>{
+  const target=semantics.visualTarget(item(placeable).object,values,item(placeable).definition.previewVisual).target;
+  return semantics.resizeModel(theme.constructions[target],values);
+};
+const resize=(model,values,bounds,pointer,cell={w:32,h:32},origin={x:48,y:96})=>
+  plain(semantics.resizeValues(model,values,bounds,pointer,cell,origin));
+let values={'transform.x':48,'transform.y':96,'extent.width':3,'extent.height':3,'backgroundFill.material':'black'};
+let model=modelFor('backgroundFill',values);
+let changed=resize(model,values,{x:0,y:0,w:96,h:96},{x:160,y:128});
+assert.deepStrictEqual({w:changed['extent.width'],h:changed['extent.height'],x:changed['transform.x'],y:changed['transform.y']},
+  {w:5,h:4,x:80,y:128},'repeatRect resizes in native 32px cells while its top-left anchor stays stable');
+values={'transform.x':48,'transform.y':32,'extent.width':3};model=modelFor('lightGreenArch',values);
+changed=resize(model,values,{x:0,y:0,w:96,h:32},{x:160,y:999});
+assert.deepStrictEqual({w:changed['extent.width'],x:changed['transform.x'],y:changed['transform.y']},{w:5,x:80,y:32},
+  'extensibleRow changes width only and retains its left/middle/right model');
+assert.deepStrictEqual(indices(layout('construction.background.green-stone-arch',changed['extent.width'])),[25,26,26,26,27]);
+values={'transform.x':16,'transform.y':96,'extent.height':3};model=modelFor('lightGreenColumn',values);
+changed=resize(model,values,{x:0,y:0,w:32,h:96},{x:999,y:160});
+assert.deepStrictEqual({h:changed['extent.height'],x:changed['transform.x'],y:changed['transform.y']},{h:5,x:16,y:160},
+  'extensibleColumn changes height only and retains its top/middle/bottom model');
+assert.deepStrictEqual(indices(layout('construction.background.green-stone-column',undefined,changed['extent.height'])),[35,43,43,43,51]);
+values={'transform.x':16,'transform.y':48,'terrain.width':2,'terrain.height':2,'terrain.style':'overground'};
+model=modelFor('ground',values);changed=resize(model,values,{x:0,y:0,w:32,h:32},{x:48,y:48},{w:16,h:16},{x:16,y:48});
+assert.deepStrictEqual({w:changed['terrain.width'],h:changed['terrain.height'],x:changed['transform.x'],y:changed['transform.y']},{w:3,h:3,x:24,y:64});
+assert.strictEqual(semantics.rectangleAutotiles(changed['terrain.width'],changed['terrain.height'],overground)[4].mask,'1111',
+  'resized autotile rectangles continue through the semantic neighbor-mask resolver');
+assert.strictEqual(modelFor('hill',{'hill.shape':'large'}),null,'fixed Hill geometry rejects resize');
+values={'transform.x':48,'transform.y':32,'extent.width':3};model=modelFor('lightGreenArch',values);
+changed=resize(model,values,{x:0,y:0,w:96,h:32},{x:1,y:0});
+assert.deepStrictEqual({w:changed['extent.width'],x:changed['transform.x']},{w:3,x:48},
+  'declared minimum extent is enforced without moving the stable opposite edge');
+const zoomPointer=semantics.worldToScreen({x:160,y:128},camera);
+changed=resize(semantics.resizeModel(theme.constructions['construction.background.fill.black'],{'extent.width':3,'extent.height':3}),
+  {'transform.x':48,'transform.y':96,'extent.width':3,'extent.height':3},{x:0,y:0,w:96,h:96},
+  semantics.screenToWorld(zoomPointer,camera));
+assert.deepStrictEqual({w:changed['extent.width'],h:changed['extent.height']},{w:5,h:4},
+  'resizing while zoomed converts the pointer back to the same world extents');
 
 // A copied fixture protects the explicit requirement that the old editor remains untouched.
 assert(oldEditor.includes('LLMario Cartbench v0.30 Pipe Topology'));
