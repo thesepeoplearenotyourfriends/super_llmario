@@ -12343,6 +12343,11 @@
       ],
       "initialValues": {
         "pipe.length": 2
+      },
+      "formCycle": {
+        "path": "pipe.direction",
+        "values": ["up", "right", "down", "left"],
+        "labels": ["Up", "Right", "Down", "Left"]
       }
     },
     "ladder": {
@@ -12404,6 +12409,11 @@
       ],
       "initialValues": {
         "extent.width": 3
+      },
+      "formCycle": {
+        "path": "bush.variant",
+        "values": ["variant_0", "variant_1"],
+        "labels": ["Wide", "Compact"]
       }
     },
     "arrowSign": {
@@ -12459,7 +12469,12 @@
         "transform.x",
         "transform.y",
         "hill.shape"
-      ]
+      ],
+      "formCycle": {
+        "path": "hill.shape",
+        "values": ["large", "small"],
+        "labels": ["Large", "Small"]
+      }
     },
     "verticalCannon": {
       "authoringGroup": "World",
