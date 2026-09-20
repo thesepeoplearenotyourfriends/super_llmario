@@ -479,6 +479,71 @@ for(const [direction,pointer,expectedOrigin,cursor] of [
     `${direction} pipe local/world resize transforms round-trip`);
 }
 
+// Palette forms are explicitly authored; arbitrary enum schemas do not become cycles.
+assert.deepStrictEqual(theme.placeables.pipe.formCycle, {
+  path:'pipe.direction', values:['up','right','down','left'], labels:['Up','Right','Down','Left'],
+});
+const pipeItem=item('pipe');
+pipeItem.values={'pipe.length':2};
+assert.strictEqual(semantics.activatePalette(null,pipeItem),pipeItem,'first click selects without skipping the initial form');
+assert.strictEqual(pipeItem.values['pipe.direction'],'up');
+for(const direction of ['right','down','left','up']) {
+  semantics.activatePalette(pipeItem,pipeItem);
+  assert.strictEqual(pipeItem.values['pipe.direction'],direction,`active Pipe advances to ${direction}`);
+}
+pipeItem.values['pipe.direction']='down';
+semantics.activatePalette(pipeItem,pipeItem);
+assert.strictEqual(pipeItem.values['pipe.direction'],'left','a Details-authored form is the coherent cycle cursor');
+const ladderItem=item('ladder'); ladderItem.values={'extent.length':2};
+semantics.activatePalette(ladderItem,ladderItem);
+assert.deepStrictEqual(ladderItem.values,{'extent.length':2},'a card without explicit formCycle never mutates');
+assert.deepStrictEqual(theme.placeables.bush.formCycle.values,['variant_0','variant_1']);
+assert.deepStrictEqual(theme.placeables.hill.formCycle.values,['large','small']);
+
+const mapDocument={instances:[{placeable:'pipe',values:{'transform.x':32,'transform.y':48,'pipe.direction':'right','pipe.length':2},sceneLayer:'foreground'}],markers:{start:{x:16,y:64},goal:{x:320,y:64}}};
+const envelope=plain(semantics.serializeMap(theme,mapDocument));
+assert.deepStrictEqual(plain(semantics.validateMap(theme,envelope)),[],'the versioned editor map validates against its required theme');
+assert.deepStrictEqual(envelope.instances,mapDocument.instances,'instances, cloned values, and authored layer overrides round-trip');
+assert.deepStrictEqual(envelope.markers,mapDocument.markers,'singleton markers round-trip');
+for(const transient of ['camera','zoom','brush','selection','paletteVisible','detailsVisible','history'])
+  assert(!Object.hasOwn(envelope,transient),`${transient} UI state is omitted from map content`);
+assert.match(semantics.validateMap({...theme,id:'another-theme'},envelope)[0],/theme mismatch/);
+assert(semantics.validateMap(theme,{...envelope,instances:[{placeable:'pipe',values:{}}]}).some(x=>/malformed values/.test(x)));
+assert(semantics.validateMap(theme,{...envelope,markers:{start:{x:'bad',y:0},goal:null}}).some(x=>/start marker/.test(x)));
+
+const history=semantics.createHistory({instances:[],markers:{start:null,goal:null}});
+history.push(mapDocument);
+assert.strictEqual(history.state().dirty,true);
+history.markClean();
+assert.strictEqual(history.state().dirty,false,'saving marks the current history position clean without erasing undo');
+assert.strictEqual(history.state().canUndo,true);
+history.undo();
+assert.strictEqual(history.state().canRedo,true);
+history.push({instances:[],markers:{start:{x:0,y:0},goal:null}});
+assert.strictEqual(history.state().canRedo,false,'a new authored edit after undo invalidates redo');
+assert.strictEqual(history.state().dirty,true,'a branch replacing the old clean index stays dirty');
+history.reset(mapDocument);
+assert.deepStrictEqual(plain(history.state()),{canUndo:false,canRedo:false,dirty:false,index:0,clean:0},'map loading establishes a fresh clean history baseline');
+
+const branchedHistory=semantics.createHistory({edit:'initial'});
+branchedHistory.push({edit:'A'});
+branchedHistory.push({edit:'B'});
+branchedHistory.markClean();
+branchedHistory.undo();
+branchedHistory.push({edit:'C'});
+assert.strictEqual(branchedHistory.state().dirty,true,
+  'Edit A → Edit B → save → undo to A → Edit C cannot reuse the saved checkpoint');
+assert.strictEqual(branchedHistory.state().canRedo,false,'the replaced B branch is no longer redoable');
+
+for(const id of ['paletteToggle','detailsToggle','helpDialog','openMapBtn','saveMapBtn','undoBtn','redoBtn'])
+  assert(newEditor.includes(`id="${id}"`),`${id} is a discoverable editor control`);
+assert(newEditor.includes("requestAnimationFrame(resize)"),'sidebar changes schedule canvas/device-pixel resizing');
+assert(newEditor.includes('palette-hidden.details-hidden'),'both hidden sidebars release both grid columns');
+assert(newEditor.includes('Start and Goal cards place grid-snapped singleton markers'),'help documents actual marker behavior');
+assert(newEditor.includes('if(state.brush?.markerKind)'), 'marker brushes have a Details branch before ordinary placeables');
+assert(newEditor.includes("!text&&state.history&&(e.metaKey||e.ctrlKey)"),
+  'map undo/redo shortcuts are inert before theme history exists');
+
 // A copied fixture protects the explicit requirement that the old editor remains untouched.
 assert(oldEditor.includes('LLMario Cartbench v0.30 Pipe Topology'));
 console.log('reference pack editor contract checks passed');
