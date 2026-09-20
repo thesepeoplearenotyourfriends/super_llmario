@@ -203,6 +203,84 @@ const stampCamera={x:91,y:-37,zoom:2.75},stampWorld={x:80,y:48};
 assert.deepStrictEqual(plain(semantics.screenToWorld(semantics.worldToScreen(stampWorld,stampCamera),stampCamera)),stampWorld,
   'stamp coordinates survive active camera zoom and pan');
 
+// Erasing uses the same snapped sparse-event traversal, but locks a gesture to
+// the effective layer (or to singleton markers) after its first actual hit.
+const eraseBounds=instance=>({x:instance.values['transform.x']-8,y:instance.values['transform.y']-8,w:16,h:16});
+const eraseGesture=()=>({visited:new Set(),removedTargets:new Set(),scope:null,removedCount:0});
+const erase=(instances,markers,from,to,gesture=eraseGesture())=>
+  semantics.eraseSquareCells(theme,instances,markers,from,to,gesture,eraseBounds);
+const layerItems={
+  sky:{...item('skyGradient'),values:{}},
+  background:{...item('bush'),values:{}},
+  world:{...item('solidBlock'),values:{}},
+  actors:{...item('koopaRed'),values:{}},
+  foreground:{...item('bush'),values:{}},
+};
+const layerInstance=(layer,x,y)=>at(layerItems[layer],x,y,layer==='foreground'?'foreground':undefined);
+for(const [name,cells] of [
+  ['horizontal',line({x:0,y:0},{x:64,y:0})],
+  ['vertical',line({x:0,y:0},{x:0,y:64})],
+  ['diagonal',line({x:0,y:0},{x:64,y:64})],
+]) {
+  const instances=cells.map(([x,y])=>layerInstance('world',x,y));
+  assert.strictEqual(erase(instances,{start:null,goal:null},{x:cells[0][0],y:cells[0][1]},
+    {x:cells.at(-1)[0],y:cells.at(-1)[1]}).count,cells.length,`${name} eraser drag visits every snapped cell`);
+  assert.strictEqual(instances.length,0,`${name} eraser drag leaves no sparse-event gaps`);
+}
+const irregularInstances=irregular.map(([x,y])=>layerInstance('world',x,y)),irregularGesture=eraseGesture();
+for(const [from,to] of [[{x:0,y:0},{x:48,y:16}],[{x:48,y:16},{x:16,y:48}],[{x:16,y:48},{x:48,y:16}]])
+  erase(irregularInstances,{start:null,goal:null},from,to,irregularGesture);
+assert.strictEqual(irregularGesture.removedCount,irregular.length,'irregular eraser traversal visits each deduplicated cell once');
+assert.strictEqual(irregularGesture.visited.size,irregular.length,'self-crossing erase segments deduplicate visited cells');
+for(const layer of theme.sceneLayers) {
+  const instances=[layerInstance(layer,0,0),...theme.sceneLayers.filter(x=>x!==layer).map((other,i)=>layerInstance(other,16*(i+1),0))];
+  const gesture=eraseGesture();
+  const result=erase(instances,{start:null,goal:null},{x:0,y:0},{x:80,y:0},gesture);
+  assert.strictEqual(result.scope,layer,`${layer} establishes its own erase scope`);
+  assert.strictEqual(result.count,1,`${layer} lock does not erase other effective layers`);
+  assert(instances.every(instance=>semantics.sceneLayerFor(theme,instance)!==layer),`${layer} target was removed`);
+}
+const missThenHit=[layerInstance('world',32,0),layerInstance('actors',48,0)],missGesture=eraseGesture();
+erase(missThenHit,{start:null,goal:null},{x:0,y:0},{x:48,y:0},missGesture);
+assert.strictEqual(missGesture.scope,'world','empty leading cells do not lock before the first successful deletion');
+assert.deepStrictEqual(missThenHit.map(x=>semantics.sceneLayerFor(theme,x)),['actors'],
+  'the first hit locks the remainder of a sparse drag to that layer');
+const override=layerInstance('background',0,0);override.sceneLayer='actors';
+const overrideGesture=eraseGesture();erase([override],{start:null,goal:null},{x:0,y:0},{x:0,y:0},overrideGesture);
+assert.strictEqual(overrideGesture.scope,'actors','an authored per-instance override determines erase scope');
+const beneath=[layerInstance('world',0,0),layerInstance('foreground',0,0)],beneathGesture=eraseGesture();
+beneathGesture.scope='world';
+assert.strictEqual(erase(beneath,{start:null,goal:null},{x:0,y:0},{x:0,y:0},beneathGesture).count,1,
+  'layer-filtered picking reaches a matching object beneath a different-layer object');
+assert.strictEqual(semantics.sceneLayerFor(theme,beneath[0]),'foreground');
+const freshInstances=[layerInstance('sky',0,0),layerInstance('world',16,0)];
+assert.strictEqual(erase(freshInstances,{start:null,goal:null},{x:0,y:0},{x:0,y:0}).scope,'sky');
+assert.strictEqual(erase(freshInstances,{start:null,goal:null},{x:16,y:0},{x:16,y:0}).scope,'world',
+  'a fresh gesture can lock to a different layer');
+const markerInstances=[layerInstance('world',16,0)],markers={start:{x:0,y:0},goal:{x:32,y:0}},markerGesture=eraseGesture();
+erase(markerInstances,markers,{x:0,y:0},{x:32,y:0},markerGesture);
+assert.strictEqual(markerGesture.scope,'markers');
+assert.strictEqual(markerGesture.removedCount,2,'marker scope can erase both singleton markers');
+assert.strictEqual(markerInstances.length,1,'marker scope cannot fall through to ordinary objects');
+const wide=layerInstance('world',16,0),wideGesture=eraseGesture();
+const wideBounds=()=>({x:0,y:-8,w:48,h:16});
+const wideResult=semantics.eraseSquareCells(theme,[wide],{start:null,goal:null},{x:0,y:0},{x:32,y:0},wideGesture,wideBounds);
+assert.strictEqual(wideResult.count,1,'an object spanning several visited cells is removed only once');
+const eraseHistory=semantics.createHistory({instances:[{placeable:'solidBlock',values:{'transform.x':0,'transform.y':0}},{placeable:'solidBlock',values:{'transform.x':16,'transform.y':0}}],markers:{start:null,goal:null}});
+eraseHistory.push({instances:[],markers:{start:null,goal:null}});
+assert.strictEqual(eraseHistory.state().index,1,'one multi-object erase drag is one history entry');
+assert.strictEqual(eraseHistory.undo().instances.length,2,'undo restores the complete erase drag');
+assert.strictEqual(eraseHistory.redo().instances.length,0,'redo removes the complete erase drag again');
+const missHistory=semantics.createHistory({instances:[],markers:{start:null,goal:null}}),missResult=erase([],{start:null,goal:null},{x:0,y:0},{x:64,y:64});
+if(missResult.count)missHistory.push({instances:[],markers:{start:null,goal:null}});
+assert.strictEqual(missHistory.state().index,0,'an all-empty erase gesture creates no history entry');
+const cancelBefore={instances:[layerInstance('world',0,0)],markers:{start:{x:16,y:16},goal:null}},cancelWorking=structuredClone(cancelBefore);
+erase(cancelWorking.instances,cancelWorking.markers,{x:0,y:0},{x:0,y:0});
+assert.deepStrictEqual(plain(cancelBefore).instances.length,1,'the pre-gesture snapshot remains available for pointer cancellation');
+const eraseCamera={x:-123,y:77,zoom:3.25},eraseWorld={x:32,y:-16};
+assert.deepStrictEqual(plain(semantics.screenToWorld(semantics.worldToScreen(eraseWorld,eraseCamera),eraseCamera)),eraseWorld,
+  'eraser coordinates survive active camera zoom and pan');
+
 const sourceIndices = id => theme.resources[id].provenance.index;
 const layout = (id,width,height) => {
   const construction=theme.constructions[id];
@@ -581,8 +659,28 @@ assert.strictEqual(branchedHistory.state().dirty,true,
   'Edit A → Edit B → save → undo to A → Edit C cannot reuse the saved checkpoint');
 assert.strictEqual(branchedHistory.state().canRedo,false,'the replaced B branch is no longer redoable');
 
-for(const id of ['paletteToggle','detailsToggle','helpDialog','openMapBtn','saveMapBtn','undoBtn','redoBtn'])
+for(const id of ['eraserBtn','paletteToggle','detailsToggle','helpDialog','openMapBtn','saveMapBtn','undoBtn','redoBtn'])
   assert(newEditor.includes(`id="${id}"`),`${id} is a discoverable editor control`);
+assert(newEditor.includes('aria-label="Eraser tool" aria-pressed="false"'),
+  'the compact eraser control has an accessible label and exposed pressed state');
+assert(newEditor.includes("$('eraserBtn').onclick=()=>setEraserMode(!state.eraser)"),
+  'clicking the active eraser toggles it off');
+assert((newEditor.match(/state\.eraser=false;\$\('eraserBtn'\)\.setAttribute\('aria-pressed','false'\)/g)||[]).length>=2,
+  'marker and ordinary palette cards replace eraser mode');
+assert(newEditor.includes("e.key==='Escape'&&state.eraser"),'Escape exits eraser mode');
+assert(newEditor.includes('Eraser ready — drag to erase'),'activation feedback names the drag interaction');
+assert(newEditor.includes("Eraser locked to ${layerLabel(result.scope)}${result.scope==='markers'?'':' layer'}"),
+  'the first successful deletion announces and retains its layer lock');
+assert(newEditor.includes("Erased ${gesture.removedCount} ${label}${gesture.removedCount===1?'':'s'}"),
+  'completion feedback reports a correctly pluralized authored-target count');
+assert(newEditor.includes('<b>Eraser:</b> removes objects only while you drag and locks each drag to the layer'),
+  'help documents drag-only erasing and first-layer locking');
+assert(newEditor.includes("else if(state.gesture.type==='erase')eraseCells(state.gesture,p)"),
+  'hover without an active pointer gesture cannot invoke erasing');
+assert(newEditor.includes("if(state.eraser){state.selected=null;state.gesture={type:'erase'"),
+  'eraser pointer-down takes priority over selection and move gestures');
+assert(newEditor.includes("const wasErase=state.gesture?.type==='erase'"),
+  'pointer cancellation follows the snapshot restoration path and clears transient erase state');
 assert(newEditor.includes("requestAnimationFrame(resize)"),'sidebar changes schedule canvas/device-pixel resizing');
 assert(newEditor.includes('palette-hidden.details-hidden'),'both hidden sidebars release both grid columns');
 assert(newEditor.includes('Start and Goal cards place grid-snapped singleton markers'),'help documents actual marker behavior');
