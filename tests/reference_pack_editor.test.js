@@ -27,14 +27,25 @@ assert.strictEqual(semantics.initialValue('rewardBlock.uses', schema.rewardBlock
 
 assert.strictEqual(semantics.visualTarget(theme.objects.coin, {}).target, 'pickup.coin.spin',
   'the sole visual target is deterministic');
-assert.match(semantics.visualTarget(theme.objects.questionBlock, {}).gap, /multiple visual states/,
-  'multi-state objects without a declared default report a gap');
+assert.strictEqual(semantics.visualTarget(theme.objects.questionBlock, {}, theme.placeables.questionBlock.previewVisual).target,
+  'block.question.idle', 'explicit placeable preview metadata resolves a multi-state object');
+assert.strictEqual(theme.placeables.koopaRed.previewVisual, 'walk');
+assert.strictEqual(theme.placeables.koopaGreen.previewVisual, 'walk');
+assert.strictEqual(theme.placeables.brick.previewVisual, 'normal');
 assert.strictEqual(semantics.visualTarget(theme.objects.ground, {'terrain.style':'castle'}).target,
   'construction.terrain.castle', 'an authored selector chooses its matching visual');
 
 assert.strictEqual(semantics.autotilePreview('construction.terrain.overground',
-  theme.constructions['construction.terrain.overground']).supported, false,
-  'autotile rectangles are not filled with an invented representative variant');
+  theme.constructions['construction.terrain.overground']).supported, true,
+  'declared neighbor bits and mask variants support deterministic autotiling');
+assert.deepStrictEqual(theme.placeables.pipe.initialValues, {'pipe.length':2});
+assert.deepStrictEqual(theme.placeables.ladder.initialValues, {'extent.length':2});
+assert.deepStrictEqual(theme.placeables.ground.initialValues, {'terrain.width':2,'terrain.height':2});
+assert.deepStrictEqual(theme.placeables.mushroomPlatform.initialValues, {'extent.width':3});
+assert.deepStrictEqual(theme.placeables.bush.initialValues, {'extent.width':3});
+assert.deepStrictEqual(theme.placeables.movingMushroomPlatform.initialValues, {'extent.width':3});
+assert(newEditor.includes("c.rotate(p.rotation)"), 'construction presentation rotates the rendered result');
+assert(newEditor.includes("c.scale(p.mirror?-1:1,1)"), 'actor presentation mirrors the rendered result');
 assert.strictEqual(semantics.controlEnabled('pipe.destination', schema.pipe.destination,
   {'pipe.travelEnabled':false}), false, 'enabledWhen disables a control when its condition is false');
 assert.strictEqual(semantics.controlEnabled('pipe.destination', schema.pipe.destination,
