@@ -37,12 +37,6 @@
       "licenseText": "ORIGINAL MarioAI 0.2.0 LICENSE\n\n/**\n * Copyright (c) 2009-2010, Sergey Karakovskiy and Julian Togelius\n * All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions are met:\n *     * Redistributions of source code must retain the above copyright\n *       notice, this list of conditions and the following disclaimer.\n *     * Redistributions in binary form must reproduce the above copyright\n *       notice, this list of conditions and the following disclaimer in the\n *       documentation and/or other materials provided with the distribution.\n *     * Neither the name of the Mario AI nor the\n *       names of its contributors may be used to endorse or promote products\n *       derived from this software without specific prior written permission.\n *\n * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\n * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\n * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.\n * IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,\n * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT\n * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,\n * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\n * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\n * POSSIBILITY OF SUCH DAMAGE.\n */\n\nCURRENT MarioAI 0.3.1 LICENSE\n\n  Copyright (c) 2009-2015, Sergey Karakovskiy, Julian Togelius and Jakub Gemrot\n  All rights reserved.\n \n  Redistribution and use in source and binary forms, with or without\n  modification, are permitted provided that the following conditions are met:\n      * Redistributions of source code must retain the above copyright\n        notice, this list of conditions and the following disclaimer.\n      * Redistributions in binary form must reproduce the above copyright\n        notice, this list of conditions and the following disclaimer in the\n        documentation and/or other materials provided with the distribution.\n      * Neither the name of the Mario AI nor the\n        names of its contributors may be used to endorse or promote products\n        derived from this software without specific prior written permission.\n \n  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\n  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\n  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.\n  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,\n  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT\n  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,\n  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\n  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\n  POSSIBILITY OF SUCH DAMAGE.\n"
     }
   ],
-  "sceneLayers": [
-    "background",
-    "world",
-    "actors",
-    "foreground"
-  ],
   "assets": {
     "images": {
       "map.block.hidden.revealed": "data:image/png;base64,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",
@@ -348,7 +342,6 @@
   "assetCatalog": {
     "map.block.hidden.revealed": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 4,
@@ -370,7 +363,6 @@
     },
     "map.block.brown_face.variant_1": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 5,
@@ -392,7 +384,6 @@
     },
     "map.block.brown_face.variant_2": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 6,
@@ -414,7 +405,6 @@
     },
     "map.block.brown_face.variant_3": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 7,
@@ -436,7 +426,6 @@
     },
     "map.block.stone": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 9,
@@ -458,7 +447,6 @@
     },
     "map.pipe.vertical.mouth.left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 10,
@@ -480,7 +468,6 @@
     },
     "map.pipe.vertical.mouth.right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 11,
@@ -502,7 +489,6 @@
     },
     "map.block.wood": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 12,
@@ -524,7 +510,6 @@
     },
     "map.cannon.vertical.muzzle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 14,
@@ -546,7 +531,6 @@
     },
     "map.block.breakable": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 16,
@@ -568,7 +552,6 @@
     },
     "map.block.breakable.coin": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 17,
@@ -590,7 +573,6 @@
     },
     "map.block.breakable.powerup": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 18,
@@ -612,7 +594,6 @@
     },
     "map.block.brick_solid": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 19,
@@ -634,7 +615,6 @@
     },
     "map.block.question.visual.frame_0": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 20,
@@ -658,7 +638,6 @@
     },
     "map.block.question.coin": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 21,
@@ -686,7 +665,6 @@
     },
     "map.block.question.powerup": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 22,
@@ -714,7 +692,6 @@
     },
     "map.block.question.multicoin": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 23,
@@ -742,7 +719,6 @@
     },
     "map.pipe.narrow.vertical.top": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 24,
@@ -764,7 +740,6 @@
     },
     "map.log_column.cap": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 25,
@@ -786,7 +761,6 @@
     },
     "map.pipe.vertical.body.left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 26,
@@ -808,7 +782,6 @@
     },
     "map.pipe.vertical.body.right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 27,
@@ -830,7 +803,6 @@
     },
     "map.block.glass_blue": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 28,
@@ -852,7 +824,6 @@
     },
     "map.cannon.vertical.neck": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 30,
@@ -874,7 +845,6 @@
     },
     "map.pickup.coin.visual.frame_0": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 32,
@@ -898,7 +868,6 @@
     },
     "map.pickup.coin.visual.frame_1": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 33,
@@ -922,7 +891,6 @@
     },
     "map.pickup.coin": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 34,
@@ -950,7 +918,6 @@
     },
     "map.pickup.coin.visual.frame_3": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 35,
@@ -974,7 +941,6 @@
     },
     "map.block.yellow_face": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 36,
@@ -996,7 +962,6 @@
     },
     "map.platform.yellow_striped": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 37,
@@ -1018,7 +983,6 @@
     },
     "map.platform.yellow_face": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 38,
@@ -1040,7 +1004,6 @@
     },
     "map.platform.thin_brown": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 39,
@@ -1062,7 +1025,6 @@
     },
     "map.pipe.narrow.vertical.body": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 40,
@@ -1084,7 +1046,6 @@
     },
     "map.log_column.body_upper": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 41,
@@ -1106,7 +1067,6 @@
     },
     "map.cannon.vertical.body": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 46,
@@ -1128,7 +1088,6 @@
     },
     "map.pipe.narrow.vertical.bottom": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 56,
@@ -1150,7 +1109,6 @@
     },
     "map.log_column.body_lower": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 57,
@@ -1172,7 +1130,6 @@
     },
     "map.bar.white.left_cap": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 60,
@@ -1194,7 +1151,6 @@
     },
     "map.ladder.body": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 61,
@@ -1216,7 +1172,6 @@
     },
     "map.sign.arrow_right.top_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 67,
@@ -1238,7 +1193,6 @@
     },
     "map.sign.arrow_right.top_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 68,
@@ -1260,7 +1214,6 @@
     },
     "map.hill.large.top_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 70,
@@ -1282,7 +1235,6 @@
     },
     "map.hill.large.top_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 71,
@@ -1304,7 +1256,6 @@
     },
     "map.hill.wide.top_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 73,
@@ -1326,7 +1277,6 @@
     },
     "map.hill.wide.top_middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 74,
@@ -1348,7 +1298,6 @@
     },
     "map.hill.wide.top_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 75,
@@ -1370,7 +1319,6 @@
     },
     "map.pillar_glass.light.top": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 76,
@@ -1392,7 +1340,6 @@
     },
     "map.pillar_glass.dark.top": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 77,
@@ -1414,7 +1361,6 @@
     },
     "map.foliage_canopy.left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 80,
@@ -1436,7 +1382,6 @@
     },
     "map.foliage_canopy.middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 81,
@@ -1458,7 +1403,6 @@
     },
     "map.foliage_canopy.right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 82,
@@ -1480,7 +1424,6 @@
     },
     "map.sign.arrow_right.bottom_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 83,
@@ -1502,7 +1445,6 @@
     },
     "map.sign.arrow_right.bottom_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 84,
@@ -1524,7 +1466,6 @@
     },
     "map.hill.large.upper_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 86,
@@ -1546,7 +1487,6 @@
     },
     "map.hill.large.upper_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 87,
@@ -1568,7 +1508,6 @@
     },
     "map.hill.wide.middle_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 89,
@@ -1590,7 +1529,6 @@
     },
     "map.hill.wide.middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 90,
@@ -1612,7 +1550,6 @@
     },
     "map.hill.wide.middle_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 91,
@@ -1634,7 +1571,6 @@
     },
     "map.pillar_glass.light.body": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 92,
@@ -1656,7 +1592,6 @@
     },
     "map.ladder.top": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 93,
@@ -1678,7 +1613,6 @@
     },
     "map.bush.left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 96,
@@ -1700,7 +1634,6 @@
     },
     "map.bush.middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 97,
@@ -1722,7 +1655,6 @@
     },
     "map.bush.right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 98,
@@ -1744,7 +1676,6 @@
     },
     "map.hill.large.lower_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 102,
@@ -1766,7 +1697,6 @@
     },
     "map.hill.large.lower_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 103,
@@ -1788,7 +1718,6 @@
     },
     "map.hill.wide.lower_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 104,
@@ -1810,7 +1739,6 @@
     },
     "map.hill.wide.lower_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 105,
@@ -1832,7 +1760,6 @@
     },
     "map.hill.large.bottom_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 118,
@@ -1854,7 +1781,6 @@
     },
     "map.hill.large.bottom_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 119,
@@ -1876,7 +1802,6 @@
     },
     "map.hill.wide.bottom_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 120,
@@ -1898,7 +1823,6 @@
     },
     "map.hill.wide.bottom_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 121,
@@ -1920,7 +1844,6 @@
     },
     "map.terrain.autotile.overground.mask_1000": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 128,
@@ -1944,7 +1867,6 @@
     },
     "map.terrain.autotile.overground.mask_1100": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 129,
@@ -1968,7 +1890,6 @@
     },
     "map.terrain.autotile.overground.mask_0100": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 130,
@@ -1992,7 +1913,6 @@
     },
     "map.terrain.autotile.overground.mask_1110": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 131,
@@ -2016,7 +1936,6 @@
     },
     "map.terrain.overground.grass_top.left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 132,
@@ -2038,7 +1957,6 @@
     },
     "map.terrain.overground.grass_top.middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 133,
@@ -2060,7 +1978,6 @@
     },
     "map.terrain.overground.grass_top.right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 134,
@@ -2082,7 +1999,6 @@
     },
     "map.terrain.overground.rounded_corner.top_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 135,
@@ -2104,7 +2020,6 @@
     },
     "map.terrain.autotile.castle.mask_1000": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 136,
@@ -2128,7 +2043,6 @@
     },
     "map.terrain.autotile.castle.mask_1100": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 137,
@@ -2152,7 +2066,6 @@
     },
     "map.terrain.autotile.castle.mask_0100": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 138,
@@ -2176,7 +2089,6 @@
     },
     "map.terrain.autotile.castle.mask_1110": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 139,
@@ -2200,7 +2112,6 @@
     },
     "map.terrain.autotile.underground.mask_1000": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 140,
@@ -2224,7 +2135,6 @@
     },
     "map.terrain.autotile.underground.mask_1100": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 141,
@@ -2248,7 +2158,6 @@
     },
     "map.terrain.autotile.underground.mask_0100": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 142,
@@ -2272,7 +2181,6 @@
     },
     "map.terrain.autotile.underground.mask_1110": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 143,
@@ -2296,7 +2204,6 @@
     },
     "map.terrain.autotile.overground.mask_1010": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 144,
@@ -2320,7 +2227,6 @@
     },
     "map.terrain.autotile.overground.mask_0110": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 145,
@@ -2356,7 +2262,6 @@
     },
     "map.terrain.autotile.overground.mask_0101": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 146,
@@ -2380,7 +2285,6 @@
     },
     "map.terrain.autotile.overground.mask_1101": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 147,
@@ -2404,7 +2308,6 @@
     },
     "map.terrain.overground.dirt_fill.variant_0": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 148,
@@ -2426,7 +2329,6 @@
     },
     "map.terrain.overground.dirt_fill.variant_1": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 149,
@@ -2448,7 +2350,6 @@
     },
     "map.terrain.overground.dirt_fill.variant_2": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 150,
@@ -2470,7 +2371,6 @@
     },
     "map.terrain.overground.rounded_corner.top_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 151,
@@ -2492,7 +2392,6 @@
     },
     "map.terrain.autotile.castle.mask_1010": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 152,
@@ -2516,7 +2415,6 @@
     },
     "map.terrain.autotile.castle.mask_0110": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 153,
@@ -2552,7 +2450,6 @@
     },
     "map.terrain.autotile.castle.mask_0101": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 154,
@@ -2576,7 +2473,6 @@
     },
     "map.terrain.autotile.castle.mask_1101": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 155,
@@ -2600,7 +2496,6 @@
     },
     "map.terrain.autotile.underground.mask_1010": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 156,
@@ -2624,7 +2519,6 @@
     },
     "map.terrain.autotile.underground.mask_0110": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 157,
@@ -2660,7 +2554,6 @@
     },
     "map.terrain.autotile.underground.mask_0101": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 158,
@@ -2684,7 +2577,6 @@
     },
     "map.terrain.autotile.underground.mask_1101": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 159,
@@ -2708,7 +2600,6 @@
     },
     "map.terrain.autotile.overground.mask_0010": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 160,
@@ -2732,7 +2623,6 @@
     },
     "map.terrain.autotile.overground.mask_0011": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 161,
@@ -2756,7 +2646,6 @@
     },
     "map.terrain.autotile.overground.mask_0001": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 162,
@@ -2780,7 +2669,6 @@
     },
     "map.terrain.autotile.overground.mask_0111": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 163,
@@ -2804,7 +2692,6 @@
     },
     "map.terrain.overground.dirt_fill.variant_3": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 164,
@@ -2826,7 +2713,6 @@
     },
     "map.terrain.overground.dirt_fill.variant_4": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 165,
@@ -2848,7 +2734,6 @@
     },
     "map.terrain.overground.dirt_fill.variant_5": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 166,
@@ -2870,7 +2755,6 @@
     },
     "map.terrain.overground.rounded_corner.bottom_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 167,
@@ -2892,7 +2776,6 @@
     },
     "map.terrain.autotile.castle.mask_0010": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 168,
@@ -2916,7 +2799,6 @@
     },
     "map.terrain.autotile.castle.mask_0011": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 169,
@@ -2940,7 +2822,6 @@
     },
     "map.terrain.autotile.castle.mask_0001": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 170,
@@ -2964,7 +2845,6 @@
     },
     "map.terrain.autotile.castle.mask_0111": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 171,
@@ -2988,7 +2868,6 @@
     },
     "map.terrain.autotile.underground.mask_0010": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 172,
@@ -3012,7 +2891,6 @@
     },
     "map.terrain.autotile.underground.mask_0011": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 173,
@@ -3036,7 +2914,6 @@
     },
     "map.terrain.autotile.underground.mask_0001": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 174,
@@ -3060,7 +2937,6 @@
     },
     "map.terrain.autotile.underground.mask_0111": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 175,
@@ -3084,7 +2960,6 @@
     },
     "map.terrain.overground.grass_edge.curved_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 176,
@@ -3106,7 +2981,6 @@
     },
     "map.terrain.overground.grass_edge.curved_middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 177,
@@ -3128,7 +3002,6 @@
     },
     "map.terrain.overground.grass_edge.curved_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 178,
@@ -3150,7 +3023,6 @@
     },
     "map.terrain.autotile.overground.mask_1011": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 179,
@@ -3174,7 +3046,6 @@
     },
     "map.terrain.overground.grass_top.alt_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 180,
@@ -3196,7 +3067,6 @@
     },
     "map.terrain.overground.grass_top.alt_middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 181,
@@ -3218,7 +3088,6 @@
     },
     "map.terrain.overground.grass_top.alt_right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 182,
@@ -3240,7 +3109,6 @@
     },
     "map.terrain.overground.rounded_corner.bottom_left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 183,
@@ -3262,7 +3130,6 @@
     },
     "map.terrain.autotile.castle.mask_1011": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 187,
@@ -3286,7 +3153,6 @@
     },
     "map.terrain.autotile.underground.mask_1011": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 191,
@@ -3310,7 +3176,6 @@
     },
     "map.mushroom_platform.cap.left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 224,
@@ -3332,7 +3197,6 @@
     },
     "map.mushroom_platform.cap.middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 225,
@@ -3354,7 +3218,6 @@
     },
     "map.mushroom_platform.cap.right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 226,
@@ -3376,7 +3239,6 @@
     },
     "map.mushroom_platform.stem.left": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 240,
@@ -3398,7 +3260,6 @@
     },
     "map.mushroom_platform.stem.middle": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 241,
@@ -3420,7 +3281,6 @@
     },
     "map.mushroom_platform.stem.right": {
       "category": "mapTile",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mapsheet.png",
       "sourceIndex": 242,
@@ -3442,10 +3302,6 @@
     },
     "bg.background-cell.x00.y00": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 0,
@@ -3462,10 +3318,6 @@
     },
     "bg.background-cell.x01.y00": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 1,
@@ -3482,10 +3334,6 @@
     },
     "bg.background-cell.x02.y00": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 2,
@@ -3502,10 +3350,6 @@
     },
     "bg.background-cell.x03.y00": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 3,
@@ -3522,10 +3366,6 @@
     },
     "bg.background-cell.x04.y00": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 4,
@@ -3542,10 +3382,6 @@
     },
     "bg.background-cell.x06.y00": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 6,
@@ -3562,10 +3398,6 @@
     },
     "bg.background-cell.x07.y00": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 7,
@@ -3582,10 +3414,6 @@
     },
     "bg.background-cell.x00.y01": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 8,
@@ -3602,10 +3430,6 @@
     },
     "bg.background-cell.x01.y01": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 9,
@@ -3622,10 +3446,6 @@
     },
     "bg.background-cell.x02.y01": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 10,
@@ -3642,10 +3462,6 @@
     },
     "bg.background-cell.x03.y01": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 11,
@@ -3662,10 +3478,6 @@
     },
     "bg.background-cell.x04.y01": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 12,
@@ -3682,10 +3494,6 @@
     },
     "bg.background-cell.x06.y01": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 14,
@@ -3702,10 +3510,6 @@
     },
     "bg.background-cell.x07.y01": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 15,
@@ -3722,10 +3526,6 @@
     },
     "bg.background-cell.x00.y02": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 16,
@@ -3742,10 +3542,6 @@
     },
     "bg.background-cell.x01.y02": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 17,
@@ -3762,10 +3558,6 @@
     },
     "bg.background-cell.x02.y02": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 18,
@@ -3782,10 +3574,6 @@
     },
     "bg.background-cell.x03.y02": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 19,
@@ -3802,10 +3590,6 @@
     },
     "bg.background-cell.x04.y02": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 20,
@@ -3822,10 +3606,6 @@
     },
     "bg.background-cell.x07.y02": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 23,
@@ -3842,10 +3622,6 @@
     },
     "bg.background-cell.x00.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 24,
@@ -3862,10 +3638,6 @@
     },
     "bg.background-cell.x01.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 25,
@@ -3882,10 +3654,6 @@
     },
     "bg.background-cell.x02.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 26,
@@ -3902,10 +3670,6 @@
     },
     "bg.background-cell.x03.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 27,
@@ -3922,10 +3686,6 @@
     },
     "bg.background-cell.x04.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 28,
@@ -3942,10 +3702,6 @@
     },
     "bg.background-cell.x05.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 29,
@@ -3962,10 +3718,6 @@
     },
     "bg.background-cell.x06.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 30,
@@ -3982,10 +3734,6 @@
     },
     "bg.background-cell.x07.y03": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 31,
@@ -4002,10 +3750,6 @@
     },
     "bg.background-cell.x00.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 32,
@@ -4022,10 +3766,6 @@
     },
     "bg.background-cell.x01.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 33,
@@ -4042,10 +3782,6 @@
     },
     "bg.background-cell.x02.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 34,
@@ -4062,10 +3798,6 @@
     },
     "bg.background-cell.x03.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 35,
@@ -4082,10 +3814,6 @@
     },
     "bg.background-cell.x04.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 36,
@@ -4102,10 +3830,6 @@
     },
     "bg.background-cell.x05.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 37,
@@ -4122,10 +3846,6 @@
     },
     "bg.background-cell.x06.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 38,
@@ -4142,10 +3862,6 @@
     },
     "bg.background-cell.x07.y04": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 39,
@@ -4162,10 +3878,6 @@
     },
     "bg.background-cell.x00.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 40,
@@ -4182,10 +3894,6 @@
     },
     "bg.background-cell.x01.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 41,
@@ -4202,10 +3910,6 @@
     },
     "bg.background-cell.x02.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 42,
@@ -4222,10 +3926,6 @@
     },
     "bg.background-cell.x03.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 43,
@@ -4242,10 +3942,6 @@
     },
     "bg.background-cell.x04.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 44,
@@ -4262,10 +3958,6 @@
     },
     "bg.background-cell.x05.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 45,
@@ -4282,10 +3974,6 @@
     },
     "bg.background-cell.x06.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 46,
@@ -4302,10 +3990,6 @@
     },
     "bg.background-cell.x07.y05": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 47,
@@ -4322,10 +4006,6 @@
     },
     "bg.background-cell.x00.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 48,
@@ -4342,10 +4022,6 @@
     },
     "bg.background-cell.x01.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 49,
@@ -4362,10 +4038,6 @@
     },
     "bg.background-cell.x02.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 50,
@@ -4382,10 +4054,6 @@
     },
     "bg.background-cell.x03.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 51,
@@ -4402,10 +4070,6 @@
     },
     "bg.background-cell.x04.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 52,
@@ -4422,10 +4086,6 @@
     },
     "bg.background-cell.x05.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 53,
@@ -4442,10 +4102,6 @@
     },
     "bg.background-cell.x06.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 54,
@@ -4462,10 +4118,6 @@
     },
     "bg.background-cell.x07.y06": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 55,
@@ -4482,10 +4134,6 @@
     },
     "bg.background-cell.x00.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 56,
@@ -4502,10 +4150,6 @@
     },
     "bg.background-cell.x01.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 57,
@@ -4522,10 +4166,6 @@
     },
     "bg.background-cell.x02.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 58,
@@ -4542,10 +4182,6 @@
     },
     "bg.background-cell.x03.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 59,
@@ -4562,10 +4198,6 @@
     },
     "bg.background-cell.x04.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 60,
@@ -4582,10 +4214,6 @@
     },
     "bg.background-cell.x05.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 61,
@@ -4602,10 +4230,6 @@
     },
     "bg.background-cell.x06.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 62,
@@ -4622,10 +4246,6 @@
     },
     "bg.background-cell.x07.y07": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 63,
@@ -4642,10 +4262,6 @@
     },
     "bg.background-cell.x02.y08": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 66,
@@ -4662,10 +4278,6 @@
     },
     "bg.background-cell.x03.y08": {
       "category": "background",
-      "authoringGroup": "deco",
-      "defaultSceneLayer": "background",
-      "paletteExposure": "relationshipOnly",
-      "decoRelationship": "unresolved",
       "scope": "theme",
       "sourceSheet": "bgsheet.png",
       "sourceIndex": 67,
@@ -4682,7 +4294,6 @@
     },
     "enemy.enemy-walker.armored.red.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 0,
@@ -4706,7 +4317,6 @@
     },
     "enemy.enemy-walker.armored.red.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 1,
@@ -4730,7 +4340,6 @@
     },
     "enemy.enemy-cell.x02.y00": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 2,
@@ -4747,7 +4356,6 @@
     },
     "enemy.enemy-walker.armored.red.shell.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 3,
@@ -4771,7 +4379,6 @@
     },
     "enemy.enemy-walker.armored.red.shell.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 4,
@@ -4795,7 +4402,6 @@
     },
     "enemy.enemy-walker.armored.red.shell.frame_2": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 5,
@@ -4819,7 +4425,6 @@
     },
     "enemy.enemy-walker.armored.red.shell.frame_3": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 6,
@@ -4843,7 +4448,6 @@
     },
     "enemy.enemy-walker.armored.green.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 16,
@@ -4867,7 +4471,6 @@
     },
     "enemy.enemy-walker.armored.green.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 17,
@@ -4891,7 +4494,6 @@
     },
     "enemy.enemy-cell.x02.y01": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 18,
@@ -4908,7 +4510,6 @@
     },
     "enemy.enemy-walker.armored.green.shell.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 19,
@@ -4932,7 +4533,6 @@
     },
     "enemy.enemy-walker.armored.green.shell.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 20,
@@ -4956,7 +4556,6 @@
     },
     "enemy.enemy-walker.armored.green.shell.frame_2": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 21,
@@ -4980,7 +4579,6 @@
     },
     "enemy.enemy-walker.armored.green.shell.frame_3": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 22,
@@ -5004,7 +4602,6 @@
     },
     "enemy.enemy-walker.basic.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 32,
@@ -5028,7 +4625,6 @@
     },
     "enemy.enemy-walker.basic.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 33,
@@ -5052,7 +4648,6 @@
     },
     "enemy.enemy-walker.spiked.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 48,
@@ -5076,7 +4671,6 @@
     },
     "enemy.enemy-walker.spiked.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 49,
@@ -5100,7 +4694,6 @@
     },
     "enemy.enemy-overlay.wing.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 64,
@@ -5124,7 +4717,6 @@
     },
     "enemy.enemy-overlay.wing.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 65,
@@ -5148,7 +4740,6 @@
     },
     "enemy.enemy-projectile.horizontal": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 80,
@@ -5170,7 +4761,6 @@
     },
     "enemy.enemy-hazard.emerging.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 96,
@@ -5194,7 +4784,6 @@
     },
     "enemy.enemy-hazard.emerging.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 97,
@@ -5218,7 +4807,6 @@
     },
     "enemy.enemy-hazard.emerging.frame_2": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 98,
@@ -5242,7 +4830,6 @@
     },
     "enemy.enemy-hazard.emerging.frame_3": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 99,
@@ -5266,7 +4853,6 @@
     },
     "enemy.enemy-flyer.wave.frame_0": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 112,
@@ -5290,7 +4876,6 @@
     },
     "enemy.enemy-flyer.wave.frame_1": {
       "category": "enemyArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "enemysheet.png",
       "sourceIndex": 113,
@@ -5314,7 +4899,6 @@
     },
     "item.pickup-powerup.grow": {
       "category": "itemArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "itemsheet.png",
       "sourceIndex": 0,
@@ -5336,7 +4920,6 @@
     },
     "item.pickup-powerup.projectile": {
       "category": "itemArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "itemsheet.png",
       "sourceIndex": 1,
@@ -5358,7 +4941,6 @@
     },
     "item.pickup-special.green": {
       "category": "itemArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "itemsheet.png",
       "sourceIndex": 2,
@@ -5380,7 +4962,6 @@
     },
     "particle.effect-debris.variant_0": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 0,
@@ -5408,7 +4989,6 @@
     },
     "particle.effect-debris.variant_1": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 1,
@@ -5436,7 +5016,6 @@
     },
     "particle.effect-sparkle.general.frame_0": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 8,
@@ -5460,7 +5039,6 @@
     },
     "particle.effect-sparkle.general.frame_1": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 9,
@@ -5484,7 +5062,6 @@
     },
     "particle.effect-sparkle.general.frame_2": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 10,
@@ -5508,7 +5085,6 @@
     },
     "particle.effect-sparkle.pickup.frame_0": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 16,
@@ -5532,7 +5108,6 @@
     },
     "particle.effect-sparkle.pickup.frame_1": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 17,
@@ -5556,7 +5131,6 @@
     },
     "particle.effect-sparkle.pickup.frame_2": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 18,
@@ -5580,7 +5154,6 @@
     },
     "particle.projectile-fireball.frame_0": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 24,
@@ -5604,7 +5177,6 @@
     },
     "particle.projectile-fireball.frame_1": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 25,
@@ -5628,7 +5200,6 @@
     },
     "particle.projectile-fireball.frame_2": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 26,
@@ -5652,7 +5223,6 @@
     },
     "particle.projectile-fireball.frame_3": {
       "category": "particleArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "particlesheet.png",
       "sourceIndex": 27,
@@ -5676,7 +5246,6 @@
     },
     "mario.player-motion.idle_walk_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 0,
@@ -5698,7 +5267,6 @@
     },
     "mario.player-motion.walk_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 1,
@@ -5720,7 +5288,6 @@
     },
     "mario.player-motion.walk_2": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 2,
@@ -5742,7 +5309,6 @@
     },
     "mario.player-motion.fast_run_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 3,
@@ -5764,7 +5330,6 @@
     },
     "mario.player-motion.fast_run_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 4,
@@ -5786,7 +5351,6 @@
     },
     "mario.player-motion.fast_run_2": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 5,
@@ -5808,7 +5372,6 @@
     },
     "mario.player-motion.jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 6,
@@ -5830,7 +5393,6 @@
     },
     "mario.player-motion.fast_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 7,
@@ -5852,7 +5414,6 @@
     },
     "mario.player-large-cell.x08.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 8,
@@ -5869,7 +5430,6 @@
     },
     "mario.player-motion.skid": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 9,
@@ -5891,7 +5451,6 @@
     },
     "mario.player-motion.carry_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 10,
@@ -5913,7 +5472,6 @@
     },
     "mario.player-motion.carry_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 11,
@@ -5935,7 +5493,6 @@
     },
     "mario.player-motion.carry_2_or_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 12,
@@ -5957,7 +5514,6 @@
     },
     "mario.player-large-cell.x13.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 13,
@@ -5974,7 +5530,6 @@
     },
     "mario.player-motion.duck": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "mariosheet.png",
       "sourceIndex": 14,
@@ -5996,7 +5551,6 @@
     },
     "smallmario.player-motion.idle_walk_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 0,
@@ -6018,7 +5572,6 @@
     },
     "smallmario.player-motion.walk_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 1,
@@ -6040,7 +5593,6 @@
     },
     "smallmario.player-motion.fast_run_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 2,
@@ -6062,7 +5614,6 @@
     },
     "smallmario.player-motion.fast_run_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 3,
@@ -6084,7 +5635,6 @@
     },
     "smallmario.player-motion.jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 4,
@@ -6106,7 +5656,6 @@
     },
     "smallmario.player-motion.fast_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 5,
@@ -6128,7 +5677,6 @@
     },
     "smallmario.player-small-cell.x06.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 6,
@@ -6145,7 +5693,6 @@
     },
     "smallmario.player-motion.skid": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 7,
@@ -6167,7 +5714,6 @@
     },
     "smallmario.player-motion.carry_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 8,
@@ -6189,7 +5735,6 @@
     },
     "smallmario.player-motion.carry_1_or_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 9,
@@ -6211,7 +5756,6 @@
     },
     "smallmario.player-small-cell.x10.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "smallmariosheet.png",
       "sourceIndex": 10,
@@ -6228,7 +5772,6 @@
     },
     "firemario.player-motion.idle_walk_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 0,
@@ -6250,7 +5793,6 @@
     },
     "firemario.player-motion.walk_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 1,
@@ -6272,7 +5814,6 @@
     },
     "firemario.player-motion.walk_2": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 2,
@@ -6294,7 +5835,6 @@
     },
     "firemario.player-motion.fast_run_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 3,
@@ -6316,7 +5856,6 @@
     },
     "firemario.player-motion.fast_run_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 4,
@@ -6338,7 +5877,6 @@
     },
     "firemario.player-motion.fast_run_2": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 5,
@@ -6360,7 +5898,6 @@
     },
     "firemario.player-motion.jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 6,
@@ -6382,7 +5919,6 @@
     },
     "firemario.player-motion.fast_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 7,
@@ -6404,7 +5940,6 @@
     },
     "firemario.player-fire-cell.x08.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 8,
@@ -6421,7 +5956,6 @@
     },
     "firemario.player-motion.skid": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 9,
@@ -6443,7 +5977,6 @@
     },
     "firemario.player-motion.carry_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 10,
@@ -6465,7 +5998,6 @@
     },
     "firemario.player-motion.carry_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 11,
@@ -6487,7 +6019,6 @@
     },
     "firemario.player-motion.carry_2_or_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 12,
@@ -6509,7 +6040,6 @@
     },
     "firemario.player-fire-cell.x13.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 13,
@@ -6526,7 +6056,6 @@
     },
     "firemario.player-motion.duck": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "firemariosheet.png",
       "sourceIndex": 14,
@@ -6548,7 +6077,6 @@
     },
     "racoonmario.player-motion.idle_walk_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 0,
@@ -6570,7 +6098,6 @@
     },
     "racoonmario.player-motion.walk_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 1,
@@ -6592,7 +6119,6 @@
     },
     "racoonmario.player-motion.walk_2": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 2,
@@ -6614,7 +6140,6 @@
     },
     "racoonmario.player-motion.fast_run_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 3,
@@ -6636,7 +6161,6 @@
     },
     "racoonmario.player-motion.fast_run_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 4,
@@ -6658,7 +6182,6 @@
     },
     "racoonmario.player-motion.fast_run_2": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 5,
@@ -6680,7 +6203,6 @@
     },
     "racoonmario.player-motion.jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 6,
@@ -6702,7 +6224,6 @@
     },
     "racoonmario.player-motion.fast_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 7,
@@ -6724,7 +6245,6 @@
     },
     "racoonmario.player-carry-cell.x08.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 8,
@@ -6741,7 +6261,6 @@
     },
     "racoonmario.player-motion.skid": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 9,
@@ -6763,7 +6282,6 @@
     },
     "racoonmario.player-motion.carry_0": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 10,
@@ -6785,7 +6303,6 @@
     },
     "racoonmario.player-motion.carry_1": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 11,
@@ -6807,7 +6324,6 @@
     },
     "racoonmario.player-motion.carry_2_or_jump": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 12,
@@ -6829,7 +6345,6 @@
     },
     "racoonmario.player-carry-cell.x13.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 13,
@@ -6846,7 +6361,6 @@
     },
     "racoonmario.player-motion.duck": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 14,
@@ -6868,7 +6382,6 @@
     },
     "racoonmario.player-carry-cell.x15.y00": {
       "category": "playerArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "racoonmariosheet.png",
       "sourceIndex": 15,
@@ -6885,7 +6398,6 @@
     },
     "princess.goal-actor.frame_0": {
       "category": "goalActorArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "princess.png",
       "sourceIndex": 0,
@@ -6909,7 +6421,6 @@
     },
     "princess.goal-actor.frame_1": {
       "category": "goalActorArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "princess.png",
       "sourceIndex": 1,
@@ -6933,7 +6444,6 @@
     },
     "princess.goal-actor-cell.x02.y00": {
       "category": "goalActorArt",
-      "authoringGroup": "world",
       "scope": "theme",
       "sourceSheet": "princess.png",
       "sourceIndex": 2,
@@ -20077,8 +19587,6 @@
     "families": {
       "terrain.overground": {
         "id": "terrain.overground",
-        "authoringGroup": "world",
-        "defaultSceneLayer": "world",
         "name": "Overground terrain",
         "category": "terrain",
         "type": "terrain",
@@ -20141,8 +19649,6 @@
       },
       "pipe.vertical": {
         "id": "pipe.vertical",
-        "authoringGroup": "world",
-        "defaultSceneLayer": "world",
         "name": "Vertical pipe",
         "category": "system",
         "type": "resizable",
@@ -20190,8 +19696,6 @@
       },
       "cannon.vertical": {
         "id": "cannon.vertical",
-        "authoringGroup": "world",
-        "defaultSceneLayer": "world",
         "name": "Vertical cannon stack",
         "category": "system",
         "type": "fixed",
@@ -20221,8 +19725,6 @@
       },
       "ladder.vertical": {
         "id": "ladder.vertical",
-        "authoringGroup": "world",
-        "defaultSceneLayer": "world",
         "name": "Ladder strip",
         "category": "system",
         "type": "resizable",
@@ -20264,8 +19766,6 @@
       },
       "bush.span": {
         "id": "bush.span",
-        "authoringGroup": "deco",
-        "defaultSceneLayer": "background",
         "name": "Bush",
         "category": "decor",
         "type": "span",
@@ -20283,8 +19783,6 @@
       },
       "mushroom.platform": {
         "id": "mushroom.platform",
-        "authoringGroup": "world",
-        "defaultSceneLayer": "world",
         "name": "Mushroom Platform",
         "category": "terrain",
         "type": "parametric",

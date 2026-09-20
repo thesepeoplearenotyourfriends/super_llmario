@@ -73,6 +73,12 @@
     "license": "themes/marioai_theme_files/LICENSE",
     "repository": "https://github.com/medovina/MarioAI"
   },
+  "sceneLayers": [
+    "background",
+    "world",
+    "actors",
+    "foreground"
+  ],
   "atlases": {
     "map": {
       "mediaType": "image/png",
@@ -11124,6 +11130,7 @@
       }
     },
     "goomba": {
+      "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
       "capabilities": [
@@ -11135,6 +11142,7 @@
       }
     },
     "koopa.red": {
+      "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
       "capabilities": [
@@ -11172,6 +11180,7 @@
       ]
     },
     "koopa.green": {
+      "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
       "capabilities": [
@@ -11209,6 +11218,7 @@
       ]
     },
     "spiky": {
+      "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
       "capabilities": [
@@ -11220,6 +11230,7 @@
       }
     },
     "waveGoomba": {
+      "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "actor",
       "capabilities": [
@@ -11253,6 +11264,7 @@
       }
     },
     "coin": {
+      "defaultSceneLayer": "actors",
       "kind": "pickup",
       "engineNoun": "pickup",
       "capabilities": [
@@ -11299,6 +11311,7 @@
       }
     },
     "questionBlock": {
+      "defaultSceneLayer": "world",
       "kind": "block",
       "engineNoun": "block",
       "capabilities": [],
@@ -11316,6 +11329,7 @@
       "collisionMode": "solid"
     },
     "brick": {
+      "defaultSceneLayer": "world",
       "kind": "block",
       "engineNoun": "block",
       "capabilities": [],
@@ -11331,6 +11345,7 @@
       "collisionMode": "solid"
     },
     "pipe": {
+      "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "structure",
       "capabilities": [
@@ -11342,6 +11357,7 @@
       }
     },
     "ladder": {
+      "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "structure",
       "capabilities": [
@@ -11352,6 +11368,7 @@
       }
     },
     "ground": {
+      "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "terrain",
       "capabilities": [
@@ -11365,6 +11382,7 @@
       }
     },
     "mushroomPlatform": {
+      "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "platform",
       "capabilities": [
@@ -11376,6 +11394,7 @@
       }
     },
     "bush": {
+      "defaultSceneLayer": "background",
       "kind": "decoration",
       "engineNoun": "decoration",
       "capabilities": [],
@@ -11386,6 +11405,7 @@
       }
     },
     "arrowSign": {
+      "defaultSceneLayer": "world",
       "kind": "decoration",
       "engineNoun": "decoration",
       "capabilities": [],
@@ -11428,6 +11448,7 @@
       }
     },
     "solidBlock": {
+      "defaultSceneLayer": "world",
       "kind": "block",
       "engineNoun": "block",
       "capabilities": [],
@@ -11443,6 +11464,7 @@
       "collisionMode": "solid"
     },
     "rotatingBlock": {
+      "defaultSceneLayer": "world",
       "kind": "block",
       "engineNoun": "block",
       "capabilities": [],
@@ -11469,6 +11491,7 @@
       ]
     },
     "whitePlatform": {
+      "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "platform",
       "capabilities": [],
@@ -11489,6 +11512,7 @@
       }
     },
     "hill": {
+      "defaultSceneLayer": "background",
       "kind": "decoration",
       "engineNoun": "decoration",
       "capabilities": [],
@@ -11499,6 +11523,7 @@
       }
     },
     "verticalCannon": {
+      "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "structure",
       "capabilities": [],
@@ -11512,6 +11537,7 @@
       }
     },
     "hiddenRevealedBlock": {
+      "defaultSceneLayer": "world",
       "kind": "block",
       "engineNoun": "block",
       "capabilities": [],
@@ -11717,6 +11743,8 @@
   },
   "placeables": {
     "coin": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "actors",
       "label": "Coin",
       "object": "coin",
       "parameters": [
@@ -11725,6 +11753,8 @@
       ]
     },
     "goomba": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "actors",
       "label": "Goomba",
       "object": "goomba",
       "parameters": [
@@ -11736,6 +11766,8 @@
       ]
     },
     "koopaRed": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "actors",
       "label": "Red Koopa",
       "object": "koopa.red",
       "parameters": [
@@ -11750,6 +11782,8 @@
       "previewVisual": "walk"
     },
     "koopaGreen": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "actors",
       "label": "Green Koopa",
       "object": "koopa.green",
       "parameters": [
@@ -11764,6 +11798,8 @@
       "previewVisual": "walk"
     },
     "spiky": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "actors",
       "label": "Spiky",
       "object": "spiky",
       "parameters": [
@@ -11775,6 +11811,8 @@
       ]
     },
     "waveGoomba": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "actors",
       "label": "Wave Goomba",
       "object": "waveGoomba",
       "parameters": [
@@ -11786,6 +11824,8 @@
       ]
     },
     "questionBlock": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Question Block",
       "object": "questionBlock",
       "parameters": [
@@ -11797,6 +11837,8 @@
       "previewVisual": "normal"
     },
     "brick": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Brick",
       "object": "brick",
       "parameters": [
@@ -11806,6 +11848,8 @@
       ]
     },
     "pipe": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Pipe",
       "object": "pipe",
       "parameters": [
@@ -11821,6 +11865,8 @@
       }
     },
     "ladder": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Ladder",
       "object": "ladder",
       "parameters": [
@@ -11833,6 +11879,8 @@
       }
     },
     "ground": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Ground",
       "object": "ground",
       "parameters": [
@@ -11848,6 +11896,8 @@
       }
     },
     "mushroomPlatform": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Mushroom Platform",
       "object": "mushroomPlatform",
       "parameters": [
@@ -11865,6 +11915,8 @@
       }
     },
     "bush": {
+      "authoringGroup": "Deco",
+      "defaultSceneLayer": "background",
       "label": "Bush",
       "object": "bush",
       "parameters": [
@@ -11878,6 +11930,8 @@
       }
     },
     "arrowSign": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Arrow Sign",
       "object": "arrowSign",
       "parameters": [
@@ -11886,6 +11940,8 @@
       ]
     },
     "solidBlock": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Solid Block",
       "object": "solidBlock",
       "parameters": [
@@ -11895,6 +11951,8 @@
       ]
     },
     "rotatingBlock": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Rotating Block",
       "object": "rotatingBlock",
       "parameters": [
@@ -11904,6 +11962,8 @@
       "previewVisual": "idle"
     },
     "whitePlatform": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "White Platform",
       "object": "whitePlatform",
       "parameters": [
@@ -11919,6 +11979,8 @@
       }
     },
     "hill": {
+      "authoringGroup": "Deco",
+      "defaultSceneLayer": "background",
       "label": "Hill",
       "object": "hill",
       "parameters": [
@@ -11928,6 +11990,8 @@
       ]
     },
     "verticalCannon": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Vertical Cannon",
       "object": "verticalCannon",
       "parameters": [
@@ -11936,6 +12000,8 @@
       ]
     },
     "hiddenRevealedBlock": {
+      "authoringGroup": "World",
+      "defaultSceneLayer": "world",
       "label": "Hidden / Revealed Block",
       "object": "hiddenRevealedBlock",
       "parameters": [
