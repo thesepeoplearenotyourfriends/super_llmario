@@ -27,8 +27,16 @@ const rawBackgroundResources=Object.keys(theme.resources).filter(id=>id.startsWi
 assert(rawBackgroundResources.length>0,'fixture contains raw background resources to guard');
 assert(rawBackgroundResources.every(id=>!Object.hasOwn(theme.placeables,id)),
   'no raw background resource can become a palette card');
-assert.deepStrictEqual(Object.entries(theme.placeables).filter(([,p])=>p.authoringGroup==='Deco').map(([id])=>id),
-  ['bush','hill'],'Deco contains authored constructions rather than background cells');
+const decoIds=Object.entries(theme.placeables).filter(([,p])=>p.authoringGroup==='Deco').map(([id])=>id);
+assert.deepStrictEqual(decoIds.sort(), ['backgroundDome','backgroundFill','bush','darkGreenArch','darkGreenColumn',
+  'greyStone','hill','lightGreenArch','lightGreenColumn','rockpile','skyGradient','yellowBrownCave'].sort(),
+  'Deco contains audited concepts rather than source-cell palette noise');
+for(const id of decoIds) {
+  const object=theme.objects[theme.placeables[id].object];
+  assert.strictEqual(object.defaultSceneLayer,'background',`${id} defaults to the background layer`);
+  assert.strictEqual(object.collisionMode,undefined,`${id} does not infer collision from appearance`);
+  assert.deepStrictEqual(object.capabilities,[],`${id} has no inferred gameplay capability`);
+}
 assert(newEditor.includes("Object.entries(state.theme.placeables)"), 'palette inventory comes from placeables');
 assert(!/buildPalette\(\)[^]*Object\.entries\(state\.theme\.resources\)/.test(newEditor),
   'palette building never enumerates raw resources');
@@ -125,20 +133,79 @@ for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform
 assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.status, 'unimplemented');
 assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.optional, true);
 assert.deepStrictEqual(theme.objects.hill.visuals, {
-  large:'construction.hill.large',wide:'construction.hill.wide',
+  large:'construction.hill.large',small:'construction.hill.small',
 });
 const largeHill=plain(semantics.constructionLayout(
   theme.constructions['construction.hill.large'].components,
   theme.constructions['construction.hill.large'].layout));
 assert.deepStrictEqual(largeHill.cells.map(({x,y})=>[x,y]),
-  [[0,0],[1,0],[0,1],[1,1],[0,2],[1,2],[0,3],[1,3]]);
-const wideHill=plain(semantics.constructionLayout(
-  theme.constructions['construction.hill.wide'].components,
-  theme.constructions['construction.hill.wide'].layout));
-assert.deepStrictEqual(wideHill.cells.map(({x,y})=>[x,y]),
-  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[2,2],[0,3],[2,3]]);
+  [[0,0],[1,0],[0,1],[1,1],[0,2],[1,2]]);
+assert.deepStrictEqual(largeHill.cells.map(cell=>theme.resources[cell.id].provenance.index),[70,71,86,87,102,103]);
+const smallHill=plain(semantics.constructionLayout(
+  theme.constructions['construction.hill.small'].components,
+  theme.constructions['construction.hill.small'].layout));
+assert.deepStrictEqual(smallHill.cells.map(({id,x,y})=>[theme.resources[id].provenance.index,x,y]),
+  [[118,0,0],[119,1,0]]);
+assert.strictEqual(semantics.constructionLayout(theme.constructions['construction.hill.wide'].components,
+  theme.constructions['construction.hill.wide'].layout),null,'unresolved Hill fragments are not rendered as an invented assembly');
+assert(!theme.parameterSchemas.hill.shape.values.includes('wide'));
 assert(theme.placeables.hill.parameters.includes('hill.shape'));
 assert.strictEqual(theme.objects.hill.collisionMode, undefined, 'hills remain presentation-only');
+
+const sourceIndices = id => theme.resources[id].provenance.index;
+const layout = (id,width,height) => {
+  const construction=theme.constructions[id];
+  return plain(semantics.constructionLayout(construction.components,construction.layout,width,height));
+};
+const indices = result => result.cells.map(cell=>sourceIndices(cell.id));
+for(const id of ['construction.hill.large','construction.background.dome.variant_0',
+  'construction.background.dome.variant_1','construction.background.cave-arch-yellow-brown']) {
+  const construction=theme.constructions[id],assembled=layout(id);
+  assert.strictEqual(assembled.cells.length,construction.layout.columns*construction.layout.rows,
+    `${id} consumes its declared fixedGrid rows and columns`);
+}
+assert.strictEqual(semantics.constructionLayout({a:'one',b:'two'},{type:'fixedGrid',columns:2,rows:2}),null,
+  'fixedGrid rejects a declared shape that does not match its component count');
+assert.strictEqual(semantics.constructionLayout({a:'one',b:'two'},{type:'fixedGrid',columns:2}),null,
+  'fixedGrid rows are required rather than inert metadata');
+assert.deepStrictEqual(indices(layout('construction.background.dome.variant_0')),[0,1,8,9,16,17]);
+assert.deepStrictEqual(indices(layout('construction.background.dome.variant_1')),[2,3,10,11,18,19]);
+assert.strictEqual(semantics.visualTarget(theme.objects.backgroundDome,{'dome.variant':'variant_1'}).target,
+  'construction.background.dome.variant_1');
+assert.deepStrictEqual(indices(layout('construction.background.sky-gradient')),[4,12,20]);
+assert.deepStrictEqual(indices(layout('construction.background.grey-stone-vertical')),[24,32]);
+assert.deepStrictEqual(indices(layout('construction.background.grey-stone-horizontal')),[40,41],
+  'fixedRow is supported by the same exported helper used by live rendering');
+assert.strictEqual(sourceIndices(theme.objects.greyStone.visuals.square),48);
+assert.deepStrictEqual(indices(layout('construction.background.green-stone-arch',5)),[25,26,26,26,27]);
+assert.strictEqual(layout('construction.background.green-stone-arch',2),null,'audited arch retains its middle piece');
+assert.deepStrictEqual(indices(layout('construction.background.green-stone-column',undefined,5)),[35,43,43,43,51]);
+assert.deepStrictEqual(indices(layout('construction.background.green-stone-dark-arch')),[33,34]);
+assert.deepStrictEqual(indices(layout('construction.background.green-stone-dark-column',undefined,4)),[42,50,50,58]);
+assert.strictEqual(layout('construction.background.green-stone-dark-column',undefined,2),null,
+  'audited column retains its middle piece');
+assert.deepStrictEqual(indices(layout('construction.background.cave-arch-yellow-brown')),[28,29,36,37,44,45,52,53,60,61]);
+assert.strictEqual(sourceIndices(theme.objects.rockpile.visuals.sprig),30);
+assert.strictEqual(sourceIndices(theme.objects.rockpile.visuals.plain),38);
+assert.strictEqual(semantics.visualTarget(theme.objects.rockpile,{'rockpile.appearance':'plain'}).target,
+  'background.rockpile.variant_plain');
+assert.deepStrictEqual(theme.parameterSchemas.backgroundFill.material.values,['black','maroon','light_green','dark_green']);
+for(const [material,index] of Object.entries({black:49,maroon:62,light_green:66,dark_green:67})) {
+  const fill=layout(theme.objects.backgroundFill.visuals[material],3,2);
+  assert.strictEqual(fill.cells.length,6,`${material} remains one dimensioned instance resolving six presentation cells`);
+  assert(fill.cells.every(cell=>sourceIndices(cell.id)===index));
+  const geometry=plain(semantics.constructionGeometry(fill,id=>theme.resources[id].display));
+  assert.deepStrictEqual({w:geometry.w,h:geometry.h,cellW:geometry.cellW,cellH:geometry.cellH},
+    {w:96,h:64,cellW:32,cellH:32},`${material} uses native 32px bgsheet geometry`);
+}
+const hillGeometry=plain(semantics.constructionGeometry(largeHill,id=>theme.resources[id].display));
+assert.deepStrictEqual({w:hillGeometry.w,h:hillGeometry.h,cellW:hillGeometry.cellW,cellH:hillGeometry.cellH},
+  {w:32,h:48,cellW:16,cellH:16},'Hill keeps native 16px mapsheet geometry');
+assert.strictEqual(theme.resources['background.maroon_fill.source_1'].provenance.index,63,
+  'the byte-identical secondary maroon source remains preserved without becoming palette noise');
+assert(theme.coverage.unresolvedResources>0);
+assert(theme.coverage.unresolvedBySourceSheet['bgsheet.png'].includes(56));
+assert(theme.coverage.unresolvedBySourceSheet['mapsheet.png'].includes(73));
 assert.deepStrictEqual(theme.constructions['construction.cannon.vertical'].layout.order,
   ['muzzle','neck','body']);
 const cannonCells=plain(semantics.constructionLayout(

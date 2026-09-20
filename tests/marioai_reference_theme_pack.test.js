@@ -49,9 +49,11 @@ assert.equal(pack.format, 'llmario-theme-pack-reference');
 assert.deepEqual(new Set(pack.contract.resourceKinds), kinds);
 assert.equal(Object.keys(pack.resources).length, pack.coverage.nonemptyWorldResources);
 assert.equal(pack.coverage.nonemptyWorldResources, 298);
-assert.equal(pack.coverage.backgroundUnresolved, 0);
-assert.equal(pack.coverage.unresolvedResources, 0);
-assert.equal(pack.coverage.unresolvedExactPurpose.length, 0);
+assert.equal(pack.coverage.backgroundUnresolved, 14);
+assert.equal(pack.coverage.unresolvedResources, 24);
+assert.equal(pack.coverage.unresolvedExactPurpose.length, 4);
+assert.deepEqual(pack.coverage.unresolvedBySourceSheet['bgsheet.png'],[6,7,14,15,23,31,39,46,47,54,55,56,57,59]);
+assert.deepEqual(pack.coverage.unresolvedBySourceSheet['mapsheet.png'],[73,74,75,89,90,91,104,105,120,121]);
 assert(!Object.keys(pack.resources).some(id => id.includes('unresolved')));
 
 const reviewedBackgrounds = {
@@ -84,7 +86,7 @@ const reviewedBackgrounds = {
   56:'background.dark_bars.fill', 57:'background.green_stone_dark.trim_line',
   58:'background.green_stone_dark.column.bottom', 59:'background.green.border_top',
   60:'background.cave_arch_yellow_brown.bottom_left', 61:'background.cave_arch_yellow_brown.bottom_right',
-  62:'background.red_stone_wall.lower_left', 63:'background.red_stone_wall.lower_right',
+  62:'background.maroon_fill.source_0', 63:'background.maroon_fill.source_1',
   66:'background.green_stone.fill', 67:'background.green_stone_dark.fill',
 };
 assert.equal(Object.keys(reviewedBackgrounds).length, 62);
