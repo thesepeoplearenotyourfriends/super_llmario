@@ -41,7 +41,6 @@
         "duck",
         "emerge",
         "extraLife",
-        "flightPresentation",
         "goalPresentation",
         "grow",
         "horizontalFlight",
@@ -11014,8 +11013,7 @@
         "patrol",
         "stompable",
         "armored",
-        "shell",
-        "flightPresentation"
+        "shell"
       ],
       "visuals": {
         "walk": "enemy.red_koopa.walk",
@@ -11024,10 +11022,24 @@
       },
       "attachments": [
         {
-          "enabledBy": "flight.winged",
+          "enabledBy": "flight.hasWings",
           "target": "enemy.wing.flap",
           "layer": "behind",
-          "placement": "koopaWings"
+          "instances": [
+            {
+              "offsetByBody": {
+                "x": -0.42,
+                "y": -0.46
+              }
+            },
+            {
+              "offsetByBody": {
+                "x": 0.42,
+                "y": -0.46
+              },
+              "mirror": true
+            }
+          ]
         }
       ]
     },
@@ -11038,8 +11050,7 @@
         "patrol",
         "stompable",
         "armored",
-        "shell",
-        "flightPresentation"
+        "shell"
       ],
       "visuals": {
         "walk": "enemy.green_koopa.walk",
@@ -11048,10 +11059,24 @@
       },
       "attachments": [
         {
-          "enabledBy": "flight.winged",
+          "enabledBy": "flight.hasWings",
           "target": "enemy.wing.flap",
           "layer": "behind",
-          "placement": "koopaWings"
+          "instances": [
+            {
+              "offsetByBody": {
+                "x": -0.42,
+                "y": -0.46
+              }
+            },
+            {
+              "offsetByBody": {
+                "x": 0.42,
+                "y": -0.46
+              },
+              "mirror": true
+            }
+          ]
         }
       ]
     },
@@ -11278,6 +11303,16 @@
         "wood": "block.wood",
         "glassBlue": "block.glass_blue"
       }
+    },
+    "rotatingBlock": {
+      "kind": "block",
+      "engineNoun": "block",
+      "capabilities": [
+        "bump"
+      ],
+      "visuals": {
+        "spin": "block.rotating.spin"
+      }
     }
   },
   "parameterSchemas": {
@@ -11417,9 +11452,15 @@
       }
     },
     "flight": {
-      "winged": {
+      "hasWings": {
         "type": "boolean",
-        "default": false
+        "default": false,
+        "semantics": "presentation-only"
+      },
+      "flying": {
+        "type": "boolean",
+        "default": false,
+        "semantics": "behavior"
       }
     },
     "block": {
@@ -11472,7 +11513,8 @@
         "walker.direction",
         "walker.patrolRange",
         "walker.speed",
-        "flight.winged"
+        "flight.hasWings",
+        "flight.flying"
       ],
       "previewVisual": "walk"
     },
@@ -11485,7 +11527,8 @@
         "walker.direction",
         "walker.patrolRange",
         "walker.speed",
-        "flight.winged"
+        "flight.hasWings",
+        "flight.flying"
       ],
       "previewVisual": "walk"
     },
@@ -11617,6 +11660,14 @@
         "transform.x",
         "transform.y",
         "solidBlock.style"
+      ]
+    },
+    "rotatingBlock": {
+      "label": "Rotating Block",
+      "object": "rotatingBlock",
+      "parameters": [
+        "transform.x",
+        "transform.y"
       ]
     }
   },

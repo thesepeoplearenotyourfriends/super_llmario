@@ -55,10 +55,22 @@ for (const id of ['growMushroom','fireFlower','lifeMushroom']) {
   assert(schema.rewardBlock.contents.allowedObjects.includes(id), `${id} remains selectable as block contents`);
 }
 for (const id of ['koopaRed','koopaGreen']) {
-  assert(theme.placeables[id].parameters.includes('flight.winged'), `${id} exposes authored wings`);
+  assert(theme.placeables[id].parameters.includes('flight.hasWings'), `${id} exposes authored wings`);
+  assert(theme.placeables[id].parameters.includes('flight.flying'), `${id} exposes independent flying behavior`);
   assert.deepStrictEqual(theme.objects[theme.placeables[id].object].attachments,
-    [{enabledBy:'flight.winged',target:'enemy.wing.flap',layer:'behind',placement:'koopaWings'}]);
+    [{enabledBy:'flight.hasWings',target:'enemy.wing.flap',layer:'behind',instances:[
+      {offsetByBody:{x:-0.42,y:-0.46}},
+      {offsetByBody:{x:0.42,y:-0.46},mirror:true},
+    ]}]);
 }
+assert.strictEqual(schema.flight.hasWings.default, false);
+assert.strictEqual(schema.flight.flying.default, false);
+assert(!theme.contract.engineVocabulary.capabilities.includes('flightPresentation'));
+assert(!newEditor.includes('koopaWings'), 'attachment placement is interpreted from data, not a named editor special case');
+assert.strictEqual(theme.objects.rotatingBlock.visuals.spin, 'block.rotating.spin');
+assert.strictEqual(theme.placeables.rotatingBlock.object, 'rotatingBlock');
+assert(!Object.values(theme.placeables).some(p => /^block\.rotating\.frame_/.test(p.object)),
+  'rotating block runtime frames are not separate palette objects');
 assert(newEditor.includes('function drawPatrolRange(inst)'), 'selected patrol actors have an editor-only range gizmo');
 assert(newEditor.includes("authoredSize('extent.height')"), 'mushroom construction consumes authored height');
 const plain = value => JSON.parse(JSON.stringify(value));
