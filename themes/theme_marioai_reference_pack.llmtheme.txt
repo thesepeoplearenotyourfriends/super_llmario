@@ -11744,7 +11744,6 @@
   "placeables": {
     "coin": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "actors",
       "label": "Coin",
       "object": "coin",
       "parameters": [
@@ -11754,7 +11753,6 @@
     },
     "goomba": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "actors",
       "label": "Goomba",
       "object": "goomba",
       "parameters": [
@@ -11767,7 +11765,6 @@
     },
     "koopaRed": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "actors",
       "label": "Red Koopa",
       "object": "koopa.red",
       "parameters": [
@@ -11783,7 +11780,6 @@
     },
     "koopaGreen": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "actors",
       "label": "Green Koopa",
       "object": "koopa.green",
       "parameters": [
@@ -11799,7 +11795,6 @@
     },
     "spiky": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "actors",
       "label": "Spiky",
       "object": "spiky",
       "parameters": [
@@ -11812,7 +11807,6 @@
     },
     "waveGoomba": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "actors",
       "label": "Wave Goomba",
       "object": "waveGoomba",
       "parameters": [
@@ -11825,7 +11819,6 @@
     },
     "questionBlock": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Question Block",
       "object": "questionBlock",
       "parameters": [
@@ -11838,7 +11831,6 @@
     },
     "brick": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Brick",
       "object": "brick",
       "parameters": [
@@ -11849,7 +11841,6 @@
     },
     "pipe": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Pipe",
       "object": "pipe",
       "parameters": [
@@ -11866,7 +11857,6 @@
     },
     "ladder": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Ladder",
       "object": "ladder",
       "parameters": [
@@ -11880,7 +11870,6 @@
     },
     "ground": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Ground",
       "object": "ground",
       "parameters": [
@@ -11897,7 +11886,6 @@
     },
     "mushroomPlatform": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Mushroom Platform",
       "object": "mushroomPlatform",
       "parameters": [
@@ -11916,7 +11904,6 @@
     },
     "bush": {
       "authoringGroup": "Deco",
-      "defaultSceneLayer": "background",
       "label": "Bush",
       "object": "bush",
       "parameters": [
@@ -11931,7 +11918,6 @@
     },
     "arrowSign": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Arrow Sign",
       "object": "arrowSign",
       "parameters": [
@@ -11941,7 +11927,6 @@
     },
     "solidBlock": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Solid Block",
       "object": "solidBlock",
       "parameters": [
@@ -11952,7 +11937,6 @@
     },
     "rotatingBlock": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Rotating Block",
       "object": "rotatingBlock",
       "parameters": [
@@ -11963,7 +11947,6 @@
     },
     "whitePlatform": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "White Platform",
       "object": "whitePlatform",
       "parameters": [
@@ -11980,7 +11963,6 @@
     },
     "hill": {
       "authoringGroup": "Deco",
-      "defaultSceneLayer": "background",
       "label": "Hill",
       "object": "hill",
       "parameters": [
@@ -11991,7 +11973,6 @@
     },
     "verticalCannon": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Vertical Cannon",
       "object": "verticalCannon",
       "parameters": [
@@ -12001,7 +11982,6 @@
     },
     "hiddenRevealedBlock": {
       "authoringGroup": "World",
-      "defaultSceneLayer": "world",
       "label": "Hidden / Revealed Block",
       "object": "hiddenRevealedBlock",
       "parameters": [

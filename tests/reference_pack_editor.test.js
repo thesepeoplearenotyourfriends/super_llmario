@@ -17,8 +17,9 @@ assert.strictEqual(theme.placeables.hill.authoringGroup, 'Deco');
 for (const id of ['koopaRed','koopaGreen','ground']) assert.strictEqual(theme.placeables[id].authoringGroup, 'World');
 for (const [id,placeable] of Object.entries(theme.placeables)) {
   assert(['World','Deco'].includes(placeable.authoringGroup), `${id} has an explicit authoring group`);
-  assert.strictEqual(placeable.defaultSceneLayer, theme.objects[placeable.object].defaultSceneLayer,
-    `${id} and its authored object agree on their explicit scene-layer default`);
+  assert(!Object.hasOwn(placeable,'defaultSceneLayer'), `${id} does not duplicate its object's scene-layer default`);
+  assert(theme.sceneLayers.includes(theme.objects[placeable.object].defaultSceneLayer),
+    `${id} consumes its authored object's scene-layer default`);
 }
 assert(!Object.keys(theme.placeables).some(id=>id.startsWith('background.')),
   'raw background resources are not palette concepts');
@@ -46,13 +47,22 @@ assert.deepStrictEqual(semantics.orderedInstances(theme,[bush,koopa]).map(x=>x.i
   'Bush placed before Koopa renders behind it');
 assert.deepStrictEqual(semantics.orderedInstances(theme,[koopa,bush]).map(x=>x.item.id),['bush','koopaRed'],
   'Bush placed after Koopa still renders behind it');
+const overlap=()=>({x:90,y:70,w:30,h:40}),point={x:100,y:100};
+assert.strictEqual(semantics.pickInstance(theme,[bush,koopa],point,overlap),koopa,
+  'overlapping Bush and Koopa hit-test the normally frontmost Koopa');
 bush.sceneLayer='foreground';
 assert.deepStrictEqual(semantics.orderedInstances(theme,[bush,koopa]).map(x=>x.item.id),['koopaRed','bush'],
   'instance foreground override renders Bush over Koopa');
+assert.strictEqual(semantics.pickInstance(theme,[bush,koopa],point,overlap),bush,
+  'overlapping objects hit-test the foreground-overridden Bush first');
 for (const path of bush.item.definition.parameters) bush.values[path]=path==='bush.variant'?'variant_1':7;
 assert.strictEqual(bush.sceneLayer,'foreground','ordinary position, dimension, and visual edits retain the instance override');
-assert(newEditor.includes('const ordered=semantics.orderedInstances(state.theme,state.instances)'),
-  'hit testing reverses the exact visual stacking order');
+const red={item:item('koopaRed'),values:{'transform.x':10,'transform.y':10}},green={item:item('koopaGreen'),values:{'transform.x':20,'transform.y':20}};
+assert.deepStrictEqual(semantics.orderedInstances(theme,[green,red]).map(x=>x.item.id),['koopaGreen','koopaRed'],
+  'same-layer order stays stable instead of sorting by species or position');
+red.values['transform.x']=999;red.values['flight.hasWings']=true;
+assert.deepStrictEqual(semantics.orderedInstances(theme,[green,red]).map(x=>x.item.id),['koopaGreen','koopaRed'],
+  'same-layer movement and parameter edits cannot change relative depth');
 
 assert.strictEqual(semantics.initialValue('rewardBlock.contents', schema.rewardBlock.contents), undefined,
   'allowed object references do not become authored defaults');
