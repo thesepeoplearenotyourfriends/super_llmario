@@ -47,6 +47,39 @@ assert.deepStrictEqual(theme.placeables.ladder.initialValues, {'extent.length':2
 assert.deepStrictEqual(theme.placeables.ground.initialValues, {'terrain.width':2,'terrain.height':2});
 assert.deepStrictEqual(theme.placeables.mushroomPlatform.initialValues, {'extent.width':3,'extent.height':3});
 assert.deepStrictEqual(theme.placeables.bush.initialValues, {'extent.width':3});
+assert.deepStrictEqual(theme.objects.bush.visuals, {
+  variant_0:'construction.background.bush.variant_0',
+  variant_1:'construction.background.bush.variant_1',
+}, 'one Bush concept owns both audited appearances');
+assert(theme.placeables.bush.parameters.includes('bush.variant'));
+assert.strictEqual(semantics.visualTarget(theme.objects.bush, {'bush.variant':'variant_0'}).target,
+  'construction.background.bush.variant_0');
+assert.strictEqual(semantics.visualTarget(theme.objects.bush, {'bush.variant':'variant_1'}).target,
+  'construction.background.bush.variant_1');
+assert.deepStrictEqual(theme.constructions['construction.ladder'].components,
+  {top:'ladder.top',body:'ladder.body'}, 'ladder construction remains unchanged');
+assert.deepStrictEqual(theme.constructions['construction.white-platform'].components, {
+  left:'platform.white.rounded_end_cap',middle:'ladder.body',right:'platform.white.rounded_end_cap',
+}, 'white platform reuses ladder art as presentation material without changing the ladder');
+assert.deepStrictEqual(theme.constructions['construction.white-platform'].layout.mirror, ['right']);
+assert.deepStrictEqual(theme.placeables.whitePlatform.initialValues, {'extent.width':3});
+for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform.speed'])
+  assert(theme.placeables.whitePlatform.parameters.includes(path), `white platform exposes optional ${path}`);
+assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.status, 'unimplemented');
+assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.optional, true);
+assert.deepStrictEqual(theme.objects.hill.visuals, {
+  large:'construction.hill.large',wide:'construction.hill.wide',
+});
+assert(theme.placeables.hill.parameters.includes('hill.shape'));
+assert.strictEqual(theme.objects.hill.collisionMode, undefined, 'hills remain presentation-only');
+assert.deepStrictEqual(theme.constructions['construction.cannon.vertical'].layout.order,
+  ['muzzle','neck','body']);
+assert.strictEqual(theme.objects.verticalCannon.runtimeHooks.firing.status, 'unimplemented');
+assert(theme.placeables.verticalCannon.parameters.includes('cannon.firingEnabled'));
+assert.strictEqual(theme.objects.hiddenRevealedBlock.visuals.revealed, 'block.hidden.revealed.frame_0');
+assert.strictEqual(theme.objects.hiddenRevealedBlock.runtimeHooks.revealCycle.status, 'unimplemented');
+assert(theme.placeables.hiddenRevealedBlock.parameters.includes('hiddenBlock.revealDuration'));
+assert(!theme.objects.questionBlock.visuals.used, 'hidden reveal art is not question-block used art');
 assert(!theme.placeables.movingMushroomPlatform, 'moving mushroom platform is not a separate palette species');
 for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform.speed'])
   assert(theme.placeables.mushroomPlatform.parameters.includes(path), `mushroom platform exposes optional ${path}`);
