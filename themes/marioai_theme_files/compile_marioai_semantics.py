@@ -315,7 +315,7 @@ def map_logical_roles() -> dict[int, list[tuple[str, str]]]:
     r(41,  "visual.log_column.body_upper",                   "log_column.body_upper")
     r(56,  "visual.pipe.narrow.vertical.bottom",             "pipe.narrow.vertical.bottom")
     r(57,  "visual.log_column.body_lower",                   "log_column.body_lower")
-    r(60,  "visual.platform.white.rounded_end_cap",           "platform.white.rounded_end_cap")
+    r(60,  "visual.bar.white.left_cap",                      "bar.white.left_cap")
 
     r(67,  "visual.sign.arrow_right.top_left",               "sign.arrow_right.top_left")
     r(68,  "visual.sign.arrow_right.top_right",              "sign.arrow_right.top_right")

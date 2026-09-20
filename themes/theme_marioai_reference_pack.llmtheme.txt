@@ -9393,9 +9393,9 @@
         }
       }
     },
-    "platform.white.rounded_end_cap": {
+    "bar.white.left_cap": {
       "kind": "decoration",
-      "role": "platform.white.rounded_end_cap",
+      "role": "bar.white.left_cap",
       "purpose": "A frame or component of bar.white.",
       "belongsTo": "bar.white",
       "image": {
@@ -9423,7 +9423,7 @@
           "y": 3
         }
       },
-      "id": "platform.white.rounded_end_cap"
+      "id": "bar.white.left_cap"
     }
   },
   "families": {
@@ -10932,11 +10932,11 @@
       }
     },
     "construction.white-platform": {
-      "kind": "platform",
+      "kind": "ground",
       "components": {
-        "left": "platform.white.rounded_end_cap",
+        "left": "bar.white.left_cap",
         "middle": "ladder.body",
-        "right": "platform.white.rounded_end_cap"
+        "right": "bar.white.left_cap"
       },
       "layout": {
         "type": "extensibleRow",
@@ -11037,7 +11037,7 @@
       }
     },
     "construction.cannon.vertical": {
-      "kind": "decoration",
+      "kind": "ground",
       "family": "cannon.vertical",
       "components": {
         "muzzle": "cannon.vertical.muzzle",
@@ -11054,7 +11054,7 @@
       }
     },
     "construction.block.hidden": {
-      "kind": "presentation-state",
+      "kind": "block",
       "components": {},
       "layout": {
         "type": "empty",
@@ -11479,7 +11479,7 @@
       ]
     },
     "whitePlatform": {
-      "kind": "platform",
+      "kind": "ground",
       "engineNoun": "platform",
       "capabilities": [],
       "collisionMode": "oneWay",
@@ -11509,16 +11509,15 @@
       }
     },
     "verticalCannon": {
-      "kind": "decoration",
-      "engineNoun": "decoration",
+      "kind": "ground",
+      "engineNoun": "structure",
       "capabilities": [],
       "visuals": {
         "idle": "construction.cannon.vertical"
       },
       "runtimeHooks": {
         "firing": {
-          "status": "unimplemented",
-          "enabledBy": "cannon.firingEnabled"
+          "status": "unimplemented"
         }
       }
     },
@@ -11535,7 +11534,6 @@
       "runtimeHooks": {
         "revealCycle": {
           "status": "unimplemented",
-          "stateParameter": "hiddenBlock.previewState",
           "durationParameter": "hiddenBlock.revealDuration"
         }
       }
@@ -11727,13 +11725,6 @@
           "wide"
         ],
         "default": "large"
-      }
-    },
-    "cannon": {
-      "firingEnabled": {
-        "type": "boolean",
-        "default": false,
-        "semantics": "future-runtime-hook"
       }
     },
     "hiddenBlock": {
@@ -11972,8 +11963,7 @@
       "object": "verticalCannon",
       "parameters": [
         "transform.x",
-        "transform.y",
-        "cannon.firingEnabled"
+        "transform.y"
       ]
     },
     "hiddenRevealedBlock": {
