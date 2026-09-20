@@ -521,14 +521,28 @@ history.undo();
 assert.strictEqual(history.state().canRedo,true);
 history.push({instances:[],markers:{start:{x:0,y:0},goal:null}});
 assert.strictEqual(history.state().canRedo,false,'a new authored edit after undo invalidates redo');
+assert.strictEqual(history.state().dirty,true,'a branch replacing the old clean index stays dirty');
 history.reset(mapDocument);
 assert.deepStrictEqual(plain(history.state()),{canUndo:false,canRedo:false,dirty:false,index:0,clean:0},'map loading establishes a fresh clean history baseline');
+
+const branchedHistory=semantics.createHistory({edit:'initial'});
+branchedHistory.push({edit:'A'});
+branchedHistory.push({edit:'B'});
+branchedHistory.markClean();
+branchedHistory.undo();
+branchedHistory.push({edit:'C'});
+assert.strictEqual(branchedHistory.state().dirty,true,
+  'Edit A → Edit B → save → undo to A → Edit C cannot reuse the saved checkpoint');
+assert.strictEqual(branchedHistory.state().canRedo,false,'the replaced B branch is no longer redoable');
 
 for(const id of ['paletteToggle','detailsToggle','helpDialog','openMapBtn','saveMapBtn','undoBtn','redoBtn'])
   assert(newEditor.includes(`id="${id}"`),`${id} is a discoverable editor control`);
 assert(newEditor.includes("requestAnimationFrame(resize)"),'sidebar changes schedule canvas/device-pixel resizing');
 assert(newEditor.includes('palette-hidden.details-hidden'),'both hidden sidebars release both grid columns');
 assert(newEditor.includes('Start and Goal cards place grid-snapped singleton markers'),'help documents actual marker behavior');
+assert(newEditor.includes('if(state.brush?.markerKind)'), 'marker brushes have a Details branch before ordinary placeables');
+assert(newEditor.includes("!text&&state.history&&(e.metaKey||e.ctrlKey)"),
+  'map undo/redo shortcuts are inert before theme history exists');
 
 // A copied fixture protects the explicit requirement that the old editor remains untouched.
 assert(oldEditor.includes('LLMario Cartbench v0.30 Pipe Topology'));
