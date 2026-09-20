@@ -458,6 +458,26 @@ assert.deepStrictEqual({axes:modelFor('skyGradient',{'extent.width':1,'extent.he
   minHeight:modelFor('skyGradient',{'extent.width':1,'extent.height':3}).minHeight},{axes:'xy',minHeight:3});
 assert.strictEqual(modelFor('pipe',{'pipe.length':3}).heightPath,'pipe.length','pipe length is a vertical resize axis');
 assert.strictEqual(modelFor('ladder',{'extent.length':3}).heightPath,'extent.length','ladder length is a vertical resize axis');
+const pipeModel=modelFor('pipe',{'pipe.length':2}),pipeOrigin={x:100,y:100};
+const pipeLocalBounds={x:-16,y:-32,w:32,h:32},pipeCell={w:16,h:16};
+for(const [direction,pointer,expectedOrigin,cursor] of [
+  ['up',{x:100,y:132},{x:100,y:132},'ns-resize'],
+  ['right',{x:68,y:100},{x:68,y:100},'ew-resize'],
+  ['down',{x:100,y:68},{x:100,y:68},'ns-resize'],
+  ['left',{x:132,y:100},{x:132,y:100},'ew-resize'],
+]) {
+  const values={'transform.x':100,'transform.y':100,'pipe.length':2,'pipe.direction':direction};
+  const pipePresentation=semantics.authoredPresentation(true,false,values);
+  assert.deepStrictEqual(plain(semantics.resizeHandleWorld(pipeModel,pipeLocalBounds,pipePresentation,pipeOrigin)),pipeOrigin,
+    `${direction} pipe resize handle stays on its local base anchor`);
+  const changed=plain(semantics.resizePresentedValues(pipeModel,values,pipeLocalBounds,pointer,pipeCell,pipeOrigin,pipePresentation));
+  assert.deepStrictEqual({length:changed['pipe.length'],x:changed['transform.x'],y:changed['transform.y']},
+    {length:4,...expectedOrigin},`${direction} pipe resizes along its rotated local length while preserving the mouth edge`);
+  assert.strictEqual(semantics.resizeCursor(pipeModel,pipePresentation),cursor,`${direction} pipe advertises its world resize axis`);
+  assert.deepStrictEqual(plain(semantics.worldToLocal(
+    semantics.localToWorld({x:7,y:-19},pipePresentation,pipeOrigin),pipePresentation,pipeOrigin)),{x:7,y:-19},
+    `${direction} pipe local/world resize transforms round-trip`);
+}
 
 // A copied fixture protects the explicit requirement that the old editor remains untouched.
 assert(oldEditor.includes('LLMario Cartbench v0.30 Pipe Topology'));
