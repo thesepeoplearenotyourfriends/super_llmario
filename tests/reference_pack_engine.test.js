@@ -82,6 +82,94 @@ test('authored actor animations advance deterministically at declared cadence an
   assert.strictEqual(api.commandAtTick(staticActor,99),staticActor,'static actor visuals remain unchanged');
 });
 
+
+test('authored patrol actors retain their range, move at legacy speed, reverse, and mirror',()=>{
+  const map={...validMap,instances:[
+    {placeable:'koopaRed',values:{'transform.x':100,'transform.y':96,'walker.direction':'right','walker.patrolRange':1.2}},
+    {placeable:'goomba',values:{'transform.x':160,'transform.y':96,'walker.direction':'left','walker.patrolRange':0}},
+    {placeable:'coin',values:{'transform.x':220,'transform.y':96}}
+  ]};
+  const runtime=api.compileReferenceRuntime(theme,map).runtime,koopa=runtime.instances[0];
+  assert.equal(koopa.values['walker.patrolRange'],1.2,'authored world-unit range survives compilation');
+  const behavior=api.createActorBehavior(runtime),actor=behavior.actors[0],command=runtime.drawCommands.find(item=>item.instanceIndex===0);
+  assert.equal(behavior.actors.filter(item=>item.range>0).length,1,'only actors with a positive authored range move');
+  assert.equal(actor.speed,.4,'walker uses the established old-engine speed');
+  behavior.step();assert.equal(actor.x,100.4);assert.equal(actor.direction,1);assert.equal(actor.mirror,false);
+  behavior.step();behavior.step();assert.equal(actor.x,101.2);assert.equal(actor.direction,-1);assert.equal(actor.mirror,true,'right endpoint reverses and faces left');
+  const frameBefore=behavior.commandAt(command,0),frameAfter=behavior.commandAt(command,8);
+  assert.notEqual(frameBefore.resource,frameAfter.resource,'walking animation advances while patrol movement is active');
+  assert.equal(frameAfter.worldX,actor.x);assert.equal(frameAfter.mirror,true);
+  for(let i=0;i<6;i++)behavior.step();
+  assert.equal(actor.x,98.8);assert.equal(actor.direction,1);assert.equal(actor.mirror,false,'left endpoint reverses and faces right');
+  assert.equal(runtime.drawCommands.find(item=>item.instanceIndex===1).worldX,160,'zero-range actor stays at its authored transform');
+  assert.equal(runtime.drawCommands.find(item=>item.instanceIndex===2).worldX,220,'actor without patrol capability stays static');
+});
+
+
+
+test('wing attachments honor enablement, authored offsets, mirroring, animation, and reset',()=>{
+  const wingMap=(hasWings,flying=hasWings)=>({...validMap,instances:[{placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'right','walker.patrolRange':8,'flight.hasWings':hasWings,'flight.flying':flying}}]});
+  const plainRuntime=api.compileReferenceRuntime(theme,wingMap(false)).runtime;
+  assert.equal(plainRuntime.drawCommands.filter(command=>command.attachment).length,0,'disabled presentation data emits no wings');
+  const visibleRuntime=api.compileReferenceRuntime(theme,wingMap(true,false)).runtime,visibleBehavior=api.createActorBehavior(visibleRuntime),visibleY=visibleBehavior.actors[0].y;
+  visibleBehavior.step();assert.equal(visibleBehavior.actors[0].y,visibleY,'visible wings do not imply flight behavior');
+  assert.equal(visibleRuntime.drawCommands.filter(command=>command.attachment).length,2);
+  const runtime=api.compileReferenceRuntime(theme,wingMap(true,true)).runtime,attachments=runtime.drawCommands.filter(command=>command.attachment);
+  assert.equal(attachments.length,2,'enabled attachment resolves both authored wing copies');
+  assert.deepEqual(plain(attachments.map(command=>({x:command.rawOffsetX,y:command.rawOffsetY,mirror:command.attachmentMirror}))),[
+    {x:-6.72,y:-14.72,mirror:false},{x:6.72,y:-14.72,mirror:true}
+  ]);
+  assert(attachments.every(command=>command.attachmentLayer==='behind'&&command.order<0));
+  const behavior=api.createActorBehavior(runtime),actor=behavior.actors[0],startY=actor.y;
+  behavior.step();
+  assert.equal(actor.x,100.4,'flying retains horizontal patrol');
+  assert.notEqual(actor.y,startY,'flying applies the established vertical phase motion');
+  const left=behavior.commandAt(attachments[0],0);for(let i=0;i<7;i++)behavior.step();const right=behavior.commandAt(attachments[1],0);
+  assert.equal(left.worldOffsetX,-6.72);assert.equal(right.worldOffsetX,6.72);
+  assert.equal(left.mirror,false);assert.equal(right.mirror,true);
+  assert.notEqual(left.resource,right.resource,'wing animation advances at its declared cadence');
+  behavior.reset();
+  assert.equal(behavior.commandAt(attachments[0],99).resource,theme.animations['enemy.wing.flap'].frames[0].resource,'reset restarts wing animation');
+  assert.deepEqual({x:actor.x,y:actor.y,direction:actor.direction,winged:actor.winged,flying:actor.flying,phase:actor.wingPhase,state:actor.state},
+    {x:100,y:120,direction:1,winged:true,flying:true,phase:0,state:'walking'});
+});
+
+test('relative stomp contacts defeat stompables, reject hazards, and reset side contacts',()=>{
+  const enemyMap=placeable=>({...validMap,instances:[{placeable,values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':16}}]});
+  const goombaRuntime=api.compileReferenceRuntime(theme,enemyMap('goomba')).runtime;
+  const playerBehavior=api.createPlayerBehavior({playerSpawn:{x:7,y:9},bounds:null,surfaces:{solid:[],solidTop:[]}}),goombas=api.createActorBehavior(goombaRuntime,playerBehavior),goomba=goombas.actors[0],box=goombas.actorBox(goomba);
+  Object.assign(playerBehavior.player,{x:box.x,y:box.y-12,vy:5});
+  const stomp=goombas.collide(playerBehavior.player,{x:box.x,y:box.y-24});
+  assert.equal(stomp.type,'stomp');assert.equal(goomba.state,'defeated');assert.equal(goomba.collisionEligible,false);
+  const stoppedX=goomba.x;goombas.step();assert.equal(goomba.x,stoppedX,'defeated actors stop ordinary patrol');
+  for(let i=0;i<17;i++)goombas.step();
+  assert.equal(goomba.active,false,'squash presentation completes and removes the actor');
+  assert.equal(goombas.commandAt(goombaRuntime.drawCommands[0],99),null,'completed defeat no longer renders or collides');
+
+  const spikyRuntime=api.compileReferenceRuntime(theme,enemyMap('spiky')).runtime,spikies=api.createActorBehavior(spikyRuntime,playerBehavior),spiky=spikies.actors[0],spikyBox=spikies.actorBox(spiky);
+  Object.assign(playerBehavior.player,{x:spikyBox.x,y:spikyBox.y-12,vy:5});
+  const hazard=spikies.collide(playerBehavior.player,{x:spikyBox.x,y:spikyBox.y-24});
+  assert.equal(hazard.type,'hurt');assert.equal(spiky.state,'walking','stomp hazards are never defeated');
+  assert.deepEqual({x:playerBehavior.player.x,y:playerBehavior.player.y},{x:7,y:9},'hazard contact resets the small player');
+
+  const sidePlayers=api.createPlayerBehavior({playerSpawn:{x:3,y:4},bounds:null,surfaces:{solid:[],solidTop:[]}}),sides=api.createActorBehavior(goombaRuntime,sidePlayers),sideBox=sides.actorBox(sides.actors[0]);
+  Object.assign(sidePlayers.player,{x:sideBox.x,y:sideBox.y,vy:0});
+  assert.equal(sides.collide(sidePlayers.player,{x:sideBox.x-1,y:sideBox.y}).type,'hurt');
+  assert.deepEqual({x:sidePlayers.player.x,y:sidePlayers.player.y},{x:3,y:4},'side contact resets the player');
+});
+
+test('winged Koopas lose wings first, then enter the declared shell state',()=>{
+  const map={...validMap,instances:[{placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'right','walker.patrolRange':16,'flight.hasWings':true,'flight.flying':true}}]},runtime=api.compileReferenceRuntime(theme,map).runtime,behavior=api.createActorBehavior(runtime),actor=behavior.actors[0],body=runtime.drawCommands.find(command=>!command.attachment);
+  const stomp=()=>{const box=behavior.actorBox(actor),player={x:box.x,y:box.y-12,w:24,h:24,vy:5,onGround:false};return behavior.collide(player,{x:box.x,y:box.y-24})};
+  assert.equal(stomp().type,'stomp');assert.equal(actor.winged,false);assert.equal(actor.flying,false);assert.equal(actor.state,'walking');
+  assert.equal(runtime.drawCommands.filter(command=>command.attachment).map(command=>behavior.commandAt(command,0)).filter(Boolean).length,0,'lost wings stop rendering');
+  assert.equal(stomp().type,'stomp');assert.equal(actor.state,'shell');assert.equal(actor.collisionEligible,false);
+  const shell=behavior.commandAt(body,0);
+  assert.equal(shell.resource,theme.animations['enemy.red_koopa.shell'].frames[0].resource,'shell capability selects the declared shell visual');
+  const x=actor.x;behavior.step();assert.equal(actor.x,x,'transformed shell no longer patrols as a walker');
+  behavior.reset();assert.equal(actor.state,'walking');assert.equal(actor.winged,true);assert.equal(actor.flying,true);assert.equal(actor.collisionEligible,true);
+});
+
 test('construction geometry follows editor native-cell, autotile, sky, and rotation rules',()=>{
   const runtime=api.compileReferenceRuntime(theme,fixture).runtime;
   const ground=runtime.instances.find(x=>x.placeable==='ground').target.construction.geometry;
@@ -105,7 +193,7 @@ test('construction geometry follows editor native-cell, autotile, sky, and rotat
 test('preserves markers and exposes finite derived preview bounds',()=>{
   const result=api.compileReferenceRuntime(theme,fixture),runtime=result.runtime;
   assert.deepEqual(plain(runtime.markers),fixture.markers);
-  assert.deepEqual(plain(runtime.playerSpawn),{x:fixture.markers.start.x-17,y:fixture.markers.start.y-48});
+  assert.deepEqual(plain(runtime.playerSpawn),{x:fixture.markers.start.x-api.PLAYER_WIDTH/2,y:fixture.markers.start.y-api.PLAYER_HEIGHT});
   assert.equal(runtime.boundsSource,'derived-preview');
   assert([runtime.bounds.x,runtime.bounds.y,runtime.bounds.w,runtime.bounds.h].every(Number.isFinite));
   assert(runtime.bounds.w>0&&runtime.bounds.h>0);
@@ -127,10 +215,10 @@ test('compiles explicit solid and solidTop behavior surfaces from capabilities',
 });
 
 test('ported player behavior preserves oracle acceleration, jump cut, gravity, and dimensions',()=>{
-  const runtime={playerSpawn:{x:100,y:252},bounds:{x:0,y:0,w:1000,h:500},surfaces:{solid:[{x:0,y:300,w:1000,h:200}],solidTop:[]}};
+  const runtime={playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:1000,h:500},surfaces:{solid:[{x:0,y:300,w:1000,h:200}],solidTop:[]}};
   const behavior=api.createPlayerBehavior(runtime),player=behavior.player;
   behavior.step();
-  assert.deepEqual({w:player.w,h:player.h,onGround:player.onGround,y:player.y},{w:34,h:48,onGround:true,y:252});
+  assert.deepEqual({w:player.w,h:player.h,onGround:player.onGround,y:player.y},{w:24,h:24,onGround:true,y:276});
   behavior.step({right:true});
   assert.equal(player.vx,.36);
   assert.equal(player.face,1);
@@ -147,15 +235,15 @@ test('ported player behavior preserves oracle acceleration, jump cut, gravity, a
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
-  for(let i=0;i<4&&!oneWay.player.onGround;i++)oneWay.step();
-  assert.equal(oneWay.player.y,152);
+  for(let i=0;i<6&&!oneWay.player.onGround;i++)oneWay.step();
+  assert.equal(oneWay.player.y,176);
   assert.equal(oneWay.player.onGround,true);
 
-  const wall=api.createPlayerBehavior({playerSpawn:{x:100,y:252},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[{x:0,y:300,w:500,h:100},{x:150,y:200,w:20,h:100}],solidTop:[]}});
+  const wall=api.createPlayerBehavior({playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[{x:0,y:300,w:500,h:100},{x:150,y:200,w:20,h:100}],solidTop:[]}});
   wall.step();
   wall.player.vx=4.6;
   for(let i=0;i<8;i++)wall.step({right:true,run:true});
-  assert.equal(wall.player.x,116);
+  assert.equal(wall.player.x,126);
   assert.equal(wall.player.vx,0);
 });
 
@@ -180,7 +268,7 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.runtime);
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
-    x:fixture.markers.start.x-17,y:fixture.markers.start.y-48,w:34,h:48,vx:0,vy:0,
+    x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
     onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle'
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
@@ -196,15 +284,15 @@ test('player sprite preserves authored aspect ratio and bottom-center anchor',as
   assert.deepEqual(plain(fit),{
     originX:player.x+player.w/2,
     originY:player.y+player.h,
-    dx:-17,dy:-34,w:34,h:34
+    dx:-12,dy:-24,w:24,h:24
   });
   assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
   assert(fit.w>16&&fit.h>16,'the family fit is larger than a literal 16×16 rendering');
-  assert(fit.w<=player.w&&fit.h<=player.h,'the visual fits inside the 34×48 collision box');
-  assert.notEqual(fit.h,player.h,'the visual is not stretched to the collision-box height');
+  assert(fit.w<=player.w&&fit.h<=player.h,'the visual fits inside the 24×24 collision box');
+  assert.equal(fit.h,player.h,'the square visual fills the intended square hero box');
   assert.equal(fit.originY+fit.dy+fit.h,player.y+player.h,'the visual bottom remains at the player feet');
   assert.equal(fit.originX+fit.dx+fit.w/2,player.x+player.w/2,'the visual remains horizontally centered');
-  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-17&&args[6]===-34&&args[7]===34&&args[8]===34),
+  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-12&&args[6]===-24&&args[7]===24&&args[8]===24),
     'canvas draw uses the fitted, foot-centered destination rectangle');
   operations.scales.length=0;operations.translates.length=0;player.face=-1;frames.shift()(0);
   assert(operations.scales.some(args=>args[0]===-1&&args[1]===1),'mirroring happens around the player anchor');
