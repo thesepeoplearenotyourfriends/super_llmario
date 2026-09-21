@@ -1,12 +1,12 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),C=require('../construction/catalog.js');
-const engine=fs.readFileSync('engine/engine.html','utf8'),editor=fs.readFileSync('editor/editor.html','utf8');
+const engine=fs.readFileSync('engine/engine.html','utf8'),editor=fs.readFileSync('archived/editor/editor.html','utf8');
 function fn(source,name){const start=source.indexOf('function '+name+'(');assert(start>=0,'missing '+name);let paren=source.indexOf('(',start),pd=0,brace=-1;for(let i=paren;i<source.length;i++){if(source[i]==='(')pd++;else if(source[i]===')'&&!--pd){brace=source.indexOf('{',i);break}}let depth=0,quote='',escape=false;for(let i=brace;i<source.length;i++){const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue}if(ch==='"'||ch==="'"||ch==='`'){quote=ch;continue}if(ch==='{')depth++;else if(ch==='}'&&!--depth)return source.slice(start,i+1)}throw Error('unterminated '+name)}
 function context(seed={}){const c=vm.createContext(Object.assign({console,Math,JSON},seed));return c}
 function load(c,source,names){vm.runInContext(names.map(n=>fn(source,n)).join('\n'),c)}
 function constObject(source,name){const start=source.indexOf('const '+name+' =');assert(start>=0,'missing '+name);const brace=source.indexOf('{',start);let depth=0,quote='',escape=false;for(let i=brace;i<source.length;i++){const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue}if(ch==='"'||ch==="'"){quote=ch;continue}if(ch==='{')depth++;else if(ch==='}'&&!--depth)return vm.runInNewContext('('+source.slice(brace,i+1)+')')}throw Error('unterminated '+name)}
-const theme=JSON.parse(fs.readFileSync('themes/theme_marioai_nonempty.llmtheme.txt','utf8'));
-const fixture=JSON.parse(fs.readFileSync('tests/fixtures/raw_bush.llmmap.txt','utf8'));
+const theme=JSON.parse(fs.readFileSync('archived/themes/theme_marioai_nonempty.llmtheme.txt','utf8'));
+const fixture=JSON.parse(fs.readFileSync('archived/tests/fixtures/raw_bush.llmmap.txt','utf8'));
 const engineAudio=constObject(engine,'ENGINE_DEFAULT_AUDIO');
 
 // Player animation families keep their identity, while rendering scale is

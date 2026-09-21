@@ -1,6 +1,6 @@
 # MarioAI complete reference theme pack
 
-`themes/theme_marioai_reference_pack.llmtheme.txt` is a hand-authored **reference contract**, not a replacement for or a new version of the legacy theme format. No current editor or engine is expected to consume it. Its purpose is to show what a future theme must say so consumers never infer presentation semantics from filenames or sprite coordinates.
+`themes/theme_marioai_reference_pack.llmtheme.txt` is the canonical active **reference contract** consumed by `editor/reference_pack_editor.html` and `engine/reference_pack_engine.html`. It defines what the theme says so consumers never infer presentation semantics from filenames or sprite coordinates.
 
 ## Contract at a glance
 
@@ -46,4 +46,4 @@ The mapsheet audit is intentionally narrow and provenance-driven. It assigns cel
 
 This reference does not define serialization for maps, runtime state-machine rules, collision algorithms, autotile editing UX, atlas upload UX, mirroring policy, palette variants, or how a consumer migrates legacy themes. Those belong to later editor and engine work. Anchors remain presentation data, while animation timing awaits actual behavioral evidence; no compatibility branch has been added now.
 
-The source images, legacy themes, existing converter/compiler, editor, Cartbench, and engine are unchanged.
+Legacy text material is preserved under `archived/`; immutable binary source sheets remain in place only as historical build inputs and are never runtime dependencies.

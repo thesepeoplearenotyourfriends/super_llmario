@@ -15,7 +15,7 @@ const mapBase={format:'llmario-map-v1',theme:'test-theme',title:'Test',world:{wi
 
 // Editable source keeps canonical split documents external and boots the
 // durable demo; release packaging is tested separately.
-const sourceTheme=JSON.parse(fs.readFileSync('themes/theme_marioai_nonempty.llmtheme.txt','utf8')),sourceMap=JSON.parse(fs.readFileSync('maps/map_marioai_reference.llmmap.txt','utf8'));
+const sourceTheme=JSON.parse(fs.readFileSync('archived/themes/theme_marioai_nonempty.llmtheme.txt','utf8')),sourceMap=JSON.parse(fs.readFileSync('maps/map_marioai_reference.llmmap.txt','utf8'));
 assert(!engine.includes(sourceTheme.title));assert(!engine.includes(sourceMap.title));
 assert(engine.includes('const PACKED_THEMES = [];'));assert(engine.includes('const PACKED_MAPS = [];'));
 assert(engine.includes('let ACTIVE_CART = DEMO_CART;'));assert(engine.includes('bootPackedReleaseOrDemo();'));assert(engine.includes('const base = raw.splitSource ? {audio:ENGINE_DEFAULT_AUDIO} : DEMO_CART;'));

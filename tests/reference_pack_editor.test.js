@@ -2,7 +2,7 @@ const fs = require('fs');
 const assert = require('assert');
 const vm = require('vm');
 
-const oldEditor = fs.readFileSync('editor/editor.html', 'utf8');
+const oldEditor = fs.readFileSync('archived/editor/editor.html', 'utf8');
 const newEditor = fs.readFileSync('editor/reference_pack_editor.html', 'utf8');
 const theme = JSON.parse(fs.readFileSync('themes/theme_marioai_reference_pack.llmtheme.txt', 'utf8'));
 
@@ -637,6 +637,38 @@ assert.match(semantics.validateMap({...theme,id:'another-theme'},envelope)[0],/t
 assert(semantics.validateMap(theme,{...envelope,instances:[{placeable:'pipe',values:{}}]}).some(x=>/malformed values/.test(x)));
 assert(semantics.validateMap(theme,{...envelope,markers:{start:{x:'bad',y:0},goal:null}}).some(x=>/start marker/.test(x)));
 
+// Exercise the same schema-driven Details conversion used by the live input handler, then
+// cross every editor boundary: selected values, document/history snapshot, save JSON, and reopen.
+const detailCases=[
+  ['whitePlatform',{'transform.x':'-48','transform.y':'-16','extent.width':'3','movingPlatform.path':'[{"x":-12,"y":0},{"x":30,"y":8}]','movingPlatform.range':'42','movingPlatform.speed':'12'}],
+  ['goomba',{'transform.x':'-24','transform.y':'80','walker.direction':'right','walker.patrolRange':'37.5','walker.speed':'1.25'}],
+  ['pipe',{'transform.x':'96','transform.y':'112','pipe.direction':'down','pipe.length':'4','pipe.travelEnabled':'true','pipe.destination':'{"map":"bonus","x":-32,"y":64}'}],
+  ['koopaRed',{'transform.x':'144','transform.y':'96','flight.hasWings':'false','flight.flying':'true'}],
+];
+const editedDocument={instances:[],markers:{start:null,goal:null}};
+for(const [placeable,inputs] of detailCases){
+  const values={};
+  for(const [path,raw] of Object.entries(inputs))assert.strictEqual(
+    semantics.applyAuthoredInput(values,path,schema[path.split('.')[0]][path.split('.')[1]],raw),true,
+    `${placeable} Details accepts ${path}`);
+  editedDocument.instances.push({placeable,values});
+}
+const detailHistory=semantics.createHistory({instances:[],markers:{start:null,goal:null}});
+detailHistory.push(editedDocument);
+assert.deepStrictEqual(plain(detailHistory.current()),plain(editedDocument),'documentState/history preserves all Details values');
+const savedText=JSON.stringify(semantics.serializeMap(theme,detailHistory.current()));
+const reopened=JSON.parse(savedText);
+assert.deepStrictEqual(reopened.instances,plain(editedDocument.instances),'Details → documentState → save → reopen preserves optional values');
+assert.deepStrictEqual(reopened.instances[0].values,{
+  'transform.x':-48,'transform.y':-16,'extent.width':3,
+  'movingPlatform.path':[{x:-12,y:0},{x:30,y:8}],
+  'movingPlatform.range':42,'movingPlatform.speed':12,
+},'white-platform path/range/speed and negative transforms survive the real Details conversion');
+assert.deepStrictEqual(plain(semantics.validateMap(theme,reopened)),[],'reopened Details matrix remains a valid canonical map');
+const malformedPath={};
+assert.strictEqual(semantics.applyAuthoredInput(malformedPath,'movingPlatform.path',schema.movingPlatform.path,'[{'),false);
+assert.deepStrictEqual(malformedPath,{},'invalid path JSON cannot partially overwrite selected-instance state');
+
 const history=semantics.createHistory({instances:[],markers:{start:null,goal:null}});
 history.push(mapDocument);
 assert.strictEqual(history.state().dirty,true);
@@ -690,6 +722,6 @@ assert(newEditor.includes('if(state.brush?.markerKind)'), 'marker brushes have a
 assert(newEditor.includes("!text&&state.history&&(e.metaKey||e.ctrlKey)"),
   'map undo/redo shortcuts are inert before theme history exists');
 
-// A copied fixture protects the explicit requirement that the old editor remains untouched.
+// The archived editor is an explicit regression oracle, never an active default.
 assert(oldEditor.includes('LLMario Cartbench v0.30 Pipe Topology'));
 console.log('reference pack editor contract checks passed');
