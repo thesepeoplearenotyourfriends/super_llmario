@@ -52,13 +52,17 @@ assert.equal(pack.objects.backgroundFill.defaultSceneLayer, 'sky');
 assert.equal(pack.objects.hill.defaultSceneLayer, 'background');
 assert.deepEqual(new Set(pack.contract.resourceKinds), kinds);
 assert.equal(Object.keys(pack.resources).length, pack.coverage.nonemptyWorldResources);
-assert.equal(pack.coverage.nonemptyWorldResources, 298);
+assert.equal(pack.coverage.nonemptyWorldResources, 299);
 assert.equal(pack.coverage.backgroundUnresolved, 14);
 assert.equal(pack.coverage.unresolvedResources, 24);
 assert.equal(pack.coverage.unresolvedExactPurpose.length, 4);
 assert.deepEqual(pack.coverage.unresolvedBySourceSheet['bgsheet.png'],[6,7,14,15,23,31,39,46,47,54,55,56,57,59]);
 assert.deepEqual(pack.coverage.unresolvedBySourceSheet['mapsheet.png'],[73,74,75,89,90,91,104,105,120,121]);
 assert(!Object.keys(pack.resources).some(id => id.includes('unresolved')));
+assert.equal(pack.resources['pickup.powerup.flight'].provenance.index,3);
+assert.equal(pack.objects.raccoonFeather.visuals.idle,'pickup.powerup.flight');
+assert(pack.objects.raccoonFeather.capabilities.includes('flightPower'));
+assert.equal(pack.placeables.raccoonFeather.object,'raccoonFeather');
 
 const reviewedBackgrounds = {
   0:'background.dome.variant_0.top_left', 1:'background.dome.variant_0.top_right',

@@ -5153,6 +5153,37 @@
         }
       }
     },
+    "pickup.powerup.flight": {
+      "kind": "pickup",
+      "role": "pickup.powerup.flight",
+      "purpose": "Theme-backed feather flight powerup.",
+      "belongsTo": "pickup.powerup",
+      "image": {
+        "atlas": "item",
+        "rect": {
+          "x": 48,
+          "y": 0,
+          "w": 16,
+          "h": 16
+        }
+      },
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "itemsheet.png",
+        "index": 3,
+        "cell": {
+          "x": 3,
+          "y": 0
+        }
+      }
+    },
     "pickup.special.green": {
       "kind": "pickup",
       "role": "pickup.special.green",
@@ -5708,6 +5739,37 @@
         "cell": {
           "x": 14,
           "y": 0
+        }
+      }
+    },
+    "player.carrying.fast_jump.alternate_tail": {
+      "kind": "actor",
+      "role": "player.carrying.fast_jump.alternate_tail",
+      "purpose": "Alternate authored tail frame for the carrying/raccoon fast-jump pose.",
+      "belongsTo": "player.carrying",
+      "image": {
+        "atlas": "player.carrying",
+        "rect": {
+          "x": 224,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "racoonmariosheet.png",
+        "index": 15,
+        "cell": {
+          "x": 7,
+          "y": 1
         }
       }
     },
@@ -11662,6 +11724,18 @@
         "idle": "pickup.powerup.projectile"
       }
     },
+    "raccoonFeather": {
+      "defaultSceneLayer": "actors",
+      "kind": "pickup",
+      "engineNoun": "pickup",
+      "capabilities": [
+        "collectible",
+        "flightPower"
+      ],
+      "visuals": {
+        "idle": "pickup.powerup.flight"
+      }
+    },
     "lifeMushroom": {
       "kind": "pickup",
       "engineNoun": "pickup",
@@ -12048,7 +12122,8 @@
           "coin",
           "growMushroom",
           "fireFlower",
-          "lifeMushroom"
+          "lifeMushroom",
+          "raccoonFeather"
         ]
       },
       "uses": {
@@ -12271,6 +12346,15 @@
       "authoringGroup": "World",
       "label": "Coin",
       "object": "coin",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
+    },
+    "raccoonFeather": {
+      "authoringGroup": "World",
+      "label": "Raccoon Feather",
+      "object": "raccoonFeather",
       "parameters": [
         "transform.x",
         "transform.y"
@@ -12569,7 +12653,7 @@
     }
   },
   "coverage": {
-    "nonemptyWorldResources": 298,
+    "nonemptyWorldResources": 299,
     "bySourceSheet": {
       "bgsheet.png": 62,
       "enemysheet.png": 27,
