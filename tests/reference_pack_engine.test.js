@@ -692,13 +692,13 @@ test('player sprite preserves authored aspect ratio and bottom-center anchor',as
   await engine.loadReferenceTheme(theme);
   engine.loadReferenceEditorMap(fixture);
   const player=engine.state.behavior.player,fit=engine.currentPlayerFit();
-  assert.deepEqual(plain(fit),{originX:player.x+player.w/2,originY:player.y+player.h,dx:-12,dy:-24,w:24,h:24});
+  assert.deepEqual(plain(fit),{originX:player.x+player.w/2,originY:player.y+player.h,dx:-8,dy:-16,w:16,h:16});
   assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
-  assert.equal(fit.w,24,'undersized art expands to cover the established gameplay geometry');
+  assert.equal(fit.w,16,'physics dimensions never rescale native authored artwork');
   assert.equal(fit.originY+fit.dy+fit.h,player.y+player.h,'the visual bottom remains at the player feet');
   assert.equal(fit.originX+fit.dx+fit.w/2,player.x+player.w/2,'the visual remains horizontally centered');
-  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-12&&args[6]===-24&&args[7]===24&&args[8]===24),
-    'canvas draw uses the authored native, foot-centered destination rectangle');
+  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-8&&args[6]===-16&&args[7]===16&&args[8]===16),
+    'canvas draw uses the authored native, foot-centered destination rectangle independently of the 24×24 body');
   operations.scales.length=0;operations.translates.length=0;player.face=-1;frames.shift()(0);
   assert(operations.scales.some(args=>args[0]===-1&&args[1]===1),'mirroring happens around the player anchor');
   assert(operations.translates.some(args=>args[0]===player.x+player.w/2&&args[1]===player.y+player.h),'mirroring retains the bottom-center anchor');
