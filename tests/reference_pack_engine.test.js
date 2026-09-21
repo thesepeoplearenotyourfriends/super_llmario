@@ -17,17 +17,18 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 const validMap={format:'llmario-reference-editor-map',mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},instances:[],markers:{start:null,goal:null}};
 
 function engineHarness(){
-  const operations={fillRect:0,drawImage:0,drawCalls:[]};
-  const ctx={setTransform(){},save(){},restore(){},translate(){},scale(){},rotate(){},fillRect(){operations.fillRect++},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
+  const operations={fillRect:0,drawImage:0,drawCalls:[],translates:[],scales:[]};
+  const frames=[];
+  const ctx={setTransform(){},save(){},restore(){},translate(...args){operations.translates.push(args)},scale(...args){operations.scales.push(args)},rotate(){},fillRect(){operations.fillRect++},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
   const elements={
     screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},
     themeButton:{},mapButton:{},fitButton:{},themeFile:{files:[],value:''},mapFile:{files:[],value:''}
   };
   class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
   const window={ReferencePackBoundary:api};
-  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(){},addEventListener(){},Map,Set,Math,Promise,console};
+  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(){},Map,Set,Math,Promise,console};
   vm.runInNewContext(applicationSource,domContext);
-  return{engine:window.ReferenceEngine,elements,operations};
+  return{engine:window.ReferenceEngine,elements,operations,frames};
 }
 
 test('compiles the actual reference theme and representative editor map',()=>{
@@ -162,24 +163,29 @@ test('successful load hides the empty-state overlay',async()=>{
     onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle'
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
-  assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
+  assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display,familyBounds:{left:-8,right:8,top:-16,bottom:0}});
   assert.equal(elements.empty.hidden,true);
 });
 
 test('player sprite preserves authored aspect ratio and bottom-center anchor',async()=>{
-  const {engine,operations}=engineHarness();
+  const {engine,operations,frames}=engineHarness();
   await engine.loadReferenceTheme(theme);
   engine.loadReferenceEditorMap(fixture);
   const player=engine.state.behavior.player,fit=engine.currentPlayerFit();
   assert.deepEqual(plain(fit),{
     originX:player.x+player.w/2,
     originY:player.y+player.h,
-    dx:-17,dy:-34,w:34,h:34
+    dx:-8,dy:-16,w:16,h:16
   });
   assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
-  assert.notEqual(fit.h,player.h,'the visual is fitted inside, not stretched to, the collision box');
-  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-17&&args[6]===-34&&args[7]===34&&args[8]===34),
+  assert(fit.w<=player.w&&fit.h<=player.h,'the visual fits inside the 34×48 collision box');
+  assert.equal(fit.originY+fit.dy+fit.h,player.y+player.h,'the visual bottom remains at the player feet');
+  assert.equal(fit.originX+fit.dx+fit.w/2,player.x+player.w/2,'the visual remains horizontally centered');
+  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-8&&args[6]===-16&&args[7]===16&&args[8]===16),
     'canvas draw uses the fitted, foot-centered destination rectangle');
+  operations.scales.length=0;operations.translates.length=0;player.face=-1;frames.shift()(0);
+  assert(operations.scales.some(args=>args[0]===-1&&args[1]===1),'mirroring happens around the player anchor');
+  assert(operations.translates.some(args=>args[0]===player.x+player.w/2&&args[1]===player.y+player.h),'mirroring retains the bottom-center anchor');
 });
 
 test('finite-bounds camera keeps the oracle follow target and smoothing',async()=>{
