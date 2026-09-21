@@ -81,6 +81,17 @@
     "foreground"
   ],
   "atlases": {
+    "pickup.flight": {
+      "mediaType": "image/png",
+      "encoding": "base64",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAElBMVEVHcEz4+PgAAAD4dwD4vwD4+ABMtRJ/AAAAAXRSTlMAQObYZgAAAQVJREFUeNrt3bENgzAQhlGvwApZgRVYIfuvksY0J1lWpNzZSd5fW3wPKipoLWmPyVr2AAAAAAAAAMoBMXCGpUMAAAAAAAAAlgFi8Og7BwMAAAAAAAD4HcB9gRicASIEAAAAAAAA4PsAMQwAAAAAAADwP4BROAaffaNzH79zAAAAAAAAgHTALHzv6it/EQEAAAAAAABIA7wbnp1Lv3MAAAAAAACAckBaGAAAAAAAAGA5wKMHAAAAAAAAGAHSwwAAAAAAAADbAsrCAAAAAAAAANsBZuH0Ly0CAAAAAAAAlANieNkPEAAAAAAAAADKAaNwqxoAAAAAAADANoDyMAAAAAAAAMAugBcoufhqV/q50wAAAABJRU5ErkJggg==",
+      "sha256": "992894ac071bba73cc506e3665f98a68e2b3fecbd31c9da9fc6c251f1ae2bfcb",
+      "cellSize": {
+        "w": 256,
+        "h": 256
+      },
+      "embeddedOnly": true
+    },
     "map": {
       "mediaType": "image/png",
       "encoding": "base64",
@@ -172,8 +183,8 @@
     "player.carrying": {
       "mediaType": "image/png",
       "encoding": "base64",
-      "data": "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",
-      "sha256": "26a2ec94d6d23922104f43eb5a34ae54268fe371b5b2620ce5f2d10fd445aa08",
+      "data": "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",
+      "sha256": "d4e4bfb320df96cc626f4f8b42e6f6964a5494e48312cc98e2e6d8a5c6b49399",
       "sourceFile": "carrying_reordered_sheet.png",
       "cellSize": {
         "w": 32,
@@ -190,17 +201,6 @@
         "w": 32,
         "h": 32
       }
-    },
-    "pickup.flight": {
-      "mediaType": "image/png",
-      "encoding": "base64",
-      "data": "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAElBMVEVHcEz4+PgAAAD4dwD4vwD4+ABMtRJ/AAAAAXRSTlMAQObYZgAAAQVJREFUeNrt3bENgzAQhlGvwApZgRVYIfuvksY0J1lWpNzZSd5fW3wPKipoLWmPyVr2AAAAAAAAAMoBMXCGpUMAAAAAAAAAlgFi8Og7BwMAAAAAAAD4HcB9gRicASIEAAAAAAAA4PsAMQwAAAAAAADwP4BROAaffaNzH79zAAAAAAAAgHTALHzv6it/EQEAAAAAAABIA7wbnp1Lv3MAAAAAAACAckBaGAAAAAAAAGA5wKMHAAAAAAAAGAHSwwAAAAAAAADbAsrCAAAAAAAAANsBZuH0Ly0CAAAAAAAAlANieNkPEAAAAAAAAADKAaNwqxoAAAAAAADANoDyMAAAAAAAAMAugBcoufhqV/q50wAAAABJRU5ErkJggg==",
-      "sha256": "992894ac071bba73cc506e3665f98a68e2b3fecbd31c9da9fc6c251f1ae2bfcb",
-      "cellSize": {
-        "w": 256,
-        "h": 256
-      },
-      "embeddedOnly": true
     }
   },
   "resources": {
@@ -5164,6 +5164,33 @@
         }
       }
     },
+    "pickup.powerup.flight": {
+      "kind": "pickup",
+      "role": "pickup.powerup.flight",
+      "purpose": "Theme-backed feather flight powerup.",
+      "belongsTo": "pickup.powerup",
+      "image": {
+        "atlas": "pickup.flight",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 256,
+          "h": 256
+        }
+      },
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "source": "user-provided feather icon",
+        "atlas": "pickup.flight"
+      }
+    },
     "pickup.special.green": {
       "kind": "pickup",
       "role": "pickup.special.green",
@@ -5719,6 +5746,37 @@
         "cell": {
           "x": 14,
           "y": 0
+        }
+      }
+    },
+    "player.carrying.fast_jump.alternate_tail": {
+      "kind": "actor",
+      "role": "player.carrying.fast_jump.alternate_tail",
+      "purpose": "Alternate authored tail frame for the carrying/raccoon fast-jump pose.",
+      "belongsTo": "player.carrying",
+      "image": {
+        "atlas": "player.carrying",
+        "rect": {
+          "x": 224,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      },
+      "display": {
+        "w": 32,
+        "h": 32,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "sheet": "racoonmariosheet.png",
+        "index": 15,
+        "cell": {
+          "x": 7,
+          "y": 1
         }
       }
     },
@@ -9411,33 +9469,6 @@
         }
       },
       "id": "bar.white.left_cap"
-    },
-    "pickup.powerup.flight": {
-      "kind": "pickup",
-      "role": "pickup.powerup.flight",
-      "purpose": "Theme-backed feather flight powerup.",
-      "belongsTo": "pickup.powerup",
-      "image": {
-        "atlas": "pickup.flight",
-        "rect": {
-          "x": 0,
-          "y": 0,
-          "w": 256,
-          "h": 256
-        }
-      },
-      "display": {
-        "w": 16,
-        "h": 16,
-        "anchor": {
-          "x": 0.5,
-          "y": 1
-        }
-      },
-      "provenance": {
-        "source": "user-provided feather icon",
-        "atlas": "pickup.flight"
-      }
     }
   },
   "families": {
@@ -11700,6 +11731,18 @@
         "idle": "pickup.powerup.projectile"
       }
     },
+    "raccoonFeather": {
+      "defaultSceneLayer": "actors",
+      "kind": "pickup",
+      "engineNoun": "pickup",
+      "capabilities": [
+        "collectible",
+        "flightPower"
+      ],
+      "visuals": {
+        "idle": "pickup.powerup.flight"
+      }
+    },
     "lifeMushroom": {
       "kind": "pickup",
       "engineNoun": "pickup",
@@ -11737,7 +11780,6 @@
       "capabilities": [],
       "visuals": {
         "normal": "block.breakable.idle",
-        "breaking": "effect.debris",
         "classic": "block.breakable.idle"
       },
       "visualSelector": "block.style",
@@ -11896,14 +11938,16 @@
       "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "platform",
-      "capabilities": [],
+      "capabilities": [
+        "movingPlatform"
+      ],
       "collisionMode": "oneWay",
       "visuals": {
         "idle": "construction.white-platform"
       },
       "runtimeHooks": {
         "movement": {
-          "status": "unimplemented",
+          "status": "implemented",
           "parameters": [
             "movingPlatform.path",
             "movingPlatform.range",
@@ -11951,18 +11995,6 @@
           "status": "unimplemented",
           "frameGroup": "block.hidden.revealed"
         }
-      }
-    },
-    "raccoonFeather": {
-      "defaultSceneLayer": "actors",
-      "kind": "pickup",
-      "engineNoun": "pickup",
-      "capabilities": [
-        "collectible",
-        "flightPower"
-      ],
-      "visuals": {
-        "idle": "pickup.powerup.flight"
       }
     }
   },
@@ -12327,6 +12359,15 @@
         "transform.y"
       ]
     },
+    "raccoonFeather": {
+      "authoringGroup": "World",
+      "label": "Raccoon Feather",
+      "object": "raccoonFeather",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
+    },
     "goomba": {
       "authoringGroup": "World",
       "label": "Goomba",
@@ -12617,19 +12658,10 @@
         "transform.x",
         "transform.y"
       ]
-    },
-    "raccoonFeather": {
-      "authoringGroup": "World",
-      "label": "Raccoon Feather",
-      "object": "raccoonFeather",
-      "parameters": [
-        "transform.x",
-        "transform.y"
-      ]
     }
   },
   "coverage": {
-    "nonemptyWorldResources": 298,
+    "nonemptyWorldResources": 299,
     "bySourceSheet": {
       "bgsheet.png": 62,
       "enemysheet.png": 27,
