@@ -21,20 +21,20 @@
       "placeable": "ground",
       "values": {
         "terrain.style": "overground",
-        "terrain.width": 31,
-        "terrain.height": 19,
-        "transform.x": -5336,
-        "transform.y": 1616
+        "terrain.width": 30,
+        "terrain.height": 6,
+        "transform.x": -5344,
+        "transform.y": 1408
       }
     },
     {
       "placeable": "ground",
       "values": {
         "terrain.style": "overground",
-        "terrain.width": 33,
-        "terrain.height": 50,
-        "transform.x": -5920,
-        "transform.y": 2112
+        "terrain.width": 38,
+        "terrain.height": 6,
+        "transform.x": -5936,
+        "transform.y": 1408
       }
     },
     {
@@ -77,9 +77,10 @@
     {
       "placeable": "questionBlock",
       "values": {
-        "rewardBlock.uses": 1,
+        "rewardBlock.uses": 4,
         "transform.x": -6128,
-        "transform.y": 1264
+        "transform.y": 1264,
+        "rewardBlock.contents": "growMushroom"
       }
     },
     {
@@ -96,7 +97,7 @@
       "values": {
         "block.style": "classic",
         "transform.x": -5312,
-        "transform.y": 1280
+        "transform.y": 1264
       }
     },
     {
@@ -113,9 +114,269 @@
       "placeable": "waveGoomba",
       "values": {
         "walker.direction": "left",
-        "transform.x": -6032,
-        "transform.y": 1312,
+        "transform.x": -5904,
+        "transform.y": 1200,
         "walker.patrolRange": 63
+      }
+    },
+    {
+      "placeable": "mushroomPlatform",
+      "values": {
+        "extent.width": 3,
+        "extent.height": 3,
+        "transform.x": -5552,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "mushroomPlatform",
+      "values": {
+        "extent.width": 7,
+        "extent.height": 7,
+        "transform.x": -5456,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "mushroomPlatform",
+      "values": {
+        "extent.width": 27,
+        "extent.height": 7,
+        "transform.x": -5856,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -6048,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -6016,
+        "transform.y": 1168
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5984,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5952,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5920,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5872,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5824,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5776,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5728,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5696,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5664,
+        "transform.y": 1184
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": -5600,
+        "transform.y": 1216
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": -5584,
+        "transform.y": 1216
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": -5568,
+        "transform.y": 1216
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "extent.width": 3,
+        "transform.x": -5568,
+        "transform.y": 1120
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "extent.width": 3,
+        "movingPlatform.range": 39,
+        "transform.x": -5152,
+        "transform.y": 1200
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "extent.width": 3,
+        "movingPlatform.range": 39,
+        "transform.x": -5344,
+        "transform.y": 1152
+      }
+    },
+    {
+      "placeable": "arrowSign",
+      "values": {
+        "transform.x": -5168,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "values": {
+        "transform.x": -6048,
+        "transform.y": 1136
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "values": {
+        "transform.x": -6032,
+        "transform.y": 1136
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "values": {
+        "transform.x": -6016,
+        "transform.y": 1136
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "values": {
+        "transform.x": -6000,
+        "transform.y": 1136
+      }
+    },
+    {
+      "placeable": "hill",
+      "values": {
+        "hill.shape": "large",
+        "transform.x": -5808,
+        "transform.y": 1312
+      },
+      "sceneLayer": "world"
+    },
+    {
+      "placeable": "bush",
+      "values": {
+        "bush.variant": "variant_1",
+        "extent.width": 3,
+        "transform.x": -5312,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "backgroundDome",
+      "values": {
+        "dome.variant": "variant_0",
+        "transform.x": -6096,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "backgroundDome",
+      "values": {
+        "dome.variant": "variant_0",
+        "transform.x": -6160,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "backgroundDome",
+      "values": {
+        "dome.variant": "variant_0",
+        "transform.x": -6208,
+        "transform.y": 1312
+      },
+      "sceneLayer": "sky"
+    },
+    {
+      "placeable": "questionBlock",
+      "values": {
+        "rewardBlock.uses": 1,
+        "transform.x": -6160,
+        "transform.y": 1264,
+        "rewardBlock.contents": "fireFlower"
+      }
+    },
+    {
+      "placeable": "pipe",
+      "values": {
+        "pipe.direction": "up",
+        "pipe.travelEnabled": false,
+        "pipe.length": 2,
+        "transform.x": -6224,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "values": {
+        "rewardBlock.uses": 1,
+        "transform.x": -6192,
+        "transform.y": 1264,
+        "rewardBlock.contents": "raccoonFeather"
       }
     }
   ],
