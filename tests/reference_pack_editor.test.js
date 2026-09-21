@@ -743,6 +743,7 @@ const pipeDoc={instances:[{placeable:'pipe',instanceId:'pipe-a',values:pipeA.val
 assert.strictEqual(saved.instances[1].instanceId,'pipe-b','stable identity survives save');assert.deepStrictEqual(plain(saved.instances[0].values['pipe.destination']),{kind:'point',x:501,y:177});
 assert(newEditor.includes("path==='pipe.destination'&&state.selected"),'live pipe destination bypasses generic JSON textarea');
 assert(newEditor.includes("canvas.style.cursor='crosshair'"),'destination pick mode presents a spatial cursor');
+assert(newEditor.includes("if(state.destinationPick){canvas.style.cursor='crosshair';return}"),'destination picker pointermove preserves the crosshair until cancellation');
 assert(newEditor.includes("source.values['pipe.travelEnabled']=false"),'Clear disables contradictory travel state');
 assert(newEditor.includes("Destination selection cancelled."),'Escape/right-click cancellation preserves the prior document');
 const pipeHistory=semantics.createHistory(pipeDoc),pipeChanged=plain(pipeDoc);pipeChanged.instances[0].values['pipe.destination']={kind:'pipe',instanceId:'pipe-b'};pipeHistory.push(pipeChanged);assert.strictEqual(pipeHistory.undo().instances[0].values['pipe.destination'].kind,'point');assert.strictEqual(pipeHistory.redo().instances[0].values['pipe.destination'].kind,'pipe');
