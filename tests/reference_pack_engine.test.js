@@ -134,7 +134,7 @@ test('wing attachments honor enablement, authored offsets, mirroring, animation,
     {x:100,y:120,direction:1,winged:true,flying:true,phase:0,state:'walking'});
 });
 
-test('relative stomp contacts defeat stompables, reject hazards, and reset side contacts',()=>{
+test('relative stomp contacts defeat stompables and route harmful contacts through death',()=>{
   const enemyMap=placeable=>({...validMap,instances:[{placeable,values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':16}}]});
   const goombaRuntime=api.compileReferenceRuntime(theme,enemyMap('goomba')).runtime;
   const playerBehavior=api.createPlayerBehavior({playerSpawn:{x:7,y:9},bounds:null,surfaces:{solid:[],solidTop:[]}}),goombas=api.createActorBehavior(goombaRuntime,playerBehavior),goomba=goombas.actors[0],box=goombas.actorBox(goomba);
@@ -150,12 +150,12 @@ test('relative stomp contacts defeat stompables, reject hazards, and reset side 
   Object.assign(playerBehavior.player,{x:spikyBox.x,y:spikyBox.y-12,vy:5});
   const hazard=spikies.collide(playerBehavior.player,{x:spikyBox.x,y:spikyBox.y-24});
   assert.equal(hazard.type,'hurt');assert.equal(spiky.state,'walking','stomp hazards are never defeated');
-  assert.deepEqual({x:playerBehavior.player.x,y:playerBehavior.player.y},{x:7,y:9},'hazard contact resets the small player');
+  assert.equal(playerBehavior.player.dead,true,'stomp hazards enter the shared death transition');
 
   const sidePlayers=api.createPlayerBehavior({playerSpawn:{x:3,y:4},bounds:null,surfaces:{solid:[],solidTop:[]}}),sides=api.createActorBehavior(goombaRuntime,sidePlayers),sideBox=sides.actorBox(sides.actors[0]);
   Object.assign(sidePlayers.player,{x:sideBox.x,y:sideBox.y,vy:0});
   assert.equal(sides.collide(sidePlayers.player,{x:sideBox.x-1,y:sideBox.y}).type,'hurt');
-  assert.deepEqual({x:sidePlayers.player.x,y:sidePlayers.player.y},{x:3,y:4},'side contact resets the player');
+  assert.equal(sidePlayers.player.dead,true,'ordinary side contact enters the shared death transition');
 });
 
 test('winged Koopas lose wings first, then enter the declared shell state',()=>{
@@ -163,11 +163,76 @@ test('winged Koopas lose wings first, then enter the declared shell state',()=>{
   const stomp=()=>{const box=behavior.actorBox(actor),player={x:box.x,y:box.y-12,w:24,h:24,vy:5,onGround:false};return behavior.collide(player,{x:box.x,y:box.y-24})};
   assert.equal(stomp().type,'stomp');assert.equal(actor.winged,false);assert.equal(actor.flying,false);assert.equal(actor.state,'walking');
   assert.equal(runtime.drawCommands.filter(command=>command.attachment).map(command=>behavior.commandAt(command,0)).filter(Boolean).length,0,'lost wings stop rendering');
-  assert.equal(stomp().type,'stomp');assert.equal(actor.state,'shell');assert.equal(actor.collisionEligible,false);
+  assert.equal(stomp().type,'stomp');assert.equal(actor.state,'shellStopped');assert.equal(actor.collisionEligible,true);
   const shell=behavior.commandAt(body,0);
   assert.equal(shell.resource,theme.animations['enemy.red_koopa.shell'].frames[0].resource,'shell capability selects the declared shell visual');
   const x=actor.x;behavior.step();assert.equal(actor.x,x,'transformed shell no longer patrols as a walker');
   behavior.reset();assert.equal(actor.state,'walking');assert.equal(actor.winged,true);assert.equal(actor.flying,true);assert.equal(actor.collisionEligible,true);
+});
+
+test('authored interaction geometry follows actor feet without changing native presentation',()=>{
+  const map={...validMap,instances:[
+    {placeable:'goomba',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}},
+    {placeable:'koopaRed',values:{'transform.x':150,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}
+  ]},runtime=api.compileReferenceRuntime(theme,map).runtime,behavior=api.createActorBehavior(runtime);
+  const goomba=behavior.actors[0],koopa=behavior.actors[1];
+  assert.deepEqual(plain(behavior.actorBox(goomba)),{x:92,y:104,w:16,h:16});
+  assert.deepEqual(plain(behavior.actorBox(koopa)),{x:142,y:96,w:16,h:24});
+  assert.equal(goomba.instance.bounds.y,88,'the authored 16×32 presentation remains bottom anchored and unchanged');
+  const playerBehavior=api.createPlayerBehavior({playerSpawn:{x:0,y:0},bounds:null,surfaces:{solid:[],solidTop:[]}});
+  Object.assign(playerBehavior.player,{x:92,y:80,vy:0});
+  assert.equal(behavior.collide(playerBehavior.player,{x:92,y:80}),null,'empty presentation space above the body is not interactive');
+  playerBehavior.player.y=104;
+  assert.equal(behavior.collide(playerBehavior.player,{x:91,y:104}).type,'hurt','contact with the visible foot-aligned body is harmful');
+});
+
+test('Koopa shells stop, kick, travel, mirror, stop on stomp, and knock out enemies',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:500,h:240},instances:[
+    {placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}},
+    {placeable:'goomba',values:{'transform.x':130,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}
+  ]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),shell=behavior.actors[0],target=behavior.actors[1];
+  shell.winged=false;const walkingBox=behavior.actorBox(shell);
+  Object.assign(players.player,{x:walkingBox.x,y:walkingBox.y-12,vy:5});
+  assert.equal(behavior.collide(players.player,{x:walkingBox.x,y:walkingBox.y-24}).type,'stomp');
+  assert.equal(shell.state,'shellStopped');
+  const stopped=behavior.actorBox(shell);Object.assign(players.player,{x:stopped.x-22,y:stopped.y,vy:0,dead:false});
+  const kick=behavior.collide(players.player,{x:players.player.x-1,y:players.player.y});
+  assert.equal(kick.type,'shellKick');assert.equal(shell.shellVx,api.SHELL_SPEED);assert.equal(shell.mirror,false);
+  const start=shell.x;players.player.x=300;behavior.step();assert.equal(shell.x,start+api.SHELL_SPEED,'moving shell uses the oracle speed');
+  while(target.state==='walking')behavior.step();
+  assert.equal(target.state,'knockedOut','moving-shell overlap applies the established knockout state');
+  assert.equal(target.collisionEligible,false);
+  shell.state='shellMoving';shell.shellVx=-api.SHELL_SPEED;shell.direction=-1;shell.mirror=true;shell.x=200;
+  behavior.step();assert.equal(shell.x,200-api.SHELL_SPEED);assert.equal(shell.mirror,true,'leftward shell travel mirrors the shell visual');
+  const movingBox=behavior.actorBox(shell);Object.assign(players.player,{x:movingBox.x,y:movingBox.y-12,vy:5,dead:false});
+  assert.equal(behavior.collide(players.player,{x:movingBox.x,y:movingBox.y-24}).type,'stomp');
+  assert.equal(shell.state,'shellStopped');assert.equal(shell.shellVx,0);
+});
+
+test('moving shells and every harmful actor share the dead-player transition',()=>{
+  for(const placeable of ['goomba','spiky','koopaRed']){
+    const runtime=api.compileReferenceRuntime(theme,{...validMap,instances:[{placeable,values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]}).runtime;
+    const players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),actor=behavior.actors[0];
+    if(placeable==='koopaRed'){actor.state='shellMoving';actor.shellVx=api.SHELL_SPEED}
+    const box=behavior.actorBox(actor);Object.assign(players.player,{x:box.x,y:box.y,vy:0});
+    assert.equal(behavior.collide(players.player,{x:box.x-1,y:box.y}).type,'hurt');
+    assert.equal(players.player.dead,true,`${placeable} uses the dead state`);assert.equal(players.player.vy,-4);
+  }
+});
+
+test('dead motion ignores terrain and finite-envelope restart restores player and actors',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:320,h:160},markers:{start:{x:20,y:40},goal:null},instances:[
+    {placeable:'ground',values:{'transform.x':160,'transform.y':100,'terrain.width':8,'terrain.height':1,'terrain.style':'overground'}},
+    {placeable:'koopaRed',values:{'transform.x':100,'transform.y':80,'walker.direction':'right','walker.patrolRange':20,'flight.hasWings':true,'flight.flying':true}}
+  ]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),actor=behavior.actors[0];
+  players.player.y=60;players.beginDeath();actor.state='shellMoving';actor.shellVx=api.SHELL_SPEED;actor.winged=false;actor.x=140;actor.tick=17;
+  let crossedSolid=false;
+  for(let i=0;i<100&&!players.consumeRestart();i++){players.step({left:true,jump:true});if(players.player.dead&&players.player.y>100)crossedSolid=true}
+  assert.equal(crossedSolid,true,'dead fall passes through solid and one-way collision without input control');
+  if(!players.player.dead)behavior.reset();
+  assert.equal(players.player.dead,false);assert.deepEqual({x:players.player.x,y:players.player.y},plain(runtime.playerSpawn));
+  assert.deepEqual({x:actor.x,y:actor.y,state:actor.state,direction:actor.direction,winged:actor.winged,flying:actor.flying,tick:actor.tick,eligible:actor.collisionEligible},
+    {x:100,y:80,state:'walking',direction:1,winged:true,flying:true,tick:0,eligible:true});
 });
 
 test('construction geometry follows editor native-cell, autotile, sky, and rotation rules',()=>{
@@ -269,10 +334,10 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
     x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
-    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle'
+    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',dead:false
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
-  assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display,familyBounds:{left:-8,right:8,top:-16,bottom:0}});
+  assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
   assert.equal(elements.empty.hidden,true);
 });
 
@@ -284,16 +349,14 @@ test('player sprite preserves authored aspect ratio and bottom-center anchor',as
   assert.deepEqual(plain(fit),{
     originX:player.x+player.w/2,
     originY:player.y+player.h,
-    dx:-12,dy:-24,w:24,h:24
+    dx:-8,dy:-16,w:16,h:16
   });
   assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
-  assert(fit.w>16&&fit.h>16,'the family fit is larger than a literal 16×16 rendering');
-  assert(fit.w<=player.w&&fit.h<=player.h,'the visual fits inside the 24×24 collision box');
-  assert.equal(fit.h,player.h,'the square visual fills the intended square hero box');
+  assert.equal(fit.w,16,'native rendering retains the authored width rather than scaling to gameplay geometry');
   assert.equal(fit.originY+fit.dy+fit.h,player.y+player.h,'the visual bottom remains at the player feet');
   assert.equal(fit.originX+fit.dx+fit.w/2,player.x+player.w/2,'the visual remains horizontally centered');
-  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-12&&args[6]===-24&&args[7]===24&&args[8]===24),
-    'canvas draw uses the fitted, foot-centered destination rectangle');
+  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-8&&args[6]===-16&&args[7]===16&&args[8]===16),
+    'canvas draw uses the authored native, foot-centered destination rectangle');
   operations.scales.length=0;operations.translates.length=0;player.face=-1;frames.shift()(0);
   assert(operations.scales.some(args=>args[0]===-1&&args[1]===1),'mirroring happens around the player anchor');
   assert(operations.translates.some(args=>args[0]===player.x+player.w/2&&args[1]===player.y+player.h),'mirroring retains the bottom-center anchor');
