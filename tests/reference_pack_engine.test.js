@@ -381,9 +381,12 @@ test('brick hits bump while small and break while powered, disabling collision a
   while(block.bump)blocks.step();
   players.player.form='normal';
   assert.equal(hit().type,'blockBreak');
-  assert.equal(block.broken,true);
+  assert.equal(block.broken,false,'break state remains visible for the authored animation duration');
   assert.equal(surface.disabled,true);
-  assert.equal(blocks.commandAt(runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex)),null);
+  const authored=runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex),breaking=blocks.commandAt(authored);
+  assert.equal(breaking.resource,theme.animations['effect.debris'].frames[0].resource);
+  while(block.breakTicks)blocks.step();
+  assert.equal(block.broken,true);assert.equal(blocks.commandAt(authored),null,'brick retires after its authored break visual');
   blocks.reset();
   assert.equal(surface.disabled,false,'restart restores broken brick collision');
 });
@@ -534,6 +537,38 @@ test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   for(let i=0;i<8;i++)wall.step({right:true,run:true});
   assert.equal(wall.player.x,126);
   assert.equal(wall.player.vx,0);
+});
+
+
+test('ordinary authored terrain and one-way white platforms compile into shared projectile/player surfaces',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:400,h:240},instances:[
+    {placeable:'ground',values:{'transform.x':160,'transform.y':120,'terrain.width':10,'terrain.height':1,'terrain.style':'overground'}},
+    {placeable:'whitePlatform',values:{'transform.x':280,'transform.y':120,'extent.width':3,'movingPlatform.range':0,'movingPlatform.speed':0}}
+  ],markers:{start:{x:100,y:104},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime;
+  const ground=runtime.instances[0],white=runtime.instances[1];
+  assert(runtime.surfaces.solid.some(surface=>surface.instanceIndex===ground.index),'terrain solid capability reaches shared runtime collision');
+  assert(runtime.surfaces.solidTop.some(surface=>surface.instanceIndex===white.index),'oneWay collision mode reaches solidTop surfaces');
+  const players=api.createPlayerBehavior(runtime),shots=api.createProjectileBehavior(runtime,players);players.setForm('fire');Object.assign(players.player,{x:88,y:80,face:1,fireCooldown:0});
+  const shot=shots.launch();for(let i=0;i<20&&shot.bounces===0;i++)shots.step();assert(shot.bounces>0,'fireball bounces on ordinary terrain');assert.equal(shot.alive,true);
+  const platform=runtime.surfaces.solidTop.find(surface=>surface.instanceIndex===white.index),landing=api.createPlayerBehavior({playerSpawn:{x:platform.x+4,y:platform.y-60},bounds:runtime.bounds,surfaces:{solid:[],solidTop:[platform]}});
+  landing.player.vy=10;for(let i=0;i<8&&!landing.player.onGround;i++)landing.step();assert.equal(landing.player.y,platform.y-landing.player.h);assert.equal(landing.player.onGround,true);
+  const rising=api.createPlayerBehavior({playerSpawn:{x:platform.x+4,y:platform.y+8},bounds:runtime.bounds,surfaces:{solid:[],solidTop:[platform]}});rising.player.vy=-8;rising.step();assert(rising.player.y<platform.y+8,'Mario passes upward through a one-way white platform');
+});
+
+test('authored feather uses normal AABB pickup flow to select raccoon form',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:240,h:180},instances:[{placeable:'raccoonFeather',values:{'transform.x':100,'transform.y':100}}],markers:{start:{x:100,y:100},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,powerups=api.createPowerupBehavior(runtime),players=api.createPlayerBehavior(runtime),feather=powerups.powerups[0];
+  assert.equal(feather.template.command.resource,'pickup.powerup.flight');Object.assign(players.player,{x:feather.x,y:feather.y});
+  const event=powerups.step(null,players.player).find(item=>item.type==='powerupCollect');assert.deepEqual(plain(event.capabilities),['collectible','flightPower']);players.applyPowerup(event);assert.equal(players.player.form,'raccoon');assert.equal(feather.taken,true);
+});
+
+test('yellow block hit animation is observable, retains collision, and returns to normal visual',()=>{
+  const map={...validMap,instances:[{placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.uses':1}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0],authored=runtime.drawCommands[0];
+  Object.assign(players.player,{x:100,y:202,vy:-8});players.resolvePlayer();blocks.step();const first=blocks.commandAt(authored);for(let i=0;i<8;i++)blocks.step();const animated=blocks.commandAt(authored);assert.notEqual(animated.resource,first.resource,'hit transition advances the authored yellow-block animation');assert.equal(surface.disabled,undefined);while(block.bump)blocks.step();assert.equal(blocks.commandAt(authored).resource,authored.resource,'visual returns to normal after bump');
+});
+
+test('enemy contacts share form-aware damage and invulnerability through eventual small-form death',()=>{
+  const map={...validMap,instances:[{placeable:'goomba',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior({playerSpawn:{x:0,y:0},bounds:{x:0,y:0,w:300,h:240},surfaces:{solid:[],solidTop:[]}}),actors=api.createActorBehavior(runtime,players),box=actors.actorBox(actors.actors[0]),contact=()=>{Object.assign(players.player,{x:box.x,y:box.y,vy:0});return actors.collide(players.player,{x:box.x-1,y:box.y})};
+  players.setForm('raccoon');assert.equal(contact().result,'powerDown');assert.equal(players.player.form,'normal');assert.equal(contact(),null,'repeat contact is ignored during invulnerability');for(let i=0;i<90;i++)players.step();assert.equal(contact().result,'powerDown');assert.equal(players.player.form,'small');for(let i=0;i<90;i++)players.step();const lives=players.player.lives;assert.equal(contact().result,'death');assert.equal(players.player.lives,lives-1);assert.equal(players.player.dead,true);players.reset();assert.equal(players.player.inv,0);assert.equal(players.player.dead,false);
 });
 
 test('reports unsupported content without throwing or drawing substitutes',()=>{
