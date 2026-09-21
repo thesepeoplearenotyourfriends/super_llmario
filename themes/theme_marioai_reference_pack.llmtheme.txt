@@ -12340,6 +12340,10 @@
       "authoringGroup": "World",
       "label": "Goomba",
       "object": "goomba",
+      "paletteFamily": {
+        "variants": ["goomba", "waveGoomba"],
+        "labels": ["Ground", "Wave"]
+      },
       "parameters": [
         "transform.x",
         "transform.y",
@@ -12350,8 +12354,12 @@
     },
     "koopaRed": {
       "authoringGroup": "World",
-      "label": "Red Koopa",
+      "label": "Koopa",
       "object": "koopa.red",
+      "paletteFamily": {
+        "variants": ["koopaRed", "koopaGreen"],
+        "labels": ["Red", "Green"]
+      },
       "parameters": [
         "transform.x",
         "transform.y",
@@ -12376,7 +12384,8 @@
         "flight.hasWings",
         "flight.flying"
       ],
-      "previewVisual": "walk"
+      "previewVisual": "walk",
+      "paletteFamilyMember": "koopaRed"
     },
     "spiky": {
       "authoringGroup": "World",
@@ -12394,6 +12403,7 @@
       "authoringGroup": "World",
       "label": "Wave Goomba",
       "object": "waveGoomba",
+      "paletteFamilyMember": "goomba",
       "parameters": [
         "transform.x",
         "transform.y",
@@ -12490,6 +12500,11 @@
       "initialValues": {
         "terrain.width": 2,
         "terrain.height": 2
+      },
+      "formCycle": {
+        "path": "terrain.style",
+        "values": ["overground", "castle", "underground"],
+        "labels": ["Overground", "Castle", "Underground"]
       }
     },
     "mushroomPlatform": {
@@ -12536,7 +12551,7 @@
       }
     },
     "arrowSign": {
-      "authoringGroup": "World",
+      "authoringGroup": "Deco",
       "label": "Arrow Sign",
       "object": "arrowSign",
       "parameters": [
@@ -12560,7 +12575,12 @@
         "transform.x",
         "transform.y",
         "solidBlock.style"
-      ]
+      ],
+      "formCycle": {
+        "path": "solidBlock.style",
+        "values": ["stone", "wood", "glassBlue"],
+        "labels": ["Stone", "Wood", "Blue Glass"]
+      }
     },
     "rotatingBlock": {
       "authoringGroup": "World",

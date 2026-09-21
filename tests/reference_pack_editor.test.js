@@ -28,16 +28,18 @@ assert(rawBackgroundResources.length>0,'fixture contains raw background resource
 assert(rawBackgroundResources.every(id=>!Object.hasOwn(theme.placeables,id)),
   'no raw background resource can become a palette card');
 const decoIds=Object.entries(theme.placeables).filter(([,p])=>p.authoringGroup==='Deco').map(([id])=>id);
-assert.deepStrictEqual(decoIds.sort(), ['backgroundDome','backgroundFill','bush','darkGreenArch','darkGreenColumn',
+assert.deepStrictEqual(decoIds.sort(), ['arrowSign','backgroundDome','backgroundFill','bush','darkGreenArch','darkGreenColumn',
   'greyStone','hill','lightGreenArch','lightGreenColumn','rockpile','skyGradient','yellowBrownCave'].sort(),
   'Deco contains audited concepts rather than source-cell palette noise');
-for(const id of decoIds) {
+for(const id of decoIds.filter(id=>id!=='arrowSign')) {
   const object=theme.objects[theme.placeables[id].object];
   assert.strictEqual(object.defaultSceneLayer,['backgroundFill','skyGradient'].includes(id)?'sky':'background',
     `${id} defaults to its authored scenery depth`);
   assert.strictEqual(object.collisionMode,undefined,`${id} does not infer collision from appearance`);
   assert.deepStrictEqual(object.capabilities,[],`${id} has no inferred gameplay capability`);
 }
+assert.strictEqual(theme.placeables.arrowSign.authoringGroup,'Deco','Arrow Sign is presented in Deco');
+assert.strictEqual(theme.placeables.arrowSign.object,'arrowSign','moving the card does not alter authored identity');
 assert(newEditor.includes("Object.entries(state.theme.placeables)"), 'palette inventory comes from placeables');
 assert(!/buildPalette\(\)[^]*Object\.entries\(state\.theme\.resources\)/.test(newEditor),
   'palette building never enumerates raw resources');
@@ -629,6 +631,26 @@ semantics.activatePalette(ladderItem,ladderItem);
 assert.deepStrictEqual(ladderItem.values,{'extent.length':2},'a card without explicit formCycle never mutates');
 assert.deepStrictEqual(theme.placeables.bush.formCycle.values,['variant_0','variant_1']);
 assert.deepStrictEqual(theme.placeables.hill.formCycle.values,['large','small']);
+assert.deepStrictEqual(theme.placeables.ground.formCycle.values,['overground','castle','underground']);
+assert.deepStrictEqual(theme.placeables.solidBlock.formCycle.values,['stone','wood','glassBlue']);
+for(const [rootId,memberId,labels] of [['goomba','waveGoomba',['Ground','Wave']],['koopaRed','koopaGreen',['Red','Green']]]) {
+  const root=item(rootId),member=item(memberId);
+  root.values={}; member.values={};
+  root.familyVariants=[{...root},{...member}]; root.familyLabels=labels; root.familyValues=new Map; root.familyIndex=0;
+  assert.strictEqual(semantics.activatePalette(null,root),root,`${rootId} first activation keeps its first form`);
+  semantics.activatePalette(root,root);
+  assert.strictEqual(root.id,memberId,`${rootId} family reaches ${memberId}`);
+  assert.strictEqual(root.object,member.object,`${rootId} preview/runtime object follows the selected family member`);
+  assert.strictEqual(semantics.formState(root).label,labels[1],`${rootId} displays the selected form label`);
+  semantics.activatePalette(root,root);
+  assert.strictEqual(root.id,rootId,`${rootId} family cycles back without losing its canonical identity`);
+}
+assert.strictEqual(theme.placeables.waveGoomba.paletteFamilyMember,'goomba');
+assert.strictEqual(theme.placeables.koopaGreen.paletteFamilyMember,'koopaRed');
+assert(!newEditor.includes('Filter declared placeables'),'small tab palettes do not include a filter control');
+assert.match(newEditor,/role="tablist"[^]*role="tab"[^]*aria-selected="true"/,'palette exposes accessible tab semantics and active state');
+assert(newEditor.indexOf('<h3>Selected instance</h3>')<newEditor.indexOf('<h3>Theme contract</h3>'),'Selected Instance remains above secondary cards');
+assert(newEditor.indexOf('<h3>Map area</h3>')<newEditor.indexOf('<h3>Theme contract</h3>'),'Map Area sits directly before the bottom Theme Contract card');
 
 const mapDocument={instances:[{placeable:'pipe',values:{'transform.x':32,'transform.y':48,'pipe.direction':'right','pipe.length':2},sceneLayer:'foreground'}],markers:{start:{x:16,y:64},goal:{x:320,y:64}}};
 const envelope=plain(semantics.serializeMap(theme,mapDocument));
@@ -801,7 +823,10 @@ assert.deepStrictEqual(plain(semantics.clampCamera({x:999,y:-999,zoom:2},finite,
   'editor camera pan clamps to the authored bounds at zoom');
 const boundedDocument={worldBounds:finite,instances:mapDocument.instances,markers:mapDocument.markers};
 const boundedEnvelope=plain(semantics.serializeMap(theme,boundedDocument));
-assert.deepStrictEqual(boundedEnvelope.worldBounds,finite,'finite bounds survive save serialization');
+assert.deepStrictEqual(boundedEnvelope.worldBounds,{x:0,y:0,w:320,h:192},'save normalizes a finite single-map origin');
+assert.deepStrictEqual(boundedEnvelope.instances[0].values['transform.x'],96,'instance transforms receive the same x translation');
+assert.deepStrictEqual(boundedEnvelope.instances[0].values['transform.y'],80,'instance transforms receive the same y translation');
+assert.deepStrictEqual(boundedEnvelope.markers.start,{x:80,y:96},'markers receive the same canonical translation');
 assert.deepStrictEqual(plain(semantics.validateMap(theme,JSON.parse(JSON.stringify(boundedEnvelope)))),[],
   'finite bounds survive reopen validation');
 const legacyEnvelope={...boundedEnvelope};delete legacyEnvelope.worldBounds;
@@ -813,6 +838,15 @@ assert(semantics.validateMap(theme,{...boundedEnvelope,worldBounds:{x:0,y:0,w:0,
   'malformed explicit bounds are rejected rather than becoming infinite');
 assert(newEditor.includes('Map has no authored worldBounds; using a finite derived compatibility area.'),
   'the editor diagnoses compatibility-derived bounds');
+const coordinateDocument={worldBounds:{x:-100,y:40,w:500,h:300},instances:[
+  {placeable:'pipe',values:{'transform.x':-20,'transform.y':80,'pipe.destination':{kind:'point',x:50,y:120}}},
+  {placeable:'whitePlatform',values:{'transform.x':10,'transform.y':100,'movingPlatform.path':[{x:0,y:0},{x:64,y:-16}]}}
+],markers:{start:{x:-40,y:90},goal:null}};
+const migrated=plain(semantics.normalizeSingleMap(coordinateDocument));
+assert.deepStrictEqual(migrated.worldBounds,{x:0,y:0,w:500,h:300});
+assert.deepStrictEqual(migrated.instances[0].values['pipe.destination'],{kind:'point',x:150,y:80},'absolute point destinations translate consistently');
+assert.deepStrictEqual(migrated.instances[1].values['movingPlatform.path'],coordinateDocument.instances[1].values['movingPlatform.path'],'relative moving paths preserve their authored geometry');
+assert.deepStrictEqual(plain(semantics.normalizeSingleMap(migrated)),migrated,'save/reopen migration is deterministic and idempotent');
 
 const containmentItem={definition:{stamp:{mode:'squareCell',family:'test',footprint:{w:16,h:16}}},object:{defaultSceneLayer:'world'},values:{}};
 const containmentInstances=[],containmentBounds=instance=>({x:instance.values['transform.x']-8,y:instance.values['transform.y']-8,w:16,h:16});
