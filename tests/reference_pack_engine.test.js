@@ -158,6 +158,23 @@ test('relative stomp contacts defeat stompables and route harmful contacts throu
   assert.equal(sidePlayers.player.dead,true,'ordinary side contact enters the shared death transition');
 });
 
+test('inactive defeated actors contribute no authored command and the frame loop continues',async()=>{
+  const {engine,frames}=engineHarness();
+  await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+  const actor=engine.state.actorBehavior.actors.find(item=>item.instance.placeable==='goomba');
+  assert(actor,'fixture supplies a stompable actor');
+  actor.state='defeated';actor.flat=1;actor.collisionEligible=false;
+  const platformInputs=[],originalCommandAt=engine.state.platformBehavior.commandAt;
+  engine.state.platformBehavior.commandAt=command=>{assert(command,'inactive actor commands must short-circuit before platform behavior');platformInputs.push(command);return originalCommandAt(command)};
+
+  assert.doesNotThrow(()=>frames.shift()(16),'the update/render frame survives actor retirement');
+  assert.equal(actor.active,false);
+  assert.equal(platformInputs.some(command=>command.instanceIndex===actor.instanceIndex),false,'the retired actor contributes no authored draw command');
+  assert.equal(engine.state.tick,1);
+  assert.doesNotThrow(()=>frames.shift()(32),'a subsequent scheduled frame also runs');
+  assert.equal(engine.state.tick,2,'the update loop remains live after the actor disappears');
+});
+
 test('winged Koopas lose wings first, then enter the declared shell state',()=>{
   const map={...validMap,instances:[{placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'right','walker.patrolRange':16,'flight.hasWings':true,'flight.flying':true}}]},runtime=api.compileReferenceRuntime(theme,map).runtime,behavior=api.createActorBehavior(runtime),actor=behavior.actors[0],body=runtime.drawCommands.find(command=>!command.attachment);
   const stomp=()=>{const box=behavior.actorBox(actor),player={x:box.x,y:box.y-12,w:24,h:24,vy:5,onGround:false};return behavior.collide(player,{x:box.x,y:box.y-24})};

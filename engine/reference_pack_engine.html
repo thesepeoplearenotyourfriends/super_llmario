@@ -170,7 +170,7 @@ function draw(){
   if(!state.runtime)return;
   ctx.save();ctx.translate(state.camera.x,state.camera.y);ctx.scale(state.camera.zoom,state.camera.zoom);ctx.imageSmoothingEnabled=false;
   let playerDrawn=false;
-  const authored=state.runtime.drawCommands.map(command=>{const actorCommand=state.actorBehavior.commandAt(command,state.tick);const platformCommand=state.platformBehavior.commandAt(actorCommand);const blockCommand=platformCommand&&state.blockBehavior.commandAt(platformCommand);return blockCommand&&state.powerupBehavior.commandAt(blockCommand)}).filter(Boolean),dynamic=[...state.blockBehavior.commands(),...state.powerupBehavior.commands(),...state.projectileBehavior.commands()],commands=[...authored,...dynamic].sort((a,b)=>state.runtime.layers.indexOf(a.layer)-state.runtime.layers.indexOf(b.layer)||(a.instanceIndex??Infinity)-(b.instanceIndex??Infinity)||(a.order||0)-(b.order||0));
+  const authored=state.runtime.drawCommands.map(command=>{const actorCommand=state.actorBehavior.commandAt(command,state.tick);const platformCommand=actorCommand&&state.platformBehavior.commandAt(actorCommand);const blockCommand=platformCommand&&state.blockBehavior.commandAt(platformCommand);return blockCommand&&state.powerupBehavior.commandAt(blockCommand)}).filter(Boolean),dynamic=[...state.blockBehavior.commands(),...state.powerupBehavior.commands(),...state.projectileBehavior.commands()],commands=[...authored,...dynamic].sort((a,b)=>state.runtime.layers.indexOf(a.layer)-state.runtime.layers.indexOf(b.layer)||(a.instanceIndex??Infinity)-(b.instanceIndex??Infinity)||(a.order||0)-(b.order||0));
   for(const command of commands){
     if(!command)continue;
     if(!playerDrawn&&command.layer==='foreground'){drawRuntimePlayer();playerDrawn=true}
