@@ -17,9 +17,9 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 const validMap={format:'llmario-reference-editor-map',mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},instances:[],markers:{start:null,goal:null}};
 
 function engineHarness(){
-  const operations={fillRect:0,drawImage:0,drawCalls:[],translates:[],scales:[]};
+  const operations={fillRect:0,drawImage:0,drawCalls:[],translates:[],scales:[],texts:[]};
   const frames=[];
-  const ctx={setTransform(){},save(){},restore(){},translate(...args){operations.translates.push(args)},scale(...args){operations.scales.push(args)},rotate(){},fillRect(){operations.fillRect++},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
+  const ctx={setTransform(){},save(){},restore(){},translate(...args){operations.translates.push(args)},scale(...args){operations.scales.push(args)},rotate(){},fillRect(){operations.fillRect++},fillText(...args){operations.texts.push(args)},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
   const elements={
     screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},
     themeButton:{},mapButton:{},fitButton:{},themeFile:{files:[],value:''},mapFile:{files:[],value:''}
@@ -360,6 +360,167 @@ test('Down selects crouch presentation only while grounded without changing game
   assert.equal(player.animationState,'jump','Down does not select crouch while airborne');
 });
 
+test('question boxes consume their theme-authored trigger, bump, and retain collision',()=>{
+  const map={...validMap,instances:[{placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.uses':1}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime;
+  const players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0];
+  assert(surface,'theme collisionMode binds the question box to a runtime solid');
+  players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();
+  const event=blocks.step();assert.equal(event.type,'blockBump');
+  assert.equal(event.triggers[0].type,'dispenseContents');
+  assert.equal(block.used,true);
+  assert.equal(surface.disabled,undefined,'used question boxes remain solid');
+  const authored=runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex),drawn=blocks.commandAt(authored);
+  assert.deepEqual(plain(drawn.sourceRect),plain(authored.sourceRect),'no undeclared used-box artwork is invented');
+  assert(drawn.worldY<authored.worldY,'the active bump lifts the visual without moving collision');
+});
+
+test('brick hits bump while small and break while powered, disabling collision and drawing',()=>{
+  const map={...validMap,instances:[{placeable:'brick',values:{'transform.x':112,'transform.y':200,'block.style':'classic'}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime;
+  const players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0],hit=()=>{players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();return blocks.step()};
+  assert.equal(hit().type,'blockBump');
+  while(block.bump)blocks.step();
+  players.player.form='normal';
+  assert.equal(hit().type,'blockBreak');
+  assert.equal(block.broken,true);
+  assert.equal(surface.disabled,true);
+  assert.equal(blocks.commandAt(runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex)),null);
+  blocks.reset();
+  assert.equal(surface.disabled,false,'restart restores broken brick collision');
+});
+
+test('authored box contents emerge before walking and retain native theme presentation',()=>{
+  const map={...validMap,instances:[
+    {placeable:'ground',values:{'transform.x':160,'transform.y':240,'terrain.width':8,'terrain.height':1,'terrain.style':'overground'}},
+    {placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.contents':'growMushroom','rewardBlock.uses':1}}
+  ],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),powerups=api.createPowerupBehavior(runtime);
+  players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();
+  const blockEvent=blocks.step(),events=powerups.step(blockEvent,{x:400,y:200,w:24,h:24}),mushroom=powerups.powerups[0];
+  assert.equal(events[0].type,'powerupSpawn');
+  assert.equal(mushroom.id,'growMushroom');
+  assert.equal(mushroom.vx,0,'walker remains still while emerging');
+  assert(mushroom.y>mushroom.emergeTargetY);
+  for(let i=0;i<16;i++)powerups.step(null,{x:400,y:200,w:24,h:24});
+  assert.equal(mushroom.emergeFrames,0);
+  assert.equal(mushroom.vx,.85,'theme walker capability starts established movement after emergence');
+  const command=powerups.commands()[0],resource=theme.resources[theme.objects.growMushroom.visuals.idle];
+  assert.deepEqual(plain(command.sourceRect),resource.image.rect);
+  assert.deepEqual({w:command.w,h:command.h},{w:resource.display.w,h:resource.display.h});
+});
+
+test('powerup contact emits authored capabilities, removes the pickup, and reset clears spawns',()=>{
+  const map={...validMap,instances:[{placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.contents':'fireFlower','rewardBlock.uses':1}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),powerups=api.createPowerupBehavior(runtime);
+  players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();powerups.step(blocks.step(),{x:400,y:200,w:24,h:24});
+  const flower=powerups.powerups[0];flower.emergeFrames=0;flower.x=50;flower.y=60;
+  const events=powerups.step(null,{x:50,y:60,w:24,h:24}),collection=events.find(event=>event.type==='powerupCollect');
+  assert.deepEqual(plain(collection.capabilities),['collectible','projectilePower']);
+  assert.equal(flower.taken,true);
+  assert.equal(powerups.commands().length,0,'collected pickup no longer renders');
+  powerups.reset();assert.equal(powerups.powerups.length,0);
+});
+
+test('pickup capabilities drive small, normal, fire, and extra-life transitions without changing physics geometry',()=>{
+  const players=api.createPlayerBehavior({playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[]}}),player=players.player,feet=player.y+player.h;
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','grow']})),{type:'formChange',form:'normal'});
+  assert.deepEqual({form:player.form,w:player.w,h:player.h,feet:player.y+player.h,inv:player.inv},{form:'normal',w:24,h:24,feet,inv:24});
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','projectilePower']})),{type:'formChange',form:'fire'});
+  assert.equal(player.form,'fire');
+  players.applyPowerup({type:'powerupCollect',capabilities:['collectible','grow']});
+  assert.equal(player.form,'fire','growth does not downgrade an existing fire form');
+  const lives=player.lives;
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','extraLife']})),{type:'extraLife',form:'fire'});
+  assert.equal(player.lives,lives+1);
+});
+
+test('damage steps fire to normal to small before life loss and honors transition invulnerability',()=>{
+  const players=api.createPlayerBehavior({playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[]}}),player=players.player;
+  players.setForm('fire');
+  assert.equal(players.hurt(),'powerDown');assert.equal(player.form,'normal');assert.equal(player.inv,90);
+  assert.equal(players.hurt(),null,'damage is ignored during transition invulnerability');assert.equal(player.form,'normal');
+  player.inv=0;assert.equal(players.hurt(),'powerDown');assert.equal(player.form,'small');
+  player.inv=0;const lives=player.lives;assert.equal(players.hurt(),'death');assert.equal(player.lives,lives-1);assert.equal(player.dead,true);
+  player.y=500;players.step();assert.equal(players.consumeRestart(),true);assert.equal(player.form,'small');assert.equal(player.lives,lives-1,'automatic death reset preserves the decremented life count');
+});
+
+test('fallen powerups retire at finite bounds and dead players cannot collect them',()=>{
+  const runtime=api.compileReferenceRuntime(theme,{...validMap,worldBounds:{x:0,y:0,w:320,h:240},instances:[]}).runtime,powerups=api.createPowerupBehavior(runtime),block={instanceIndex:4,instance:{bounds:{x:100,y:100,w:16,h:16}}},pickup=powerups.spawn(block,'lifeMushroom');
+  pickup.emergeFrames=0;pickup.x=100;pickup.y=260;
+  const dead={x:100,y:260,w:24,h:24,dead:true};
+  assert.equal(powerups.collect(pickup,dead),null);
+  assert.equal(pickup.taken,false);
+  powerups.step(null,dead);
+  assert.equal(pickup.taken,true,'pickup below the finite world retires');
+  assert.equal(powerups.commands().length,0);
+});
+
+test('fire form throws at most two theme-backed bouncing fireballs and hits vulnerable actors',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:500,h:240},instances:[{placeable:'goomba',values:{'transform.x':150,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}],markers:{start:{x:112,y:120},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),actors=api.createActorBehavior(runtime,players),shots=api.createProjectileBehavior(runtime,players,actors),player=players.player;
+  players.setForm('fire');Object.assign(player,{x:100,y:100,face:1,fireCooldown:0});
+  const first=shots.launch();assert(first);assert.equal(player.fireCooldown,18);
+  player.fireCooldown=0;assert(shots.launch());player.fireCooldown=0;assert.equal(shots.launch(),null,'only two live fireballs are allowed');
+  for(let i=0;i<8;i++)shots.step();
+  assert.equal(actors.actors[0].state,'knockedOut');
+  assert(shots.projectiles.some(projectile=>!projectile.alive),'impact retires its fireball');
+  const command=shots.commands()[0],frame=theme.resources[theme.animations['projectile.fireball'].frames[command.animationFrame].resource];
+  assert.deepEqual(plain(command.sourceRect),frame.image.rect,'fireballs use the authored theme animation');
+});
+
+test('fireballs use three-tick cadence and disappear on Spiky without harming it',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:500,h:240},instances:[{placeable:'spiky',values:{'transform.x':180,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}],markers:{start:{x:112,y:120},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),actors=api.createActorBehavior(runtime,players),shots=api.createProjectileBehavior(runtime,players,actors),player=players.player;
+  players.setForm('fire');Object.assign(player,{x:100,y:100,face:1,fireCooldown:0});const shot=shots.launch();
+  assert.equal(shots.commands()[0].animationFrame,0);shots.step();shots.step();assert.equal(shots.commands()[0].animationFrame,0);shots.step();assert.equal(shots.commands()[0].animationFrame,1,'fireball advances every three ticks');
+  for(let i=0;i<10&&shot.alive;i++)shots.step();
+  assert.equal(shot.alive,false,'Spiky contact consumes the fireball');
+  assert.equal(actors.actors[0].state,'walking');assert.equal(actors.actors[0].active,true);assert.equal(actors.actors[0].collisionEligible,true);
+});
+
+test('authored and block-dispensed coins collect once while full and death resets differ',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:320,h:240},instances:[
+    {placeable:'coin',values:{'transform.x':100,'transform.y':100}},
+    {placeable:'questionBlock',values:{'transform.x':160,'transform.y':160,'rewardBlock.contents':'coin','rewardBlock.uses':1}}
+  ],markers:{start:{x:40,y:200},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),powerups=api.createPowerupBehavior(runtime),authored=powerups.powerups[0],player=players.player;
+  Object.assign(player,{x:authored.x,y:authored.y});for(const event of powerups.step(null,player))players.applyPowerup(event);
+  assert.equal(player.coins,1);assert.equal(authored.taken,true);assert.equal(powerups.commandAt(runtime.drawCommands.find(command=>command.instanceIndex===authored.authoredInstance)),null);
+  for(const event of powerups.step(null,player))players.applyPowerup(event);assert.equal(player.coins,1,'retired authored coin cannot increment twice');
+  const block=blocks.blocks.find(item=>item.instance.placeable==='questionBlock'),spawnEvents=powerups.step({type:'blockBump',block,triggers:block.instance.bumpTriggers},null),coin=spawnEvents[0].powerup;coin.emergeFrames=0;coin.x=player.x;coin.y=player.y;
+  for(const event of powerups.step(null,player))players.applyPowerup(event);assert.equal(player.coins,2);assert.equal(coin.taken,true);
+  player.dead=true;player.y=300;players.step();assert.equal(players.consumeRestart(),true);powerups.reset(false);assert.equal(player.coins,2,'automatic death recovery preserves coins');assert.equal(authored.taken,true,'automatic death recovery preserves collected map coins');
+  players.reset();powerups.reset();assert.equal(player.coins,0,'full reset clears coins');assert.equal(authored.taken,false,'full reset restores authored coins');
+});
+
+test('runtime frame path collects every powerup capability and rejects dead-player overlap',async()=>{
+  const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);const player=engine.state.behavior.player;
+  const collectThroughFrame=(id)=>{const pickup=engine.state.powerupBehavior.spawn({instanceIndex:90,instance:{bounds:{x:player.x,y:player.y,w:16,h:16}}},id);Object.assign(pickup,{emergeFrames:0,x:player.x,y:player.y,vx:0,vy:0});frames.shift()(0);return pickup};
+  const grow=collectThroughFrame('growMushroom');assert.equal(grow.taken,true);assert.equal(player.form,'normal');assert.equal(engine.state.powerupBehavior.commands().some(command=>command.resource===theme.objects.growMushroom.visuals.idle),false);
+  const flower=collectThroughFrame('fireFlower');assert.equal(flower.taken,true);assert.equal(player.form,'fire');
+  const lives=player.lives,life=collectThroughFrame('lifeMushroom');assert.equal(life.taken,true);assert.equal(player.lives,lives+1);
+  player.dead=true;const blocked=collectThroughFrame('growMushroom');assert.equal(blocked.taken,false,'dead player cannot collect through the runtime frame path');
+});
+
+test('top-bar HUD shows the current coin count on two compact lines',async()=>{
+  const {engine,operations,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);engine.state.behavior.player.coins=7;operations.texts.length=0;frames.shift()(0);
+  const labels=operations.texts.map(args=>String(args[0]));
+  assert(labels.includes('COINS'));assert(labels.includes('7'));
+});
+
+test('raccoon P-speed takeoff uses established timed flight and carrying-sheet visuals',async()=>{
+  const runtime={playerSpawn:{x:100,y:176},bounds:{x:0,y:0,w:500,h:300},surfaces:{solid:[{x:0,y:200,w:500,h:100}],solidTop:[]}},players=api.createPlayerBehavior(runtime),player=players.player;
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','flightPower']})),{type:'formChange',form:'raccoon'});Object.assign(player,{onGround:true,vx:4,runCharge:71});
+  players.step({right:true,run:true,jump:true});
+  assert.equal(player.pSpeed,true);assert.equal(player.flightFrames,149);assert(player.vy<0);
+  const airborneVy=player.vy;players.step({right:true,run:true,jump:true});assert(player.vy<=airborneVy,'holding Jump supplies flight lift');
+  player.y=175;player.onGround=true;player.vy=2;players.resolvePlayer();assert.equal(player.onGround,true);players.step({left:false,right:false,run:false,jump:false,up:false,down:false});assert.equal(player.flightFrames,0,'landing ends flight');
+  const {engine}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);engine.state.behavior.player.form='raccoon';
+  const carrying=theme.resources[theme.objects['player.carrying'].visuals.idle];assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),carrying.image.rect);
+});
+
+test('dynamic pickups re-enter layer sorting before foreground art and Mario',async()=>{
+  const {engine,operations,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);operations.drawCalls.length=0;
+  engine.state.powerupBehavior.spawn({instanceIndex:99,instance:{bounds:{x:100,y:200,w:16,h:16}}},'growMushroom');
+  frames.shift()(0);
+  const pickupRect=theme.resources[theme.objects.growMushroom.visuals.idle].image.rect,foreground=engine.state.runtime.drawCommands.find(command=>command.layer==='foreground').sourceRect,indexOf=rect=>operations.drawCalls.findIndex(args=>args[1]===rect.x&&args[2]===rect.y&&args[3]===rect.w&&args[4]===rect.h);
+  assert(indexOf(pickupRect)>=0);assert(indexOf(pickupRect)<indexOf(foreground),'actor-layer pickup draws before foreground commands');
+});
+
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
@@ -397,7 +558,7 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
     x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
-    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',dead:false
+    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',lives:3,coins:0,inv:0,flightFrames:0,fireCooldown:0,dead:false
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
   assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
