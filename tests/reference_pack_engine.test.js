@@ -418,6 +418,29 @@ test('powerup contact emits authored capabilities, removes the pickup, and reset
   powerups.reset();assert.equal(powerups.powerups.length,0);
 });
 
+test('pickup capabilities drive small, normal, fire, and extra-life transitions without changing physics geometry',()=>{
+  const players=api.createPlayerBehavior({playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[]}}),player=players.player,feet=player.y+player.h;
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','grow']})),{type:'formChange',form:'normal'});
+  assert.deepEqual({form:player.form,w:player.w,h:player.h,feet:player.y+player.h,inv:player.inv},{form:'normal',w:24,h:24,feet,inv:24});
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','projectilePower']})),{type:'formChange',form:'fire'});
+  assert.equal(player.form,'fire');
+  players.applyPowerup({type:'powerupCollect',capabilities:['collectible','grow']});
+  assert.equal(player.form,'fire','growth does not downgrade an existing fire form');
+  const lives=player.lives;
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','extraLife']})),{type:'extraLife',form:'fire'});
+  assert.equal(player.lives,lives+1);
+});
+
+test('damage steps fire to normal to small before life loss and honors transition invulnerability',()=>{
+  const players=api.createPlayerBehavior({playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[]}}),player=players.player;
+  players.setForm('fire');
+  assert.equal(players.hurt(),'powerDown');assert.equal(player.form,'normal');assert.equal(player.inv,90);
+  assert.equal(players.hurt(),null,'damage is ignored during transition invulnerability');assert.equal(player.form,'normal');
+  player.inv=0;assert.equal(players.hurt(),'powerDown');assert.equal(player.form,'small');
+  player.inv=0;const lives=player.lives;assert.equal(players.hurt(),'death');assert.equal(player.lives,lives-1);assert.equal(player.dead,true);
+  player.y=500;players.step();assert.equal(players.consumeRestart(),true);assert.equal(player.form,'small');assert.equal(player.lives,lives-1,'automatic death reset preserves the decremented life count');
+});
+
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
@@ -455,7 +478,7 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
     x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
-    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',dead:false
+    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',lives:3,inv:0,dead:false
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
   assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
