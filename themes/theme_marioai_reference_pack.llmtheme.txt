@@ -11780,7 +11780,6 @@
       "capabilities": [],
       "visuals": {
         "normal": "block.breakable.idle",
-        "breaking": "effect.debris",
         "classic": "block.breakable.idle"
       },
       "visualSelector": "block.style",
@@ -11939,14 +11938,16 @@
       "defaultSceneLayer": "world",
       "kind": "ground",
       "engineNoun": "platform",
-      "capabilities": [],
+      "capabilities": [
+        "movingPlatform"
+      ],
       "collisionMode": "oneWay",
       "visuals": {
         "idle": "construction.white-platform"
       },
       "runtimeHooks": {
         "movement": {
-          "status": "unimplemented",
+          "status": "implemented",
           "parameters": [
             "movingPlatform.path",
             "movingPlatform.range",

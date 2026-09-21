@@ -135,7 +135,9 @@ for (const width of [2,3,5]) {
 assert.deepStrictEqual(theme.placeables.whitePlatform.initialValues, {'extent.width':3});
 for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform.speed'])
   assert(theme.placeables.whitePlatform.parameters.includes(path), `white platform exposes optional ${path}`);
-assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.status, 'unimplemented');
+assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.status, 'implemented');
+assert(theme.objects.whitePlatform.capabilities.includes('movingPlatform'));
+assert(theme.objects.mushroomPlatform.capabilities.includes('movingPlatform'));
 assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.optional, true);
 assert.deepStrictEqual(theme.objects.hill.visuals, {
   large:'construction.hill.large',small:'construction.hill.small',
