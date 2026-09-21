@@ -11462,6 +11462,7 @@
       "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
+      "interactionGeometry": { "walking": { "w": 16, "h": 16, "anchor": { "x": 0.5, "y": 1 } } },
       "capabilities": [
         "patrol",
         "stompable"
@@ -11474,6 +11475,10 @@
       "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
+      "interactionGeometry": {
+        "walking": { "w": 16, "h": 24, "anchor": { "x": 0.5, "y": 1 } },
+        "shell": { "w": 16, "h": 16, "anchor": { "x": 0.5, "y": 1 } }
+      },
       "capabilities": [
         "patrol",
         "stompable",
@@ -11512,6 +11517,10 @@
       "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
+      "interactionGeometry": {
+        "walking": { "w": 16, "h": 24, "anchor": { "x": 0.5, "y": 1 } },
+        "shell": { "w": 16, "h": 16, "anchor": { "x": 0.5, "y": 1 } }
+      },
       "capabilities": [
         "patrol",
         "stompable",
@@ -11550,6 +11559,7 @@
       "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "walker",
+      "interactionGeometry": { "walking": { "w": 16, "h": 16, "anchor": { "x": 0.5, "y": 1 } } },
       "capabilities": [
         "patrol",
         "stompHazard"
@@ -11562,6 +11572,7 @@
       "defaultSceneLayer": "actors",
       "kind": "actor",
       "engineNoun": "actor",
+      "interactionGeometry": { "walking": { "w": 16, "h": 16, "anchor": { "x": 0.5, "y": 1 } } },
       "capabilities": [
         "waveFlight",
         "patrol",
