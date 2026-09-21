@@ -380,7 +380,7 @@ test('powered brick break emits the oracle fragment burst, retires, and resets',
   assert.equal(hit().type,'blockBump');while(block.bump)blocks.step();players.player.form='normal';
   const event=hit(),authored=runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex),burst=blocks.commands();
   assert.equal(event.type,'blockBreak');assert.equal(block.broken,true);assert.equal(surface.disabled,true,'collision turns off on the breaking frame');assert.equal(blocks.commandAt(authored),null,'the intact brick retires immediately');
-  assert.equal(burst.length,6,'old-engine burst is preserved as several brick pieces');assert(burst.every(command=>command.brickFragment));assert(burst.every(command=>!command.resource.startsWith('effect.debris')),'tiny generic debris art is not substituted');
+  assert.equal(burst.length,6,'old-engine burst is preserved as several brick pieces');assert(burst.every(command=>command.brickFragment));assert(burst.every(command=>command.object==='brickBurst'&&!command.resource&&!command.sourceRect),'old-engine drawn fragments replace repeated sprite crops and generic debris');assert.deepEqual([...new Set(burst.map(command=>command.color))].sort(),['#b67d4c','#d7a06a']);assert(burst.every(command=>command.edge==='#5e3317'));
   const first=plain(burst.map(command=>({resource:command.resource,x:command.worldX,y:command.worldY,w:command.w,h:command.h})));blocks.step();const moved=plain(blocks.commands().map(command=>({resource:command.resource,x:command.worldX,y:command.worldY,w:command.w,h:command.h})));assert.notDeepEqual(moved,first,'fragments visibly explode away from the brick');
   for(let i=0;i<48;i++)blocks.step();assert.equal(blocks.commands().length,0,'fragments retire after the established burst lifetime');
   blocks.reset();assert.equal(block.broken,false);assert.equal(surface.disabled,false);assert.equal(blocks.fragments.length,0);assert(blocks.commandAt(authored),'restart restores the brick and clears transients');
@@ -567,9 +567,9 @@ test('rotating block temporary spin disables collision, animates once, and resto
 
 test('moving-platform capability moves drawing and collision, carries riders, stays still at zero, and resets',()=>{
   const map={...validMap,worldBounds:{x:0,y:0,w:500,h:300},instances:[
-    {placeable:'whitePlatform',values:{'transform.x':160,'transform.y':160,'extent.width':3,'movingPlatform.path':'horizontal','movingPlatform.range':12,'movingPlatform.speed':2}},
-    {placeable:'mushroomPlatform',values:{'transform.x':280,'transform.y':160,'extent.width':3,'extent.height':3,'movingPlatform.path':'vertical','movingPlatform.range':10,'movingPlatform.speed':2}},
-    {placeable:'whitePlatform',values:{'transform.x':380,'transform.y':160,'extent.width':3,'movingPlatform.path':'horizontal','movingPlatform.range':0,'movingPlatform.speed':4}}
+    {placeable:'whitePlatform',values:{'transform.x':160,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:0,y:0},{x:12,y:0}],'movingPlatform.range':12,'movingPlatform.speed':2}},
+    {placeable:'mushroomPlatform',values:{'transform.x':280,'transform.y':160,'extent.width':3,'extent.height':3,'movingPlatform.path':[{x:0,y:0},{x:0,y:10}],'movingPlatform.range':10,'movingPlatform.speed':2}},
+    {placeable:'whitePlatform',values:{'transform.x':380,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:0,y:0},{x:12,y:0}],'movingPlatform.range':0,'movingPlatform.speed':4}}
   ],markers:{start:{x:160,y:120},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),moving=api.createMovingPlatformBehavior(runtime,players),white=moving.platforms[0],mushroom=moving.platforms[1],still=moving.platforms[2],whiteCommand=runtime.drawCommands.find(command=>command.instanceIndex===white.instanceIndex);
   const startSurface={...white.surface},startPlayerX=players.player.x;players.player.x=white.surface.x+8;players.player.y=white.surface.y-players.player.h;players.player.onGround=true;moving.step();
   assert.equal(white.x,white.originX+2);assert.equal(white.surface.x,startSurface.x+2,'collision follows motion');assert.equal(moving.commandAt(whiteCommand).worldX,white.originX+2,'rendering follows motion');assert.equal(players.player.x,white.surface.x+8,'standing Mario is carried by the same delta');
