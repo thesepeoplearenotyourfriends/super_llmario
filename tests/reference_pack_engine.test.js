@@ -102,6 +102,15 @@ test('reports unsupported content without throwing or drawing substitutes',()=>{
   assert.equal(result.runtime.instances.length,fixture.instances.length);
 });
 
+test('successful load hides the empty-state overlay',async()=>{
+  assert.match(html,/#empty\[hidden\]\s*\{\s*display\s*:\s*none\s*;?\s*\}/);
+  const {engine,elements}=engineHarness();
+  await engine.loadReferenceTheme(theme);
+  engine.loadReferenceEditorMap(fixture);
+  assert(engine.state.runtime);
+  assert.equal(elements.empty.hidden,true);
+});
+
 test('invalid public map and theme loads clear an already rendered scene and retain diagnostics',async()=>{
   const {engine,elements,operations}=engineHarness();
   await engine.loadReferenceTheme(theme);
