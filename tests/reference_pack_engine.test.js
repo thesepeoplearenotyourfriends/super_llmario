@@ -567,9 +567,10 @@ test('ordinary authored terrain and one-way white platforms compile into shared 
   const rising=api.createPlayerBehavior({playerSpawn:{x:platform.x+4,y:platform.y+8},bounds:runtime.bounds,surfaces:{solid:[],solidTop:[platform]}});rising.player.vy=-8;rising.step();assert(rising.player.y<platform.y+8,'Mario passes upward through a one-way white platform');
 });
 
-test('authored feather uses normal AABB pickup flow to select raccoon form',()=>{
-  const map={...validMap,worldBounds:{x:0,y:0,w:240,h:180},instances:[{placeable:'raccoonFeather',values:{'transform.x':100,'transform.y':100}}],markers:{start:{x:100,y:100},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,powerups=api.createPowerupBehavior(runtime),players=api.createPlayerBehavior(runtime),feather=powerups.powerups[0];
-  assert.equal(feather.template.command.resource,'pickup.powerup.flight');Object.assign(players.player,{x:feather.x,y:feather.y});
+test('reward-only feather uses normal AABB pickup flow to select raccoon form',()=>{
+  assert.equal(theme.placeables.raccoonFeather,undefined,'the feather cannot be authored as direct map content');
+  const map={...validMap,worldBounds:{x:0,y:0,w:240,h:180},markers:{start:{x:100,y:100},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,powerups=api.createPowerupBehavior(runtime),players=api.createPlayerBehavior(runtime),feather=powerups.spawn({instance:{bounds:{x:88,y:100,w:24,h:24}},instanceIndex:7},'raccoonFeather');
+  assert.equal(feather.template.command.resource,'pickup.powerup.flight');Object.assign(feather,{emergeFrames:0,x:players.player.x,y:players.player.y});
   const event=powerups.step(null,players.player).find(item=>item.type==='powerupCollect');assert.deepEqual(plain(event.capabilities),['collectible','flightPower']);players.applyPowerup(event);assert.equal(players.player.form,'raccoon');assert.equal(feather.taken,true);
 });
 
@@ -598,11 +599,16 @@ test('moving-platform capability moves drawing and collision, carries riders, st
     {placeable:'mushroomPlatform',values:{'transform.x':280,'transform.y':160,'extent.width':3,'extent.height':3,'movingPlatform.path':[{x:0,y:0},{x:0,y:10}],'movingPlatform.range':10,'movingPlatform.speed':2}},
     {placeable:'whitePlatform',values:{'transform.x':380,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:0,y:0},{x:12,y:0}],'movingPlatform.range':0,'movingPlatform.speed':4}}
   ],markers:{start:{x:160,y:120},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),moving=api.createMovingPlatformBehavior(runtime,players),white=moving.platforms[0],mushroom=moving.platforms[1],still=moving.platforms[2],whiteCommand=runtime.drawCommands.find(command=>command.instanceIndex===white.instanceIndex);
-  const startSurface={...white.surface},startPlayerX=players.player.x;players.player.x=white.surface.x+8;players.player.y=white.surface.y-players.player.h;players.player.onGround=true;moving.step();
+  const startSurface={...white.surface},startPlayerX=players.player.x;
+  assert.deepEqual({x:white.surface.x,y:white.surface.y,w:white.surface.w},{x:white.instance.bounds.x+8,y:white.instance.bounds.y,w:white.instance.bounds.w-16},'white-platform top matches the visible cap-to-cap usable span without a vertical air gap');
+  players.player.x=white.surface.x+8;players.player.y=white.surface.y-players.player.h;players.player.onGround=true;moving.step();
   assert.equal(white.x,white.originX+2);assert.equal(white.surface.x,startSurface.x+2,'collision follows motion');assert.equal(moving.commandAt(whiteCommand).worldX,white.originX+2,'rendering follows motion');assert.equal(players.player.x,white.surface.x+8,'standing Mario is carried by the same delta');
   assert.equal(mushroom.y,mushroom.originY+2,'capability is generic to mushroom platforms');assert.equal(still.x,still.originX,'zero range remains stationary');
   players.player.x=white.surface.x+4;players.player.y=white.surface.y-50;players.player.vy=10;players.player.onGround=false;for(let i=0;i<8&&!players.player.onGround;i++){moving.step();players.step()}assert.equal(players.player.y+players.player.h,white.surface.y,'landing resolves against the moved one-way surface');
-  moving.reset();assert.deepEqual({x:white.x,y:white.y,phase:white.phase,direction:white.direction},{x:white.originX,y:white.originY,phase:0,direction:1});assert.equal(white.surface.x,startSurface.x);assert.equal(mushroom.y,mushroom.originY);assert.equal(still.x,still.originX);assert.notEqual(startPlayerX,undefined);
+  Object.assign(players.player,{x:white.surface.x+4,y:white.surface.y+4,vy:-8,onGround:false});players.step();assert(players.player.y<white.surface.y+4,'Mario passes upward through the white platform');
+  Object.assign(players.player,{x:white.surface.x-players.player.w,y:white.surface.y-40,vy:10,onGround:false});for(let i=0;i<6;i++)players.step();assert.equal(players.player.onGround,false,'touching the left endpoint without overlap does not land');
+  Object.assign(players.player,{x:white.surface.x+white.surface.w,y:white.surface.y-40,vy:10,onGround:false});for(let i=0;i<6;i++)players.step();assert.equal(players.player.onGround,false,'touching the right endpoint without overlap does not land');
+  moving.reset();assert.deepEqual({x:white.x,y:white.y,phase:white.phase,direction:white.direction},{x:white.originX,y:white.originY,phase:0,direction:1});assert.deepEqual({x:white.surface.x,y:white.surface.y,w:white.surface.w},{x:startSurface.x,y:startSurface.y,w:startSurface.w},'reset restores the exact authored collision top');assert.equal(mushroom.y,mushroom.originY);assert.equal(still.x,still.originX);assert.notEqual(startPlayerX,undefined);
 });
 
 test('canonical white platforms preserve editor movement values and move drawing with collision',()=>{
@@ -640,7 +646,7 @@ test('moving-platform defaults, explicit zero, fallback routes, and editor-shape
   assert.equal(zero.speed,0,'explicit zero is not replaced by the default');
   moving.step();
   assert.equal(fallback.x,-47,'negative editor coordinates move by the default speed');
-  assert.equal(fallback.surface.x,fallback.instance.bounds.x+1,'fallback collision follows its rendering position');
+  assert.equal(fallback.surface.x,fallback.initialSurface.x+1,'fallback collision follows its rendering position without losing authored insets');
   assert.equal(zero.x,zero.originX,'explicit zero remains stationary');
   assert.equal(authored.x,authored.originX+32,'authored speed 32 survives and follows its relative path');
   const command=runtime.drawCommands.find(item=>item.instanceIndex===authored.instanceIndex);
@@ -722,8 +728,10 @@ test('player visual states use theme animations with established walk and run ca
   assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.animations['player.small.walk'].frames[0].resource].image.rect);
   player.tick=7;
   assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.animations['player.small.walk'].frames[1].resource].image.rect);
-  player.animationState='run';player.tick=5;
-  assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.animations['player.small.run'].frames[1].resource].image.rect);
+  player.tick=5;engine.state.behavior.input.run=true;
+  assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.animations['player.small.walk'].frames[1].resource].image.rect,'Run accelerates the existing walk family before P-speed');
+  player.animationState='run';player.pSpeed=true;
+  assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.animations['player.small.run'].frames[1].resource].image.rect,'P-speed selects the existing arms-out family at five ticks per frame');
   player.animationState='jump';player.face=-1;
   assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.objects['player.small'].visuals.jump].image.rect);
 });

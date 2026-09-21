@@ -138,6 +138,10 @@ for (const path of ['movingPlatform.path','movingPlatform.range','movingPlatform
 assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.status, 'implemented');
 assert(theme.objects.whitePlatform.capabilities.includes('movingPlatform'));
 assert(theme.objects.mushroomPlatform.capabilities.includes('movingPlatform'));
+assert.equal(theme.placeables.raccoonFeather,undefined,'the feather is reward-only and absent from direct-placement tools');
+assert.deepStrictEqual(theme.objects.raccoonFeather.capabilities,['collectible','flightPower'],'the reward-only feather keeps flight-power pickup behavior');
+assert.equal(theme.objects.raccoonFeather.visuals.idle,'pickup.powerup.flight','the reward-only feather keeps its authored resource');
+assert(theme.parameterSchemas.rewardBlock.contents.allowedObjects.includes('raccoonFeather'),'Question Boxes retain the feather reward option');
 assert.strictEqual(theme.objects.whitePlatform.runtimeHooks.movement.optional, true);
 assert.deepStrictEqual(theme.objects.hill.visuals, {
   large:'construction.hill.large',small:'construction.hill.small',

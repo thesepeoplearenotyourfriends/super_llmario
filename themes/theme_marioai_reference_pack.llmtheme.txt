@@ -11900,6 +11900,13 @@
         "movingPlatform"
       ],
       "collisionMode": "oneWay",
+      "collisionGeometry": {
+        "solidTop": {
+          "leftInset": 8,
+          "rightInset": 8,
+          "topInset": 0
+        }
+      },
       "visuals": {
         "idle": "construction.white-platform"
       },
@@ -12615,15 +12622,6 @@
       "authoringGroup": "World",
       "label": "Hidden / Revealed Block",
       "object": "hiddenRevealedBlock",
-      "parameters": [
-        "transform.x",
-        "transform.y"
-      ]
-    },
-    "raccoonFeather": {
-      "authoringGroup": "World",
-      "label": "Raccoon Feather",
-      "object": "raccoonFeather",
       "parameters": [
         "transform.x",
         "transform.y"
