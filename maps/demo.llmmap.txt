@@ -251,8 +251,10 @@
       "placeable": "whitePlatform",
       "values": {
         "extent.width": 3,
+        "movingPlatform.range": 70,
         "transform.x": -5568,
-        "transform.y": 1120
+        "transform.y": 1120,
+        "movingPlatform.speed": 1
       }
     },
     {
@@ -261,7 +263,8 @@
         "extent.width": 3,
         "movingPlatform.range": 39,
         "transform.x": -5152,
-        "transform.y": 1200
+        "transform.y": 1200,
+        "movingPlatform.speed": 1
       }
     },
     {
@@ -270,7 +273,8 @@
         "extent.width": 3,
         "movingPlatform.range": 39,
         "transform.x": -5344,
-        "transform.y": 1152
+        "transform.y": 1152,
+        "movingPlatform.speed": 1
       }
     },
     {
