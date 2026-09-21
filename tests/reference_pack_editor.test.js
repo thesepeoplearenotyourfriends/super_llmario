@@ -747,3 +747,64 @@ assert(newEditor.includes("if(state.destinationPick){canvas.style.cursor='crossh
 assert(newEditor.includes("source.values['pipe.travelEnabled']=false"),'Clear disables contradictory travel state');
 assert(newEditor.includes("Destination selection cancelled."),'Escape/right-click cancellation preserves the prior document');
 const pipeHistory=semantics.createHistory(pipeDoc),pipeChanged=plain(pipeDoc);pipeChanged.instances[0].values['pipe.destination']={kind:'pipe',instanceId:'pipe-b'};pipeHistory.push(pipeChanged);assert.strictEqual(pipeHistory.undo().instances[0].values['pipe.destination'].kind,'point');assert.strictEqual(pipeHistory.redo().instances[0].values['pipe.destination'].kind,'pipe');
+
+// White-platform route overlays resolve through the same movement geometry as runtime.
+const whitePlatformItem=item('whitePlatform');
+function platform(values){return{item:whitePlatformItem,values}}
+let overlay=semantics.movingPlatformOverlay(platform({
+  'transform.x':-48,'transform.y':-16,'movingPlatform.path':[{x:-12,y:4},{x:20,y:4}],
+  'movingPlatform.range':32,
+}),{x:120,y:40,zoom:2});
+assert.deepStrictEqual(plain(overlay.worldPoints),[{x:-48,y:-16},{x:-16,y:-16}],
+  'authored horizontal path is relative to the platform origin, including at negative world coordinates');
+assert.deepStrictEqual(plain(overlay.screenPoints),[{x:24,y:8},{x:88,y:8}],
+  'route points use shared world-to-screen camera conversion under pan and zoom');
+overlay=semantics.movingPlatformOverlay(platform({
+  'transform.x':10,'transform.y':20,'movingPlatform.path':[{x:8,y:-5},{x:8,y:35}],
+  'movingPlatform.range':40,
+}),{x:0,y:0,zoom:1});
+assert.deepStrictEqual(plain(overlay.worldPoints),[{x:10,y:20},{x:10,y:60}],
+  'authored vertical paths preserve their direction from the platform origin');
+overlay=semantics.movingPlatformOverlay(platform({
+  'transform.x':5,'transform.y':7,'movingPlatform.range':24,
+}),{x:0,y:0,zoom:1});
+assert.deepStrictEqual(plain(overlay.worldPoints),[{x:5,y:7},{x:29,y:7}],
+  'range-only platforms display the runtime horizontal fallback route');
+assert.strictEqual(semantics.movingPlatformOverlay(platform({
+  'transform.x':5,'transform.y':7,'movingPlatform.path':[{x:0,y:0},{x:0,y:40}],
+  'movingPlatform.range':0,
+}),{x:0,y:0,zoom:1}),null,'zero runtime travel does not display a misleading route');
+const liveValues={'transform.x':16,'transform.y':32,'movingPlatform.range':16};
+assert.deepStrictEqual(plain(semantics.movingPlatformOverlay(platform(liveValues),{x:0,y:0,zoom:1}).worldPoints.at(-1)),{x:32,y:32});
+assert.strictEqual(semantics.applyAuthoredInput(liveValues,'movingPlatform.path',schema.movingPlatform.path,'[{"x":0,"y":0},{"x":0,"y":16}]'),true);
+assert.deepStrictEqual(plain(semantics.movingPlatformOverlay(platform(liveValues),{x:0,y:0,zoom:1}).worldPoints.at(-1)),{x:16,y:48},
+  'the overlay recomputes immediately from Details path edits');
+assert.strictEqual(semantics.movingPlatformOverlay(null,{x:0,y:0,zoom:1}),null,
+  'clearing selection removes the selected-instance overlay');
+assert.strictEqual(semantics.movingPlatformOverlay({item:item('mushroomPlatform'),values:liveValues},{x:0,y:0,zoom:1}),null,
+  'only White Platform instances receive this editor overlay');
+
+// Finite map geometry is one authored contract for placement, camera, and persistence.
+const finite={x:-64,y:-32,w:320,h:192};
+for(const point of [{x:-64,y:-32},{x:256,y:-32},{x:-64,y:160},{x:256,y:160}])
+  assert.strictEqual(semantics.pointInBounds(point,finite),true,`boundary point ${JSON.stringify(point)} is placeable`);
+for(const point of [{x:-65,y:0},{x:257,y:0},{x:0,y:-33},{x:0,y:161}])
+  assert.strictEqual(semantics.pointInBounds(point,finite),false,`point ${JSON.stringify(point)} beyond an edge is rejected`);
+assert.deepStrictEqual(plain(semantics.clampPointToBounds({x:-80,y:200},finite)),{x:-64,y:160},
+  'dragged authored positions clamp to the same finite map edges');
+assert.deepStrictEqual(plain(semantics.clampCamera({x:999,y:-999,zoom:2},finite,{w:320,h:192})),{x:128,y:-128,zoom:2},
+  'editor camera pan clamps to the authored bounds at zoom');
+const boundedDocument={worldBounds:finite,instances:mapDocument.instances,markers:mapDocument.markers};
+const boundedEnvelope=plain(semantics.serializeMap(theme,boundedDocument));
+assert.deepStrictEqual(boundedEnvelope.worldBounds,finite,'finite bounds survive save serialization');
+assert.deepStrictEqual(plain(semantics.validateMap(theme,JSON.parse(JSON.stringify(boundedEnvelope)))),[],
+  'finite bounds survive reopen validation');
+const legacyEnvelope={...boundedEnvelope};delete legacyEnvelope.worldBounds;
+assert.deepStrictEqual(plain(semantics.validateMap(theme,legacyEnvelope)),[],
+  'older maps without bounds remain loadable through compatibility handling');
+const derived=semantics.deriveWorldBounds([{x:-10,y:20,w:30,h:40}],16);
+assert.deepStrictEqual(plain(derived),{x:-26,y:4,w:62,h:72},'older maps receive a deterministic finite derived area');
+assert(semantics.validateMap(theme,{...boundedEnvelope,worldBounds:{x:0,y:0,w:0,h:100}}).some(x=>/worldBounds/.test(x)),
+  'malformed explicit bounds are rejected rather than becoming infinite');
+assert(newEditor.includes('Map has no authored worldBounds; using a finite derived compatibility area.'),
+  'the editor diagnoses compatibility-derived bounds');

@@ -8,11 +8,13 @@
 
 **Want to edit or mess around?** Clone this repository. The active authoring pair is `editor/reference_pack_editor.html` plus `themes/theme_marioai_reference_pack.llmtheme.txt`, with `engine/reference_pack_engine.html` as its runtime. Run `python3 scripts/build_release.py` only when you need the packed `dist/super_llmario.html` release artifact.
 
-Previous editor/theme generations are preserved under `archived/` and are not active inputs. `engine/engine.html` remains only as the explicit legacy gameplay oracle. See `docs/repository-mainline.md` for the boundary. Repository source is not packed merely for distribution convenience; packing belongs exclusively to the release build.
+Reference maps now persist an explicit finite `worldBounds` rectangle. The canonical editor outlines that area, constrains placement and navigation to it, and the runtime uses its bottom edge for fall deaths; older boundless maps receive a finite derived compatibility envelope with a diagnostic.
+
+Previous editor/theme generations are preserved under `archived/` and are not active inputs. `archived/engine/legacy_engine.html` remains only as the explicit legacy gameplay oracle. See `docs/repository-mainline.md` for the boundary. Repository source is not packed merely for distribution convenience; packing belongs exclusively to the release build.
 
 **CURRENT GAMEPLAY STATE:**
 
-The downloadable Release HTML starts with the packed MarioAI semantic theme and MarioAI reference map. Editable `engine/engine.html` starts with the engine-owned Physics Test Plains / Jump Test `DEMO_CART`, a known-good legacy compatibility/demo level with:
+The downloadable Release HTML starts with the packed MarioAI semantic theme and MarioAI reference map. Archived `archived/engine/legacy_engine.html` starts with the engine-owned Physics Test Plains / Jump Test `DEMO_CART`, a known-good legacy compatibility/demo level with:
 
 * working run/jump/fall tuning
 * standing and running jumps that feel fair

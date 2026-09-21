@@ -5,6 +5,12 @@
     "id": "marioai-reference-complete",
     "packVersion": 1
   },
+  "worldBounds": {
+    "x": -6304,
+    "y": 1040,
+    "w": 1264,
+    "h": 432
+  },
   "instances": [
     {
       "placeable": "koopaRed",
