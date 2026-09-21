@@ -2309,7 +2309,9 @@ function enterPipeTravel(hit){
   player.vx = 0;
   player.vy = 0;
   player.onGround = true;
-  player.pipeTravel={phase:'entry',entry:hit.pipe,entryRect:hit.rect,target:hit.target,destination:destination};
+  const horizontal=hit.rect.direction==='left'||hit.rect.direction==='right';
+  player.pipeTravel={phase:'entry',entry:hit.pipe,entryRect:hit.rect,target:hit.target,destination:destination,presentationY:horizontal?-4:0,animationTick:0};
+  if(horizontal) player.face=hit.rect.direction==='left'?1:-1;
   positionHeldShell();
   setToast(['Pipe travel'], 42);
   return true;
@@ -2317,6 +2319,7 @@ function enterPipeTravel(hit){
 function updatePipeTravel(){
   const travel=player.pipeTravel;
   if(!travel) return false;
+  travel.animationTick++;
   if(input.runRelease&&player.carryEnemy) travel.releaseCarry=true;
   player.vx=0; player.vy=0; player.onGround=false;
   if(travel.phase==='entry'){
@@ -2331,7 +2334,8 @@ function updatePipeTravel(){
         if(travel.releaseCarry) releaseHeldShell(true);
         setRowCameraFromPlayer();cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));return true;
       }
-      travel.exitRect=d.rect; travel.phase='exit';
+      travel.exitRect=d.rect; travel.phase='exit'; travel.presentationY=0;
+      if(d.rect.direction==='left'||d.rect.direction==='right') player.face=d.rect.direction==='left'?-1:1;
       const inside=pipeTravelPose(d.rect,true);player.x=inside.x;player.y=inside.y;
       setRowCameraFromPlayer();
       cam=Math.max(0,Math.min(WORLD_W-W,player.x-210));
@@ -4468,7 +4472,11 @@ function playerMotionAsset(){
   const has=state=>available.includes(state);
   const speed=Math.abs(player.vx), reversing=player.onGround&&speed>.7&&((player.face<0&&player.vx>0)||(player.face>0&&player.vx<0));
   let states;
-  if(player.pipeTravel) states=['idle_walk_0','walk_1'];
+  if(player.pipeTravel&&(player.pipeTravel.phase==='entry'&&(player.pipeTravel.entryRect.direction==='left'||player.pipeTravel.entryRect.direction==='right')||player.pipeTravel.phase==='exit'&&(player.pipeTravel.exitRect.direction==='left'||player.pipeTravel.exitRect.direction==='right'))){
+    const walk=available.filter(x=>/^walk_\d+$/.test(x)).sort();
+    if(has('idle_walk_0')) walk.unshift('idle_walk_0');
+    states=[walk[Math.floor(player.pipeTravel.animationTick/7)%Math.max(1,walk.length)],'walk_1','idle_walk_0'];
+  }else if(player.pipeTravel) states=['idle_walk_0'];
   else if(player.carryEnemy&&!player.big){
     if(!player.onGround) states=['carry_1_or_jump','carry_0'];
     else if(speed>.15) states=[Math.floor(tick/7)%2?'carry_1_or_jump':'carry_0','carry_0'];
@@ -4495,9 +4503,12 @@ function playerMotionAsset(){
 function drawPlayer(){
   if(player.deadTimer > 0 && Math.floor(player.deadTimer/4)%2) return;
   if(player.inv > 0 && Math.floor(player.inv/5)%2) return;
+  const presentationY=player.pipeTravel?.presentationY||0;
+  ctx.save();ctx.translate(0,presentationY);
   const id=playerMotionAsset();
-  if(id && drawThemedAsset(id,{x:player.x,y:player.y,w:player.w,h:player.h},{mirror:player.face<0})) return;
+  if(id && drawThemedAsset(id,{x:player.x,y:player.y,w:player.w,h:player.h},{mirror:player.face<0})){ctx.restore();return;}
   drawRecipe('hero', player);
+  ctx.restore();
 }
 
 function prefabMushroomHero(r,player){
