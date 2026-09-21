@@ -1,0 +1,132 @@
+{
+  "format": "llmario-reference-editor-map",
+  "mapVersion": 1,
+  "theme": {
+    "id": "marioai-reference-complete",
+    "packVersion": 1
+  },
+  "instances": [
+    {
+      "placeable": "koopaRed",
+      "values": {
+        "walker.direction": "left",
+        "flight.hasWings": true,
+        "flight.flying": true,
+        "transform.x": -5712,
+        "transform.y": 1312,
+        "walker.patrolRange": 38
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "terrain.style": "overground",
+        "terrain.width": 31,
+        "terrain.height": 19,
+        "transform.x": -5336,
+        "transform.y": 1616
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "terrain.style": "overground",
+        "terrain.width": 33,
+        "terrain.height": 50,
+        "transform.x": -5920,
+        "transform.y": 2112
+      }
+    },
+    {
+      "placeable": "goomba",
+      "values": {
+        "walker.direction": "right",
+        "transform.x": -5952,
+        "transform.y": 1312,
+        "walker.patrolRange": 54
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5888,
+        "transform.y": 1280
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -6000,
+        "transform.y": 1280
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5760,
+        "transform.y": 1280
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": -5664,
+        "transform.y": 1280
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "values": {
+        "rewardBlock.uses": 1,
+        "transform.x": -6128,
+        "transform.y": 1264
+      }
+    },
+    {
+      "placeable": "spiky",
+      "values": {
+        "walker.direction": "left",
+        "transform.x": -5456,
+        "transform.y": 1312,
+        "walker.patrolRange": 120
+      }
+    },
+    {
+      "placeable": "brick",
+      "values": {
+        "block.style": "classic",
+        "transform.x": -5312,
+        "transform.y": 1280
+      }
+    },
+    {
+      "placeable": "pipe",
+      "values": {
+        "pipe.direction": "up",
+        "pipe.travelEnabled": false,
+        "pipe.length": 2,
+        "transform.x": -5248,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "waveGoomba",
+      "values": {
+        "walker.direction": "left",
+        "transform.x": -6032,
+        "transform.y": 1312,
+        "walker.patrolRange": 63
+      }
+    }
+  ],
+  "markers": {
+    "start": {
+      "x": -6128,
+      "y": 1232
+    },
+    "goal": {
+      "x": -5120,
+      "y": 1296
+    }
+  }
+}
