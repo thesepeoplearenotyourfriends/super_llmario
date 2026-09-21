@@ -845,6 +845,25 @@ test('pipe travel validates directions, stable references, point feet arrival, s
   Object.assign(p,{x:a.bounds.x+a.bounds.w/2-p.w/2,y:a.bounds.y-p.h,form:'fire',coins:9,lives:4,runCharge:73,pSpeed:true});assert.equal(travel.step({up:true}),null,'wrong input does not enter');p.x=a.bounds.x+a.bounds.w;assert.equal(travel.step({down:true}),null,'misalignment does not enter');p.x=a.bounds.x+a.bounds.w/2-p.w/2;assert(travel.step({down:true}));
   const state={form:p.form,coins:p.coins,lives:p.lives};for(let i=0;i<18;i++)travel.step({down:true});assert.equal(travel.transit.phase,'exit');assert.equal(p.x,api.pipeMouth(b).x-p.w/2+api.pipeMouth(b).axis.x*(p.w/2+2)-api.pipeMouth(b).axis.x*(p.w+8));for(let i=0;i<18;i++)travel.step({left:true});assert.equal(travel.active,false);assert.deepEqual({form:p.form,coins:p.coins,lives:p.lives},state);assert(travel.cooldown>0);assert.equal(travel.step({left:true}),null,'held arrival input cannot retrigger');
   travel.reset();assert.equal(travel.active,false);assert.equal(travel.cooldown,0);
-  b.values['pipe.destination']={kind:'point',x:700,y:180};Object.assign(p,{x:b.bounds.x-p.w,y:b.bounds.y+b.bounds.h/2-p.h/2});assert(travel.step({left:true}));for(let i=0;i<18;i++)travel.step({left:true});assert.deepEqual({center:p.x+p.w/2,feet:p.y+p.h},{center:700,feet:180});
+  b.values['pipe.destination']={kind:'point',x:700,y:180};Object.assign(p,{x:b.bounds.x-p.w,y:b.bounds.y+b.bounds.h/2-p.h/2});assert(travel.step({left:true}));for(let i=0;i<18;i++)travel.step({left:true});assert.deepEqual({center:p.x+p.w/2,feet:p.y+p.h},{center:700,feet:180});assert.equal(travel.active,false,'point arrival skips emergence');assert.equal(travel.occlusionPipe,null,'point arrival immediately restores ordinary layering');
   a.values['pipe.destination']={kind:'pipe',instanceId:'missing'};travel.reset();Object.assign(p,{x:a.bounds.x+a.bounds.w/2-p.w/2,y:a.bounds.y-p.h});assert.equal(travel.step({down:true}),null,'broken references fail safely');
+});
+
+test('pipe entry opposes every outward mouth axis and emergence follows every target mouth axis',()=>{
+  const directions=['up','down','left','right'],bounds={x:100,y:100,w:48,h:64};
+  const placeAtMouth=(player,direction)=>{if(direction==='up')Object.assign(player,{x:bounds.x+bounds.w/2-player.w/2,y:bounds.y-player.h});else if(direction==='down')Object.assign(player,{x:bounds.x+bounds.w/2-player.w/2,y:bounds.y+bounds.h});else if(direction==='left')Object.assign(player,{x:bounds.x+bounds.w,y:bounds.y+bounds.h/2-player.h/2});else Object.assign(player,{x:bounds.x-player.w,y:bounds.y+bounds.h/2-player.h/2})};
+  for(const direction of directions){
+    const source={objectId:'pipe',instanceId:'source',index:0,bounds:{...bounds},values:{'pipe.direction':direction,'pipe.travelEnabled':true,'pipe.destination':{kind:'point',x:500,y:300}}},players=api.createPlayerBehavior({instances:[source],surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:1000,h:600},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior({instances:[source]},players),player=players.player;
+    placeAtMouth(player,direction);travel.step({[travel.requiredInput(direction)]:true});
+    const mouth=api.pipeMouth(source),entry=travel.transit;
+    assert.equal(entry.occlusionPipe,source,`${direction} source provides entry occlusion`);
+    assert.deepEqual(plain({x:entry.end.x-entry.start.x,y:entry.end.y-entry.start.y}),{x:-mouth.axis.x*(player.w+8)||0,y:-mouth.axis.y*(player.h+8)||0},`${direction} source entry is opposite its outward mouth axis`);
+  }
+  for(const direction of directions){
+    const source={objectId:'pipe',instanceId:'source',index:0,bounds:{...bounds},values:{'pipe.direction':'up','pipe.travelEnabled':true,'pipe.destination':{kind:'pipe',instanceId:'target'}}},target={objectId:'pipe',instanceId:'target',index:1,bounds:{x:400,y:220,w:48,h:64},values:{'pipe.direction':direction}},runtime={instances:[source,target]},players=api.createPlayerBehavior({instances:runtime.instances,surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:1000,h:600},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior(runtime,players),player=players.player;
+    placeAtMouth(player,'up');travel.step({down:true});for(let tick=0;tick<18;tick++)travel.step({down:true});
+    const mouth=api.pipeMouth(target),exit=travel.transit;
+    assert.equal(exit.phase,'exit');assert.equal(exit.occlusionPipe,target,`${direction} target provides emergence occlusion`);
+    assert.deepEqual(plain({x:exit.end.x-exit.start.x,y:exit.end.y-exit.start.y}),{x:mouth.axis.x*(player.w+8),y:mouth.axis.y*(player.h+8)},`${direction} target emergence follows its outward mouth axis`);
+  }
 });
