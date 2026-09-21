@@ -388,6 +388,36 @@ test('brick hits bump while small and break while powered, disabling collision a
   assert.equal(surface.disabled,false,'restart restores broken brick collision');
 });
 
+test('authored box contents emerge before walking and retain native theme presentation',()=>{
+  const map={...validMap,instances:[
+    {placeable:'ground',values:{'transform.x':160,'transform.y':240,'terrain.width':8,'terrain.height':1,'terrain.style':'overground'}},
+    {placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.contents':'growMushroom','rewardBlock.uses':1}}
+  ],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),powerups=api.createPowerupBehavior(runtime);
+  players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();
+  const blockEvent=blocks.step(),events=powerups.step(blockEvent,{x:400,y:200,w:24,h:24}),mushroom=powerups.powerups[0];
+  assert.equal(events[0].type,'powerupSpawn');
+  assert.equal(mushroom.id,'growMushroom');
+  assert.equal(mushroom.vx,0,'walker remains still while emerging');
+  assert(mushroom.y>mushroom.emergeTargetY);
+  for(let i=0;i<16;i++)powerups.step(null,{x:400,y:200,w:24,h:24});
+  assert.equal(mushroom.emergeFrames,0);
+  assert.equal(mushroom.vx,.85,'theme walker capability starts established movement after emergence');
+  const command=powerups.commands()[0],resource=theme.resources[theme.objects.growMushroom.visuals.idle];
+  assert.deepEqual(plain(command.sourceRect),resource.image.rect);
+  assert.deepEqual({w:command.w,h:command.h},{w:resource.display.w,h:resource.display.h});
+});
+
+test('powerup contact emits authored capabilities, removes the pickup, and reset clears spawns',()=>{
+  const map={...validMap,instances:[{placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.contents':'fireFlower','rewardBlock.uses':1}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),powerups=api.createPowerupBehavior(runtime);
+  players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();powerups.step(blocks.step(),{x:400,y:200,w:24,h:24});
+  const flower=powerups.powerups[0];flower.emergeFrames=0;flower.x=50;flower.y=60;
+  const events=powerups.step(null,{x:50,y:60,w:24,h:24}),collection=events.find(event=>event.type==='powerupCollect');
+  assert.deepEqual(plain(collection.capabilities),['collectible','projectilePower']);
+  assert.equal(flower.taken,true);
+  assert.equal(powerups.commands().length,0,'collected pickup no longer renders');
+  powerups.reset();assert.equal(powerups.powerups.length,0);
+});
+
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
