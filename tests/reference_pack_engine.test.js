@@ -360,6 +360,34 @@ test('Down selects crouch presentation only while grounded without changing game
   assert.equal(player.animationState,'jump','Down does not select crouch while airborne');
 });
 
+test('question boxes consume their theme-authored trigger, bump, and retain collision',()=>{
+  const map={...validMap,instances:[{placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.uses':1}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime;
+  const players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0];
+  assert(surface,'theme collisionMode binds the question box to a runtime solid');
+  players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();
+  const event=blocks.step();assert.equal(event.type,'blockBump');
+  assert.equal(event.triggers[0].type,'dispenseContents');
+  assert.equal(block.used,true);
+  assert.equal(surface.disabled,undefined,'used question boxes remain solid');
+  const authored=runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex),drawn=blocks.commandAt(authored);
+  assert.deepEqual(plain(drawn.sourceRect),plain(authored.sourceRect),'no undeclared used-box artwork is invented');
+  assert(drawn.worldY<authored.worldY,'the active bump lifts the visual without moving collision');
+});
+
+test('brick hits bump while small and break while powered, disabling collision and drawing',()=>{
+  const map={...validMap,instances:[{placeable:'brick',values:{'transform.x':112,'transform.y':200,'block.style':'classic'}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime;
+  const players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0],hit=()=>{players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();return blocks.step()};
+  assert.equal(hit().type,'blockBump');
+  while(block.bump)blocks.step();
+  players.player.form='normal';
+  assert.equal(hit().type,'blockBreak');
+  assert.equal(block.broken,true);
+  assert.equal(surface.disabled,true);
+  assert.equal(blocks.commandAt(runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex)),null);
+  blocks.reset();
+  assert.equal(surface.disabled,false,'restart restores broken brick collision');
+});
+
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
