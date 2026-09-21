@@ -374,21 +374,16 @@ test('question boxes consume their theme-authored trigger, bump, and retain coll
   assert(drawn.worldY<authored.worldY,'the active bump lifts the visual without moving collision');
 });
 
-test('brick hits bump while small and break while powered, disabling collision and drawing',()=>{
+test('powered brick break emits the oracle fragment burst, retires, and resets',()=>{
   const map={...validMap,instances:[{placeable:'brick',values:{'transform.x':112,'transform.y':200,'block.style':'classic'}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime;
   const players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0],hit=()=>{players.player.x=100;players.player.y=202;players.player.vy=-8;players.resolvePlayer();return blocks.step()};
-  assert.equal(hit().type,'blockBump');
-  while(block.bump)blocks.step();
-  players.player.form='normal';
-  assert.equal(hit().type,'blockBreak');
-  assert.equal(block.broken,false,'break state remains visible for the authored animation duration');
-  assert.equal(surface.disabled,true);
-  const authored=runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex),breaking=blocks.commandAt(authored);
-  assert.equal(breaking.resource,theme.animations['effect.debris'].frames[0].resource);
-  while(block.breakTicks)blocks.step();
-  assert.equal(block.broken,true);assert.equal(blocks.commandAt(authored),null,'brick retires after its authored break visual');
-  blocks.reset();
-  assert.equal(surface.disabled,false,'restart restores broken brick collision');
+  assert.equal(hit().type,'blockBump');while(block.bump)blocks.step();players.player.form='normal';
+  const event=hit(),authored=runtime.drawCommands.find(command=>command.instanceIndex===block.instanceIndex),burst=blocks.commands();
+  assert.equal(event.type,'blockBreak');assert.equal(block.broken,true);assert.equal(surface.disabled,true,'collision turns off on the breaking frame');assert.equal(blocks.commandAt(authored),null,'the intact brick retires immediately');
+  assert.equal(burst.length,6,'old-engine burst is preserved as several brick pieces');assert(burst.every(command=>command.brickFragment));assert(burst.every(command=>command.object==='brickBurst'&&!command.resource&&!command.sourceRect),'old-engine drawn fragments replace repeated sprite crops and generic debris');assert.deepEqual([...new Set(burst.map(command=>command.color))].sort(),['#b67d4c','#d7a06a']);assert(burst.every(command=>command.edge==='#5e3317'));
+  const first=plain(burst.map(command=>({resource:command.resource,x:command.worldX,y:command.worldY,w:command.w,h:command.h})));blocks.step();const moved=plain(blocks.commands().map(command=>({resource:command.resource,x:command.worldX,y:command.worldY,w:command.w,h:command.h})));assert.notDeepEqual(moved,first,'fragments visibly explode away from the brick');
+  for(let i=0;i<48;i++)blocks.step();assert.equal(blocks.commands().length,0,'fragments retire after the established burst lifetime');
+  blocks.reset();assert.equal(block.broken,false);assert.equal(surface.disabled,false);assert.equal(blocks.fragments.length,0);assert(blocks.commandAt(authored),'restart restores the brick and clears transients');
 });
 
 test('authored box contents emerge before walking and retain native theme presentation',()=>{
@@ -561,9 +556,26 @@ test('authored feather uses normal AABB pickup flow to select raccoon form',()=>
   const event=powerups.step(null,players.player).find(item=>item.type==='powerupCollect');assert.deepEqual(plain(event.capabilities),['collectible','flightPower']);players.applyPowerup(event);assert.equal(players.player.form,'raccoon');assert.equal(feather.taken,true);
 });
 
-test('yellow block hit animation is observable, retains collision, and returns to normal visual',()=>{
-  const map={...validMap,instances:[{placeable:'questionBlock',values:{'transform.x':112,'transform.y':200,'rewardBlock.uses':1}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0],authored=runtime.drawCommands[0];
-  Object.assign(players.player,{x:100,y:202,vy:-8});players.resolvePlayer();blocks.step();const first=blocks.commandAt(authored);for(let i=0;i<8;i++)blocks.step();const animated=blocks.commandAt(authored);assert.notEqual(animated.resource,first.resource,'hit transition advances the authored yellow-block animation');assert.equal(surface.disabled,undefined);while(block.bump)blocks.step();assert.equal(blocks.commandAt(authored).resource,authored.resource,'visual returns to normal after bump');
+test('rotating block temporary spin disables collision, animates once, and restores idle',()=>{
+  const map={...validMap,instances:[{placeable:'rotatingBlock',values:{'transform.x':112,'transform.y':200}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),blocks=api.createBlockBehavior(runtime,players),block=blocks.blocks[0],surface=runtime.surfaces.solid[0],authored=runtime.drawCommands[0];
+  Object.assign(players.player,{x:100,y:202,vy:-8});players.resolvePlayer();const event=blocks.step(),duration=block.spinDuration,first=blocks.commandAt(authored);
+  assert.equal(event.triggers[0].type,'temporarySpin');assert.equal(duration,255,'engine-default temporary spin uses the authoritative runtime duration');assert.equal(surface.disabled,true);assert.equal(first.resource,theme.animations['block.rotating.spin'].frames[0].resource);
+  for(let i=0;i<8;i++)blocks.step();assert.notEqual(blocks.commandAt(authored).resource,first.resource,'authored spinning frames are visible');
+  const remaining=block.spinTicks;Object.assign(players.player,{x:100,y:202,vy:-8});players.resolvePlayer();assert.equal(blocks.step(),null,'active spin ignores repeated hits');assert(block.spinTicks<remaining,'repeat contact does not restart the timer');
+  while(block.spinTicks)blocks.step();assert.equal(surface.disabled,false);assert.equal(blocks.commandAt(authored).resource,theme.objects.rotatingBlock.visuals.idle,'idle art and collision return together');
+});
+
+test('moving-platform capability moves drawing and collision, carries riders, stays still at zero, and resets',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:500,h:300},instances:[
+    {placeable:'whitePlatform',values:{'transform.x':160,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:0,y:0},{x:12,y:0}],'movingPlatform.range':12,'movingPlatform.speed':2}},
+    {placeable:'mushroomPlatform',values:{'transform.x':280,'transform.y':160,'extent.width':3,'extent.height':3,'movingPlatform.path':[{x:0,y:0},{x:0,y:10}],'movingPlatform.range':10,'movingPlatform.speed':2}},
+    {placeable:'whitePlatform',values:{'transform.x':380,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:0,y:0},{x:12,y:0}],'movingPlatform.range':0,'movingPlatform.speed':4}}
+  ],markers:{start:{x:160,y:120},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),moving=api.createMovingPlatformBehavior(runtime,players),white=moving.platforms[0],mushroom=moving.platforms[1],still=moving.platforms[2],whiteCommand=runtime.drawCommands.find(command=>command.instanceIndex===white.instanceIndex);
+  const startSurface={...white.surface},startPlayerX=players.player.x;players.player.x=white.surface.x+8;players.player.y=white.surface.y-players.player.h;players.player.onGround=true;moving.step();
+  assert.equal(white.x,white.originX+2);assert.equal(white.surface.x,startSurface.x+2,'collision follows motion');assert.equal(moving.commandAt(whiteCommand).worldX,white.originX+2,'rendering follows motion');assert.equal(players.player.x,white.surface.x+8,'standing Mario is carried by the same delta');
+  assert.equal(mushroom.y,mushroom.originY+2,'capability is generic to mushroom platforms');assert.equal(still.x,still.originX,'zero range remains stationary');
+  players.player.x=white.surface.x+4;players.player.y=white.surface.y-50;players.player.vy=10;players.player.onGround=false;for(let i=0;i<8&&!players.player.onGround;i++){moving.step();players.step()}assert.equal(players.player.y+players.player.h,white.surface.y,'landing resolves against the moved one-way surface');
+  moving.reset();assert.deepEqual({x:white.x,y:white.y,phase:white.phase,direction:white.direction},{x:white.originX,y:white.originY,phase:0,direction:1});assert.equal(white.surface.x,startSurface.x);assert.equal(mushroom.y,mushroom.originY);assert.equal(still.x,still.originX);assert.notEqual(startPlayerX,undefined);
 });
 
 test('enemy contacts share form-aware damage and invulnerability through eventual small-form death',()=>{
