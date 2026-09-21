@@ -55,10 +55,31 @@ test('resolves atlas rectangles and deterministic animation initial frames',()=>
   assert.equal(actor.target.kind,'animation');
   assert.equal(actor.target.animation.id,'enemy.goomba.walk');
   assert.equal(actor.target.animation.initialFrame,0);
-  assert.equal(actor.target.animation.resource,theme.animations['enemy.goomba.walk'].frames[0].resource);
+  assert.equal(actor.target.animation.frames[0].resource.id,theme.animations['enemy.goomba.walk'].frames[0].resource);
   const command=actor.drawCommands[0],resource=theme.resources[command.resource];
   assert.deepEqual(plain(command.sourceRect),resource.image.rect);
   assert.equal(command.atlas,resource.image.atlas);
+});
+
+test('authored actor animations advance deterministically at declared cadence and loop',()=>{
+  const timedTheme=plain(theme),animation=timedTheme.animations['enemy.goomba.walk'];
+  animation.frameTiming={ticksPerFrame:3};animation.loop=true;
+  timedTheme.objects.spiky.visuals.walk=timedTheme.animations['enemy.spiky.walk'].frames[0].resource;
+  const map={...validMap,instances:[
+    {placeable:'goomba',values:{'transform.x':64,'transform.y':96,'walker.direction':'left','walker.patrolRange':0}},
+    {placeable:'spiky',values:{'transform.x':128,'transform.y':96,'walker.direction':'right','walker.patrolRange':0}}
+  ]};
+  const runtime=api.compileReferenceRuntime(timedTheme,map).runtime,animated=runtime.drawCommands.find(c=>c.placeable==='goomba'),staticActor=runtime.drawCommands.find(c=>c.placeable==='spiky');
+  const at0=api.commandAtTick(animated,0),at3=api.commandAtTick(animated,3),at6=api.commandAtTick(animated,6),again=api.commandAtTick(animated,3);
+  assert.equal(at0.resource,animation.frames[0].resource,'tick zero uses the declared first frame');
+  assert.equal(at3.resource,animation.frames[1].resource,'declared cadence advances to the next ordered frame');
+  assert.equal(at6.resource,animation.frames[0].resource,'looping returns to the first frame');
+  assert.deepEqual(plain(again),plain(at3),'the same tick always resolves the same frame');
+  for(const next of [at0,at3,at6])assert.deepEqual(
+    {worldX:next.worldX,worldY:next.worldY,w:next.w,h:next.h,anchorX:next.anchorX,anchorY:next.anchorY,rotation:next.rotation,mirror:next.mirror,layer:next.layer},
+    {worldX:animated.worldX,worldY:animated.worldY,w:animated.w,h:animated.h,anchorX:animated.anchorX,anchorY:animated.anchorY,rotation:animated.rotation,mirror:animated.mirror,layer:animated.layer},
+    'animation frames retain the actor bounds, anchor, transform, and layer');
+  assert.strictEqual(api.commandAtTick(staticActor,99),staticActor,'static actor visuals remain unchanged');
 });
 
 test('construction geometry follows editor native-cell, autotile, sky, and rotation rules',()=>{
@@ -175,13 +196,15 @@ test('player sprite preserves authored aspect ratio and bottom-center anchor',as
   assert.deepEqual(plain(fit),{
     originX:player.x+player.w/2,
     originY:player.y+player.h,
-    dx:-8,dy:-16,w:16,h:16
+    dx:-17,dy:-34,w:34,h:34
   });
   assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
+  assert(fit.w>16&&fit.h>16,'the family fit is larger than a literal 16×16 rendering');
   assert(fit.w<=player.w&&fit.h<=player.h,'the visual fits inside the 34×48 collision box');
+  assert.notEqual(fit.h,player.h,'the visual is not stretched to the collision-box height');
   assert.equal(fit.originY+fit.dy+fit.h,player.y+player.h,'the visual bottom remains at the player feet');
   assert.equal(fit.originX+fit.dx+fit.w/2,player.x+player.w/2,'the visual remains horizontally centered');
-  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-8&&args[6]===-16&&args[7]===16&&args[8]===16),
+  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-17&&args[6]===-34&&args[7]===34&&args[8]===34),
     'canvas draw uses the fitted, foot-centered destination rectangle');
   operations.scales.length=0;operations.translates.length=0;player.face=-1;frames.shift()(0);
   assert(operations.scales.some(args=>args[0]===-1&&args[1]===1),'mirroring happens around the player anchor');
