@@ -17,8 +17,8 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 const validMap={format:'llmario-reference-editor-map',mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},instances:[],markers:{start:null,goal:null}};
 
 function engineHarness(){
-  const operations={fillRect:0,drawImage:0};
-  const ctx={setTransform(){},save(){},restore(){},translate(){},scale(){},rotate(){},fillRect(){operations.fillRect++},drawImage(){operations.drawImage++}};
+  const operations={fillRect:0,drawImage:0,drawCalls:[]};
+  const ctx={setTransform(){},save(){},restore(){},translate(){},scale(){},rotate(){},fillRect(){operations.fillRect++},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
   const elements={
     screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},
     themeButton:{},mapButton:{},fitButton:{},themeFile:{files:[],value:''},mapFile:{files:[],value:''}
@@ -162,8 +162,24 @@ test('successful load hides the empty-state overlay',async()=>{
     onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle'
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
-  assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0}});
+  assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
   assert.equal(elements.empty.hidden,true);
+});
+
+test('player sprite preserves authored aspect ratio and bottom-center anchor',async()=>{
+  const {engine,operations}=engineHarness();
+  await engine.loadReferenceTheme(theme);
+  engine.loadReferenceEditorMap(fixture);
+  const player=engine.state.behavior.player,fit=engine.currentPlayerFit();
+  assert.deepEqual(plain(fit),{
+    originX:player.x+player.w/2,
+    originY:player.y+player.h,
+    dx:-17,dy:-34,w:34,h:34
+  });
+  assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
+  assert.notEqual(fit.h,player.h,'the visual is fitted inside, not stretched to, the collision box');
+  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-17&&args[6]===-34&&args[7]===34&&args[8]===34),
+    'canvas draw uses the fitted, foot-centered destination rectangle');
 });
 
 test('finite-bounds camera keeps the oracle follow target and smoothing',async()=>{
