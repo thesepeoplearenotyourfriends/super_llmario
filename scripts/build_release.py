@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Super LLMario's single-file, project-specific GitHub Release asset."""
+"""Build Super LLMario's single-file reference-pack release."""
 
 from __future__ import annotations
 
@@ -8,69 +8,144 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ENGINE = ROOT / "engine" / "engine.html"
+ENGINE = ROOT / "engine" / "reference_pack_engine.html"
+EDITOR = ROOT / "editor" / "reference_pack_editor.html"
+THEME = ROOT / "themes" / "theme_marioai_reference_pack.llmtheme.txt"
+MAP = ROOT / "maps" / "demo.llmmap.txt"
 OUTPUT = ROOT / "dist" / "super_llmario.html"
-THEMES = [
-    ROOT / "themes" / "theme_desert.llmtheme.txt",
-    ROOT / "themes" / "theme_jungle.llmtheme.txt",
-    ROOT / "themes" / "theme_marioai_nonempty.llmtheme.txt",
-    ROOT / "themes" / "theme_wooded.llmtheme.txt",
-]
-MAPS = [
-    ROOT / "maps" / "map_browntown.txt",
-    ROOT / "maps" / "map_marioai_reference.llmmap.txt",
-]
-DEFAULT_THEME_ID = "marioai-semantic-nonempty"
-DEFAULT_MAP_ID = "marioai-reference-playground"
-BEGIN = "/* BEGIN RELEASE CONTENT (kept empty in editable source) */"
-END = "/* END RELEASE CONTENT */"
+EXPERIENCE_ID = "demo"
+EXPERIENCE_LABEL = "Demo"
+
+SCRIPT_BOUNDARY = "</script>\n<script>\n(()=>{\n'use strict';"
+RUNTIME_BOOT = "refreshPair();resize();requestAnimationFrame(frame);"
+EDITOR_BOOT = "window.addEventListener('resize',resize);resize();renderIssues();\n})();"
+
+RELEASE_STYLE = r"""
+.releaseMenu{border:1px solid #55dbe9;border-radius:10px;padding:8px 12px;background:#17465b;color:var(--ink);font-weight:700;cursor:pointer}
+#releaseEditorShell{position:fixed;inset:0;z-index:1000;display:grid;grid-template-rows:48px minmax(0,1fr);background:#07131d}
+#releaseEditorShell[hidden]{display:none}
+#releaseEditorBar{display:flex;align-items:center;gap:12px;padding:7px 12px;background:#0d2635;border-bottom:1px solid #48d7e866;color:var(--ink)}
+#releaseEditorBar span{color:var(--muted);font-size:12px}#releaseEditorBack{margin-left:auto}
+#releaseEditorFrame{width:100%;height:100%;border:0;background:#0b1216}
+""".strip()
+
+RELEASE_EDITOR_SHELL = """
+<div id="releaseEditorShell" hidden>
+  <div id="releaseEditorBar"><strong>MAP EDITOR</strong><span>embedded release tool</span><button id="releaseEditorBack">Back to game</button></div>
+  <iframe id="releaseEditorFrame" title="Map editor"></iframe>
+</div>
+""".strip()
+
+RELEASE_RUNTIME = r"""
+let activePackedExperienceId='';
+async function applyPackedExperience(experience){
+  if(!experience)throw new Error('Unknown packed experience.');
+  const errors=[...B.validateReferenceTheme(experience.theme),...B.validateReferenceEditorMap(experience.map,experience.theme)];
+  if(errors.length){report(errors);return false}
+  state.theme=experience.theme;state.map=experience.map;await loadAtlases();refreshPair();activePackedExperienceId=experience.id;
+  const menu=document.getElementById('releaseMenu');if(menu)menu.value=experience.id;
+  return true;
+}
+function openPackedEditor(){
+  const shell=document.getElementById('releaseEditorShell'),frame=document.getElementById('releaseEditorFrame');
+  if(!shell||!frame)return;shell.hidden=false;
+  if(frame.dataset.loaded)return;
+  frame.onload=async()=>{frame.dataset.loaded='1';const experience=PACKED_EXPERIENCES.find(item=>item.id===activePackedExperienceId)||PACKED_EXPERIENCES[0];try{await frame.contentWindow?.ReferencePackEditorReleaseLoad?.(experience.theme,experience.map)}catch(error){report(`Embedded editor failed: ${error.message||error}`)}};
+  frame.srcdoc=PACKED_EDITOR_HTML;
+}
+function closePackedEditor(){
+  const shell=document.getElementById('releaseEditorShell'),menu=document.getElementById('releaseMenu');if(shell)shell.hidden=true;if(menu&&activePackedExperienceId)menu.value=activePackedExperienceId;
+}
+async function bootPackedRelease(){
+  const menu=document.getElementById('releaseMenu');
+  if(!menu||!PACKED_EXPERIENCES.length){refreshPair();return}
+  menu.hidden=false;menu.textContent='';
+  for(const experience of PACKED_EXPERIENCES){const option=document.createElement('option');option.value=experience.id;option.textContent=experience.label||experience.id;menu.append(option)}
+  const editorOption=document.createElement('option');editorOption.value='__editor__';editorOption.textContent='Map Editor';menu.append(editorOption);
+  menu.addEventListener('change',async()=>{if(menu.value==='__editor__'){openPackedEditor();return}try{await applyPackedExperience(PACKED_EXPERIENCES.find(item=>item.id===menu.value))}catch(error){report(`Packed experience failed: ${error.message||error}`)}});
+  document.getElementById('releaseEditorBack')?.addEventListener('click',closePackedEditor);
+  const initial=PACKED_EXPERIENCES.find(item=>item.id===PACKED_DEFAULT_EXPERIENCE_ID)||PACKED_EXPERIENCES[0];
+  await applyPackedExperience(initial);
+}
+""".strip()
 
 
-def load_documents(paths: list[Path]) -> list[object]:
-    return [json.loads(path.read_text(encoding="utf-8")) for path in paths]
+def load_document(path: Path) -> object:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def javascript_string(text: str) -> str:
+    literal = json.dumps(text, ensure_ascii=False)
+    return literal.replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
 
 
 def javascript_json_parse(document: object) -> str:
     compact = json.dumps(document, ensure_ascii=False, separators=(",", ":"))
-    literal = json.dumps(compact, ensure_ascii=False)
-    literal = literal.replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
-    return f"JSON.parse({literal})"
+    return f"JSON.parse({javascript_string(compact)})"
 
 
-def packed_block() -> str:
-    theme_docs = load_documents(THEMES)
-    map_docs = load_documents(MAPS)
-    if DEFAULT_THEME_ID not in {doc.get("id") for doc in theme_docs if isinstance(doc, dict)}:
-        raise RuntimeError("default release theme is not packed")
-    default_map = next((doc for doc in map_docs if isinstance(doc, dict) and doc.get("id") == DEFAULT_MAP_ID), None)
-    if default_map is None or default_map.get("theme") != DEFAULT_THEME_ID:
-        raise RuntimeError("default release map is missing or does not use the default theme")
-    themes = ",\n  ".join(javascript_json_parse(doc) for doc in theme_docs)
-    maps = ",\n  ".join(javascript_json_parse(doc) for doc in map_docs)
+def pack_editor(source: str) -> str:
+    if source.count(EDITOR_BOOT) != 1:
+        raise RuntimeError("editor boot marker is missing or ambiguous")
+    hook = """window.ReferencePackEditorReleaseLoad=async(theme,map)=>{\n  const themeFile=new File([JSON.stringify(theme)],'theme_marioai_reference_pack.llmtheme.txt',{type:'application/json'});\n  await loadTheme(themeFile);\n  const mapFile=new File([JSON.stringify(map)],'demo.llmmap.txt',{type:'application/json'});\n  await openMap(mapFile);\n};\n"""
+    return source.replace(EDITOR_BOOT, "window.addEventListener('resize',resize);resize();renderIssues();\n" + hook + "})();", 1)
+
+
+def release_data(theme: object, map_doc: object, editor_html: str) -> str:
+    experience = "\n".join(
+        (
+            "{",
+            f"  id: {json.dumps(EXPERIENCE_ID)},",
+            f"  label: {json.dumps(EXPERIENCE_LABEL)},",
+            f"  theme: {javascript_json_parse(theme)},",
+            f"  map: {javascript_json_parse(map_doc)}",
+            "}",
+        )
+    )
     return "\n".join(
         (
-            BEGIN,
-            f"const PACKED_THEMES = [\n  {themes}\n];",
-            f"const PACKED_MAPS = [\n  {maps}\n];",
-            f"const PACKED_DEFAULT_THEME_ID = {json.dumps(DEFAULT_THEME_ID)};",
-            f"const PACKED_DEFAULT_MAP_ID = {json.dumps(DEFAULT_MAP_ID)};",
-            END,
+            '<script id="packedReleaseContent">',
+            f"const PACKED_EXPERIENCES = [\n{experience}\n];",
+            f"const PACKED_DEFAULT_EXPERIENCE_ID = {json.dumps(EXPERIENCE_ID)};",
+            f"const PACKED_EDITOR_HTML = {javascript_string(editor_html)};",
+            "</script>",
         )
     )
 
 
-def build(source: str) -> str:
-    start = source.find(BEGIN)
-    finish = source.find(END, start)
-    if start < 0 or finish < 0:
-        raise RuntimeError("engine release-content markers are missing or out of order")
-    finish += len(END)
-    return source[:start] + packed_block() + source[finish:]
+def build(engine: str, editor: str, theme: object, map_doc: object) -> str:
+    if theme.get("id") != map_doc.get("theme", {}).get("id"):
+        raise RuntimeError("demo map does not target the packed reference theme")
+    if theme.get("packVersion") != map_doc.get("theme", {}).get("packVersion"):
+        raise RuntimeError("demo map theme version does not match the packed reference theme")
+    if engine.count(SCRIPT_BOUNDARY) != 1:
+        raise RuntimeError("engine script boundary is missing or ambiguous")
+    if engine.count(RUNTIME_BOOT) != 1:
+        raise RuntimeError("engine boot marker is missing or ambiguous")
+    if engine.count('<div class="controls">') != 1:
+        raise RuntimeError("engine controls marker is missing or ambiguous")
+    if engine.count("</style></head>") != 1:
+        raise RuntimeError("engine style marker is missing or ambiguous")
+    if engine.count("</main>") != 1:
+        raise RuntimeError("engine main marker is missing or ambiguous")
+
+    packed_editor = pack_editor(editor)
+    output = engine.replace("</style></head>", RELEASE_STYLE + "\n</style></head>", 1)
+    output = output.replace(
+        '<div class="controls">',
+        '<div class="controls"><select id="releaseMenu" class="releaseMenu" hidden aria-label="Packed experience"></select>',
+        1,
+    )
+    output = output.replace("</main>", "</main>\n" + RELEASE_EDITOR_SHELL, 1)
+    output = output.replace(SCRIPT_BOUNDARY, "</script>\n" + release_data(theme, map_doc, packed_editor) + "\n<script>\n(()=>{\n'use strict';", 1)
+    output = output.replace(RUNTIME_BOOT, RELEASE_RUNTIME + "\nbootPackedRelease();resize();requestAnimationFrame(frame);", 1)
+    return output
 
 
 def main() -> int:
-    source = ENGINE.read_text(encoding="utf-8")
-    output = build(source)
+    theme = load_document(THEME)
+    map_doc = load_document(MAP)
+    output = build(ENGINE.read_text(encoding="utf-8"), EDITOR.read_text(encoding="utf-8"), theme, map_doc)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(output, encoding="utf-8")
     print(f"wrote {OUTPUT.relative_to(ROOT)} ({len(output.encode('utf-8'))} bytes)")
