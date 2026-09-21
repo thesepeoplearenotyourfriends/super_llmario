@@ -190,6 +190,17 @@
         "w": 32,
         "h": 32
       }
+    },
+    "pickup.flight": {
+      "mediaType": "image/png",
+      "encoding": "base64",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAElBMVEVHcEz4+PgAAAD4dwD4vwD4+ABMtRJ/AAAAAXRSTlMAQObYZgAAAQVJREFUeNrt3bENgzAQhlGvwApZgRVYIfuvksY0J1lWpNzZSd5fW3wPKipoLWmPyVr2AAAAAAAAAMoBMXCGpUMAAAAAAAAAlgFi8Og7BwMAAAAAAAD4HcB9gRicASIEAAAAAAAA4PsAMQwAAAAAAADwP4BROAaffaNzH79zAAAAAAAAgHTALHzv6it/EQEAAAAAAABIA7wbnp1Lv3MAAAAAAACAckBaGAAAAAAAAGA5wKMHAAAAAAAAGAHSwwAAAAAAAADbAsrCAAAAAAAAANsBZuH0Ly0CAAAAAAAAlANieNkPEAAAAAAAAADKAaNwqxoAAAAAAADANoDyMAAAAAAAAMAugBcoufhqV/q50wAAAABJRU5ErkJggg==",
+      "sha256": "992894ac071bba73cc506e3665f98a68e2b3fecbd31c9da9fc6c251f1ae2bfcb",
+      "cellSize": {
+        "w": 256,
+        "h": 256
+      },
+      "embeddedOnly": true
     }
   },
   "resources": {
@@ -9400,6 +9411,33 @@
         }
       },
       "id": "bar.white.left_cap"
+    },
+    "pickup.powerup.flight": {
+      "kind": "pickup",
+      "role": "pickup.powerup.flight",
+      "purpose": "Theme-backed feather flight powerup.",
+      "belongsTo": "pickup.powerup",
+      "image": {
+        "atlas": "pickup.flight",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 256,
+          "h": 256
+        }
+      },
+      "display": {
+        "w": 16,
+        "h": 16,
+        "anchor": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      "provenance": {
+        "source": "user-provided feather icon",
+        "atlas": "pickup.flight"
+      }
     }
   },
   "families": {
@@ -11914,6 +11952,18 @@
           "frameGroup": "block.hidden.revealed"
         }
       }
+    },
+    "raccoonFeather": {
+      "defaultSceneLayer": "actors",
+      "kind": "pickup",
+      "engineNoun": "pickup",
+      "capabilities": [
+        "collectible",
+        "flightPower"
+      ],
+      "visuals": {
+        "idle": "pickup.powerup.flight"
+      }
     }
   },
   "parameterSchemas": {
@@ -12048,7 +12098,8 @@
           "coin",
           "growMushroom",
           "fireFlower",
-          "lifeMushroom"
+          "lifeMushroom",
+          "raccoonFeather"
         ]
       },
       "uses": {
@@ -12562,6 +12613,15 @@
       "authoringGroup": "World",
       "label": "Hidden / Revealed Block",
       "object": "hiddenRevealedBlock",
+      "parameters": [
+        "transform.x",
+        "transform.y"
+      ]
+    },
+    "raccoonFeather": {
+      "authoringGroup": "World",
+      "label": "Raccoon Feather",
+      "object": "raccoonFeather",
       "parameters": [
         "transform.x",
         "transform.y"
