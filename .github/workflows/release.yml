@@ -1,4 +1,4 @@
-name: Build latest standalone HTML
+name: Build latest combo pack
 
 on:
   push:
@@ -8,8 +8,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: super-llmario-release
@@ -19,10 +17,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - uses: actions/checkout@v4
 
@@ -30,15 +24,32 @@ jobs:
         with:
           python-version: "3.x"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+      - name: Validate release inputs
+        run: |
+          test -f engine/reference_pack_engine.html
+          test -f editor/reference_pack_editor.html
+          test -f themes/theme_marioai_reference_pack.llmtheme.txt
+          test -f maps/demo.llmmap.txt
 
-      - name: Build standalone release
-        run: python3 scripts/build_release.py
+          python3 -m json.tool themes/theme_marioai_reference_pack.llmtheme.txt >/dev/null
+          python3 -m json.tool maps/demo.llmmap.txt >/dev/null
 
-      - name: Validate standalone release
-        run: node --test tests/release_build.test.js
+      - name: Build combo pack
+        run: |
+          rm -rf dist
+          mkdir -p dist/super_llmario
+
+          cp engine/reference_pack_engine.html \
+            dist/super_llmario/reference_pack_engine.html
+          cp editor/reference_pack_editor.html \
+            dist/super_llmario/reference_pack_editor.html
+          cp themes/theme_marioai_reference_pack.llmtheme.txt \
+            dist/super_llmario/theme_marioai_reference_pack.llmtheme.txt
+          cp maps/demo.llmmap.txt \
+            dist/super_llmario/demo.llmmap.txt
+
+          cd dist
+          zip -r super_llmario_latest.zip super_llmario
 
       - name: Replace rolling GitHub Release
         env:
@@ -47,25 +58,8 @@ jobs:
           gh release delete latest --cleanup-tag --yes || true
 
           gh release create latest \
-            dist/super_llmario.html \
+            dist/super_llmario_latest.zip \
             --target "$GITHUB_SHA" \
             --title "Super LLMario — Latest" \
-            --notes "Automatically built from the latest main branch." \
+            --notes "Latest combo pack: reference-pack engine, map editor, MarioAI reference theme, and demo map." \
             --latest
-
-      - name: Prepare Pages
-        run: |
-          mkdir -p dist/pages
-          cp dist/super_llmario.html dist/pages/index.html
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/pages
-
-      - name: Deploy Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
