@@ -195,7 +195,7 @@ that operation rather than allowing the PR to become blocked.
 
 ## Standalone runtime invariant
 
-archived/engine/legacy_engine.html and editor/editor.html are standalone applications.
+`editor/reference_pack_editor.html` and `engine/reference_pack_engine.html` are the canonical standalone applications. `archived/engine/legacy_engine.html` is a historical behavioral oracle only; no archived editor, theme, tool, test, or fixture is an active runtime input.
 
 The repository is editable source/workshop form. The GitHub Release HTML is the self-contained/to-go build produced by `scripts/build_release.py`. Nothing should be embedded into editable engine source merely for distribution convenience; distribution packing belongs to the release build.
 

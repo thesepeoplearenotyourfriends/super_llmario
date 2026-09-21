@@ -8,7 +8,7 @@
 
 **Want to edit or mess around?** Clone this repository. The active authoring pair is `editor/reference_pack_editor.html` plus `themes/theme_marioai_reference_pack.llmtheme.txt`, with `engine/reference_pack_engine.html` as its runtime. Run `python3 scripts/build_release.py` only when you need the packed `dist/super_llmario.html` release artifact.
 
-Reference maps now persist an explicit finite `worldBounds` rectangle. The canonical editor outlines that area, constrains placement and navigation to it, and the runtime uses its bottom edge for fall deaths; older boundless maps receive a finite derived compatibility envelope with a diagnostic.
+Reference maps persist an explicit finite `worldBounds` rectangle. The canonical editor keeps complete object and marker geometry inside that area, clamps navigation to it, and the runtime uses the same bounds for its camera and fall deaths. Older boundless maps receive a finite derived compatibility envelope and diagnostic; saving persists that envelope. Rows are not part of the current canonical map/runtime contract.
 
 Previous editor/theme generations are preserved under `archived/` and are not active inputs. `archived/engine/legacy_engine.html` remains only as the explicit legacy gameplay oracle. See `docs/repository-mainline.md` for the boundary. Repository source is not packed merely for distribution convenience; packing belongs exclusively to the release build.
 

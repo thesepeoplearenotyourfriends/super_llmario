@@ -790,8 +790,13 @@ for(const point of [{x:-64,y:-32},{x:256,y:-32},{x:-64,y:160},{x:256,y:160}])
   assert.strictEqual(semantics.pointInBounds(point,finite),true,`boundary point ${JSON.stringify(point)} is placeable`);
 for(const point of [{x:-65,y:0},{x:257,y:0},{x:0,y:-33},{x:0,y:161}])
   assert.strictEqual(semantics.pointInBounds(point,finite),false,`point ${JSON.stringify(point)} beyond an edge is rejected`);
-assert.deepStrictEqual(plain(semantics.clampPointToBounds({x:-80,y:200},finite)),{x:-64,y:160},
-  'dragged authored positions clamp to the same finite map edges');
+assert.strictEqual(semantics.rectInBounds({x:-64,y:-32,w:320,h:192},finite),true,'an object may exactly fill all four finite edges');
+assert.strictEqual(semantics.rectInBounds({x:-65,y:-32,w:320,h:192},finite),false,'complete geometry, not only its origin, controls containment');
+assert.deepStrictEqual(plain(semantics.constrainRectOrigin({x:-72,y:176},{x:-80,y:160,w:24,h:24},finite)),{x:-56,y:152},
+  'movement shifts complete object geometry back inside the right and bottom edges');
+assert.deepStrictEqual(plain(semantics.constrainMarker({x:-64,y:-32},finite)),{x:-48,y:0},
+  'marker placement at a corner moves its complete marker geometry inside');
+assert.strictEqual(semantics.rectInBounds(semantics.markerBounds({x:-48,y:0}),finite),true);
 assert.deepStrictEqual(plain(semantics.clampCamera({x:999,y:-999,zoom:2},finite,{w:320,h:192})),{x:128,y:-128,zoom:2},
   'editor camera pan clamps to the authored bounds at zoom');
 const boundedDocument={worldBounds:finite,instances:mapDocument.instances,markers:mapDocument.markers};
@@ -808,3 +813,15 @@ assert(semantics.validateMap(theme,{...boundedEnvelope,worldBounds:{x:0,y:0,w:0,
   'malformed explicit bounds are rejected rather than becoming infinite');
 assert(newEditor.includes('Map has no authored worldBounds; using a finite derived compatibility area.'),
   'the editor diagnoses compatibility-derived bounds');
+
+const containmentItem={definition:{stamp:{mode:'squareCell',family:'test',footprint:{w:16,h:16}}},object:{defaultSceneLayer:'world'},values:{}};
+const containmentInstances=[],containmentBounds=instance=>({x:instance.values['transform.x']-8,y:instance.values['transform.y']-8,w:16,h:16});
+semantics.stampSquareCells({sceneLayers:['world']},containmentInstances,containmentItem,{},
+  {x:-64,y:0},{x:-32,y:0},new Set(),containmentBounds,finite);
+assert.deepStrictEqual(containmentInstances.map(x=>x.values['transform.x']),[-48,-32],
+  'stamping uses complete candidate bounds and skips the cell whose artwork crosses the left edge');
+const resizedRect={x:200,y:80,w:96,h:96};
+const resizedOrigin=semantics.constrainRectOrigin({x:248,y:176},resizedRect,finite);
+assert.deepStrictEqual(plain(resizedOrigin),{x:208,y:160},'resize results are shifted so their complete geometry remains inside');
+assert.strictEqual(semantics.constrainRectOrigin({x:0,y:0},{x:0,y:0,w:321,h:10},finite),null,
+  'objects too large for the finite map are mechanically rejected');

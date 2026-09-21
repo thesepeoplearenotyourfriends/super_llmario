@@ -925,3 +925,22 @@ test('authored and compatibility-derived runtime bounds stay finite and diagnost
   assert(legacy.diagnostics.some(item=>item.code==='derived-bounds'&&/finite derived/.test(item.message)));
   assert(api.validateReferenceEditorMap({...validMap,worldBounds:{x:0,y:0,w:0,h:20}},theme).some(message=>/worldBounds/.test(message)));
 });
+
+test('editor overlay and runtime share exact moving-platform route semantics',()=>{
+  const editorHtml=fs.readFileSync('editor/reference_pack_editor.html','utf8');
+  const source=editorHtml.match(/<script id="contractSemantics">([\s\S]*?)<\/script>/)[1],editorContext={structuredClone,globalThis:{}};
+  vm.runInNewContext(source,editorContext);const editorSemantics=editorContext.globalThis.ReferencePackSemantics;
+  for(const values of [
+    {'movingPlatform.path':[{x:-12,y:8},{x:20,y:8}], 'movingPlatform.range':32},
+    {'movingPlatform.path':[{x:4,y:-10},{x:4,y:30}], 'movingPlatform.range':80},
+    {'movingPlatform.range':24},
+    {'movingPlatform.path':[{x:0,y:0},{x:10,y:0}], 'movingPlatform.range':0},
+  ])assert.deepEqual(plain(editorSemantics.movingPlatformRoute(values)),plain(api.movingPlatformRoute(values)));
+});
+
+test('runtime diagnoses complete authored geometry outside finite worldBounds',()=>{
+  const result=api.compileReferenceRuntime(theme,{...validMap,worldBounds:{x:0,y:0,w:100,h:100},instances:[
+    {placeable:'whitePlatform',values:{'transform.x':96,'transform.y':80,'extent.width':3,'movingPlatform.range':0}},
+  ],markers:{start:{x:16,y:32},goal:null}});
+  assert(result.diagnostics.some(item=>item.code==='outside-world-bounds'&&item.instanceIndex===0));
+});
