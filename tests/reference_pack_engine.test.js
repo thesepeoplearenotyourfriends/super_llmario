@@ -441,6 +441,48 @@ test('damage steps fire to normal to small before life loss and honors transitio
   player.y=500;players.step();assert.equal(players.consumeRestart(),true);assert.equal(player.form,'small');assert.equal(player.lives,lives-1,'automatic death reset preserves the decremented life count');
 });
 
+test('fallen powerups retire at finite bounds and dead players cannot collect them',()=>{
+  const runtime=api.compileReferenceRuntime(theme,{...validMap,worldBounds:{x:0,y:0,w:320,h:240},instances:[]}).runtime,powerups=api.createPowerupBehavior(runtime),block={instanceIndex:4,instance:{bounds:{x:100,y:100,w:16,h:16}}},pickup=powerups.spawn(block,'lifeMushroom');
+  pickup.emergeFrames=0;pickup.x=100;pickup.y=260;
+  const dead={x:100,y:260,w:24,h:24,dead:true};
+  assert.equal(powerups.collect(pickup,dead),null);
+  assert.equal(pickup.taken,false);
+  powerups.step(null,dead);
+  assert.equal(pickup.taken,true,'pickup below the finite world retires');
+  assert.equal(powerups.commands().length,0);
+});
+
+test('fire form throws at most two theme-backed bouncing fireballs and hits vulnerable actors',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:500,h:240},instances:[{placeable:'goomba',values:{'transform.x':150,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}],markers:{start:{x:112,y:120},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),actors=api.createActorBehavior(runtime,players),shots=api.createProjectileBehavior(runtime,players,actors),player=players.player;
+  players.setForm('fire');Object.assign(player,{x:100,y:100,face:1,fireCooldown:0});
+  const first=shots.launch();assert(first);assert.equal(player.fireCooldown,18);
+  player.fireCooldown=0;assert(shots.launch());player.fireCooldown=0;assert.equal(shots.launch(),null,'only two live fireballs are allowed');
+  for(let i=0;i<8;i++)shots.step();
+  assert.equal(actors.actors[0].state,'knockedOut');
+  assert(shots.projectiles.some(projectile=>!projectile.alive),'impact retires its fireball');
+  const command=shots.commands()[0],frame=theme.resources[theme.animations['projectile.fireball'].frames[command.animationFrame].resource];
+  assert.deepEqual(plain(command.sourceRect),frame.image.rect,'fireballs use the authored theme animation');
+});
+
+test('raccoon P-speed takeoff uses established timed flight and carrying-sheet visuals',async()=>{
+  const runtime={playerSpawn:{x:100,y:176},bounds:{x:0,y:0,w:500,h:300},surfaces:{solid:[{x:0,y:200,w:500,h:100}],solidTop:[]}},players=api.createPlayerBehavior(runtime),player=players.player;
+  assert.deepEqual(plain(players.applyPowerup({type:'powerupCollect',capabilities:['collectible','flightPower']})),{type:'formChange',form:'raccoon'});Object.assign(player,{onGround:true,vx:4,runCharge:71});
+  players.step({right:true,run:true,jump:true});
+  assert.equal(player.pSpeed,true);assert.equal(player.flightFrames,149);assert(player.vy<0);
+  const airborneVy=player.vy;players.step({right:true,run:true,jump:true});assert(player.vy<=airborneVy,'holding Jump supplies flight lift');
+  player.y=175;player.onGround=true;player.vy=2;players.resolvePlayer();assert.equal(player.onGround,true);players.step({left:false,right:false,run:false,jump:false,up:false,down:false});assert.equal(player.flightFrames,0,'landing ends flight');
+  const {engine}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);engine.state.behavior.player.form='raccoon';
+  const carrying=theme.resources[theme.objects['player.carrying'].visuals.idle];assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),carrying.image.rect);
+});
+
+test('dynamic pickups re-enter layer sorting before foreground art and Mario',async()=>{
+  const {engine,operations,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);operations.drawCalls.length=0;
+  engine.state.powerupBehavior.spawn({instanceIndex:99,instance:{bounds:{x:100,y:200,w:16,h:16}}},'growMushroom');
+  frames.shift()(0);
+  const pickupRect=theme.resources[theme.objects.growMushroom.visuals.idle].image.rect,foreground=engine.state.runtime.drawCommands.find(command=>command.layer==='foreground').sourceRect,indexOf=rect=>operations.drawCalls.findIndex(args=>args[1]===rect.x&&args[2]===rect.y&&args[3]===rect.w&&args[4]===rect.h);
+  assert(indexOf(pickupRect)>=0);assert(indexOf(pickupRect)<indexOf(foreground),'actor-layer pickup draws before foreground commands');
+});
+
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
@@ -478,7 +520,7 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
     x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
-    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',lives:3,inv:0,dead:false
+    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',lives:3,inv:0,flightFrames:0,fireCooldown:0,dead:false
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
   assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
