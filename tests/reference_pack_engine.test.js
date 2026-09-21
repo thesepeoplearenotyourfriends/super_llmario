@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 
 const html=fs.readFileSync('engine/reference_pack_engine.html','utf8');
-const legacy=fs.readFileSync('engine/engine.html','utf8');
+const legacy=fs.readFileSync('archived/engine/legacy_engine.html','utf8');
 const theme=JSON.parse(fs.readFileSync('themes/theme_marioai_reference_pack.llmtheme.txt','utf8'));
 const fixture=JSON.parse(fs.readFileSync('tests/fixtures/reference_static_scene.llmmap.txt','utf8'));
 const boundarySource=html.match(/<script id="referencePackBoundary">([\s\S]*?)<\/script>/)[1];
@@ -654,7 +654,7 @@ test('moving-platform defaults, explicit zero, fallback routes, and editor-shape
 });
 
 test('enemy contacts share form-aware damage and invulnerability through eventual small-form death',()=>{
-  const map={...validMap,instances:[{placeable:'goomba',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior({playerSpawn:{x:0,y:0},bounds:{x:0,y:0,w:300,h:240},surfaces:{solid:[],solidTop:[]}}),actors=api.createActorBehavior(runtime,players),box=actors.actorBox(actors.actors[0]),contact=()=>{Object.assign(players.player,{x:box.x,y:box.y,vy:0});return actors.collide(players.player,{x:box.x-1,y:box.y})};
+  const map={...validMap,instances:[{placeable:'goomba',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior({playerSpawn:{x:0,y:0},bounds:{x:0,y:0,w:300,h:10000},surfaces:{solid:[],solidTop:[]}}),actors=api.createActorBehavior(runtime,players),box=actors.actorBox(actors.actors[0]),contact=()=>{Object.assign(players.player,{x:box.x,y:box.y,vy:0});return actors.collide(players.player,{x:box.x-1,y:box.y})};
   players.setForm('raccoon');assert.equal(contact().result,'powerDown');assert.equal(players.player.form,'normal');assert.equal(contact(),null,'repeat contact is ignored during invulnerability');for(let i=0;i<90;i++)players.step();assert.equal(contact().result,'powerDown');assert.equal(players.player.form,'small');for(let i=0;i<90;i++)players.step();const lives=players.player.lives;assert.equal(contact().result,'death');assert.equal(players.player.lives,lives-1);assert.equal(players.player.dead,true);players.reset();assert.equal(players.player.inv,0);assert.equal(players.player.dead,false);
 });
 
@@ -895,4 +895,52 @@ test('far point travel snaps while hidden, holds destination, and exposes one ex
 test('gameplay camera defaults to 2x, preserves native visuals, and resize retains zoom',async()=>{
   const {engine,elements,events}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);assert.equal(engine.state.camera.zoom,2);const visual=engine.currentPlayerVisual(),resource=theme.resources[theme.objects['player.small'].visuals.idle];assert.deepEqual(plain(visual.display),resource.display,'camera zoom does not mutate authored display size');engine.state.camera.zoom=1.5;elements.stage.getBoundingClientRect=()=>({width:800,height:400});
   events.resize();assert.equal(engine.state.camera.zoom,1.5,'stage resize preserves the current zoom');assert(Number.isFinite(engine.state.camera.x)&&Number.isFinite(engine.state.camera.y),'follow remains finite at non-default zoom');
+});
+
+test('authored bottom boundary triggers death and restart resets actors and moving platforms',async()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:320,h:180},markers:{start:{x:40,y:80},goal:null},instances:[
+    {placeable:'goomba',values:{'transform.x':120,'transform.y':100,'walker.direction':'right','walker.patrolRange':30}},
+    {placeable:'whitePlatform',values:{'transform.x':180,'transform.y':120,'extent.width':3,'movingPlatform.range':24,'movingPlatform.speed':4}},
+  ]};
+  const h=engineHarness();await h.engine.loadReferenceTheme(theme);h.engine.loadReferenceEditorMap(map);
+  const {behavior,actorBehavior,platformBehavior}=h.engine.state,actor=actorBehavior.actors[0],platform=platformBehavior.platforms[0];
+  actor.x+=17;actor.tick=9;platformBehavior.step();assert(platform.phase>0);
+  const lives=behavior.player.lives;behavior.player.y=map.worldBounds.y+map.worldBounds.h-behavior.player.h+1;
+  h.engine.stepPlayer({});
+  assert.equal(behavior.player.dead,true,'crossing the finite bottom enters the existing death state');
+  assert.equal(behavior.player.lives,lives-1,'fall death consumes one life');
+  for(let i=0;i<120&&behavior.player.dead;i++)h.engine.stepPlayer({});
+  assert.equal(behavior.player.dead,false,'death fall reaches the finite envelope and restarts');
+  assert.deepEqual({x:behavior.player.x,y:behavior.player.y},plain(h.engine.state.runtime.playerSpawn));
+  assert.equal(actor.x,actor.originX,'actor resets after fall death');assert.equal(actor.tick,0);
+  assert.equal(platform.x,platform.originX,'moving platform resets after fall death');assert.equal(platform.phase,0);
+});
+
+test('authored and compatibility-derived runtime bounds stay finite and diagnostic',()=>{
+  const authored=api.compileReferenceRuntime(theme,{...validMap,worldBounds:{x:-50,y:-20,w:400,h:240}});
+  assert.deepEqual(plain(authored.runtime.bounds),{x:-50,y:-20,w:400,h:240});assert.equal(authored.runtime.boundsSource,'authored');
+  const legacy=api.compileReferenceRuntime(theme,{...validMap,worldBounds:undefined,instances:[],markers:{start:null,goal:null}});
+  assert.equal(legacy.runtime.boundsSource,'derived-preview');
+  assert([legacy.runtime.bounds.x,legacy.runtime.bounds.y,legacy.runtime.bounds.w,legacy.runtime.bounds.h].every(Number.isFinite));
+  assert(legacy.diagnostics.some(item=>item.code==='derived-bounds'&&/finite derived/.test(item.message)));
+  assert(api.validateReferenceEditorMap({...validMap,worldBounds:{x:0,y:0,w:0,h:20}},theme).some(message=>/worldBounds/.test(message)));
+});
+
+test('editor overlay and runtime share exact moving-platform route semantics',()=>{
+  const editorHtml=fs.readFileSync('editor/reference_pack_editor.html','utf8');
+  const source=editorHtml.match(/<script id="contractSemantics">([\s\S]*?)<\/script>/)[1],editorContext={structuredClone,globalThis:{}};
+  vm.runInNewContext(source,editorContext);const editorSemantics=editorContext.globalThis.ReferencePackSemantics;
+  for(const values of [
+    {'movingPlatform.path':[{x:-12,y:8},{x:20,y:8}], 'movingPlatform.range':32},
+    {'movingPlatform.path':[{x:4,y:-10},{x:4,y:30}], 'movingPlatform.range':80},
+    {'movingPlatform.range':24},
+    {'movingPlatform.path':[{x:0,y:0},{x:10,y:0}], 'movingPlatform.range':0},
+  ])assert.deepEqual(plain(editorSemantics.movingPlatformRoute(values)),plain(api.movingPlatformRoute(values)));
+});
+
+test('runtime diagnoses complete authored geometry outside finite worldBounds',()=>{
+  const result=api.compileReferenceRuntime(theme,{...validMap,worldBounds:{x:0,y:0,w:100,h:100},instances:[
+    {placeable:'whitePlatform',values:{'transform.x':96,'transform.y':80,'extent.width':3,'movingPlatform.range':0}},
+  ],markers:{start:{x:16,y:32},goal:null}});
+  assert(result.diagnostics.some(item=>item.code==='outside-world-bounds'&&item.instanceIndex===0));
 });

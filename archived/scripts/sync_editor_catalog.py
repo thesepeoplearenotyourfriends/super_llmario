@@ -7,7 +7,7 @@ source=(root/'construction/catalog.js').read_text().rstrip()
 begin='<!-- BEGIN GENERATED CONSTRUCTION CATALOG -->'; end='<!-- END GENERATED CONSTRUCTION CATALOG -->'
 block=f'{begin}\n<script>\n{source}\n</script>\n{end}'
 stale=[]
-for relative in ('editor/editor.html','engine/engine.html'):
+for relative in ('archived/editor/editor.html','archived/engine/legacy_engine.html'):
     path=root/relative; html=path.read_text()
     if begin in html:
         before,rest=html.split(begin,1); _,after=rest.split(end,1); generated=before+block+after

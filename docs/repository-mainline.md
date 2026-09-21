@@ -1,14 +1,17 @@
 # Repository mainline and archive
 
-The active reference regime has one canonical authoring pair:
+The canonical reference-pack regime consists of exactly:
 
-- `editor/reference_pack_editor.html`
-- `themes/theme_marioai_reference_pack.llmtheme.txt`
+- `editor/reference_pack_editor.html` — the active standalone map editor;
+- `themes/theme_marioai_reference_pack.llmtheme.txt` — the active theme contract with its runtime atlas images embedded as base64 text; and
+- `engine/reference_pack_engine.html` — the active standalone, single-file runtime.
 
-Runtime work for that pair belongs in `engine/reference_pack_engine.html`. The release builder consumes only those reference-pack files and the canonical demo map.
+`scripts/build_release.py` consumes those canonical files and `maps/demo.llmmap.txt`. The editable HTML files do not fetch sibling repository files at runtime. The canonical theme has no runtime PNG, GIF, or DAT filesystem dependency; source image names are provenance only.
 
-Previous editors, themes, conversion tools, tests, and fixtures are retained under `archived/`. They are historical material, not inputs to the active editor, runtime, release build, or default test discovery. The archived editor may be read only by an explicitly named regression assertion.
+Everything under `archived/`—including editors, themes, tools, tests, and fixtures—is historical and is not an active input. `archived/engine/legacy_engine.html` is retained solely as an explicit behavioral oracle, never as an active runtime.
 
-`engine/engine.html` remains the deliberately preserved legacy gameplay oracle. It is not a second mainline and should only be used when a test explicitly compares established behavior.
+Canonical maps may author a finite `worldBounds` rectangle. The editor requires complete object and marker geometry to remain inside that rectangle, uses it for navigation and fitting, and the runtime uses the same rectangle for camera and fall-death behavior. Older maps without `worldBounds` remain loadable through a finite derived compatibility envelope and an explicit diagnostic; saving from the canonical editor persists that derived envelope.
 
-The immutable original sprite sheets remain in `themes/marioai_theme_files/` because repository policy forbids moving or recommitting those binary inputs. Active reference applications do not load those PNG/GIF files at runtime: the canonical theme embeds its atlas data and both HTML applications remain standalone. No DAT input is required.
+Rows and row transitions are not part of the current canonical reference map/runtime contract. A future row contract may give each row its own finite bounds without changing the current top-level finite-map rule.
+
+The immutable original sprite sheets remain in `themes/marioai_theme_files/` only as protected conversion inputs. They are not runtime dependencies and must not be moved or recommitted.
