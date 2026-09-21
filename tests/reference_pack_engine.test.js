@@ -595,6 +595,30 @@ test('moving-platform capability moves drawing and collision, carries riders, st
   moving.reset();assert.deepEqual({x:white.x,y:white.y,phase:white.phase,direction:white.direction},{x:white.originX,y:white.originY,phase:0,direction:1});assert.equal(white.surface.x,startSurface.x);assert.equal(mushroom.y,mushroom.originY);assert.equal(still.x,still.originX);assert.notEqual(startPlayerX,undefined);
 });
 
+test('canonical white platforms preserve editor movement values and move drawing with collision',()=>{
+  const map={...validMap,worldBounds:{x:0,y:0,w:500,h:300},instances:[
+    {placeable:'whitePlatform',values:{'transform.x':80,'transform.y':160,'extent.width':3,'movingPlatform.range':42,'movingPlatform.speed':1}},
+    {placeable:'whitePlatform',values:{'transform.x':180,'transform.y':160,'extent.width':3,'movingPlatform.range':42,'movingPlatform.speed':12}},
+    {placeable:'whitePlatform',values:{'transform.x':280,'transform.y':160,'extent.width':3,'movingPlatform.range':42,'movingPlatform.speed':32}},
+    {placeable:'whitePlatform',values:{'transform.x':400,'transform.y':160,'extent.width':3,'movingPlatform.range':0,'movingPlatform.speed':0}}
+  ],markers:{start:{x:80,y:120},goal:null}},result=api.compileReferenceRuntime(theme,map),runtime=result.runtime,moving=api.createMovingPlatformBehavior(runtime);
+  assert.equal(result.ok,true);assert.equal(runtime.instances.length,4);
+  for(const [index,speed] of [1,12,32].entries()){
+    const instance=runtime.instances[index],platform=moving.byInstance.get(instance.index),command=runtime.drawCommands.find(item=>item.instanceIndex===instance.index),surfaceStart={...platform.surface};
+    assert(instance.capabilities.includes('movingPlatform'),'white platform compiles with its movement capability');
+    assert.equal(instance.values['movingPlatform.range'],42,'authored range survives compilation');
+    assert.equal(instance.values['movingPlatform.speed'],speed,'authored speed survives compilation');
+    assert(platform,'moving-platform behavior registers the compiled instance');
+    moving.step();
+    assert.equal(platform.x,platform.originX+speed,'one runtime step applies the authored speed');
+    assert.equal(platform.surface.x,surfaceStart.x+speed,'collision surface follows the runtime position');
+    assert.equal(moving.commandAt(command).worldX,platform.x,'rendered command follows the same runtime position');
+    moving.reset();
+  }
+  const still=moving.byInstance.get(runtime.instances[3].index),stillCommand=runtime.drawCommands.find(item=>item.instanceIndex===still.instanceIndex),stillSurface={...still.surface};
+  moving.step();assert.deepEqual({x:still.x,y:still.y},{x:still.originX,y:still.originY},'zero range and speed remain stationary');assert.deepEqual({x:still.surface.x,y:still.surface.y},{x:stillSurface.x,y:stillSurface.y});assert.deepEqual({x:moving.commandAt(stillCommand).worldX,y:moving.commandAt(stillCommand).worldY},{x:still.originX,y:still.originY});
+});
+
 test('enemy contacts share form-aware damage and invulnerability through eventual small-form death',()=>{
   const map={...validMap,instances:[{placeable:'goomba',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior({playerSpawn:{x:0,y:0},bounds:{x:0,y:0,w:300,h:240},surfaces:{solid:[],solidTop:[]}}),actors=api.createActorBehavior(runtime,players),box=actors.actorBox(actors.actors[0]),contact=()=>{Object.assign(players.player,{x:box.x,y:box.y,vy:0});return actors.collide(players.player,{x:box.x-1,y:box.y})};
   players.setForm('raccoon');assert.equal(contact().result,'powerDown');assert.equal(players.player.form,'normal');assert.equal(contact(),null,'repeat contact is ignored during invulnerability');for(let i=0;i<90;i++)players.step();assert.equal(contact().result,'powerDown');assert.equal(players.player.form,'small');for(let i=0;i<90;i++)players.step();const lives=players.player.lives;assert.equal(contact().result,'death');assert.equal(players.player.lives,lives-1);assert.equal(players.player.dead,true);players.reset();assert.equal(players.player.inv,0);assert.equal(players.player.dead,false);
