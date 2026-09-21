@@ -862,6 +862,29 @@ test('pipe travel stages near camera pan, hidden holds, target occlusion, and ou
   let result;for(let i=0;i<18;i++)result=travel.step({left:true},camera);assert.equal(travel.active,false);assert.equal(result.suppressSimulationThisFrame,true,'final scripted position is not fought by physics');assert.deepEqual({form:p.form,coins:p.coins,lives:p.lives},preserved);assert.equal(travel.step({left:true},camera),null,'held arrival input cannot retrigger');
 });
 
+test('sideways pipe transit faces along travel, lifts entry presentation only, and advances walking',()=>{
+  const expected={left:{entryFace:1,exitFace:-1},right:{entryFace:-1,exitFace:1}};
+  for(const direction of ['left','right']){
+    const source={objectId:'pipe',instanceId:'source',index:0,bounds:{x:100,y:100,w:64,h:48},values:{'pipe.direction':direction,'pipe.travelEnabled':true,'pipe.destination':{kind:'pipe',instanceId:'target'}}};
+    const target={objectId:'pipe',instanceId:'target',index:1,bounds:{x:400,y:220,w:64,h:48},values:{'pipe.direction':direction}};
+    const runtime={instances:[source,target]},players=api.createPlayerBehavior({instances:runtime.instances,surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:1000,h:600},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior(runtime,players),p=players.player;
+    const mouth=api.pipeMouth(source);Object.assign(p,{x:direction==='left'?mouth.x-p.w:mouth.x,y:mouth.y-p.h/2});const physicalY=p.y;
+    travel.step({[travel.requiredInput(direction)]:true});
+    assert.equal(p.face,expected[direction].entryFace,`${direction} source faces inward`);
+    assert.equal(p.y,physicalY,'entry lift does not alter the physics body');
+    assert.equal(travel.transit.presentationY,-4,'sideways entry receives the presentation-only lift');
+    const firstTick=p.tick;travel.step({});assert.equal(p.animationState,'walk');assert(p.tick>firstTick,'scripted entry advances the animation clock');
+    for(let i=0;i<100&&travel.transit?.phase!=='exit';i++)travel.step({});
+    assert.equal(p.face,expected[direction].exitFace,`${direction} target faces outward`);
+    assert.equal(p.animationState,'walk','sideways emergence uses walking animation');
+    assert.equal(travel.transit.presentationY,0,'entry lift is not applied again during emergence');
+    const exitTick=p.tick;travel.step({});assert(p.tick>exitTick,'scripted emergence advances the animation clock');
+  }
+  const vertical={objectId:'pipe',instanceId:'vertical',index:0,bounds:{x:100,y:100,w:48,h:64},values:{'pipe.direction':'up','pipe.travelEnabled':true,'pipe.destination':{kind:'point',x:500,y:300}}},players=api.createPlayerBehavior({instances:[vertical],surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:1000,h:600},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior({instances:[vertical]},players),p=players.player;
+  Object.assign(p,{x:vertical.bounds.x+vertical.bounds.w/2-p.w/2,y:vertical.bounds.y-p.h,face:-1,animationState:'idle'});travel.step({down:true});
+  assert.equal(travel.transit.presentationY,0);assert.equal(p.face,-1);assert.equal(p.animationState,'idle','vertical entry presentation remains unchanged');
+});
+
 test('far point travel snaps while hidden, holds destination, and exposes one exact relocation frame',()=>{
   const source={objectId:'pipe',instanceId:'source',index:0,bounds:{x:100,y:100,w:48,h:64},values:{'pipe.direction':'up','pipe.travelEnabled':true,'pipe.destination':{kind:'point',x:5000,y:3000}}},runtime={instances:[source]},players=api.createPlayerBehavior({instances:runtime.instances,surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:6000,h:4000},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior(runtime,players),p=players.player,positions=[],camera={viewport:{w:480,h:240},current:{x:0,y:0},targetFor:()=>({x:-4800,y:-2800}),set(x,y){this.current={x,y};positions.push({x,y})}};
   Object.assign(p,{x:source.bounds.x+source.bounds.w/2-p.w/2,y:source.bounds.y-p.h});travel.step({down:true},camera);let result,phases=[];for(let i=0;i<100&&travel.active;i++){result=travel.step({down:true},camera);phases.push(travel.transit?.phase)}
