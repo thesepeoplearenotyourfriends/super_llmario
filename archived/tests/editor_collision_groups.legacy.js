@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const source=fs.readFileSync('editor/editor.html','utf8');
+const source=fs.readFileSync('archived/editor/editor.html','utf8');
 
 function functionSource(name){
   const start=source.indexOf('function '+name+'(');assert.notEqual(start,-1,'missing '+name);let brace=source.indexOf('{',start),depth=0,quote='',escaped=false;

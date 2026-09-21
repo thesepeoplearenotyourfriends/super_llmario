@@ -582,6 +582,16 @@ test('rotating block temporary spin disables collision, animates once, and resto
   while(block.spinTicks)blocks.step();assert.equal(surface.disabled,false);assert.equal(blocks.commandAt(authored).resource,theme.objects.rotatingBlock.visuals.idle,'idle art and collision return together');
 });
 
+test('idle and used block visuals advance through commandAtTick without disturbing bump or spin',()=>{
+  const map={...validMap,instances:[{placeable:'questionBlock',values:{'transform.x':112,'transform.y':200}}],markers:{start:{x:112,y:240},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,blocks=api.createBlockBehavior(runtime),authored=runtime.drawCommands[0];
+  const first=blocks.commandAt(authored,0),later=blocks.commandAt(authored,8);
+  assert.notEqual(later.resource,first.resource,'ordinary idle question-block rendering advances its animation');
+  blocks.blocks[0].used=true;
+  assert.equal(blocks.commandAt(authored,0).animationFrame,0,'used-state commands also resolve through commandAtTick');
+  blocks.blocks[0].bump=8;
+  assert.notEqual(blocks.commandAt(authored,3).worldY,authored.worldY,'bump offset remains active while its visual is resolved');
+});
+
 test('moving-platform capability moves drawing and collision, carries riders, stays still at zero, and resets',()=>{
   const map={...validMap,worldBounds:{x:0,y:0,w:500,h:300},instances:[
     {placeable:'whitePlatform',values:{'transform.x':160,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:0,y:0},{x:12,y:0}],'movingPlatform.range':12,'movingPlatform.speed':2}},
@@ -617,6 +627,24 @@ test('canonical white platforms preserve editor movement values and move drawing
   }
   const still=moving.byInstance.get(runtime.instances[3].index),stillCommand=runtime.drawCommands.find(item=>item.instanceIndex===still.instanceIndex),stillSurface={...still.surface};
   moving.step();assert.deepEqual({x:still.x,y:still.y},{x:still.originX,y:still.originY},'zero range and speed remain stationary');assert.deepEqual({x:still.surface.x,y:still.surface.y},{x:stillSurface.x,y:stillSurface.y});assert.deepEqual({x:moving.commandAt(stillCommand).worldX,y:moving.commandAt(stillCommand).worldY},{x:still.originX,y:still.originY});
+});
+
+test('moving-platform defaults, explicit zero, fallback routes, and editor-shaped coordinates are exact',()=>{
+  const map={...validMap,worldBounds:{x:-200,y:-100,w:700,h:400},instances:[
+    {placeable:'whitePlatform',values:{'transform.x':-48,'transform.y':-16,'extent.width':3,'movingPlatform.range':42}},
+    {placeable:'whitePlatform',values:{'transform.x':80,'transform.y':160,'extent.width':3,'movingPlatform.range':42,'movingPlatform.speed':0}},
+    {placeable:'whitePlatform',values:{'transform.x':180,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:-10,y:4},{x:22,y:4}],'movingPlatform.range':32,'movingPlatform.speed':32}},
+  ],markers:{start:{x:0,y:0},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,moving=api.createMovingPlatformBehavior(runtime),[fallback,zero,authored]=moving.platforms;
+  assert.equal(fallback.speed,1,'omitted speed uses the intended engine default');
+  assert.deepEqual(plain(fallback.route.points),[{x:0,y:0},{x:42,y:0}],'range-only records receive the fallback route');
+  assert.equal(zero.speed,0,'explicit zero is not replaced by the default');
+  moving.step();
+  assert.equal(fallback.x,-47,'negative editor coordinates move by the default speed');
+  assert.equal(fallback.surface.x,fallback.instance.bounds.x+1,'fallback collision follows its rendering position');
+  assert.equal(zero.x,zero.originX,'explicit zero remains stationary');
+  assert.equal(authored.x,authored.originX+32,'authored speed 32 survives and follows its relative path');
+  const command=runtime.drawCommands.find(item=>item.instanceIndex===authored.instanceIndex);
+  assert.equal(moving.commandAt(command).worldX,authored.x,'authored-path rendering and collision share the moving transform');
 });
 
 test('enemy contacts share form-aware damage and invulnerability through eventual small-form death',()=>{

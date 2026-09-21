@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),C=require('../construction/catalog.js');
-const engine=fs.readFileSync('engine/engine.html','utf8'),editor=fs.readFileSync('editor/editor.html','utf8');
+const engine=fs.readFileSync('engine/engine.html','utf8'),editor=fs.readFileSync('archived/editor/editor.html','utf8');
 
 function fn(source,name){const start=source.indexOf('function '+name+'(');assert(start>=0,'missing '+name);let brace=source.indexOf('{',start),depth=0,quote='',escape=false;for(let i=brace;i<source.length;i++){const ch=source[i];if(quote){if(escape)escape=false;else if(ch==='\\')escape=true;else if(ch===quote)quote='';continue}if(ch==='"'||ch==="'"||ch==='`'){quote=ch;continue}if(ch==='{')depth++;else if(ch==='}'&&!--depth)return source.slice(start,i+1)}throw Error('unterminated '+name)}
 const oneWay={x:40,y:100,w:64,h:4,collision:{kind:'oneWayTop'},collisionOnly:true},solid={x:120,y:100,w:64,h:20},player={x:50,y:70,w:16,h:20,vx:0,vy:12,onGround:false};
@@ -17,7 +17,7 @@ player.x=50;player.y=106;player.vy=-12;player.y+=player.vy;assert.equal(land(106
 player.y=95;player.vy=0;assert.equal(land(95,0),false);assert.equal(player.y,95,'an actor already below/intersecting never snaps upward');
 player.x=30;player.y=90;player.vx=15;player.x+=player.vx;assert.deepEqual(Array.from(hitSolids(player)),[],'lateral entry through the side is permeable');
 
-const theme=JSON.parse(fs.readFileSync('themes/theme_marioai_nonempty.llmtheme.txt','utf8')),entry=theme.constructionCatalog.families['mushroom.platform'];
+const theme=JSON.parse(fs.readFileSync('archived/themes/theme_marioai_nonempty.llmtheme.txt','utf8')),entry=theme.constructionCatalog.families['mushroom.platform'];
 assert.equal(entry.authoringBinding.noun,'oneWayPlatform');
 const root={platforms:[]},group='mushroom-7',origin={x:32,y:48};
 let binding=C.updateBinding(root,entry,group,origin,{w:5,h:4},{semanticFamily:entry.id});

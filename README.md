@@ -6,9 +6,9 @@
 
 **Want to play?** Download [`super_llmario.html` from the latest GitHub Release](https://github.com/thesepeoplearenotyourfriends/super_llmario/releases/latest/download/super_llmario.html) and open that one file. The Release HTML is the self-contained, to-go build and starts with the MarioAI semantic reference experience.
 
-**Want to edit or mess around?** Clone this repository. The checkout is the editable workshop: engine, editor, themes, and maps remain independent source files. `engine/engine.html` stays standalone by booting its small engine-owned Physics Test Plains demo; use its load menu to open repository theme/map files. Run `python3 scripts/build_release.py` only when you need the packed `dist/super_llmario.html` release artifact.
+**Want to edit or mess around?** Clone this repository. The active authoring pair is `editor/reference_pack_editor.html` plus `themes/theme_marioai_reference_pack.llmtheme.txt`, with `engine/reference_pack_engine.html` as its runtime. Run `python3 scripts/build_release.py` only when you need the packed `dist/super_llmario.html` release artifact.
 
-Repository source is not packed merely for distribution convenience. Canonical themes and maps stay in their normal files; packing belongs exclusively to the release build.
+Previous editor/theme generations are preserved under `archived/` and are not active inputs. `engine/engine.html` remains only as the explicit legacy gameplay oracle. See `docs/repository-mainline.md` for the boundary. Repository source is not packed merely for distribution convenience; packing belongs exclusively to the release build.
 
 **CURRENT GAMEPLAY STATE:**
 
