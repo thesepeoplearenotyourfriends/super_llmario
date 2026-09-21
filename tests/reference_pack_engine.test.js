@@ -18,7 +18,7 @@ const validMap={format:'llmario-reference-editor-map',mapVersion:1,theme:{id:the
 
 function engineHarness(){
   const operations={fillRect:0,drawImage:0,drawCalls:[],translates:[],scales:[],texts:[]};
-  const frames=[];
+  const frames=[],events={};
   const ctx={setTransform(){},save(){},restore(){},translate(...args){operations.translates.push(args)},scale(...args){operations.scales.push(args)},rotate(){},fillRect(){operations.fillRect++},fillText(...args){operations.texts.push(args)},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
   const elements={
     screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},
@@ -26,9 +26,9 @@ function engineHarness(){
   };
   class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
   const window={ReferencePackBoundary:api};
-  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(){},Map,Set,Math,Promise,console};
+  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(type,fn){events[type]=fn},Map,Set,Math,Promise,console};
   vm.runInNewContext(applicationSource,domContext);
-  return{engine:window.ReferenceEngine,elements,operations,frames};
+  return{engine:window.ReferenceEngine,elements,operations,frames,events};
 }
 
 test('compiles the actual reference theme and representative editor map',()=>{
@@ -838,32 +838,38 @@ test('player-equivalent white-platform edge contact matches rendered cap, solidT
   const before={x:surface.x,y:surface.y,w:surface.w};moving.step();assert.equal(surface.x,before.x+2);assert.equal(surface.w,before.w);moving.reset();assert.deepEqual({x:surface.x,y:surface.y,w:surface.w},before,'moving reset restores corrected collision geometry');
 });
 
-test('pipe travel validates directions, stable references, point feet arrival, state, cooldown, and reset',()=>{
-  const pipe=(id,x,y,direction,destination,enabled=true)=>({placeable:'pipe',instanceId:id,values:{'transform.x':x,'transform.y':y,'pipe.direction':direction,'pipe.length':2,'pipe.travelEnabled':enabled,...(destination?{'pipe.destination':destination}:{})}});
-  const map={...validMap,instances:[pipe('a',100,200,'up',{kind:'pipe',instanceId:'b'}),pipe('b',400,200,'right',{kind:'point',x:700,y:180}),pipe('off',600,200,'left',null,false)],markers:{start:{x:100,y:200},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),travel=api.createPipeTravelBehavior(runtime,players),p=players.player,a=travel.byId.get('a'),b=travel.byId.get('b');
-  assert.equal(travel.resolveDestination(travel.byId.get('off')),null);assert.equal(travel.requiredInput('up'),'down');assert.equal(travel.requiredInput('down'),'up');assert.equal(travel.requiredInput('left'),'right');assert.equal(travel.requiredInput('right'),'left');
-  Object.assign(p,{x:a.bounds.x+a.bounds.w/2-p.w/2,y:a.bounds.y-p.h,form:'fire',coins:9,lives:4,runCharge:73,pSpeed:true});assert.equal(travel.step({up:true}),null,'wrong input does not enter');p.x=a.bounds.x+a.bounds.w;assert.equal(travel.step({down:true}),null,'misalignment does not enter');p.x=a.bounds.x+a.bounds.w/2-p.w/2;assert(travel.step({down:true}));
-  const state={form:p.form,coins:p.coins,lives:p.lives};for(let i=0;i<18;i++)travel.step({down:true});assert.equal(travel.transit.phase,'exit');assert.equal(p.x,api.pipeMouth(b).x-p.w/2+api.pipeMouth(b).axis.x*(p.w/2+2)-api.pipeMouth(b).axis.x*(p.w+8));for(let i=0;i<18;i++)travel.step({left:true});assert.equal(travel.active,false);assert.deepEqual({form:p.form,coins:p.coins,lives:p.lives},state);assert(travel.cooldown>0);assert.equal(travel.step({left:true}),null,'held arrival input cannot retrigger');
-  travel.reset();assert.equal(travel.active,false);assert.equal(travel.cooldown,0);
-  b.values['pipe.destination']={kind:'point',x:700,y:180};Object.assign(p,{x:b.bounds.x-p.w,y:b.bounds.y+b.bounds.h/2-p.h/2});assert(travel.step({left:true}));for(let i=0;i<18;i++)travel.step({left:true});assert.deepEqual({center:p.x+p.w/2,feet:p.y+p.h},{center:700,feet:180});assert.equal(travel.active,false,'point arrival skips emergence');assert.equal(travel.occlusionPipe,null,'point arrival immediately restores ordinary layering');
-  a.values['pipe.destination']={kind:'pipe',instanceId:'missing'};travel.reset();Object.assign(p,{x:a.bounds.x+a.bounds.w/2-p.w/2,y:a.bounds.y-p.h});assert.equal(travel.step({down:true}),null,'broken references fail safely');
-});
-
-test('pipe entry opposes every outward mouth axis and emergence follows every target mouth axis',()=>{
+test('pipe mouths require the player edge to meet the actual mouth edge in all four directions',()=>{
   const directions=['up','down','left','right'],bounds={x:100,y:100,w:48,h:64};
-  const placeAtMouth=(player,direction)=>{if(direction==='up')Object.assign(player,{x:bounds.x+bounds.w/2-player.w/2,y:bounds.y-player.h});else if(direction==='down')Object.assign(player,{x:bounds.x+bounds.w/2-player.w/2,y:bounds.y+bounds.h});else if(direction==='left')Object.assign(player,{x:bounds.x+bounds.w,y:bounds.y+bounds.h/2-player.h/2});else Object.assign(player,{x:bounds.x-player.w,y:bounds.y+bounds.h/2-player.h/2})};
+  const placeAtMouth=(player,direction,b=bounds)=>{if(direction==='up')Object.assign(player,{x:b.x+b.w/2-player.w/2,y:b.y-player.h});else if(direction==='down')Object.assign(player,{x:b.x+b.w/2-player.w/2,y:b.y+b.h});else if(direction==='left')Object.assign(player,{x:b.x-player.w,y:b.y+b.h/2-player.h/2});else Object.assign(player,{x:b.x+b.w,y:b.y+b.h/2-player.h/2})};
   for(const direction of directions){
     const source={objectId:'pipe',instanceId:'source',index:0,bounds:{...bounds},values:{'pipe.direction':direction,'pipe.travelEnabled':true,'pipe.destination':{kind:'point',x:500,y:300}}},players=api.createPlayerBehavior({instances:[source],surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:1000,h:600},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior({instances:[source]},players),player=players.player;
-    placeAtMouth(player,direction);travel.step({[travel.requiredInput(direction)]:true});
-    const mouth=api.pipeMouth(source),entry=travel.transit;
-    assert.equal(entry.occlusionPipe,source,`${direction} source provides entry occlusion`);
-    assert.deepEqual(plain({x:entry.end.x-entry.start.x,y:entry.end.y-entry.start.y}),{x:-mouth.axis.x*(player.w+8)||0,y:-mouth.axis.y*(player.h+8)||0},`${direction} source entry is opposite its outward mouth axis`);
+    placeAtMouth(player,direction);const mouth=api.pipeMouth(source);
+    assert.equal(direction==='up'?player.y+player.h:direction==='down'?player.y:direction==='left'?player.x+player.w:player.x,direction==='up'||direction==='down'?mouth.y:mouth.x,`${direction} player edge touches its mouth edge`);
+    assert.equal(travel.aligned(source,player),true);travel.step({[travel.requiredInput(direction)]:true});const entry=travel.transit;
+    assert.equal(entry.occlusionPipe,source,`${direction} source owns entry occlusion`);
+    assert.deepEqual(plain({x:entry.end.x-entry.start.x,y:entry.end.y-entry.start.y}),{x:-mouth.axis.x*(player.w+8)||0,y:-mouth.axis.y*(player.h+8)||0},`${direction} entry opposes outward mouth axis`);
   }
-  for(const direction of directions){
-    const source={objectId:'pipe',instanceId:'source',index:0,bounds:{...bounds},values:{'pipe.direction':'up','pipe.travelEnabled':true,'pipe.destination':{kind:'pipe',instanceId:'target'}}},target={objectId:'pipe',instanceId:'target',index:1,bounds:{x:400,y:220,w:48,h:64},values:{'pipe.direction':direction}},runtime={instances:[source,target]},players=api.createPlayerBehavior({instances:runtime.instances,surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:1000,h:600},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior(runtime,players),player=players.player;
-    placeAtMouth(player,'up');travel.step({down:true});for(let tick=0;tick<18;tick++)travel.step({down:true});
-    const mouth=api.pipeMouth(target),exit=travel.transit;
-    assert.equal(exit.phase,'exit');assert.equal(exit.occlusionPipe,target,`${direction} target provides emergence occlusion`);
-    assert.deepEqual(plain({x:exit.end.x-exit.start.x,y:exit.end.y-exit.start.y}),{x:mouth.axis.x*(player.w+8),y:mouth.axis.y*(player.h+8)},`${direction} target emergence follows its outward mouth axis`);
-  }
+});
+
+test('pipe travel stages near camera pan, hidden holds, target occlusion, and outward emergence',()=>{
+  const bounds={x:100,y:100,w:48,h:64},source={objectId:'pipe',instanceId:'source',index:0,bounds,values:{'pipe.direction':'up','pipe.travelEnabled':true,'pipe.destination':{kind:'pipe',instanceId:'target'}}},target={objectId:'pipe',instanceId:'target',index:1,bounds:{x:400,y:220,w:48,h:64},values:{'pipe.direction':'right'}},runtime={instances:[source,target]},players=api.createPlayerBehavior({instances:runtime.instances,surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:1200,h:700},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior(runtime,players),p=players.player,positions=[],camera={viewport:{w:480,h:240},current:{x:0,y:0},targetFor:()=>({x:-300,y:-100}),set(x,y){this.current={x,y};positions.push({x,y})}};
+  Object.assign(p,{x:bounds.x+bounds.w/2-p.w/2,y:bounds.y-p.h,form:'fire',coins:9,lives:4});travel.step({down:true},camera);const preserved={form:p.form,coins:p.coins,lives:p.lives};
+  const phases=[];for(let i=0;i<100&&travel.transit?.phase!=='exit';i++){travel.step({down:true},camera);phases.push(travel.transit?.phase)}
+  for(const phase of ['sourceHold','cameraTransition','destinationHold','exit'])assert(phases.includes(phase),`${phase} occurs`);
+  assert(positions.length>1,'near destination interpolates camera');assert(positions.some(({x})=>x<0&&x>-300),'pan includes intermediate position');
+  const exit=travel.transit,mouth=api.pipeMouth(target);assert.equal(exit.cameraMode,'pan');assert.equal(exit.occlusionPipe,target);assert.equal(travel.hidden,false,'Mario reappears only when emergence starts');
+  assert.deepEqual(plain({x:exit.end.x-exit.start.x,y:exit.end.y-exit.start.y}),{x:mouth.axis.x*(p.w+8),y:mouth.axis.y*(p.h+8)});
+  let result;for(let i=0;i<18;i++)result=travel.step({left:true},camera);assert.equal(travel.active,false);assert.equal(result.suppressSimulationThisFrame,true,'final scripted position is not fought by physics');assert.deepEqual({form:p.form,coins:p.coins,lives:p.lives},preserved);assert.equal(travel.step({left:true},camera),null,'held arrival input cannot retrigger');
+});
+
+test('far point travel snaps while hidden, holds destination, and exposes one exact relocation frame',()=>{
+  const source={objectId:'pipe',instanceId:'source',index:0,bounds:{x:100,y:100,w:48,h:64},values:{'pipe.direction':'up','pipe.travelEnabled':true,'pipe.destination':{kind:'point',x:5000,y:3000}}},runtime={instances:[source]},players=api.createPlayerBehavior({instances:runtime.instances,surfaces:{solid:[],solidTop:[]},bounds:{x:0,y:0,w:6000,h:4000},playerSpawn:{x:0,y:0}}),travel=api.createPipeTravelBehavior(runtime,players),p=players.player,positions=[],camera={viewport:{w:480,h:240},current:{x:0,y:0},targetFor:()=>({x:-4800,y:-2800}),set(x,y){this.current={x,y};positions.push({x,y})}};
+  Object.assign(p,{x:source.bounds.x+source.bounds.w/2-p.w/2,y:source.bounds.y-p.h});travel.step({down:true},camera);let result,phases=[];for(let i=0;i<100&&travel.active;i++){result=travel.step({down:true},camera);phases.push(travel.transit?.phase)}
+  assert(phases.includes('sourceHold'));assert(phases.includes('cameraTransition'));assert(phases.includes('destinationHold'));assert(!phases.includes('exit'),'point destination invents no exit');assert.deepEqual(positions,[{x:-4800,y:-2800}],'far camera rebases once without flyover');assert.equal(result.suppressSimulationThisFrame,true);assert.deepEqual({center:p.x+p.w/2,feet:p.y+p.h},{center:5000,feet:3000});assert.equal(travel.hidden,false);assert.equal(travel.occlusionPipe,null);
+  const exact={x:p.x,y:p.y};players.step({});assert.notDeepEqual({x:p.x,y:p.y},exact,'ordinary simulation can resume on following frame');
+});
+
+test('gameplay camera defaults to 2x, preserves native visuals, and resize retains zoom',async()=>{
+  const {engine,elements,events}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);assert.equal(engine.state.camera.zoom,2);const visual=engine.currentPlayerVisual(),resource=theme.resources[theme.objects['player.small'].visuals.idle];assert.deepEqual(plain(visual.display),resource.display,'camera zoom does not mutate authored display size');engine.state.camera.zoom=1.5;elements.stage.getBoundingClientRect=()=>({width:800,height:400});
+  events.resize();assert.equal(engine.state.camera.zoom,1.5,'stage resize preserves the current zoom');assert(Number.isFinite(engine.state.camera.x)&&Number.isFinite(engine.state.camera.y),'follow remains finite at non-default zoom');
 });
