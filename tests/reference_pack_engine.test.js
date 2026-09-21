@@ -82,6 +82,29 @@ test('authored actor animations advance deterministically at declared cadence an
   assert.strictEqual(api.commandAtTick(staticActor,99),staticActor,'static actor visuals remain unchanged');
 });
 
+
+test('authored patrol actors retain their range, move at legacy speed, reverse, and mirror',()=>{
+  const map={...validMap,instances:[
+    {placeable:'koopaRed',values:{'transform.x':100,'transform.y':96,'walker.direction':'right','walker.patrolRange':1.2}},
+    {placeable:'goomba',values:{'transform.x':160,'transform.y':96,'walker.direction':'left','walker.patrolRange':0}},
+    {placeable:'coin',values:{'transform.x':220,'transform.y':96}}
+  ]};
+  const runtime=api.compileReferenceRuntime(theme,map).runtime,koopa=runtime.instances[0];
+  assert.equal(koopa.values['walker.patrolRange'],1.2,'authored world-unit range survives compilation');
+  const behavior=api.createActorBehavior(runtime),actor=behavior.actors[0],command=runtime.drawCommands.find(item=>item.instanceIndex===0);
+  assert.equal(behavior.actors.length,1,'only patrol-capable actors with a positive range move');
+  assert.equal(actor.speed,.4,'walker uses the established old-engine speed');
+  behavior.step();assert.equal(actor.x,100.4);assert.equal(actor.direction,1);assert.equal(actor.mirror,false);
+  behavior.step();behavior.step();assert.equal(actor.x,101.2);assert.equal(actor.direction,-1);assert.equal(actor.mirror,true,'right endpoint reverses and faces left');
+  const frameBefore=behavior.commandAt(command,0),frameAfter=behavior.commandAt(command,8);
+  assert.notEqual(frameBefore.resource,frameAfter.resource,'walking animation advances while patrol movement is active');
+  assert.equal(frameAfter.worldX,actor.x);assert.equal(frameAfter.mirror,true);
+  for(let i=0;i<6;i++)behavior.step();
+  assert.equal(actor.x,98.8);assert.equal(actor.direction,1);assert.equal(actor.mirror,false,'left endpoint reverses and faces right');
+  assert.equal(runtime.drawCommands.find(item=>item.instanceIndex===1).worldX,160,'zero-range actor stays at its authored transform');
+  assert.equal(runtime.drawCommands.find(item=>item.instanceIndex===2).worldX,220,'actor without patrol capability stays static');
+});
+
 test('construction geometry follows editor native-cell, autotile, sky, and rotation rules',()=>{
   const runtime=api.compileReferenceRuntime(theme,fixture).runtime;
   const ground=runtime.instances.find(x=>x.placeable==='ground').target.construction.geometry;
@@ -105,7 +128,7 @@ test('construction geometry follows editor native-cell, autotile, sky, and rotat
 test('preserves markers and exposes finite derived preview bounds',()=>{
   const result=api.compileReferenceRuntime(theme,fixture),runtime=result.runtime;
   assert.deepEqual(plain(runtime.markers),fixture.markers);
-  assert.deepEqual(plain(runtime.playerSpawn),{x:fixture.markers.start.x-17,y:fixture.markers.start.y-48});
+  assert.deepEqual(plain(runtime.playerSpawn),{x:fixture.markers.start.x-api.PLAYER_WIDTH/2,y:fixture.markers.start.y-api.PLAYER_HEIGHT});
   assert.equal(runtime.boundsSource,'derived-preview');
   assert([runtime.bounds.x,runtime.bounds.y,runtime.bounds.w,runtime.bounds.h].every(Number.isFinite));
   assert(runtime.bounds.w>0&&runtime.bounds.h>0);
@@ -127,10 +150,10 @@ test('compiles explicit solid and solidTop behavior surfaces from capabilities',
 });
 
 test('ported player behavior preserves oracle acceleration, jump cut, gravity, and dimensions',()=>{
-  const runtime={playerSpawn:{x:100,y:252},bounds:{x:0,y:0,w:1000,h:500},surfaces:{solid:[{x:0,y:300,w:1000,h:200}],solidTop:[]}};
+  const runtime={playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:1000,h:500},surfaces:{solid:[{x:0,y:300,w:1000,h:200}],solidTop:[]}};
   const behavior=api.createPlayerBehavior(runtime),player=behavior.player;
   behavior.step();
-  assert.deepEqual({w:player.w,h:player.h,onGround:player.onGround,y:player.y},{w:34,h:48,onGround:true,y:252});
+  assert.deepEqual({w:player.w,h:player.h,onGround:player.onGround,y:player.y},{w:24,h:24,onGround:true,y:276});
   behavior.step({right:true});
   assert.equal(player.vx,.36);
   assert.equal(player.face,1);
@@ -147,15 +170,15 @@ test('ported player behavior preserves oracle acceleration, jump cut, gravity, a
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
-  for(let i=0;i<4&&!oneWay.player.onGround;i++)oneWay.step();
-  assert.equal(oneWay.player.y,152);
+  for(let i=0;i<6&&!oneWay.player.onGround;i++)oneWay.step();
+  assert.equal(oneWay.player.y,176);
   assert.equal(oneWay.player.onGround,true);
 
-  const wall=api.createPlayerBehavior({playerSpawn:{x:100,y:252},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[{x:0,y:300,w:500,h:100},{x:150,y:200,w:20,h:100}],solidTop:[]}});
+  const wall=api.createPlayerBehavior({playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[{x:0,y:300,w:500,h:100},{x:150,y:200,w:20,h:100}],solidTop:[]}});
   wall.step();
   wall.player.vx=4.6;
   for(let i=0;i<8;i++)wall.step({right:true,run:true});
-  assert.equal(wall.player.x,116);
+  assert.equal(wall.player.x,126);
   assert.equal(wall.player.vx,0);
 });
 
@@ -180,7 +203,7 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.runtime);
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
-    x:fixture.markers.start.x-17,y:fixture.markers.start.y-48,w:34,h:48,vx:0,vy:0,
+    x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
     onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle'
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
@@ -196,15 +219,15 @@ test('player sprite preserves authored aspect ratio and bottom-center anchor',as
   assert.deepEqual(plain(fit),{
     originX:player.x+player.w/2,
     originY:player.y+player.h,
-    dx:-17,dy:-34,w:34,h:34
+    dx:-12,dy:-24,w:24,h:24
   });
   assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
   assert(fit.w>16&&fit.h>16,'the family fit is larger than a literal 16×16 rendering');
-  assert(fit.w<=player.w&&fit.h<=player.h,'the visual fits inside the 34×48 collision box');
-  assert.notEqual(fit.h,player.h,'the visual is not stretched to the collision-box height');
+  assert(fit.w<=player.w&&fit.h<=player.h,'the visual fits inside the 24×24 collision box');
+  assert.equal(fit.h,player.h,'the square visual fills the intended square hero box');
   assert.equal(fit.originY+fit.dy+fit.h,player.y+player.h,'the visual bottom remains at the player feet');
   assert.equal(fit.originX+fit.dx+fit.w/2,player.x+player.w/2,'the visual remains horizontally centered');
-  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-17&&args[6]===-34&&args[7]===34&&args[8]===34),
+  assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-12&&args[6]===-24&&args[7]===24&&args[8]===24),
     'canvas draw uses the fitted, foot-centered destination rectangle');
   operations.scales.length=0;operations.translates.length=0;player.face=-1;frames.shift()(0);
   assert(operations.scales.some(args=>args[0]===-1&&args[1]===1),'mirroring happens around the player anchor');
