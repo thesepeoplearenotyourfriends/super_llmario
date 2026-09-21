@@ -59,7 +59,8 @@ assert.equal(pack.coverage.unresolvedExactPurpose.length, 4);
 assert.deepEqual(pack.coverage.unresolvedBySourceSheet['bgsheet.png'],[6,7,14,15,23,31,39,46,47,54,55,56,57,59]);
 assert.deepEqual(pack.coverage.unresolvedBySourceSheet['mapsheet.png'],[73,74,75,89,90,91,104,105,120,121]);
 assert(!Object.keys(pack.resources).some(id => id.includes('unresolved')));
-assert.equal(pack.resources['pickup.powerup.flight'].provenance.index,3);
+assert.equal(pack.resources['pickup.powerup.flight'].provenance.atlas,'pickup.flight');
+assert.equal(pack.atlases['pickup.flight'].embeddedOnly,true);
 assert.equal(pack.objects.raccoonFeather.visuals.idle,'pickup.powerup.flight');
 assert(pack.objects.raccoonFeather.capabilities.includes('flightPower'));
 assert.equal(pack.placeables.raccoonFeather.object,'raccoonFeather');
@@ -157,16 +158,18 @@ for (const [id, resource] of Object.entries(pack.resources)) {
   assert(pack.families[resource.belongsTo].purpose, `${id}: family ${resource.belongsTo} has no purpose`);
   assert(pack.atlases[resource.image.atlas], `${id}: missing atlas`);
   assert(resource.display?.anchor && resource.display.w > 0 && resource.display.h > 0, `${id}: incomplete display contract`);
-  const key = `${resource.provenance.sheet}:${resource.provenance.index}`;
+  const key = resource.provenance.sheet?`${resource.provenance.sheet}:${resource.provenance.index}`:`embedded:${resource.provenance.atlas}:${id}`;
   assert(!provenance.has(key), `${id}: duplicate source cell ${key}`);
   provenance.add(key);
 }
 
 let independentlyCounted = 0;
-for (const atlas of Object.values(pack.atlases)) {
-  const source = fs.readFileSync(path.join(ROOT, 'themes/marioai_theme_files', atlas.sourceFile));
+for (const [atlasId, atlas] of Object.entries(pack.atlases)) {
+  const embedded = Buffer.from(atlas.data, 'base64');
+  const source = atlas.embeddedOnly?embedded:fs.readFileSync(path.join(ROOT, 'themes/marioai_theme_files', atlas.sourceFile));
   assert.equal(require('crypto').createHash('sha256').update(source).digest('hex'), atlas.sha256);
-  assert(source.equals(Buffer.from(atlas.data, 'base64')), `${atlas.sourceFile}: embedded atlas differs from static source`);
+  if (!atlas.embeddedOnly) assert(source.equals(embedded), `${atlas.sourceFile}: embedded atlas differs from static source`);
+  if (atlas.embeddedOnly) { independentlyCounted++; continue; }
   const image = pngAlpha(source);
   const {w, h} = atlas.cellSize;
   for (let cy = 0; cy < image.height / h; cy++) for (let cx = 0; cx < image.width / w; cx++) {
@@ -175,11 +178,12 @@ for (const atlas of Object.values(pack.atlases)) {
     if (visible) {
       independentlyCounted++;
       const index = cy * (image.width / w) + cx;
-      assert(provenance.has(`${atlas.sourceFile}:${index}`), `${atlas.sourceFile} nonempty cell ${index} is not inventoried`);
+      const key=atlas.embeddedOnly?`embedded:${atlasId}:pickup.powerup.flight`:`${atlas.sourceFile}:${index}`;
+      assert(provenance.has(key), `${atlas.sourceFile||atlasId} nonempty cell ${index} is not inventoried`);
     }
   }
 }
-assert.equal(independentlyCounted, 298);
+assert.equal(independentlyCounted, 299);
 
 for (const [id, animation] of Object.entries(pack.animations)) {
   assert(animation.frames.length > 1, `${id}: static resources must not be wrapped as animations`);

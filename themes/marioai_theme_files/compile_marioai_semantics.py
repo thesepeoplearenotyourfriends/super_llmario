@@ -221,7 +221,6 @@ def apply_item_roles(entry: dict, x: int, y: int):
         0: ("item.mushroom",       "pickup.powerup.grow"),
         1: ("item.fire_flower",     "pickup.powerup.projectile"),
         2: ("item.green_mushroom",  "pickup.special.green"),
-        3: ("item.feather",         "pickup.powerup.flight"),
     }
     if x in mapping:
         src, role = mapping[x]

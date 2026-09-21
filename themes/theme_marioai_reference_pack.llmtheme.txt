@@ -81,6 +81,17 @@
     "foreground"
   ],
   "atlases": {
+    "pickup.flight": {
+      "mediaType": "image/png",
+      "encoding": "base64",
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEABAMAAACuXLVVAAAAElBMVEVHcEz4+PgAAAD4dwD4vwD4+ABMtRJ/AAAAAXRSTlMAQObYZgAAAQVJREFUeNrt3bENgzAQhlGvwApZgRVYIfuvksY0J1lWpNzZSd5fW3wPKipoLWmPyVr2AAAAAAAAAMoBMXCGpUMAAAAAAAAAlgFi8Og7BwMAAAAAAAD4HcB9gRicASIEAAAAAAAA4PsAMQwAAAAAAADwP4BROAaffaNzH79zAAAAAAAAgHTALHzv6it/EQEAAAAAAABIA7wbnp1Lv3MAAAAAAACAckBaGAAAAAAAAGA5wKMHAAAAAAAAGAHSwwAAAAAAAADbAsrCAAAAAAAAANsBZuH0Ly0CAAAAAAAAlANieNkPEAAAAAAAAADKAaNwqxoAAAAAAADANoDyMAAAAAAAAMAugBcoufhqV/q50wAAAABJRU5ErkJggg==",
+      "sha256": "992894ac071bba73cc506e3665f98a68e2b3fecbd31c9da9fc6c251f1ae2bfcb",
+      "cellSize": {
+        "w": 256,
+        "h": 256
+      },
+      "embeddedOnly": true
+    },
     "map": {
       "mediaType": "image/png",
       "encoding": "base64",
@@ -5159,12 +5170,12 @@
       "purpose": "Theme-backed feather flight powerup.",
       "belongsTo": "pickup.powerup",
       "image": {
-        "atlas": "item",
+        "atlas": "pickup.flight",
         "rect": {
-          "x": 48,
+          "x": 0,
           "y": 0,
-          "w": 16,
-          "h": 16
+          "w": 256,
+          "h": 256
         }
       },
       "display": {
@@ -5176,12 +5187,8 @@
         }
       },
       "provenance": {
-        "sheet": "itemsheet.png",
-        "index": 3,
-        "cell": {
-          "x": 3,
-          "y": 0
-        }
+        "source": "user-provided feather icon",
+        "atlas": "pickup.flight"
       }
     },
     "pickup.special.green": {
