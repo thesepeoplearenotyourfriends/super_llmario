@@ -351,6 +351,15 @@ test('ported player behavior preserves oracle acceleration, jump cut, gravity, a
   assert(Math.abs(player.vy-(-3.58))<1e-9,'released jump uses the oracle short-hop clamp before gravity');
 });
 
+test('Down selects crouch presentation only while grounded without changing gameplay geometry',()=>{
+  const runtime={playerSpawn:{x:100,y:276},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[{x:0,y:300,w:500,h:100}],solidTop:[]}},behavior=api.createPlayerBehavior(runtime),player=behavior.player;
+  behavior.step();behavior.step({down:true});
+  assert.equal(player.animationState,'duck');
+  assert.deepEqual({w:player.w,h:player.h,x:player.x,y:player.y},{w:24,h:24,x:100,y:276},'crouch is presentation-only and keeps the 24×24 body');
+  player.onGround=false;player.vy=-2;behavior.step({down:true});
+  assert.equal(player.animationState,'jump','Down does not select crouch while airborne');
+});
+
 test('ported collision behavior lands on solidTop and rejects solid walls',()=>{
   const oneWay=api.createPlayerBehavior({playerSpawn:{x:110,y:120},bounds:{x:0,y:0,w:500,h:400},surfaces:{solid:[],solidTop:[{x:100,y:200,w:100,h:32}]}});
   oneWay.player.vy=11;
@@ -388,7 +397,7 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
     x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
-    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',dead:false
+    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',dead:false
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
   assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
@@ -440,6 +449,22 @@ test('player visual states use theme animations with established walk and run ca
   assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.animations['player.small.run'].frames[1].resource].image.rect);
   player.animationState='jump';player.face=-1;
   assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),theme.resources[theme.objects['player.small'].visuals.jump].image.rect);
+});
+
+test('grounded crouch uses the selected form duck visual and falls back when absent',async()=>{
+  const {engine}=engineHarness();
+  await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+  const player=engine.state.behavior.player;
+  player.form='normal';player.animationState='duck';
+  const normalDuck=theme.resources[theme.objects['player.normal'].visuals.duck];
+  assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),normalDuck.image.rect,'normal form uses its authored duck frame');
+  player.form='fire';
+  const fireDuck=theme.resources[theme.objects['player.fire'].visuals.duck];
+  assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),fireDuck.image.rect,'fire form uses its authored duck frame');
+  player.form='small';
+  const smallIdle=theme.resources[theme.objects['player.small'].visuals.idle];
+  assert.deepEqual(plain(engine.currentPlayerVisual().sourceRect),smallIdle.image.rect,'small form without duck uses its normal idle fallback');
+  assert.deepEqual({w:player.w,h:player.h},{w:24,h:24});
 });
 
 test('invalid public map and theme loads clear an already rendered scene and retain diagnostics',async()=>{
