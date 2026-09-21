@@ -692,17 +692,13 @@ test('player sprite preserves authored aspect ratio and bottom-center anchor',as
   await engine.loadReferenceTheme(theme);
   engine.loadReferenceEditorMap(fixture);
   const player=engine.state.behavior.player,fit=engine.currentPlayerFit();
-  assert.deepEqual(plain(fit),{
-    originX:player.x+player.w/2,
-    originY:player.y+player.h,
-    dx:-8,dy:-16,w:16,h:16
-  });
+  assert.deepEqual(plain(fit),{originX:player.x+player.w/2,originY:player.y+player.h,dx:-8,dy:-16,w:16,h:16});
   assert.equal(fit.w/fit.h,1,'the authored 16×16 frame remains square');
-  assert.equal(fit.w,16,'native rendering retains the authored width rather than scaling to gameplay geometry');
+  assert.equal(fit.w,16,'physics dimensions never rescale native authored artwork');
   assert.equal(fit.originY+fit.dy+fit.h,player.y+player.h,'the visual bottom remains at the player feet');
   assert.equal(fit.originX+fit.dx+fit.w/2,player.x+player.w/2,'the visual remains horizontally centered');
   assert(operations.drawCalls.some(args=>args.length===9&&args[5]===-8&&args[6]===-16&&args[7]===16&&args[8]===16),
-    'canvas draw uses the authored native, foot-centered destination rectangle');
+    'canvas draw uses the authored native, foot-centered destination rectangle independently of the 24×24 body');
   operations.scales.length=0;operations.translates.length=0;player.face=-1;frames.shift()(0);
   assert(operations.scales.some(args=>args[0]===-1&&args[1]===1),'mirroring happens around the player anchor');
   assert(operations.translates.some(args=>args[0]===player.x+player.w/2&&args[1]===player.y+player.h),'mirroring retains the bottom-center anchor');
@@ -826,4 +822,29 @@ test('remains standalone and leaves the legacy oracle unchanged',()=>{
   assert(!html.includes('ART_RESOURCES'));
   assert(!html.includes('llmcart-toybox-recipe'));
   assert(legacy.includes('DEMO_CART'),'legacy oracle remains intact');
+});
+
+test('player-equivalent white-platform edge contact matches rendered cap, solidTop, and 24x24 body while moving',()=>{
+  const map={...validMap,instances:[{placeable:'whitePlatform',values:{'transform.x':160,'transform.y':160,'extent.width':3,'movingPlatform.range':12,'movingPlatform.speed':2}}],markers:{start:{x:40,y:120},goal:null}};
+  const runtime=api.compileReferenceRuntime(theme,map).runtime,instance=runtime.instances[0],surface=runtime.surfaces.solidTop[0],players=api.createPlayerBehavior(runtime),moving=api.createMovingPlatformBehavior(runtime,players),player=players.player;
+  const commands=runtime.drawCommands.filter(command=>command.instanceIndex===instance.index),rendered={x:Math.min(...commands.map(c=>c.worldX+c.x-c.anchorX*c.w)),right:Math.max(...commands.map(c=>c.worldX+c.x+(1-c.anchorX)*c.w))};
+  assert.deepEqual({left:surface.x,right:surface.x+surface.w},{left:rendered.x+8,right:rendered.right-8},'runtime usable top is explicitly inset from rendered cap bounds');
+  assert.equal(player.w,24);assert.equal(player.h,24);
+  Object.assign(player,{x:surface.x-player.w-.25,y:surface.y-44,vy:10,onGround:false});for(let i=0;i<7;i++)players.step();assert.equal(player.onGround,false,'body entirely beside visible/usable cap cannot remain supported');
+  Object.assign(player,{x:surface.x-player.w,y:surface.y-player.h,vy:0,onGround:true});players.step({});assert.equal(player.onGround,false,'edge touch without body overlap is not support');
+  player.x+=.25;player.y=surface.y-40;player.vy=10;for(let i=0;i<5&&!player.onGround;i++)players.step();assert.equal(player.onGround,true,'contact starts after actual body overlap');
+  Object.assign(player,{x:surface.x+4,y:surface.y+5,vy:-8,onGround:false});players.step();assert(player.y<surface.y+5,'upward movement passes through');
+  Object.assign(player,{x:surface.x+surface.w/2-player.w/2,y:surface.y-44,vy:10,onGround:false});for(let i=0;i<6&&!player.onGround;i++)players.step();assert.equal(player.y+player.h,surface.y,'normal landing stays within visible cap');
+  const before={x:surface.x,y:surface.y,w:surface.w};moving.step();assert.equal(surface.x,before.x+2);assert.equal(surface.w,before.w);moving.reset();assert.deepEqual({x:surface.x,y:surface.y,w:surface.w},before,'moving reset restores corrected collision geometry');
+});
+
+test('pipe travel validates directions, stable references, point feet arrival, state, cooldown, and reset',()=>{
+  const pipe=(id,x,y,direction,destination,enabled=true)=>({placeable:'pipe',instanceId:id,values:{'transform.x':x,'transform.y':y,'pipe.direction':direction,'pipe.length':2,'pipe.travelEnabled':enabled,...(destination?{'pipe.destination':destination}:{})}});
+  const map={...validMap,instances:[pipe('a',100,200,'up',{kind:'pipe',instanceId:'b'}),pipe('b',400,200,'right',{kind:'point',x:700,y:180}),pipe('off',600,200,'left',null,false)],markers:{start:{x:100,y:200},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),travel=api.createPipeTravelBehavior(runtime,players),p=players.player,a=travel.byId.get('a'),b=travel.byId.get('b');
+  assert.equal(travel.resolveDestination(travel.byId.get('off')),null);assert.equal(travel.requiredInput('up'),'down');assert.equal(travel.requiredInput('down'),'up');assert.equal(travel.requiredInput('left'),'right');assert.equal(travel.requiredInput('right'),'left');
+  Object.assign(p,{x:a.bounds.x+a.bounds.w/2-p.w/2,y:a.bounds.y-p.h,form:'fire',coins:9,lives:4,runCharge:73,pSpeed:true});assert.equal(travel.step({up:true}),null,'wrong input does not enter');p.x=a.bounds.x+a.bounds.w;assert.equal(travel.step({down:true}),null,'misalignment does not enter');p.x=a.bounds.x+a.bounds.w/2-p.w/2;assert(travel.step({down:true}));
+  const state={form:p.form,coins:p.coins,lives:p.lives};for(let i=0;i<18;i++)travel.step({down:true});assert.equal(travel.transit.phase,'exit');assert.equal(p.x,api.pipeMouth(b).x-p.w/2+api.pipeMouth(b).axis.x*(p.w/2+2)-api.pipeMouth(b).axis.x*(p.w+8));for(let i=0;i<18;i++)travel.step({left:true});assert.equal(travel.active,false);assert.deepEqual({form:p.form,coins:p.coins,lives:p.lives},state);assert(travel.cooldown>0);assert.equal(travel.step({left:true}),null,'held arrival input cannot retrigger');
+  travel.reset();assert.equal(travel.active,false);assert.equal(travel.cooldown,0);
+  b.values['pipe.destination']={kind:'point',x:700,y:180};Object.assign(p,{x:b.bounds.x-p.w,y:b.bounds.y+b.bounds.h/2-p.h/2});assert(travel.step({left:true}));for(let i=0;i<18;i++)travel.step({left:true});assert.deepEqual({center:p.x+p.w/2,feet:p.y+p.h},{center:700,feet:180});
+  a.values['pipe.destination']={kind:'pipe',instanceId:'missing'};travel.reset();Object.assign(p,{x:a.bounds.x+a.bounds.w/2-p.w/2,y:a.bounds.y-p.h});assert.equal(travel.step({down:true}),null,'broken references fail safely');
 });

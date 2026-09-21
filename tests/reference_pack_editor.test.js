@@ -729,3 +729,20 @@ assert(newEditor.includes("!text&&state.history&&(e.metaKey||e.ctrlKey)"),
 // The archived editor is an explicit regression oracle, never an active default.
 assert(oldEditor.includes('LLMario Cartbench v0.30 Pipe Topology'));
 console.log('reference pack editor contract checks passed');
+
+// Pipe destinations are stable, explicit map-local links or feet-centered points.
+const travelPipeItem=item('pipe'),pipeA={item:travelPipeItem,instanceId:'pipe-a',values:{'transform.x':100,'transform.y':200,'pipe.direction':'up','pipe.length':2,'pipe.destination':{kind:'pipe',instanceId:'pipe-b'}}},pipeB={item:travelPipeItem,instanceId:'pipe-b',values:{'transform.x':300,'transform.y':220,'pipe.direction':'right','pipe.length':2}};
+const travelPipeBounds=instance=>({x:instance.values['transform.x']-16,y:instance.values['transform.y']-32,w:32,h:32});
+assert.deepStrictEqual(plain(semantics.normalizeDestination({x:8,y:9})),{kind:'point',x:8,y:9},'legacy mapLocation remains a point');
+assert.deepStrictEqual(plain(semantics.normalizeDestination({kind:'pipe',instanceId:'pipe-b'})),{kind:'pipe',instanceId:'pipe-b'});
+let endpoint=semantics.destinationEndpoint(pipeA,[pipeA,pipeB],travelPipeBounds);
+assert.strictEqual(endpoint.target,pipeB);assert.deepStrictEqual(plain({x:endpoint.x,y:endpoint.y}),{x:316,y:204},'overlay endpoint uses the target pipe mouth');
+pipeB.values['transform.x']=420;endpoint=semantics.destinationEndpoint(pipeA,[pipeA,pipeB],travelPipeBounds);assert.strictEqual(endpoint.x,436,'stable reference follows a moved target rather than stale coordinates');
+pipeA.values['pipe.destination']={kind:'point',x:501,y:177};assert.deepStrictEqual(plain(semantics.destinationEndpoint(pipeA,[pipeA,pipeB],travelPipeBounds)),{kind:'point',x:501,y:177});
+const pipeDoc={instances:[{placeable:'pipe',instanceId:'pipe-a',values:pipeA.values},{placeable:'pipe',instanceId:'pipe-b',values:pipeB.values}],markers:{start:null,goal:null}},saved=semantics.serializeMap(theme,pipeDoc);
+assert.strictEqual(saved.instances[1].instanceId,'pipe-b','stable identity survives save');assert.deepStrictEqual(plain(saved.instances[0].values['pipe.destination']),{kind:'point',x:501,y:177});
+assert(newEditor.includes("path==='pipe.destination'&&state.selected"),'live pipe destination bypasses generic JSON textarea');
+assert(newEditor.includes("canvas.style.cursor='crosshair'"),'destination pick mode presents a spatial cursor');
+assert(newEditor.includes("source.values['pipe.travelEnabled']=false"),'Clear disables contradictory travel state');
+assert(newEditor.includes("Destination selection cancelled."),'Escape/right-click cancellation preserves the prior document');
+const pipeHistory=semantics.createHistory(pipeDoc),pipeChanged=plain(pipeDoc);pipeChanged.instances[0].values['pipe.destination']={kind:'pipe',instanceId:'pipe-b'};pipeHistory.push(pipeChanged);assert.strictEqual(pipeHistory.undo().instances[0].values['pipe.destination'].kind,'point');assert.strictEqual(pipeHistory.redo().instances[0].values['pipe.destination'].kind,'pipe');
