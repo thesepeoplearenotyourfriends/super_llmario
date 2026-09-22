@@ -22,7 +22,7 @@ function engineHarness(){
   const ctx={setTransform(){},save(){},restore(){},translate(...args){operations.translates.push(args)},scale(...args){operations.scales.push(args)},rotate(){},fillRect(){operations.fillRect++},fillText(...args){operations.texts.push(args)},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
   const elements={
     screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},
-    themeButton:{},mapButton:{},fitButton:{},themeFile:{files:[],value:''},mapFile:{files:[],value:''}
+    themeButton:{},mapButton:{},fitButton:{},coinCount:{value:'',textContent:''},livesCount:{value:'',textContent:''},themeFile:{files:[],value:''},mapFile:{files:[],value:''}
   };
   class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
   const window={ReferencePackBoundary:api};
@@ -511,10 +511,15 @@ test('runtime frame path collects every powerup capability and rejects dead-play
   player.dead=true;const blocked=collectThroughFrame('growMushroom');assert.equal(blocked.taken,false,'dead player cannot collect through the runtime frame path');
 });
 
-test('top-bar HUD shows the current coin count on two compact lines',async()=>{
-  const {engine,operations,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);engine.state.behavior.player.coins=7;operations.texts.length=0;frames.shift()(0);
-  const labels=operations.texts.map(args=>String(args[0]));
-  assert(labels.includes('COINS'));assert(labels.includes('7'));
+test('top-bar HUD shows current coins and lives from player state',async()=>{
+  const {engine,elements,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);Object.assign(engine.state.behavior.player,{coins:7,lives:2});frames.shift()(0);
+  assert.equal(elements.coinCount.textContent,'7');assert.equal(elements.livesCount.textContent,'2');
+});
+
+test('standalone chrome uses concise controls without combined-mode navigation',()=>{
+  assert.match(html,/<header><span class="counter">COINS <output id="coinCount">0<\/output><\/span><span class="counter">LIVES <output id="livesCount">3<\/output><\/span><\/header>/);
+  assert.match(html,/<button id="themeButton">Load theme…<\/button>/);assert.match(html,/<button id="mapButton">Load map…<\/button>/);assert.match(html,/<button id="fitButton">Restart<\/button>/);
+  assert.doesNotMatch(html,/REFERENCE-PACK ENGINE|static runtime compiler|releaseMenu|releaseEditorButton/);
 });
 
 test('raccoon P-speed takeoff uses established timed flight and carrying-sheet visuals',async()=>{

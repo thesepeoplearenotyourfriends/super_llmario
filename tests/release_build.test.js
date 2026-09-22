@@ -17,7 +17,9 @@ test('release packs the canonical reference theme, demo map, and embedded map ed
   assert.equal(sandbox.PACKED_EXPERIENCES.length,1);assert.equal(sandbox.PACKED_EXPERIENCES[0].id,'demo');
   assert.deepEqual(JSON.parse(JSON.stringify(sandbox.PACKED_EXPERIENCES[0].theme)),theme);assert.deepEqual(JSON.parse(JSON.stringify(sandbox.PACKED_EXPERIENCES[0].map)),map);
   assert.equal(sandbox.PACKED_DEFAULT_EXPERIENCE_ID,'demo');assert(sandbox.PACKED_EDITOR_HTML.includes('Reference Pack Editor'));assert(sandbox.PACKED_EDITOR_HTML.includes('ReferencePackEditorReleaseLoad'));
-  assert(html.includes('Map Editor'));assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
+  assert(html.includes('MAP EDITOR'));assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
+  assert.match(html,/<button id="releaseEditorButton">Editor<\/button><\/header>/);assert.doesNotMatch(html,/id="releaseMenu"|class="releaseMenu"/);
+  assert.match(html,/getElementById\('releaseEditorButton'\).*addEventListener\('click',openPackedEditor\)/);
 });
 test('every generated inline script is syntactically valid JavaScript',()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'llmario-release-'));

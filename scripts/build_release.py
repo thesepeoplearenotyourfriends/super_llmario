@@ -21,7 +21,7 @@ RUNTIME_BOOT = "refreshPair();resize();requestAnimationFrame(frame);"
 EDITOR_BOOT = "window.addEventListener('resize',resize);resize();renderIssues();\n})();"
 
 RELEASE_STYLE = r"""
-.releaseMenu{border:1px solid #55dbe9;border-radius:10px;padding:8px 12px;background:#17465b;color:var(--ink);font-weight:700;cursor:pointer}
+#releaseEditorButton{margin-left:auto}
 #releaseEditorShell{position:fixed;inset:0;z-index:1000;display:grid;grid-template-rows:48px minmax(0,1fr);background:#07131d}
 #releaseEditorShell[hidden]{display:none}
 #releaseEditorBar{display:flex;align-items:center;gap:12px;padding:7px 12px;background:#0d2635;border-bottom:1px solid #48d7e866;color:var(--ink)}
@@ -54,15 +54,11 @@ function openPackedEditor(){
   frame.srcdoc=PACKED_EDITOR_HTML;
 }
 function closePackedEditor(){
-  const shell=document.getElementById('releaseEditorShell'),menu=document.getElementById('releaseMenu');if(shell)shell.hidden=true;if(menu&&activePackedExperienceId)menu.value=activePackedExperienceId;
+  const shell=document.getElementById('releaseEditorShell');if(shell)shell.hidden=true;
 }
 async function bootPackedRelease(){
-  const menu=document.getElementById('releaseMenu');
-  if(!menu||!PACKED_EXPERIENCES.length){refreshPair();return}
-  menu.hidden=false;menu.textContent='';
-  for(const experience of PACKED_EXPERIENCES){const option=document.createElement('option');option.value=experience.id;option.textContent=experience.label||experience.id;menu.append(option)}
-  const editorOption=document.createElement('option');editorOption.value='__editor__';editorOption.textContent='Map Editor';menu.append(editorOption);
-  menu.addEventListener('change',async()=>{if(menu.value==='__editor__'){openPackedEditor();return}try{await applyPackedExperience(PACKED_EXPERIENCES.find(item=>item.id===menu.value))}catch(error){report(`Packed experience failed: ${error.message||error}`)}});
+  if(!PACKED_EXPERIENCES.length){refreshPair();return}
+  document.getElementById('releaseEditorButton')?.addEventListener('click',openPackedEditor);
   document.getElementById('releaseEditorBack')?.addEventListener('click',closePackedEditor);
   const initial=PACKED_EXPERIENCES.find(item=>item.id===PACKED_DEFAULT_EXPERIENCE_ID)||PACKED_EXPERIENCES[0];
   await applyPackedExperience(initial);
@@ -131,11 +127,7 @@ def build(engine: str, editor: str, theme: object, map_doc: object) -> str:
 
     packed_editor = pack_editor(editor)
     output = engine.replace("</style></head>", RELEASE_STYLE + "\n</style></head>", 1)
-    output = output.replace(
-        '<div class="controls">',
-        '<div class="controls"><select id="releaseMenu" class="releaseMenu" hidden aria-label="Packed experience"></select>',
-        1,
-    )
+    output = output.replace("</header>", '<button id="releaseEditorButton">Editor</button></header>', 1)
     output = output.replace("</main>", "</main>\n" + RELEASE_EDITOR_SHELL, 1)
     output = output.replace(SCRIPT_BOUNDARY, "</script>\n" + release_data(theme, map_doc, packed_editor) + "\n<script>\n(()=>{\n'use strict';", 1)
     output = output.replace(RUNTIME_BOOT, RELEASE_RUNTIME + "\nbootPackedRelease();resize();requestAnimationFrame(frame);", 1)
