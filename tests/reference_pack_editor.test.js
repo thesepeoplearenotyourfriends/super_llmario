@@ -806,6 +806,34 @@ assert.strictEqual(semantics.movingPlatformOverlay(null,{x:0,y:0,zoom:1}),null,
 assert.strictEqual(semantics.movingPlatformOverlay({item:item('mushroomPlatform'),values:liveValues},{x:0,y:0,zoom:1}),null,
   'only White Platform instances receive this editor overlay');
 
+// Palette previews fit resolved native geometry with one scale on both axes.
+const previewBox={maxW:112,maxH:54};
+for(const [label,bounds] of [
+  ['Question Block',{w:16,h:16}],
+  ['Brick',{w:16,h:16}],
+]) {
+  const fit=plain(semantics.proportionalFit(bounds,previewBox));
+  assert.deepStrictEqual(fit,{scale:3.375,w:54,h:54},`${label} remains square in its palette preview`);
+}
+for(const [label,bounds] of [
+  ['Pipe (three cells)',{w:32,h:48}],
+  ['Ladder',{w:16,h:32}],
+  ['Ground (three by two cells)',{w:48,h:32}],
+  ['Mushroom Platform (three by four cells)',{w:48,h:64}],
+]) {
+  const fit=plain(semantics.proportionalFit(bounds,previewBox));
+  assert.strictEqual(fit.w/fit.h,bounds.w/bounds.h,`${label} retains its resolved native preview aspect ratio`);
+  assert(fit.w<=previewBox.maxW&&fit.h<=previewBox.maxH,`${label} fits inside the preview box`);
+}
+const familyPreviewBounds={w:16,h:24};
+for(const familyMember of ['goomba','waveGoomba']) {
+  const fit=semantics.proportionalFit(familyPreviewBounds,previewBox);
+  assert.strictEqual(fit.w/fit.h,familyPreviewBounds.w/familyPreviewBounds.h,
+    `${familyMember} family cycling preserves proportional preview scaling`);
+}
+assert(newEditor.includes('height:auto;aspect-ratio:128/68'),
+  'responsive palette canvas presentation preserves its backing-store aspect ratio');
+
 // Finite map geometry is one authored contract for placement, camera, and persistence.
 const finite={x:-64,y:-32,w:320,h:192};
 for(const point of [{x:-64,y:-32},{x:256,y:-32},{x:-64,y:160},{x:256,y:160}])
@@ -819,8 +847,29 @@ assert.deepStrictEqual(plain(semantics.constrainRectOrigin({x:-72,y:176},{x:-80,
 assert.deepStrictEqual(plain(semantics.constrainMarker({x:-64,y:-32},finite)),{x:-48,y:0},
   'marker placement at a corner moves its complete marker geometry inside');
 assert.strictEqual(semantics.rectInBounds(semantics.markerBounds({x:-48,y:0}),finite),true);
-assert.deepStrictEqual(plain(semantics.clampCamera({x:999,y:-999,zoom:2},finite,{w:320,h:192})),{x:128,y:-128,zoom:2},
-  'editor camera pan clamps to the authored bounds at zoom');
+const cameraViewport={w:320,h:192},zoom=2;
+assert.deepStrictEqual(plain(semantics.clampCamera({x:999,y:-999,zoom},finite,cameraViewport)),{x:448,y:-320,zoom},
+  'camera clamps only when the bounds left/bottom edges meet the opposite viewport edges');
+for(const [direction,camera,edge] of [
+  ['left',{x:-512,y:0,zoom},0],
+  ['right',{x:448,y:0,zoom},320],
+  ['up',{x:0,y:-320,zoom},0],
+  ['down',{x:0,y:256,zoom},192],
+]) {
+  const clamped=semantics.clampCamera(camera,finite,cameraViewport);
+  const screen={left:finite.x*zoom+clamped.x,right:(finite.x+finite.w)*zoom+clamped.x,
+    top:finite.y*zoom+clamped.y,bottom:(finite.y+finite.h)*zoom+clamped.y};
+  assert.strictEqual(screen[direction==='left'?'right':direction==='right'?'left':direction==='up'?'bottom':'top'],edge,
+    `${direction} pan stops exactly where the recoverable opposite edges meet`);
+}
+assert.deepStrictEqual(plain(semantics.clampCamera({x:-10000,y:10000,zoom},finite,cameraViewport)),{x:-512,y:256,zoom},
+  'the finite rectangle cannot be panned entirely beyond the viewport');
+const fitted=plain(semantics.fitCamera(finite,cameraViewport));
+assert.deepStrictEqual(fitted,{x:88,y:48,zoom:.75},'Fit map deliberately centers and fits the complete authored rectangle');
+const cameraAfterZoom=semantics.clampCamera(semantics.zoomAt({x:-512,y:0,zoom:2},{x:0,y:0},3),finite,cameraViewport);
+assert.strictEqual((finite.x+finite.w)*cameraAfterZoom.zoom+cameraAfterZoom.x,0,'zoom keeps the relaxed recoverability edge instead of recentering');
+const resizedViewport=semantics.clampCamera({x:-512,y:256,zoom},finite,{w:640,h:384});
+assert.deepStrictEqual(plain(resizedViewport),{x:-512,y:256,zoom},'viewport resize preserves an already recoverable relaxed camera');
 const boundedDocument={worldBounds:finite,instances:mapDocument.instances,markers:mapDocument.markers};
 const boundedEnvelope=plain(semantics.serializeMap(theme,boundedDocument));
 assert.deepStrictEqual(boundedEnvelope.worldBounds,{x:0,y:0,w:320,h:192},'save normalizes a finite single-map origin');
