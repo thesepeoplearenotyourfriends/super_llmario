@@ -172,8 +172,8 @@
     "player.carrying": {
       "mediaType": "image/png",
       "encoding": "base64",
-      "data": "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",
-      "sha256": "26a2ec94d6d23922104f43eb5a34ae54268fe371b5b2620ce5f2d10fd445aa08",
+      "data": "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",
+      "sha256": "768440dc32243823659696232d1b12f5d80308e2e8124e8f269b9091e25e5249",
       "sourceFile": "carrying_reordered_sheet.png",
       "cellSize": {
         "w": 32,
@@ -12341,8 +12341,14 @@
       "label": "Goomba",
       "object": "goomba",
       "paletteFamily": {
-        "variants": ["goomba", "waveGoomba"],
-        "labels": ["Ground", "Wave"]
+        "variants": [
+          "goomba",
+          "waveGoomba"
+        ],
+        "labels": [
+          "Ground",
+          "Wave"
+        ]
       },
       "parameters": [
         "transform.x",
@@ -12357,8 +12363,14 @@
       "label": "Koopa",
       "object": "koopa.red",
       "paletteFamily": {
-        "variants": ["koopaRed", "koopaGreen"],
-        "labels": ["Red", "Green"]
+        "variants": [
+          "koopaRed",
+          "koopaGreen"
+        ],
+        "labels": [
+          "Red",
+          "Green"
+        ]
       },
       "parameters": [
         "transform.x",
@@ -12503,8 +12515,16 @@
       },
       "formCycle": {
         "path": "terrain.style",
-        "values": ["overground", "castle", "underground"],
-        "labels": ["Overground", "Castle", "Underground"]
+        "values": [
+          "overground",
+          "castle",
+          "underground"
+        ],
+        "labels": [
+          "Overground",
+          "Castle",
+          "Underground"
+        ]
       }
     },
     "mushroomPlatform": {
@@ -12578,8 +12598,16 @@
       ],
       "formCycle": {
         "path": "solidBlock.style",
-        "values": ["stone", "wood", "glassBlue"],
-        "labels": ["Stone", "Wood", "Blue Glass"]
+        "values": [
+          "stone",
+          "wood",
+          "glassBlue"
+        ],
+        "labels": [
+          "Stone",
+          "Wood",
+          "Blue Glass"
+        ]
       }
     },
     "rotatingBlock": {
