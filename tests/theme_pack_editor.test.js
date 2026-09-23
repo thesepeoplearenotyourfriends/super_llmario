@@ -1,0 +1,55 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const os=require('node:os');
+const path=require('node:path');
+const cp=require('node:child_process');
+
+const root=path.resolve(__dirname,'..');
+const appPath=path.join(root,'editor/theme_pack_editor.html');
+const themePath=path.join(root,'themes/theme_marioai_reference_pack.llmtheme.txt');
+const html=fs.readFileSync(appPath,'utf8');
+const theme=JSON.parse(fs.readFileSync(themePath,'utf8'));
+
+function scripts(source){
+  return [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1]);
+}
+
+test('theme pack workbench is a standalone readonly single-file application',()=>{
+  assert.match(html,/THEME PACK WORKBENCH/);
+  assert.match(html,/Phase 1 · readonly inspector/);
+  assert.match(html,/id="fileInput"/);
+  assert.match(html,/window\.ThemePackWorkbench=\{loadThemeDocument,validateTheme,refsIn\}/);
+  assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+href=/i);
+  assert.doesNotMatch(html,/fetch\s*\(|XMLHttpRequest|import\s*\(/);
+  assert.doesNotMatch(html,/contenteditable\s*=|Save theme|Export theme/i);
+});
+
+test('theme pack workbench covers the complete canonical reference-pack surface',()=>{
+  const required=['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups','coverage','contract','attribution','sceneLayers','extended'];
+  for(const section of required){
+    assert(Object.hasOwn(theme,section),`canonical theme has ${section}`);
+    assert(html.includes(`'${section}'`)||html.includes(`${section}:`),`workbench names ${section}`);
+  }
+  assert.match(html,/resourceCanvas/);
+  assert.match(html,/animationCanvas/);
+  assert.match(html,/Referenced by/);
+  assert.match(html,/Component resources/);
+  assert.match(html,/Parameter Schemas/);
+});
+
+test('every inline workbench script is syntactically valid JavaScript',()=>{
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'llmario-theme-editor-'));
+  try{
+    const inline=scripts(html);
+    assert.equal(inline.length,1);
+    inline.forEach((source,index)=>{
+      const file=path.join(dir,`${index}.js`);
+      fs.writeFileSync(file,source);
+      cp.execFileSync('node',['--check',file],{stdio:'pipe'});
+    });
+  }finally{
+    fs.rmSync(dir,{recursive:true,force:true});
+  }
+});
