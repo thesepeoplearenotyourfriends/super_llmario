@@ -117,9 +117,12 @@ def validate_map_compatibility(theme: object, map_doc: object, path: Path) -> No
         raise RuntimeError(f"{path.relative_to(ROOT)} has unsupported map format {map_doc.get('format')!r}")
     if map_doc.get("mapVersion") != MAP_VERSION:
         raise RuntimeError(f"{path.relative_to(ROOT)} has unsupported mapVersion {map_doc.get('mapVersion')!r}")
-    if theme.get("id") != map_doc.get("theme", {}).get("id"):
+    map_theme = map_doc.get("theme")
+    if not isinstance(map_theme, dict):
+        raise RuntimeError(f"{path.relative_to(ROOT)} theme identity must be an object")
+    if theme.get("id") != map_theme.get("id"):
         raise RuntimeError(f"{path.relative_to(ROOT)} does not target the packed reference theme")
-    if theme.get("packVersion") != map_doc.get("theme", {}).get("packVersion"):
+    if theme.get("packVersion") != map_theme.get("packVersion"):
         raise RuntimeError(f"{path.relative_to(ROOT)} theme version does not match the packed reference theme")
 
 
