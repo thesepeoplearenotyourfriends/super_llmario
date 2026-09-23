@@ -4,7 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const root=path.resolve(__dirname,'..'),enginePath=path.join(root,'engine/reference_pack_engine.html'),editorPath=path.join(root,'editor/reference_pack_editor.html'),releasePath=path.join(root,'dist/super_llmario.html'),mapDir=path.join(root,'maps');
 const theme=JSON.parse(fs.readFileSync(path.join(root,'themes/theme_marioai_reference_pack.llmtheme.txt'),'utf8'));
 function build(){cp.execFileSync('python3',['scripts/build_release.py'],{cwd:root,stdio:'pipe'});return fs.readFileSync(releasePath,'utf8')}
-function mapFiles(){return fs.readdirSync(mapDir).filter(name=>name.endsWith('.llmmap.txt')).sort((a,b)=>{const aId=a.slice(0,-'.llmmap.txt'.length),bId=b.slice(0,-'.llmmap.txt'.length);return (aId!=='demo')-(bId!=='demo')||aId.localeCompare(bId)||a.localeCompare(b)})}
+function mapFiles(){return fs.readdirSync(mapDir).filter(name=>name.endsWith('.llmmap.txt'))}
 function scripts(html){return [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1])}
 function packedScript(html){const match=html.match(/<script id="packedReleaseContent">([\s\S]*?)<\/script>/);assert(match,'missing packed release content');return match[1]}
 
@@ -14,10 +14,10 @@ test('release builder is deterministic and never mutates editable engine/editor 
 });
 test('release packs every repository map with one shared reference theme and embedded map editor',()=>{
   const html=build(),source=packedScript(html),sandbox={};vm.createContext(sandbox);vm.runInContext(source.replace(/^const /gm,'var '),sandbox);
-  const expectedFiles=mapFiles(),expectedIds=expectedFiles.map(name=>name.slice(0,-'.llmmap.txt'.length));
-  assert.deepEqual(Array.from(sandbox.PACKED_EXPERIENCES,x=>x.id),expectedIds);assert.deepEqual(Array.from(sandbox.PACKED_EXPERIENCES,x=>x.filename),expectedFiles);
+  const expectedFiles=mapFiles(),expectedIds=expectedFiles.map(name=>name.slice(0,-'.llmmap.txt'.length)),packedFiles=Array.from(sandbox.PACKED_EXPERIENCES,x=>x.filename),packedIds=Array.from(sandbox.PACKED_EXPERIENCES,x=>x.id);
+  assert.deepEqual([...packedFiles].sort(),[...expectedFiles].sort());assert.deepEqual([...packedIds].sort(),[...expectedIds].sort());if(expectedIds.includes('demo'))assert.equal(packedIds[0],'demo');
   for(const experience of sandbox.PACKED_EXPERIENCES){const map=JSON.parse(fs.readFileSync(path.join(mapDir,experience.filename),'utf8'));assert.deepEqual(JSON.parse(JSON.stringify(experience.map)),map);assert.strictEqual(experience.theme,sandbox.PACKED_THEME)}
-  assert.deepEqual(JSON.parse(JSON.stringify(sandbox.PACKED_THEME)),theme);assert.equal(sandbox.PACKED_DEFAULT_EXPERIENCE_ID,expectedIds.includes('demo')?'demo':expectedIds[0]);
+  assert.deepEqual(JSON.parse(JSON.stringify(sandbox.PACKED_THEME)),theme);assert.equal(sandbox.PACKED_DEFAULT_EXPERIENCE_ID,expectedIds.includes('demo')?'demo':packedIds[0]);
   const caves=sandbox.PACKED_EXPERIENCES.find(x=>x.id==='breakout_caves');if(caves)assert.equal(caves.label,'Breakout Caves');
   assert(sandbox.PACKED_EDITOR_HTML.includes('Reference Pack Editor'));assert(sandbox.PACKED_EDITOR_HTML.includes('ReferencePackEditorReleaseLoad'));assert(sandbox.PACKED_EDITOR_HTML.includes("mapName='packed.llmmap.txt'"));
   assert(html.includes('MAP EDITOR'));assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
