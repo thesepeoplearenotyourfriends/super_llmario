@@ -20,10 +20,19 @@ test('theme pack workbench is a standalone readonly single-file application',()=
   assert.match(html,/THEME PACK WORKBENCH/);
   assert.match(html,/Phase 1 · readonly inspector/);
   assert.match(html,/id="fileInput"/);
-  assert.match(html,/window\.ThemePackWorkbench=\{loadThemeDocument,validateTheme,refsIn\}/);
+  assert.match(html,/window\.ThemePackWorkbench=\{loadThemeDocument,validateTheme,refsIn,report\}/);
   assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+href=/i);
   assert.doesNotMatch(html,/fetch\s*\(|XMLHttpRequest|import\s*\(/);
   assert.doesNotMatch(html,/contenteditable\s*=|Save theme|Export theme/i);
+});
+
+test('theme pack workbench keeps inventory entries reachable and exposes status logging',()=>{
+  assert.match(html,/#sectionList\{[^}]*flex:0 1 44%/);
+  assert.match(html,/#itemList\{[^}]*flex:1 1 56%/);
+  assert.match(html,/const first=INVENTORY_SECTIONS\.has\(section\)\?entries\(state\.theme\?\.\[section\]\)\[0\]\?\.\[0\]:null/);
+  for(const id of ['statusBar','statusMessage','logButton','logPanel','logEntries'])assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(html,/function report\(level,message,/);
+  assert.match(html,/Could not decode embedded atlas/);
 });
 
 test('theme pack workbench covers the complete canonical reference-pack surface',()=>{
