@@ -1,0 +1,4193 @@
+{
+  "format": "llmario-reference-editor-map",
+  "mapVersion": 1,
+  "theme": {
+    "id": "marioai-reference-complete",
+    "packVersion": 1
+  },
+  "worldBounds": {
+    "x": 0,
+    "y": 0,
+    "w": 2400,
+    "h": 2016
+  },
+  "instances": [
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-47",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 16,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-49",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 64,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-50",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 32,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-51",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 192,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-52",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 64,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-53",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 128,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-54",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 160,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-55",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 64,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-56",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 64,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-57",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 32,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-58",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 32,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-59",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 192,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-60",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 192,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-61",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 192,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-62",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 32,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-63",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 32,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-64",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 160,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-65",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 128,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-66",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 96,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-67",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 432,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-68",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 368,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-69",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 208,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-70",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 336,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-71",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 400,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-72",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 272,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-73",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 240,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-74",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 112,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-75",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 240,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-76",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 240,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-77",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 16,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-78",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 144,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-79",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 112,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-80",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 176,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-81",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 208,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-82",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 144,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-83",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 80,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-84",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 208,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-85",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 16,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-86",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 112,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-87",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 80,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-88",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 160,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-89",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 96,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-90",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 64,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-91",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 160,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-92",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 320,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-93",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 448,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-94",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 448,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-95",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 448,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-96",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 256,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-97",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 416,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-98",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 480,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-99",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 288,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-100",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 416,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-101",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 384,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-102",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 224,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-103",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 256,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-104",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 256,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-105",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 304,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-106",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 48,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-107",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 176,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-108",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 240,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-109",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 112,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-110",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 144,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-111",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 304,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-112",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 400,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-113",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 336,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-114",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 368,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-115",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 336,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-116",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 304,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-117",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 368,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-118",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 400,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-119",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 464,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-120",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 368,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-121",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 496,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-122",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 496,
+        "transform.y": 112
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-123",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 432,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-124",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 272,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-125",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 272,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-126",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 432,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-127",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 336,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-128",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 304,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-129",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 368,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-130",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 400,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-131",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 464,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-132",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 288,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-133",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 352,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-134",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 288,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-135",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 480,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-136",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 320,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-137",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 352,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-138",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 288,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-139",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 480,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-140",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 352,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-141",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 448,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-142",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 496,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-143",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 496,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-144",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 400,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-145",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 496,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-146",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 496,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-147",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 16,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-148",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 432,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-149",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 48,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-150",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 80,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-151",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 112,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-152",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 144,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-153",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 176,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-154",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 208,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-155",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 240,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-156",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 272,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-157",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 304,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-158",
+      "values": {
+        "greyStone.shape": "vertical",
+        "transform.x": 336,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-159",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 464,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-160",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 432,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-161",
+      "values": {
+        "greyStone.shape": "horizontal",
+        "transform.x": 384,
+        "transform.y": 112
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-162",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 464,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-163",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 464,
+        "transform.y": 112
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-164",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 368,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "greyStone",
+      "instanceId": "instance-165",
+      "values": {
+        "greyStone.shape": "square",
+        "transform.x": 400,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-166",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 480
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-167",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-168",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 448
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-169",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-170",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-171",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 416
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-172",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-173",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 384
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-175",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-176",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 352
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-177",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-178",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-181",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-182",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 288
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-183",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-184",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 256
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-185",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-186",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-187",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-188",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 192
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-189",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-190",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 160
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-191",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-192",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 128
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-193",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 112
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-194",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-195",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 96,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-196",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 128,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-197",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 144,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-198",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 160,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-199",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 176,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-200",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 192,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-201",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 208,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-202",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 224,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-203",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 240,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-204",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 288,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-205",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 304,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-206",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 320,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-207",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 272,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-208",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 256,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-209",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 368,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-210",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 384,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-211",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 400,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-212",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 416,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-213",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 432,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-214",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 448,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-215",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 464,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-216",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 480,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-217",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 496,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-218",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 512,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-219",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 352,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-220",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 336,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-221",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 112,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-222",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 48,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-223",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 32,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-224",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 16,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-225",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 64,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-226",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 80,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-227",
+      "values": {
+        "pipe.direction": "down",
+        "pipe.travelEnabled": true,
+        "pipe.length": 4,
+        "transform.x": 48,
+        "transform.y": 80,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-404"
+        }
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-228",
+      "values": {
+        "transform.x": 48,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-229",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 32,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-230",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 16,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-231",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 48,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-232",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 64,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-233",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 80,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-234",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 96,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-251",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 16,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-252",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 32,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-253",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 48,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-254",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 64,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-255",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 80,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-256",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 96,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-257",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 112,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-258",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 128,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-259",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 144,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-260",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 160,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-261",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 176,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-262",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 192,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-263",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 208,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-264",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 224,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-265",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 240,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-266",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 256,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-272",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 288,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-273",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 272,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-274",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 304,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-275",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 320,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-276",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 336,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-277",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 352,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-278",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 368,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-279",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 384,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-280",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 400,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-281",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 416,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-282",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 432,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-283",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 448,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-284",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 464,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-285",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 480,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-286",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 496,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-288",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 224,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-289",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 208,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-291",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 16,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-292",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 144,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-294",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 176,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-296",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 176,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-297",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 400,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-298",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 336,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-300",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 272,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-301",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 240,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-303",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 176,
+        "transform.y": 288
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-304",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 176,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-306",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 160,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-307",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 176,
+        "transform.y": 256
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-309",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 96,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-311",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 80,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-312",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 400,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-314",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 400,
+        "transform.y": 160
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-315",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 304,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-316",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 256,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-319",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 112,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-321",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 480,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-322",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 400,
+        "transform.y": 192
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-323",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 288,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-324",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 320,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-326",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 464,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-327",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 176,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-328",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 368,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-329",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 496,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-330",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 176,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-331",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 384,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-333",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 352,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-334",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 32,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-335",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 128,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-336",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 192,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-337",
+      "values": {
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "transform.x": 480,
+        "transform.y": 192,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-404"
+        }
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-338",
+      "values": {
+        "pipe.direction": "right",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "transform.x": 0,
+        "transform.y": 240,
+        "pipe.destination": {
+          "kind": "point",
+          "x": 23,
+          "y": 29
+        }
+      }
+    },
+    {
+      "placeable": "brick",
+      "instanceId": "instance-352",
+      "values": {
+        "block.style": "classic",
+        "transform.x": 160,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "brick",
+      "instanceId": "instance-353",
+      "values": {
+        "block.style": "classic",
+        "transform.x": 128,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "brick",
+      "instanceId": "instance-354",
+      "values": {
+        "block.style": "classic",
+        "transform.x": 144,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "brick",
+      "instanceId": "instance-355",
+      "values": {
+        "block.style": "classic",
+        "transform.x": 112,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-357",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 80,
+        "transform.y": 288
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-358",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 80,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-359",
+      "values": {
+        "transform.x": 128,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-360",
+      "values": {
+        "transform.x": 112,
+        "transform.y": 288
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-361",
+      "values": {
+        "transform.x": 160,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-362",
+      "values": {
+        "transform.x": 144,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-364",
+      "values": {
+        "transform.x": 96,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-371",
+      "values": {
+        "transform.x": 128,
+        "transform.y": 288
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-372",
+      "values": {
+        "transform.x": 144,
+        "transform.y": 288
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-373",
+      "values": {
+        "transform.x": 112,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-374",
+      "values": {
+        "rewardBlock.uses": 1,
+        "transform.x": 80,
+        "transform.y": 144,
+        "rewardBlock.contents": "growMushroom"
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-377",
+      "values": {
+        "pipe.direction": "left",
+        "pipe.travelEnabled": true,
+        "pipe.length": 4,
+        "transform.x": 512,
+        "transform.y": 464,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-338"
+        }
+      },
+      "sceneLayer": "background"
+    },
+    {
+      "placeable": "koopaRed",
+      "instanceId": "instance-378",
+      "values": {
+        "walker.direction": "left",
+        "flight.hasWings": false,
+        "flight.flying": false,
+        "transform.x": 256,
+        "transform.y": 192,
+        "walker.patrolRange": 123
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-379",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 16,
+        "transform.y": 384
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-380",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 32,
+        "transform.y": 384
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-381",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 48,
+        "transform.y": 384
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-383",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 64,
+        "transform.y": 400
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-384",
+      "values": {
+        "solidBlock.style": "wood",
+        "transform.x": 64,
+        "transform.y": 384
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-385",
+      "values": {
+        "pipe.direction": "down",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "transform.x": 32,
+        "transform.y": 384,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-337"
+        }
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-386",
+      "values": {
+        "rewardBlock.uses": 3,
+        "transform.x": 48,
+        "transform.y": 272,
+        "rewardBlock.contents": "lifeMushroom"
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-387",
+      "values": {
+        "rewardBlock.uses": 3,
+        "transform.x": 64,
+        "transform.y": 272,
+        "rewardBlock.contents": "lifeMushroom"
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-388",
+      "values": {
+        "transform.x": 368,
+        "transform.y": 464
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-389",
+      "values": {
+        "transform.x": 368,
+        "transform.y": 448
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-390",
+      "values": {
+        "transform.x": 368,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-391",
+      "values": {
+        "transform.x": 400,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-392",
+      "values": {
+        "transform.x": 384,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-393",
+      "values": {
+        "transform.x": 368,
+        "transform.y": 480
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-394",
+      "values": {
+        "transform.x": 448,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-398",
+      "values": {
+        "transform.x": 432,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-401",
+      "values": {
+        "transform.x": 448,
+        "transform.y": 448
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-402",
+      "values": {
+        "transform.x": 416,
+        "transform.y": 432
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-403",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 43,
+        "terrain.height": 7,
+        "transform.x": 344,
+        "transform.y": 1936
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-404",
+      "values": {
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 3,
+        "transform.x": 672,
+        "transform.y": 1824,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-377"
+        }
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-405",
+      "values": {
+        "rewardBlock.uses": 1,
+        "transform.x": 144,
+        "transform.y": 1760,
+        "rewardBlock.contents": "growMushroom"
+      }
+    },
+    {
+      "placeable": "goomba",
+      "instanceId": "instance-406",
+      "values": {
+        "walker.direction": "left",
+        "transform.x": 288,
+        "transform.y": 1824,
+        "walker.patrolRange": 80
+      }
+    },
+    {
+      "placeable": "spiky",
+      "instanceId": "instance-407",
+      "values": {
+        "walker.direction": "left",
+        "transform.x": 528,
+        "transform.y": 1824,
+        "walker.patrolRange": 90
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-408",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 160,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-409",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 192,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-410",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 176,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-411",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 336,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-412",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 352,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-413",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 368,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-414",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 384,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-415",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 400,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-416",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 34,
+        "terrain.height": 2,
+        "transform.x": 848,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-417",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 8,
+        "terrain.height": 2,
+        "transform.x": 576,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-418",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 23,
+        "terrain.height": 2,
+        "transform.x": 960,
+        "transform.y": 176
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-419",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 30,
+        "terrain.height": 2,
+        "transform.x": 752,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-420",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 30,
+        "terrain.height": 2,
+        "transform.x": 912,
+        "transform.y": 368
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-421",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-422",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 304
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-423",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 288
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-424",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 272
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-425",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 256
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-426",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 240
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-427",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-428",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 208
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-429",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 192
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-430",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 336
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-431",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 128
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-432",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 112
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-433",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-434",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-435",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1120,
+        "transform.y": 80
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-436",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1136,
+        "transform.y": 144
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-437",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 23,
+        "terrain.height": 1,
+        "transform.x": 704,
+        "transform.y": 496
+      }
+    },
+    {
+      "placeable": "spiky",
+      "instanceId": "instance-438",
+      "values": {
+        "walker.direction": "left",
+        "transform.x": 736,
+        "transform.y": 240,
+        "walker.patrolRange": 92
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-439",
+      "values": {
+        "transform.x": 688,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-440",
+      "values": {
+        "transform.x": 752,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-441",
+      "values": {
+        "transform.x": 720,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-442",
+      "values": {
+        "transform.x": 784,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-443",
+      "values": {
+        "transform.x": 816,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-444",
+      "values": {
+        "transform.x": 848,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-445",
+      "values": {
+        "transform.x": 880,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-446",
+      "values": {
+        "transform.x": 912,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-447",
+      "values": {
+        "transform.x": 944,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-448",
+      "values": {
+        "transform.x": 976,
+        "transform.y": 320
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-500",
+      "values": {
+        "transform.x": 80,
+        "transform.y": 1824,
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-501"
+        }
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-507",
+      "values": {
+        "transform.x": 48,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-508",
+      "values": {
+        "transform.x": 80,
+        "transform.y": 1744
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-509",
+      "values": {
+        "transform.x": 112,
+        "transform.y": 1760
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-510",
+      "values": {
+        "transform.x": 1520,
+        "transform.y": 1600,
+        "terrain.style": "castle",
+        "terrain.width": 30,
+        "terrain.height": 2
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-511",
+      "values": {
+        "transform.x": 1520,
+        "transform.y": 1232,
+        "terrain.style": "castle",
+        "terrain.width": 30,
+        "terrain.height": 2
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-512",
+      "values": {
+        "transform.x": 1296,
+        "transform.y": 1568,
+        "terrain.style": "castle",
+        "terrain.width": 2,
+        "terrain.height": 21
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-513",
+      "values": {
+        "transform.x": 1744,
+        "transform.y": 1568,
+        "terrain.style": "castle",
+        "terrain.width": 2,
+        "terrain.height": 21
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-501",
+      "values": {
+        "transform.x": 1344,
+        "transform.y": 1568,
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-503"
+        }
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-502",
+      "values": {
+        "transform.x": 1680,
+        "transform.y": 1232,
+        "pipe.direction": "down",
+        "pipe.travelEnabled": true,
+        "pipe.length": 3,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-501"
+        }
+      }
+    },
+    {
+      "placeable": "mushroomPlatform",
+      "instanceId": "instance-521",
+      "values": {
+        "transform.x": 1520,
+        "transform.y": 1568,
+        "extent.width": 11,
+        "extent.height": 5,
+        "movingPlatform.range": 0,
+        "movingPlatform.speed": 0
+      }
+    },
+    {
+      "placeable": "mushroomPlatform",
+      "instanceId": "instance-522",
+      "values": {
+        "transform.x": 1608,
+        "transform.y": 1568,
+        "extent.width": 8,
+        "extent.height": 9,
+        "movingPlatform.range": 0,
+        "movingPlatform.speed": 0
+      }
+    },
+    {
+      "placeable": "mushroomPlatform",
+      "instanceId": "instance-523",
+      "values": {
+        "transform.x": 1664,
+        "transform.y": 1568,
+        "extent.width": 8,
+        "extent.height": 15,
+        "movingPlatform.range": 0,
+        "movingPlatform.speed": 0
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-525",
+      "values": {
+        "transform.x": 1456,
+        "transform.y": 1456
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-526",
+      "values": {
+        "transform.x": 1504,
+        "transform.y": 1456
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-527",
+      "values": {
+        "transform.x": 1568,
+        "transform.y": 1392
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-528",
+      "values": {
+        "transform.x": 1616,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-529",
+      "values": {
+        "transform.x": 1648,
+        "transform.y": 1312
+      }
+    },
+    {
+      "placeable": "koopaRed",
+      "instanceId": "instance-530",
+      "values": {
+        "transform.x": 1512,
+        "transform.y": 1568,
+        "walker.direction": "right",
+        "walker.patrolRange": 72,
+        "flight.hasWings": true,
+        "flight.flying": true
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-531",
+      "values": {
+        "transform.x": 1360,
+        "transform.y": 1456,
+        "rewardBlock.uses": 1,
+        "rewardBlock.contents": "growMushroom"
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-532",
+      "values": {
+        "transform.x": 2080,
+        "transform.y": 1600,
+        "terrain.style": "castle",
+        "terrain.width": 30,
+        "terrain.height": 2
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-533",
+      "values": {
+        "transform.x": 2080,
+        "transform.y": 1232,
+        "terrain.style": "castle",
+        "terrain.width": 30,
+        "terrain.height": 2
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-534",
+      "values": {
+        "transform.x": 1856,
+        "transform.y": 1568,
+        "terrain.style": "castle",
+        "terrain.width": 2,
+        "terrain.height": 21
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-535",
+      "values": {
+        "transform.x": 2304,
+        "transform.y": 1520,
+        "terrain.style": "castle",
+        "terrain.width": 2,
+        "terrain.height": 18
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-503",
+      "values": {
+        "transform.x": 1904,
+        "transform.y": 1568,
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-501"
+        }
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-504",
+      "values": {
+        "transform.x": 2112,
+        "transform.y": 1232,
+        "pipe.direction": "down",
+        "pipe.travelEnabled": true,
+        "pipe.length": 3,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-503"
+        }
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-505",
+      "values": {
+        "transform.x": 2240,
+        "transform.y": 1568,
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 4,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-506"
+        }
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "instanceId": "instance-544",
+      "values": {
+        "transform.x": 2128,
+        "transform.y": 1488,
+        "extent.width": 4,
+        "movingPlatform.path": [
+          {
+            "x": 2056,
+            "y": 1424
+          },
+          {
+            "x": 2128,
+            "y": 1376
+          },
+          {
+            "x": 2168,
+            "y": 1336
+          }
+        ],
+        "movingPlatform.range": 140,
+        "movingPlatform.speed": 0.8
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-546",
+      "values": {
+        "transform.x": 1968,
+        "transform.y": 1536
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-547",
+      "values": {
+        "transform.x": 2032,
+        "transform.y": 1536
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-548",
+      "values": {
+        "transform.x": 2096,
+        "transform.y": 1536
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-549",
+      "values": {
+        "transform.x": 2160,
+        "transform.y": 1536
+      }
+    },
+    {
+      "placeable": "spiky",
+      "instanceId": "instance-550",
+      "values": {
+        "transform.x": 2016,
+        "transform.y": 1568,
+        "walker.direction": "right",
+        "walker.patrolRange": 96
+      }
+    },
+    {
+      "placeable": "goomba",
+      "instanceId": "instance-551",
+      "values": {
+        "transform.x": 2160,
+        "transform.y": 1568,
+        "walker.direction": "left",
+        "walker.patrolRange": 52
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-553",
+      "values": {
+        "transform.x": 2176,
+        "transform.y": 1440
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-555",
+      "values": {
+        "transform.x": 2224,
+        "transform.y": 1408
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-556",
+      "values": {
+        "transform.x": 1600,
+        "transform.y": 1088,
+        "terrain.style": "castle",
+        "terrain.width": 20,
+        "terrain.height": 2
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-557",
+      "values": {
+        "transform.x": 1600,
+        "transform.y": 832,
+        "terrain.style": "castle",
+        "terrain.width": 20,
+        "terrain.height": 2
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-558",
+      "values": {
+        "transform.x": 1456,
+        "transform.y": 1056,
+        "terrain.style": "castle",
+        "terrain.width": 2,
+        "terrain.height": 14
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-559",
+      "values": {
+        "transform.x": 1744,
+        "transform.y": 1056,
+        "terrain.style": "castle",
+        "terrain.width": 2,
+        "terrain.height": 14
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-506",
+      "values": {
+        "transform.x": 1600,
+        "transform.y": 1056,
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "pipe.destination": {
+          "kind": "pipe",
+          "instanceId": "instance-500"
+        }
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-567",
+      "values": {
+        "transform.x": 1504,
+        "transform.y": 976,
+        "rewardBlock.uses": 1,
+        "rewardBlock.contents": "lifeMushroom"
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-568",
+      "values": {
+        "transform.x": 1536,
+        "transform.y": 976,
+        "rewardBlock.uses": 1,
+        "rewardBlock.contents": "lifeMushroom"
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "instanceId": "instance-569",
+      "values": {
+        "transform.x": 1568,
+        "transform.y": 976,
+        "rewardBlock.uses": 10,
+        "rewardBlock.contents": "raccoonFeather"
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-570",
+      "values": {
+        "transform.x": 1504,
+        "transform.y": 928
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-571",
+      "values": {
+        "transform.x": 1536,
+        "transform.y": 912
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-572",
+      "values": {
+        "transform.x": 1568,
+        "transform.y": 928
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-573",
+      "values": {
+        "transform.x": 1632,
+        "transform.y": 928
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-574",
+      "values": {
+        "transform.x": 1664,
+        "transform.y": 912
+      }
+    },
+    {
+      "placeable": "coin",
+      "instanceId": "instance-575",
+      "values": {
+        "transform.x": 1696,
+        "transform.y": 928
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-576",
+      "values": {
+        "transform.x": 1648,
+        "transform.y": 976
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-577",
+      "values": {
+        "transform.x": 1664,
+        "transform.y": 976
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-578",
+      "values": {
+        "transform.x": 1680,
+        "transform.y": 976
+      }
+    },
+    {
+      "placeable": "rotatingBlock",
+      "instanceId": "instance-579",
+      "values": {
+        "transform.x": 1696,
+        "transform.y": 976
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-48",
+      "values": {
+        "pipe.direction": "left",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "transform.x": 2288,
+        "transform.y": 1376,
+        "pipe.destination": {
+          "kind": "point",
+          "x": 42,
+          "y": 34
+        }
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-174",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 2128,
+        "transform.y": 1344
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-179",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 2112,
+        "transform.y": 1344
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-180",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 2144,
+        "transform.y": 1344
+      }
+    },
+    {
+      "placeable": "ground",
+      "instanceId": "instance-236",
+      "values": {
+        "terrain.style": "castle",
+        "terrain.width": 33,
+        "terrain.height": 1,
+        "transform.x": 2128,
+        "transform.y": 1808
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "instanceId": "instance-237",
+      "values": {
+        "extent.width": 4,
+        "transform.x": 1808,
+        "transform.y": 1808,
+        "movingPlatform.path": [
+          {
+            "x": 0,
+            "y": 1424
+          },
+          {
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "movingPlatform.range": 550
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-239",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1776,
+        "transform.y": 992
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-240",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1776,
+        "transform.y": 912
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-267",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1776,
+        "transform.y": 832
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-268",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1664,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-269",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1648,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-270",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1632,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-271",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1616,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-287",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1600,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-290",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1584,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-293",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1568,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-295",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1552,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-299",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1536,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-302",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1520,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-305",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1504,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-308",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1488,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-310",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1472,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-313",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1456,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-317",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1440,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-318",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1424,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-320",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1408,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-325",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1392,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-332",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1376,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-339",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1360,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-340",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1344,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-341",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1328,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-342",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1312,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-463",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1296,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-464",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1280,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-465",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1248,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-466",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1264,
+        "transform.y": 1680
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-467",
+      "values": {
+        "pipe.direction": "up",
+        "pipe.travelEnabled": true,
+        "pipe.length": 2,
+        "transform.x": 1472,
+        "transform.y": 800,
+        "pipe.destination": {
+          "kind": "point",
+          "x": 598,
+          "y": 32
+        }
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-468",
+      "values": {
+        "solidBlock.style": "glassBlue",
+        "transform.x": 1776,
+        "transform.y": 1088
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-486",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2384,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-487",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2368,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-488",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2352,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-489",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2336,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-490",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2320,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-491",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2304,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-492",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2288,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-493",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2272,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-494",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2256,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "pipe",
+      "instanceId": "instance-495",
+      "values": {
+        "pipe.direction": "down",
+        "pipe.travelEnabled": false,
+        "pipe.length": 2,
+        "transform.x": 2368,
+        "transform.y": 0
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-496",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2240,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-497",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2224,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-498",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2128,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-499",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2144,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-517",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2208,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-518",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2192,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-519",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2176,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-520",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2160,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-524",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2112,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-536",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2096,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-537",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2080,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-538",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2064,
+        "transform.y": 96
+      }
+    },
+    {
+      "placeable": "solidBlock",
+      "instanceId": "instance-539",
+      "values": {
+        "solidBlock.style": "stone",
+        "transform.x": 2048,
+        "transform.y": 96
+      }
+    }
+  ],
+  "markers": {
+    "start": {
+      "x": 32,
+      "y": 1808
+    },
+    "goal": null
+  }
+}
