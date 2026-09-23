@@ -522,7 +522,7 @@ function renderDetail(){
   if(state.key==null){
     const value=state.section==='overview'?{
       format:state.theme.format,packVersion:state.theme.packVersion,id:state.theme.id,title:state.theme.title
-    }:state.theme[state.state?.section||state.section];
+    }:state.theme[state.section];
     root.innerHTML=`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
     return;
   }
