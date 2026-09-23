@@ -81,8 +81,24 @@ h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08
   linear-gradient(45deg,#101f27 75%,transparent 75%) 8px 8px/16px 16px;
 }
 .previewBox canvas{image-rendering:pixelated;max-width:90%;max-height:420px}
-.previewBox img{image-rendering:pixelated;max-width:100%;max-height:420px}
 .previewCaption{display:flex;justify-content:space-between;gap:8px;margin-top:7px;color:var(--muted);font-size:11px}
+.zoomBar{display:flex;align-items:center;gap:6px;margin:8px 0 5px;flex-wrap:wrap}
+.zoomBar button{padding:4px 8px}
+.zoomReadout{min-width:42px;text-align:center;font:11px var(--mono);color:var(--muted)}
+.zoomHint{margin-left:auto;color:var(--muted);font-size:10px}
+.zoomViewport{height:min(56vh,520px);min-height:280px;overflow:auto;position:relative;border:1px solid var(--line);border-radius:12px;cursor:grab;user-select:none;background:
+  linear-gradient(45deg,#0b151b 25%,transparent 25%) 0 0/16px 16px,
+  linear-gradient(45deg,transparent 75%,#0b151b 75%) 0 0/16px 16px,
+  linear-gradient(45deg,transparent 25%,#101f27 25%) 8px 8px/16px 16px,
+  linear-gradient(45deg,#101f27 75%,transparent 75%) 8px 8px/16px 16px;
+}
+.zoomViewport.dragging{cursor:grabbing}
+.zoomStage{position:relative;margin:16px;min-width:1px;min-height:1px}
+.zoomStage canvas{display:block;image-rendering:pixelated}
+.atlasRegion{position:absolute;border:1px solid rgba(86,217,232,.7);background:rgba(86,217,232,.05);padding:0;border-radius:0;cursor:pointer}
+.atlasRegion:hover,.atlasRegion:focus-visible{border-width:2px;border-color:var(--accent);background:rgba(86,217,232,.16);z-index:4;outline:none}
+.atlasRegion::after{content:attr(data-label);display:none;position:absolute;left:0;top:100%;margin-top:2px;z-index:8;white-space:nowrap;padding:3px 5px;border:1px solid var(--line);border-radius:5px;background:#061117;color:var(--ink);font:10px var(--mono);pointer-events:none}
+.atlasRegion:hover::after,.atlasRegion:focus-visible::after{display:block}
 .thumbGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
 .thumb{border:1px solid var(--line);border-radius:9px;padding:8px;background:#0a1820;cursor:pointer;min-width:0}
 .thumb:hover{border-color:var(--accent)}
@@ -102,7 +118,6 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 .paramBody{margin-top:5px;font-size:11px;color:var(--muted)}
 .transport{display:flex;gap:6px;align-items:center}
 .transport button{padding:5px 8px}
-
 #statusBar{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:0 8px;border-top:1px solid var(--line);background:#07141b;color:var(--muted);font-size:11px;z-index:8}
 #statusLamp{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:0 0 auto}
 #statusBar[data-level="ok"] #statusLamp{background:var(--good)}
@@ -110,7 +125,7 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 #statusBar[data-level="error"] #statusLamp{background:var(--bad)}
 #statusMessage{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #logButton{margin-left:auto;padding:2px 7px;border-radius:6px;background:transparent;color:var(--muted);font-size:10px}
-#logPanel{position:fixed;left:0;right:0;bottom:28px;height:min(220px,38vh);z-index:20;border-top:1px solid var(--line);background:#061117eF;box-shadow:0 -10px 28px var(--shadow);display:grid;grid-template-rows:34px minmax(0,1fr)}
+#logPanel{position:fixed;left:0;right:0;bottom:28px;height:min(220px,38vh);z-index:20;border-top:1px solid var(--line);background:#061117ef;box-shadow:0 -10px 28px var(--shadow);display:grid;grid-template-rows:34px minmax(0,1fr)}
 #logPanel[hidden]{display:none}
 #logHead{display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid var(--line);font-size:11px}
 #logEntries{overflow:auto;padding:5px 8px;font:10px/1.5 var(--mono)}
@@ -119,7 +134,6 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 .logEntry.warn .level{color:var(--warn)}
 .logEntry.error .level{color:var(--bad)}
 .logEntry.ok .level{color:var(--good)}
-
 @media(max-width:1000px){#layout{grid-template-columns:220px 1fr}#detail{display:none}}
 @media(max-width:720px){#layout{grid-template-columns:1fr}#nav{display:none}header .sub{display:none}}
 </style>
@@ -174,7 +188,7 @@ const SECTION_LABELS={
   sceneLayers:'Scene Layers',extended:'Extended'
 };
 const INVENTORY_SECTIONS=new Set(['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']);
-const state={theme:null,fileName:'',section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[]};
+const state={theme:null,fileName:'',section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2};
 
 const $=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -183,6 +197,7 @@ const dict=value=>value&&typeof value==='object'&&!Array.isArray(value)?value:{}
 const entries=value=>Object.entries(dict(value));
 const count=value=>Array.isArray(value)?value.length:entries(value).length;
 const simple=value=>value==null||['string','number','boolean'].includes(typeof value);
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 function renderLog(){
   const root=$('logEntries');
@@ -233,12 +248,12 @@ function knownTargets(){
   }
   return out;
 }
-
 function refsIn(value){
   const targets=knownTargets(),found=[],seen=new Set();
   function add(section,key,path){
-    const token=section+'\\0'+key+'\\0'+path;
-    if(seen.has(token))return;seen.add(token);found.push({section,key,path});
+    const token=section+'\0'+key+'\0'+path;
+    if(seen.has(token))return;
+    seen.add(token);found.push({section,key,path});
   }
   function walk(node,path){
     if(typeof node==='string'){
@@ -254,7 +269,6 @@ function refsIn(value){
   walk(value,'');
   return found;
 }
-
 function backlinks(section,key){
   const out=[];
   if(!state.theme)return out;
@@ -279,7 +293,6 @@ function describe(section,key,value){
   if(section==='frameGroups')return `${count(value.resources)} resources`;
   return '';
 }
-
 function sectionCount(section){
   if(section==='overview')return '';
   const value=state.theme?.[section];
@@ -287,7 +300,6 @@ function sectionCount(section){
   if(Array.isArray(value))return value.length;
   return value==null?0:count(value);
 }
-
 function renderSections(){
   $('sectionList').innerHTML=SECTION_ORDER.filter(section=>state.theme?.[section]!=null||section==='overview').map(section=>
     `<button class="sectionButton ${state.section===section?'active':''}" data-section="${section}">
@@ -296,7 +308,6 @@ function renderSections(){
     </button>`).join('');
   $('sectionList').querySelectorAll('[data-section]').forEach(button=>button.onclick=()=>selectSection(button.dataset.section));
 }
-
 function renderItems(){
   const list=$('itemList');
   const searchable=INVENTORY_SECTIONS.has(state.section);
@@ -304,33 +315,30 @@ function renderItems(){
   if(!searchable){list.innerHTML='<div class="muted" style="padding:8px;font-size:11px">Choose an inventory section to browse individual entries.</div>';return}
   const items=entries(state.theme?.[state.section]);
   const q=state.query.trim().toLowerCase();
-  const filtered=!q?items:items.filter(([key,value])=>{
-    const hay=(key+' '+describe(state.section,key,value)+' '+JSON.stringify(value)).toLowerCase();
-    return hay.includes(q);
-  });
+  const filtered=!q?items:items.filter(([key,value])=>(key+' '+describe(state.section,key,value)+' '+JSON.stringify(value)).toLowerCase().includes(q));
   list.innerHTML=filtered.map(([key,value])=>
     `<button class="itemButton ${state.key===key?'active':''}" data-key="${escapeHtml(key)}">
       <b>${escapeHtml(key)}</b><small>${escapeHtml(describe(state.section,key,value))}</small>
-    </button>`).join('') || `<div class="muted" style="padding:8px;font-size:11px">No matches.</div>`;
+    </button>`).join('') || '<div class="muted" style="padding:8px;font-size:11px">No matches.</div>';
   list.querySelectorAll('[data-key]').forEach(button=>button.onclick=()=>selectItem(button.dataset.key));
 }
-
+function defaultZoom(section){return section==='resources'?4:section==='atlases'?2:state.previewZoom}
 function selectSection(section){
   stopAnimation();
   state.section=section;state.query='';$('search').value='';
   const first=INVENTORY_SECTIONS.has(section)?entries(state.theme?.[section])[0]?.[0]:null;
-  state.key=first||null;state.animationIndex=0;
+  state.key=first||null;state.animationIndex=0;state.previewZoom=defaultZoom(section);
   renderSections();renderItems();renderCenter();renderDetail();
   if(first)setStatus('info',`${SECTION_LABELS[section]} · ${count(state.theme?.[section])} entries · showing ${first}`);
 }
 function selectItem(key){
   stopAnimation();
-  state.key=key;state.animationIndex=0;
+  state.key=key;state.animationIndex=0;state.previewZoom=defaultZoom(state.section);
   renderItems();renderCenter();renderDetail();
   setStatus('info',`${SECTION_LABELS[state.section]} · ${key}`);
 }
 function navigate(section,key){
-  state.section=section;state.query='';$('search').value='';state.key=key;
+  state.section=section;state.query='';$('search').value='';state.key=key;state.previewZoom=defaultZoom(section);
   stopAnimation();renderSections();renderItems();renderCenter();renderDetail();
 }
 
@@ -340,7 +348,6 @@ function refButton(section,key,label=key){
 function wireRefs(root=document){
   root.querySelectorAll('[data-ref-section]').forEach(button=>button.onclick=()=>navigate(button.dataset.refSection,button.dataset.refKey));
 }
-
 function overview(){
   const t=state.theme;
   const cards=['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']
@@ -354,31 +361,24 @@ function overview(){
   <div class="cards">${cards}</div>
   <div class="grid2">
     <section class="panel"><h2>Theme contract</h2>
-      <dl class="kv">
-        <dt>Policy</dt><dd>${escapeHtml(t.contract?.policy||'—')}</dd>
-        <dt>Coordinates</dt><dd>${escapeHtml(t.contract?.coordinates||'—')}</dd>
-        <dt>Scene layers</dt><dd><div class="chips">${(t.sceneLayers||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')}</div></dd>
-      </dl>
+      <dl class="kv"><dt>Policy</dt><dd>${escapeHtml(t.contract?.policy||'—')}</dd>
+      <dt>Coordinates</dt><dd>${escapeHtml(t.contract?.coordinates||'—')}</dd>
+      <dt>Scene layers</dt><dd><div class="chips">${(t.sceneLayers||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')}</div></dd></dl>
     </section>
     <section class="panel"><h2>Coverage</h2>
-      <dl class="kv">
-        <dt>World resources</dt><dd>${escapeHtml(coverage.nonemptyWorldResources??count(t.resources))}</dd>
-        <dt>Unresolved</dt><dd>${escapeHtml(coverage.unresolvedResources??'—')}</dd>
-        <dt>Status</dt><dd>${escapeHtml(coverage.statement||'—')}</dd>
-      </dl>
+      <dl class="kv"><dt>World resources</dt><dd>${escapeHtml(coverage.nonemptyWorldResources??count(t.resources))}</dd>
+      <dt>Unresolved</dt><dd>${escapeHtml(coverage.unresolvedResources??'—')}</dd>
+      <dt>Status</dt><dd>${escapeHtml(coverage.statement||'—')}</dd></dl>
     </section>
   </div>
   <section class="panel"><h2>Attribution</h2>${renderSimpleObject(t.attribution)}</section>`;
 }
-
 function renderSimpleObject(value){
   if(simple(value))return `<span>${escapeHtml(value)}</span>`;
   if(Array.isArray(value))return `<div class="chips">${value.map(v=>`<span class="chip">${escapeHtml(simple(v)?v:JSON.stringify(v))}</span>`).join('')}</div>`;
   return `<dl class="kv">${Object.entries(value||{}).map(([k,v])=>`<dt>${escapeHtml(k)}</dt><dd>${simple(v)?escapeHtml(v):Array.isArray(v)?`<div class="chips">${v.map(x=>`<span class="chip">${escapeHtml(simple(x)?x:JSON.stringify(x))}</span>`).join('')}</div>`:`<pre>${escapeHtml(JSON.stringify(v,null,2))}</pre>`}</dd>`).join('')}</dl>`;
 }
-
 function currentValue(){return state.key==null?state.theme?.[state.section]:dict(state.theme?.[state.section])[state.key]}
-
 function renderGenericSection(){
   const value=currentValue();
   if(state.key==null){
@@ -388,14 +388,11 @@ function renderGenericSection(){
   }
   return itemHero()+`<section class="panel"><h2>Properties</h2>${renderSimpleObject(value)}</section>`;
 }
-
 function itemHero(){
   const value=currentValue();
   return `<div class="hero"><div class="grow"><div class="eyebrow">${escapeHtml(SECTION_LABELS[state.section]||state.section)}</div>
-    <h1>${escapeHtml(value?.label||state.key)}</h1>
-    <div class="id">${escapeHtml(state.key)}</div>
-    ${value?.purpose?`<p class="muted">${escapeHtml(value.purpose)}</p>`:''}
-  </div></div>`;
+    <h1>${escapeHtml(value?.label||state.key)}</h1><div class="id">${escapeHtml(state.key)}</div>
+    ${value?.purpose?`<p class="muted">${escapeHtml(value.purpose)}</p>`:''}</div></div>`;
 }
 
 function atlasSrc(atlas){
@@ -405,8 +402,7 @@ function atlasSrc(atlas){
 }
 function getImage(atlasId){
   if(state.images.has(atlasId))return state.images.get(atlasId);
-  const atlas=dict(state.theme?.atlases)[atlasId];
-  const src=atlasSrc(atlas);
+  const atlas=dict(state.theme?.atlases)[atlasId],src=atlasSrc(atlas);
   if(!src)return null;
   const img=new Image();
   img.addEventListener('error',()=>report('error',`Could not decode embedded atlas: ${atlasId}`),{once:true});
@@ -417,37 +413,116 @@ function drawResource(canvas,resource,scale=4){
   const img=getImage(resource.image.atlas),rect=resource.image.rect;
   if(!img||!rect)return false;
   const draw=()=>{
-    const w=rect.w||1,h=rect.h||1,s=Math.max(1,Math.min(scale,Math.floor(240/Math.max(w,h))||1));
+    const w=rect.w||1,h=rect.h||1,s=Math.max(1,scale);
     canvas.width=w*s;canvas.height=h*s;
     const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(img,rect.x,rect.y,w,h,0,0,w*s,h*s);
   };
-  if(img.complete)draw();else img.addEventListener('load',draw,{once:true});
+  if(img.complete&&img.naturalWidth)draw();else img.addEventListener('load',draw,{once:true});
   return true;
 }
-
+function zoomControls(){
+  return `<div class="zoomBar">
+    <button type="button" data-zoom="-1" aria-label="Zoom out">−</button>
+    <span class="zoomReadout">${state.previewZoom}×</span>
+    <button type="button" data-zoom="1" aria-label="Zoom in">+</button>
+    <button type="button" data-zoom-value="1">1×</button>
+    <button type="button" data-zoom-fit>Fit</button>
+    <span class="zoomHint">drag to pan · Ctrl+wheel to zoom</span>
+  </div>`;
+}
 function resourcePreviewHtml(resource,key){
-  if(!resource?.image)return `<div class="previewBox"><span class="muted">No image binding.</span></div>`;
+  if(!resource?.image)return '<div class="previewBox"><span class="muted">No image binding.</span></div>';
   const r=resource.image.rect||{};
-  return `<div class="previewBox"><canvas id="resourceCanvas" aria-label="Preview of ${escapeHtml(key)}"></canvas></div>
+  return `${zoomControls()}<div class="zoomViewport" id="previewViewport"><div class="zoomStage" id="previewStage"><canvas id="resourceCanvas" aria-label="Preview of ${escapeHtml(key)}"></canvas></div></div>
     <div class="previewCaption"><span>${escapeHtml(resource.image.atlas||'')} atlas</span><span>${escapeHtml(`${r.x??'?'} , ${r.y??'?'} · ${r.w??'?'}×${r.h??'?'}`)}</span></div>`;
 }
-
 function renderResource(){
   const resource=currentValue();
   return itemHero()+resourcePreviewHtml(resource,state.key)+`
-    <div class="grid2">
-      <section class="panel"><h2>Display</h2>${renderSimpleObject(resource.display||{})}</section>
-      <section class="panel"><h2>Provenance</h2>${renderSimpleObject(resource.provenance||{})}</section>
-    </div>
+    <div class="grid2"><section class="panel"><h2>Display</h2>${renderSimpleObject(resource.display||{})}</section>
+    <section class="panel"><h2>Provenance</h2>${renderSimpleObject(resource.provenance||{})}</section></div>
     ${resource.belongsTo?`<section class="panel"><h2>Family</h2>${targetButtonsForValue(resource.belongsTo)}</section>`:''}`;
 }
-
+function atlasResources(atlasId){
+  return entries(state.theme?.resources).filter(([,resource])=>resource?.image?.atlas===atlasId&&resource.image.rect);
+}
 function renderAtlas(){
-  const atlas=currentValue(),src=atlasSrc(atlas);
-  return itemHero()+`<div class="previewBox">${src?`<img src="${src}" alt="${escapeHtml(state.key)} atlas">`:`<span class="muted">Atlas data is not inline base64.</span>`}</div>
-    <div class="previewCaption"><span>${escapeHtml(atlas.sourceFile||'embedded atlas')}</span><span>${atlas.cellSize?escapeHtml(`${atlas.cellSize.w}×${atlas.cellSize.h} cells`):''}</span></div>
+  const atlas=currentValue(),src=atlasSrc(atlas),members=atlasResources(state.key);
+  return itemHero()+`${src?`${zoomControls()}<div class="zoomViewport" id="previewViewport"><div class="zoomStage" id="previewStage"><canvas id="atlasCanvas" aria-label="${escapeHtml(state.key)} atlas"></canvas><div id="atlasRegions"></div></div></div>`:'<div class="previewBox"><span class="muted">Atlas data is not inline base64.</span></div>'}
+    <div class="previewCaption"><span>${escapeHtml(atlas.sourceFile||'embedded atlas')}</span><span>${members.length} mapped resource${members.length===1?'':'s'}${atlas.cellSize?` · ${escapeHtml(`${atlas.cellSize.w}×${atlas.cellSize.h} cells`)}`:''}</span></div>
+    <section class="panel"><h2>Atlas regions</h2><div class="thumbGrid">${members.map(([key])=>resourceThumb(key)).join('')||'<span class="muted">No resources map into this atlas.</span>'}</div></section>
     <section class="panel"><h2>Atlas metadata</h2>${renderSimpleObject(Object.fromEntries(Object.entries(atlas).filter(([k])=>k!=='data')))}</section>`;
+}
+function drawAtlas(){
+  const atlas=currentValue(),canvas=$('atlasCanvas'),stage=$('previewStage'),regions=$('atlasRegions'),img=getImage(state.key);
+  if(!canvas||!stage||!regions||!img)return;
+  const draw=()=>{
+    const z=state.previewZoom,w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+    canvas.width=w*z;canvas.height=h*z;stage.style.width=`${canvas.width}px`;stage.style.height=`${canvas.height}px`;
+    const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,w,h,0,0,canvas.width,canvas.height);
+    regions.innerHTML=atlasResources(state.key).map(([key,resource])=>{
+      const r=resource.image.rect;
+      return `<button type="button" class="atlasRegion" data-resource="${escapeHtml(key)}" data-label="${escapeHtml(key)}" title="${escapeHtml(key)} · ${r.x},${r.y} ${r.w}×${r.h}" style="left:${r.x*z}px;top:${r.y*z}px;width:${Math.max(1,r.w*z)}px;height:${Math.max(1,r.h*z)}px"></button>`;
+    }).join('');
+    regions.querySelectorAll('[data-resource]').forEach(button=>button.onclick=event=>{event.stopPropagation();navigate('resources',button.dataset.resource)});
+  };
+  if(img.complete&&img.naturalWidth)draw();else img.addEventListener('load',draw,{once:true});
+}
+function redrawZoomPreview(){
+  const readout=document.querySelector('.zoomReadout');if(readout)readout.textContent=`${state.previewZoom}×`;
+  if(state.section==='resources'&&state.key)drawResource($('resourceCanvas'),currentValue(),state.previewZoom);
+  if(state.section==='atlases'&&state.key)drawAtlas();
+}
+function setPreviewZoom(value,{anchor=null}={}){
+  const viewport=$('previewViewport');if(!viewport)return;
+  const old=state.previewZoom,newZoom=clamp(Math.round(value),1,16);
+  if(newZoom===old)return;
+  const contentX=anchor?((viewport.scrollLeft+anchor.x)/old):((viewport.scrollLeft+viewport.clientWidth/2)/old);
+  const contentY=anchor?((viewport.scrollTop+anchor.y)/old):((viewport.scrollTop+viewport.clientHeight/2)/old);
+  state.previewZoom=newZoom;redrawZoomPreview();
+  requestAnimationFrame(()=>{
+    const ax=anchor?anchor.x:viewport.clientWidth/2,ay=anchor?anchor.y:viewport.clientHeight/2;
+    viewport.scrollLeft=Math.max(0,contentX*newZoom-ax);
+    viewport.scrollTop=Math.max(0,contentY*newZoom-ay);
+  });
+}
+function fitPreview(){
+  const viewport=$('previewViewport');if(!viewport)return;
+  let w=1,h=1;
+  if(state.section==='resources'){
+    const r=currentValue()?.image?.rect||{};w=r.w||1;h=r.h||1;
+  }else if(state.section==='atlases'){
+    const img=getImage(state.key);w=img?.naturalWidth||1;h=img?.naturalHeight||1;
+  }
+  const availableW=Math.max(1,viewport.clientWidth-32),availableH=Math.max(1,viewport.clientHeight-32);
+  setPreviewZoom(clamp(Math.floor(Math.min(availableW/w,availableH/h)),1,16));
+}
+function wireZoom(){
+  const viewport=$('previewViewport');if(!viewport)return;
+  document.querySelectorAll('[data-zoom]').forEach(button=>button.onclick=()=>setPreviewZoom(state.previewZoom+(Number(button.dataset.zoom)||0)));
+  document.querySelectorAll('[data-zoom-value]').forEach(button=>button.onclick=()=>setPreviewZoom(Number(button.dataset.zoomValue)||1));
+  const fit=document.querySelector('[data-zoom-fit]');if(fit)fit.onclick=fitPreview;
+  let drag=null;
+  viewport.addEventListener('pointerdown',event=>{
+    if(event.button!==0||event.target.closest('.atlasRegion'))return;
+    drag={x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop,moved:false};
+    viewport.classList.add('dragging');viewport.setPointerCapture(event.pointerId);
+  });
+  viewport.addEventListener('pointermove',event=>{
+    if(!drag)return;
+    const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
+    if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;
+    viewport.scrollLeft=drag.left-dx;viewport.scrollTop=drag.top-dy;
+  });
+  const stop=()=>{drag=null;viewport.classList.remove('dragging')};
+  viewport.addEventListener('pointerup',stop);viewport.addEventListener('pointercancel',stop);
+  viewport.addEventListener('wheel',event=>{
+    if(!(event.ctrlKey||event.metaKey))return;
+    event.preventDefault();
+    const rect=viewport.getBoundingClientRect(),anchor={x:event.clientX-rect.left,y:event.clientY-rect.top};
+    setPreviewZoom(state.previewZoom+(event.deltaY<0?1:-1),{anchor});
+  },{passive:false});
 }
 
 function stopAnimation(){if(state.animationTimer){clearInterval(state.animationTimer);state.animationTimer=0}}
@@ -471,7 +546,6 @@ function renderAnimation(){
     <div class="transport" style="margin-top:8px"><button id="playAnimation">Play</button><button id="pauseAnimation">Pause</button><button id="nextFrame">Next frame</button></div>
     <section class="panel"><h2>Frames</h2><div class="thumbGrid">${frames.map((frame,i)=>resourceThumb(frame.resource,`${i+1}. ${frame.resource}`)).join('')}</div></section>`;
 }
-
 function resourceThumb(resourceId,label=resourceId){
   const resource=dict(state.theme?.resources)[resourceId];
   if(!resource)return `<div class="thumb"><div class="name">${escapeHtml(label)} · missing</div></div>`;
@@ -479,16 +553,14 @@ function resourceThumb(resourceId,label=resourceId){
 }
 function wireThumbs(root=document){
   root.querySelectorAll('[data-thumb-resource]').forEach(canvas=>drawResource(canvas,dict(state.theme.resources)[canvas.dataset.thumbResource],3));
-  root.querySelectorAll('[data-resource]').forEach(node=>node.onclick=()=>navigate('resources',node.dataset.resource));
+  root.querySelectorAll('[data-resource]').forEach(node=>{if(!node.classList.contains('atlasRegion'))node.onclick=()=>navigate('resources',node.dataset.resource)});
 }
-
 function renderFamily(){
   const family=currentValue();
   const members=entries(state.theme.resources).filter(([,resource])=>resource.belongsTo===state.key||resource.role===state.key||String(resource.role||'').startsWith(state.key+'.'));
   return itemHero()+`<section class="panel"><h2>Members (${members.length})</h2><div class="thumbGrid">${members.map(([key])=>resourceThumb(key)).join('')}</div></section>
     <section class="panel"><h2>Definition</h2>${renderSimpleObject(family)}</section>`;
 }
-
 function renderConstruction(){
   const c=currentValue(),components=dict(c.components),resources=[];
   for(const [slot,value] of Object.entries(components)){
@@ -498,13 +570,11 @@ function renderConstruction(){
   return itemHero()+`<section class="panel"><h2>Component resources</h2><div class="thumbGrid">${resources.map(x=>resourceThumb(x.id,`${x.slot}: ${x.id}`)).join('')||'<span class="muted">No directly enumerable components.</span>'}</div></section>
     <div class="grid2"><section class="panel"><h2>Layout</h2>${renderSimpleObject(c.layout??'—')}</section><section class="panel"><h2>Resize</h2>${renderSimpleObject(c.resize??'—')}</section></div>`;
 }
-
 function targetButtonsForValue(value){
   const refs=refsIn(value);
   if(!refs.length)return `<span class="mono">${escapeHtml(value)}</span>`;
   return `<div class="chips">${refs.map(ref=>refButton(ref.section,ref.key,ref.key)).join('')}</div>`;
 }
-
 function renderObject(){
   const obj=currentValue(),visuals=dict(obj.visuals);
   return itemHero()+`<div class="grid2">
@@ -517,21 +587,16 @@ function renderObject(){
     <section class="panel"><h2>Visual states</h2><div class="linkList">${Object.entries(visuals).map(([name,target])=>`<div class="linkRow"><span class="type">${escapeHtml(name)}</span><div>${targetButtonsForValue(target)}</div></div>`).join('')||'<span class="muted">No visuals.</span>'}</div></section>
   </div>`;
 }
-
 function renderSchema(){
   const schema=currentValue();
   return itemHero()+`<section class="panel"><h2>Parameters</h2>${Object.entries(schema).map(([name,spec])=>
     `<div class="param"><div class="paramHead"><span>${escapeHtml(state.key+'.'+name)}</span><span>${escapeHtml(spec.type||'')}</span></div>
-      <div class="paramBody">${spec.values?`values: ${escapeHtml(spec.values.join(' · '))}<br>`:''}${spec.default!==undefined?`default: ${escapeHtml(spec.default)}<br>`:''}${spec.required?`required` : ''}${spec.minimum!==undefined?`minimum: ${escapeHtml(spec.minimum)}`:''}</div></div>`).join('')}</section>`;
+      <div class="paramBody">${spec.values?`values: ${escapeHtml(spec.values.join(' · '))}<br>`:''}${spec.default!==undefined?`default: ${escapeHtml(spec.default)}<br>`:''}${spec.required?'required<br>':''}${spec.minimum!==undefined?`minimum: ${escapeHtml(spec.minimum)}`:''}</div></div>`).join('')}</section>`;
 }
-
 function renderPlaceable(){
   const p=currentValue();
   return itemHero()+`<div class="grid2">
-    <section class="panel"><h2>Authoring</h2><dl class="kv">
-      <dt>Group</dt><dd>${escapeHtml(p.authoringGroup||'—')}</dd>
-      <dt>Object</dt><dd>${p.object?targetButtonsForValue(p.object):'—'}</dd>
-    </dl></section>
+    <section class="panel"><h2>Authoring</h2><dl class="kv"><dt>Group</dt><dd>${escapeHtml(p.authoringGroup||'—')}</dd><dt>Object</dt><dd>${p.object?targetButtonsForValue(p.object):'—'}</dd></dl></section>
     <section class="panel"><h2>Initial values</h2>${renderSimpleObject(p.initialValues||{})}</section>
   </div>
   <section class="panel"><h2>Parameters</h2><div class="linkList">${(p.parameters||[]).map(param=>{
@@ -539,7 +604,6 @@ function renderPlaceable(){
     return `<div class="linkRow"><span class="type">parameter</span><div>${dict(state.theme.parameterSchemas)[schema]?refButton('parameterSchemas',schema,param):`<span class="mono">${escapeHtml(param)}</span>`}</div></div>`;
   }).join('')}</div></section>`;
 }
-
 function renderFrameGroup(){
   const group=currentValue(),ids=group.resources||[];
   return itemHero()+`<section class="panel"><h2>Resources</h2><div class="thumbGrid">${ids.map(id=>resourceThumb(id)).join('')}</div></section>
@@ -563,7 +627,8 @@ function renderCenter(){
   else if(state.section==='frameGroups')html=renderFrameGroup();
   else html=renderGenericSection();
   content.innerHTML=html;wireRefs(content);wireThumbs(content);
-  if(state.section==='resources'&&state.key)drawResource($('resourceCanvas'),currentValue(),6);
+  if(state.section==='resources'&&state.key){drawResource($('resourceCanvas'),currentValue(),state.previewZoom);wireZoom()}
+  if(state.section==='atlases'&&state.key){drawAtlas();wireZoom()}
   if(state.section==='animations'&&state.key){
     drawAnimationFrame();
     $('playAnimation').onclick=startAnimation;
@@ -571,14 +636,11 @@ function renderCenter(){
     $('nextFrame').onclick=()=>{const n=animationFrames(currentValue()).length;if(n){state.animationIndex=(state.animationIndex+1)%n;drawAnimationFrame()}};
   }
 }
-
 function renderDetail(){
   const root=$('detailScroll');
   if(!state.theme){root.innerHTML='<div class="muted">Load a theme pack to inspect its references and raw data.</div>';return}
   if(state.key==null){
-    const value=state.section==='overview'?{
-      format:state.theme.format,packVersion:state.theme.packVersion,id:state.theme.id,title:state.theme.title
-    }:state.theme[state.section];
+    const value=state.section==='overview'?{format:state.theme.format,packVersion:state.theme.packVersion,id:state.theme.id,title:state.theme.title}:state.theme[state.section];
     root.innerHTML=`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
     return;
   }
@@ -589,34 +651,28 @@ function renderDetail(){
     <h3>Raw entry</h3><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
   wireRefs(root);
 }
-
 function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
   stopAnimation();
   const issues=validateTheme(theme);
-  state.theme=theme;state.fileName=fileName;state.section='overview';state.key=null;state.query='';state.images.clear();
+  state.theme=theme;state.fileName=fileName;state.section='overview';state.key=null;state.query='';state.images.clear();state.previewZoom=2;
   $('fileName').textContent=fileName;$('search').value='';
-  const status=$('status');
-  status.className='badge '+(issues.length?'warn':'good');
+  const status=$('status');status.className='badge '+(issues.length?'warn':'good');
   status.textContent=issues.length?`${issues.length} format warning${issues.length===1?'':'s'}`:'Reference pack v1';
   renderSections();renderItems();renderCenter();renderDetail();
   if(issues.length){
     $('content').insertAdjacentHTML('afterbegin',`<div class="warning">${issues.map(escapeHtml).join('<br>')}</div>`);
     report('warn',`Loaded ${fileName} with ${issues.length} format warning${issues.length===1?'':'s'}.`);
     for(const issue of issues)report('warn',issue);
-  }else{
-    report('ok',`Loaded ${fileName} · ${count(theme.resources)} resources · ${count(theme.animations)} animations.`);
-  }
+  }else report('ok',`Loaded ${fileName} · ${count(theme.resources)} resources · ${count(theme.animations)} animations.`);
   return issues;
 }
-
 async function loadFile(file){
   try{
     report('info',`Reading ${file.name}…`,{log:false});
     const text=await file.text(),theme=JSON.parse(text);
     loadThemeDocument(theme,file.name);
   }catch(error){
-    $('status').className='badge bad';$('status').textContent='Load failed';
-    $('fileName').textContent=file?.name||'';
+    $('status').className='badge bad';$('status').textContent='Load failed';$('fileName').textContent=file?.name||'';
     $('welcome').hidden=false;$('content').hidden=true;
     $('welcome').innerHTML=`<div class="drop"><h1>Could not open theme</h1><div class="error">${escapeHtml(error.message||error)}</div><p><button id="retryLoad">Choose another file…</button></p></div>`;
     $('retryLoad').onclick=()=>$('fileInput').click();
@@ -628,12 +684,12 @@ $('loadButton').onclick=()=>$('fileInput').click();
 $('welcomeLoad').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=event=>{const file=event.target.files?.[0];if(file)loadFile(file);event.target.value=''};
 $('search').oninput=event=>{state.query=event.target.value;renderItems()};
-window.addEventListener('dragover',event=>{event.preventDefault()});
+window.addEventListener('dragover',event=>event.preventDefault());
 window.addEventListener('drop',event=>{event.preventDefault();const file=event.dataTransfer?.files?.[0];if(file)loadFile(file)});
 window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}});
 $('logButton').onclick=()=>toggleLog();
 $('closeLog').onclick=()=>toggleLog(false);
-$('clearLog').onclick=()=>{state.log.length=0;renderLog();setStatus('info','Log cleared.');};
+$('clearLog').onclick=()=>{state.log.length=0;renderLog();setStatus('info','Log cleared.')};
 window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn,report};
 renderLog();
 })();
