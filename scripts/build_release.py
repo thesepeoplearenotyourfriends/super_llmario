@@ -15,6 +15,8 @@ MAPS = ROOT / "maps"
 OUTPUT = ROOT / "dist" / "super_llmario.html"
 DEFAULT_EXPERIENCE_ID = "demo"
 MAP_SUFFIX = ".llmmap.txt"
+MAP_FORMAT = "llmario-reference-editor-map"
+MAP_VERSION = 1
 
 SCRIPT_BOUNDARY = "</script>\n<script>\n(()=>{\n'use strict';"
 RUNTIME_BOOT = "refreshPair();resize();requestAnimationFrame(frame);"
@@ -109,6 +111,12 @@ def experience_label(identifier: str) -> str:
 
 
 def validate_map_compatibility(theme: object, map_doc: object, path: Path) -> None:
+    if not isinstance(map_doc, dict):
+        raise RuntimeError(f"{path.relative_to(ROOT)} root must be an object")
+    if map_doc.get("format") != MAP_FORMAT:
+        raise RuntimeError(f"{path.relative_to(ROOT)} has unsupported map format {map_doc.get('format')!r}")
+    if map_doc.get("mapVersion") != MAP_VERSION:
+        raise RuntimeError(f"{path.relative_to(ROOT)} has unsupported mapVersion {map_doc.get('mapVersion')!r}")
     if theme.get("id") != map_doc.get("theme", {}).get("id"):
         raise RuntimeError(f"{path.relative_to(ROOT)} does not target the packed reference theme")
     if theme.get("packVersion") != map_doc.get("theme", {}).get("packVersion"):
