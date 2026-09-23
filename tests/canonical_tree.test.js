@@ -8,7 +8,7 @@ const root=path.resolve(__dirname,'..');
 const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 test('canonical tree and guidance name only the reference-pack applications',()=>{
   assert.deepEqual(fs.readdirSync(path.join(root,'engine')).sort(),['reference_pack_engine.html']);
-  assert.deepEqual(fs.readdirSync(path.join(root,'editor')).sort(),['reference_pack_editor.html']);
+  assert.deepEqual(fs.readdirSync(path.join(root,'editor')).sort(),['reference_pack_editor.html','theme_pack_editor.html']);
   assert(fs.statSync(path.join(root,'archived/engine/legacy_engine.html')).isFile(),'legacy behavioral oracle remains archived');
   const activeFiles=['AGENTS.md','README.md','docs/repository-mainline.md','docs/marioai-reference-theme-pack.md','index.html','scripts/build_release.py','tests/release_build.test.js'];
   for(const file of activeFiles){
