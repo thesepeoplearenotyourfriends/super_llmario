@@ -110,6 +110,15 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 .linkRow{display:grid;grid-template-columns:82px minmax(0,1fr);gap:7px;align-items:start;font-size:11px}
 .linkRow .type{color:var(--muted);text-transform:uppercase;font-size:9px;letter-spacing:.08em;padding-top:5px}
 .linkRow button{text-align:left;padding:5px 7px;background:#0a1c25;color:var(--accent);overflow-wrap:anywhere}
+.detailNav{position:sticky;top:-12px;z-index:6;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:6px;margin:-12px -12px 12px;padding:8px 10px;border-bottom:1px solid var(--line);background:#0c1a23f2;backdrop-filter:blur(5px)}
+.detailNav button{width:28px;height:28px;padding:0;display:grid;place-items:center;font-size:15px}
+.detailNav button:disabled{opacity:.35;cursor:default;border-color:var(--line)}
+.detailTrail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:10px var(--mono);color:var(--muted)}
+.historyDepth{font:9px var(--mono);color:var(--muted);white-space:nowrap}
+.usageSummary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.usageGroup{display:grid;grid-template-columns:104px minmax(0,1fr);gap:8px;align-items:start;padding:7px 0;border-top:1px solid #17303a}
+.usageGroup:first-of-type{border-top:0}
+.usageType{padding-top:5px;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.08em}
 .warning{padding:10px;border:1px solid #775d28;border-radius:9px;background:#2a2412;color:#ffdc82;font-size:12px}
 .error{padding:10px;border:1px solid #754044;border-radius:9px;background:#291619;color:#ff9a9f;font-size:12px}
 .param{border-top:1px solid var(--line);padding:8px 0}
@@ -188,7 +197,7 @@ const SECTION_LABELS={
   sceneLayers:'Scene Layers',extended:'Extended'
 };
 const INVENTORY_SECTIONS=new Set(['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']);
-const state={theme:null,fileName:'',section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2};
+const state={theme:null,fileName:'',section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2,history:[],historyIndex:-1};
 
 const $=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -323,23 +332,38 @@ function renderItems(){
   list.querySelectorAll('[data-key]').forEach(button=>button.onclick=()=>selectItem(button.dataset.key));
 }
 function defaultZoom(section){return section==='resources'?4:section==='atlases'?2:state.previewZoom}
-function selectSection(section){
+function sameSelection(a,b){return !!a&&!!b&&a.section===b.section&&(a.key??null)===(b.key??null)}
+function recordHistory(section,key){
+  const entry={section,key:key??null},current=state.history[state.historyIndex];
+  if(sameSelection(current,entry))return;
+  if(state.historyIndex<state.history.length-1)state.history.splice(state.historyIndex+1);
+  state.history.push(entry);
+  if(state.history.length>100)state.history.shift();
+  state.historyIndex=state.history.length-1;
+}
+function applySelection(section,key,{record=true,clearQuery=true}={}){
   stopAnimation();
-  state.section=section;state.query='';$('search').value='';
-  const first=INVENTORY_SECTIONS.has(section)?entries(state.theme?.[section])[0]?.[0]:null;
-  state.key=first||null;state.animationIndex=0;state.previewZoom=defaultZoom(section);
+  state.section=section;
+  if(clearQuery){state.query='';$('search').value=''}
+  state.key=key??null;state.animationIndex=0;state.previewZoom=defaultZoom(section);
+  if(record)recordHistory(section,state.key);
   renderSections();renderItems();renderCenter();renderDetail();
+  const label=SECTION_LABELS[section]||titleCase(section);
+  setStatus('info',state.key==null?label:`${label} · ${state.key}`);
+}
+function selectSection(section){
+  const first=INVENTORY_SECTIONS.has(section)?entries(state.theme?.[section])[0]?.[0]:null;
+  applySelection(section,first||null,{record:true,clearQuery:true});
   if(first)setStatus('info',`${SECTION_LABELS[section]} · ${count(state.theme?.[section])} entries · showing ${first}`);
 }
-function selectItem(key){
-  stopAnimation();
-  state.key=key;state.animationIndex=0;state.previewZoom=defaultZoom(state.section);
-  renderItems();renderCenter();renderDetail();
-  setStatus('info',`${SECTION_LABELS[state.section]} · ${key}`);
-}
-function navigate(section,key){
-  state.section=section;state.query='';$('search').value='';state.key=key;state.previewZoom=defaultZoom(section);
-  stopAnimation();renderSections();renderItems();renderCenter();renderDetail();
+function selectItem(key){applySelection(state.section,key,{record:true,clearQuery:false})}
+function navigate(section,key){applySelection(section,key,{record:true,clearQuery:true})}
+function historyGo(delta){
+  const next=state.historyIndex+delta;
+  if(next<0||next>=state.history.length)return;
+  state.historyIndex=next;
+  const entry=state.history[next];
+  applySelection(entry.section,entry.key,{record:false,clearQuery:true});
 }
 
 function refButton(section,key,label=key){
@@ -437,12 +461,34 @@ function resourcePreviewHtml(resource,key){
   return `${zoomControls()}<div class="zoomViewport" id="previewViewport"><div class="zoomStage" id="previewStage"><canvas id="resourceCanvas" aria-label="Preview of ${escapeHtml(key)}"></canvas></div></div>
     <div class="previewCaption"><span>${escapeHtml(resource.image.atlas||'')} atlas</span><span>${escapeHtml(`${r.x??'?'} , ${r.y??'?'} · ${r.w??'?'}×${r.h??'?'}`)}</span></div>`;
 }
+const RESOURCE_USAGE_ORDER=['families','frameGroups','animations','constructions','objects','placeables','resources','parameterSchemas'];
+function resourceUsage(resourceId){
+  const grouped=new Map(RESOURCE_USAGE_ORDER.map(section=>[section,[]])),seen=new Set();
+  const add=(section,key)=>{
+    if(!grouped.has(section)||!key)return;
+    const token=section+'\0'+key;if(seen.has(token))return;
+    seen.add(token);grouped.get(section).push(key);
+  };
+  const resource=dict(state.theme?.resources)[resourceId]||{};
+  for(const [familyKey] of entries(state.theme?.families)){
+    if(resource.belongsTo===familyKey||resource.role===familyKey||String(resource.role||'').startsWith(familyKey+'.'))add('families',familyKey);
+  }
+  for(const ref of backlinks('resources',resourceId))add(ref.section,ref.key);
+  return RESOURCE_USAGE_ORDER.map(section=>({section,items:grouped.get(section)})).filter(group=>group.items.length);
+}
+function renderResourceUsage(resourceId){
+  const groups=resourceUsage(resourceId),incoming=backlinks('resources',resourceId),contexts=groups.reduce((sum,group)=>sum+group.items.length,0);
+  const summary=incoming.length?`${incoming.length} incoming semantic reference${incoming.length===1?'':'s'}`:'No incoming semantic references';
+  return `<section class="panel"><h2>Where this resource is used</h2>
+    <div class="usageSummary"><span class="badge ${incoming.length?'good':'warn'}">${escapeHtml(summary)}</span><span class="muted">${contexts} linked context${contexts===1?'':'s'}</span></div>
+    ${groups.length?groups.map(group=>`<div class="usageGroup"><span class="usageType">${escapeHtml(SECTION_LABELS[group.section]||titleCase(group.section))}</span><div class="chips">${group.items.map(key=>refButton(group.section,key,key)).join('')}</div></div>`).join(''):'<div class="muted">No semantic links detected for this resource.</div>'}
+  </section>`;
+}
 function renderResource(){
   const resource=currentValue();
-  return itemHero()+resourcePreviewHtml(resource,state.key)+`
+  return itemHero()+resourcePreviewHtml(resource,state.key)+renderResourceUsage(state.key)+`
     <div class="grid2"><section class="panel"><h2>Display</h2>${renderSimpleObject(resource.display||{})}</section>
-    <section class="panel"><h2>Provenance</h2>${renderSimpleObject(resource.provenance||{})}</section></div>
-    ${resource.belongsTo?`<section class="panel"><h2>Family</h2>${targetButtonsForValue(resource.belongsTo)}</section>`:''}`;
+    <section class="panel"><h2>Provenance</h2>${renderSimpleObject(resource.provenance||{})}</section></div>`;
 }
 function atlasResources(atlasId){
   return entries(state.theme?.resources).filter(([,resource])=>resource?.image?.atlas===atlasId&&resource.image.rect);
@@ -636,25 +682,37 @@ function renderCenter(){
     $('nextFrame').onclick=()=>{const n=animationFrames(currentValue()).length;if(n){state.animationIndex=(state.animationIndex+1)%n;drawAnimationFrame()}};
   }
 }
+function detailNavHtml(){
+  const label=SECTION_LABELS[state.section]||titleCase(state.section),trail=state.key==null?label:`${label} / ${state.key}`;
+  const backDisabled=state.historyIndex<=0?' disabled':'',forwardDisabled=state.historyIndex<0||state.historyIndex>=state.history.length-1?' disabled':'';
+  const depth=state.history.length?`${state.historyIndex+1}/${state.history.length}`:'0/0';
+  return `<div class="detailNav"><button type="button" data-history-back title="Back" aria-label="Back"${backDisabled}>←</button><button type="button" data-history-forward title="Forward" aria-label="Forward"${forwardDisabled}>→</button><span class="detailTrail">${escapeHtml(trail)}</span><span class="historyDepth">${escapeHtml(depth)}</span></div>`;
+}
+function wireDetailNav(root){
+  const back=root.querySelector('[data-history-back]'),forward=root.querySelector('[data-history-forward]');
+  if(back)back.onclick=()=>historyGo(-1);
+  if(forward)forward.onclick=()=>historyGo(1);
+}
 function renderDetail(){
   const root=$('detailScroll');
   if(!state.theme){root.innerHTML='<div class="muted">Load a theme pack to inspect its references and raw data.</div>';return}
+  const nav=detailNavHtml();
   if(state.key==null){
     const value=state.section==='overview'?{format:state.theme.format,packVersion:state.theme.packVersion,id:state.theme.id,title:state.theme.title}:state.theme[state.section];
-    root.innerHTML=`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
-    return;
+    root.innerHTML=nav+`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
+    wireDetailNav(root);return;
   }
   const value=currentValue(),refs=refsIn(value),backs=backlinks(state.section,state.key);
-  root.innerHTML=`<h2>References</h2>
+  root.innerHTML=nav+`<h2>References</h2>
     <h3>Points to</h3>${refs.length?`<div class="linkList">${refs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
     <h3>Referenced by</h3>${backs.length?`<div class="linkList">${backs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
     <h3>Raw entry</h3><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
-  wireRefs(root);
+  wireDetailNav(root);wireRefs(root);
 }
 function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
   stopAnimation();
   const issues=validateTheme(theme);
-  state.theme=theme;state.fileName=fileName;state.section='overview';state.key=null;state.query='';state.images.clear();state.previewZoom=2;
+  state.theme=theme;state.fileName=fileName;state.section='overview';state.key=null;state.query='';state.images.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
   $('fileName').textContent=fileName;$('search').value='';
   const status=$('status');status.className='badge '+(issues.length?'warn':'good');
   status.textContent=issues.length?`${issues.length} format warning${issues.length===1?'':'s'}`:'Reference pack v1';
