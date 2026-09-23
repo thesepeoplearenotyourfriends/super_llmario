@@ -48,6 +48,18 @@ test('theme pack workbench covers the complete canonical reference-pack surface'
   assert.match(html,/Parameter Schemas/);
 });
 
+test('resource and atlas inspectors provide integer zoom, drag panning, and atlas region drill-down',()=>{
+  for(const token of ['zoomViewport','zoomStage','zoomReadout','atlasCanvas','atlasRegions','atlasRegion'])assert.match(html,new RegExp(token));
+  assert.match(html,/Ctrl\+wheel to zoom/);
+  assert.match(html,/function setPreviewZoom\(/);
+  assert.match(html,/function fitPreview\(/);
+  assert.match(html,/function wireZoom\(/);
+  assert.match(html,/viewport\.scrollLeft=drag\.left-dx/);
+  assert.match(html,/imageSmoothingEnabled=false/);
+  assert.match(html,/resource\?\.image\?\.atlas===atlasId/);
+  assert.match(html,/navigate\('resources',button\.dataset\.resource\)/);
+});
+
 test('every inline workbench script is syntactically valid JavaScript',()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'llmario-theme-editor-'));
   try{
