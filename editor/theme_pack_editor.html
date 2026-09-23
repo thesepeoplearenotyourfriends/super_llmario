@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LLMario Theme Pack Workbench</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#081219;--panel:#0c1a23;--panel2:#102631;--panel3:#15323f;
+  --line:#254955;--ink:#e7f4f7;--muted:#8fb0b9;--accent:#56d9e8;
+  --good:#7ce7a6;--warn:#ffd36b;--bad:#ff8585;--shadow:rgba(0,0,0,.28);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+button,input,select{font:inherit}
+button{border:1px solid var(--line);border-radius:8px;background:var(--panel3);color:var(--ink);padding:7px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app{height:100%;display:grid;grid-template-rows:52px minmax(0,1fr)}
+header{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a202b;border-bottom:1px solid var(--line);box-shadow:0 4px 20px var(--shadow);z-index:5}
+header strong{font-size:14px;letter-spacing:.08em}
+header .sub{font-size:11px;color:var(--muted)}
+.spacer{flex:1}
+#fileName{max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-family:var(--mono);font-size:11px}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px}
+.badge.good{color:var(--good);border-color:#397d55}
+.badge.warn{color:var(--warn);border-color:#806b32}
+.badge.bad{color:var(--bad);border-color:#82484a}
+#layout{min-height:0;display:grid;grid-template-columns:250px minmax(360px,1fr) 360px}
+aside,main{min-width:0;min-height:0}
+#nav{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+#navTop{padding:10px;border-bottom:1px solid var(--line)}
+#search{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#07141b;color:var(--ink)}
+#sectionList{overflow:auto;padding:8px}
+.sectionButton{width:100%;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;text-align:left;margin-bottom:4px;background:transparent;border-color:transparent}
+.sectionButton:hover,.sectionButton.active{background:var(--panel2);border-color:var(--line)}
+.sectionButton span:last-child{color:var(--muted);font-family:var(--mono);font-size:11px}
+#itemList{overflow:auto;border-top:1px solid var(--line);padding:8px;min-height:0;flex:1}
+.itemButton{width:100%;text-align:left;margin-bottom:4px;background:transparent;border-color:transparent;padding:7px 8px}
+.itemButton:hover,.itemButton.active{background:var(--panel2);border-color:var(--line)}
+.itemButton b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:11px}
+.itemButton small{display:block;margin-top:2px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#center{overflow:auto;padding:16px 18px 30px}
+#detail{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+#detailScroll{overflow:auto;padding:12px;min-height:0}
+.empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--muted);padding:30px}
+.empty .drop{max-width:560px;padding:34px;border:1px dashed #3c7180;border-radius:14px;background:#0c1e28}
+.empty h1{margin:0 0 8px;color:var(--ink);font-size:24px}
+.empty p{line-height:1.5}
+h1,h2,h3{margin:0}
+h1{font-size:22px}
+h2{font-size:15px;margin-bottom:9px}
+h3{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 7px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+.hero{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.hero .grow{min-width:0;flex:1}
+.hero .eyebrow{color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.hero .id{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px;overflow-wrap:anywhere}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0 18px}
+.card{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.card .value{font-size:22px;font-weight:750}
+.card .label{font-size:11px;color:var(--muted);margin-top:3px}
+.panel{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:12px;margin:10px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.kv{display:grid;grid-template-columns:130px minmax(0,1fr);gap:7px 10px;font-size:12px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip,.ref{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:#0a1c25;font-size:11px}
+.ref{color:var(--accent);cursor:pointer}
+.ref:hover{border-color:var(--accent)}
+.previewBox{min-height:260px;display:grid;place-items:center;position:relative;overflow:auto;border:1px solid var(--line);border-radius:12px;background:
+  linear-gradient(45deg,#0b151b 25%,transparent 25%) 0 0/16px 16px,
+  linear-gradient(45deg,transparent 75%,#0b151b 75%) 0 0/16px 16px,
+  linear-gradient(45deg,transparent 25%,#101f27 25%) 8px 8px/16px 16px,
+  linear-gradient(45deg,#101f27 75%,transparent 75%) 8px 8px/16px 16px;
+}
+.previewBox canvas{image-rendering:pixelated;max-width:90%;max-height:420px}
+.previewBox img{image-rendering:pixelated;max-width:100%;max-height:420px}
+.previewCaption{display:flex;justify-content:space-between;gap:8px;margin-top:7px;color:var(--muted);font-size:11px}
+.thumbGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.thumb{border:1px solid var(--line);border-radius:9px;padding:8px;background:#0a1820;cursor:pointer;min-width:0}
+.thumb:hover{border-color:var(--accent)}
+.thumb canvas{display:block;margin:auto;image-rendering:pixelated;max-width:96px;max-height:96px}
+.thumb .name{font:10px var(--mono);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mono);color:#cde3e8}
+.raw{padding:10px;border:1px solid var(--line);border-radius:8px;background:#061117}
+.linkList{display:flex;flex-direction:column;gap:5px}
+.linkRow{display:grid;grid-template-columns:82px minmax(0,1fr);gap:7px;align-items:start;font-size:11px}
+.linkRow .type{color:var(--muted);text-transform:uppercase;font-size:9px;letter-spacing:.08em;padding-top:5px}
+.linkRow button{text-align:left;padding:5px 7px;background:#0a1c25;color:var(--accent);overflow-wrap:anywhere}
+.warning{padding:10px;border:1px solid #775d28;border-radius:9px;background:#2a2412;color:#ffdc82;font-size:12px}
+.error{padding:10px;border:1px solid #754044;border-radius:9px;background:#291619;color:#ff9a9f;font-size:12px}
+.param{border-top:1px solid var(--line);padding:8px 0}
+.param:first-child{border-top:0}
+.paramHead{display:flex;justify-content:space-between;gap:8px;font:11px var(--mono)}
+.paramBody{margin-top:5px;font-size:11px;color:var(--muted)}
+.transport{display:flex;gap:6px;align-items:center}
+.transport button{padding:5px 8px}
+@media(max-width:1000px){#layout{grid-template-columns:220px 1fr}#detail{display:none}}
+@media(max-width:720px){#layout{grid-template-columns:1fr}#nav{display:none}header .sub{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div><strong>THEME PACK WORKBENCH</strong><div class="sub">Phase 1 · readonly inspector</div></div>
+  <span id="status" class="badge">No theme loaded</span>
+  <span id="fileName"></span>
+  <span class="spacer"></span>
+  <button id="loadButton">Load theme…</button>
+  <input id="fileInput" type="file" accept=".llmtheme,.txt,.json,application/json,text/plain" hidden>
+</header>
+<div id="layout">
+  <aside id="nav">
+    <div id="navTop"><input id="search" type="search" placeholder="Search current section…" disabled></div>
+    <div id="sectionList"></div>
+    <div id="itemList"></div>
+  </aside>
+  <main id="center">
+    <div id="welcome" class="empty"><div class="drop">
+      <h1>Open an <span class="mono">.llmtheme.txt</span></h1>
+      <p>This workbench inventories the complete pack, renders embedded atlas resources, previews animations, and exposes semantic links without modifying the source file.</p>
+      <button id="welcomeLoad">Choose theme pack…</button>
+      <p><small>Drop a theme file anywhere in this window, too.</small></p>
+    </div></div>
+    <div id="content" hidden></div>
+  </main>
+  <aside id="detail"><div id="detailScroll"><div class="muted">Load a theme pack to inspect its references and raw data.</div></div></aside>
+</div>
+</div>
+<script>
+(()=>{
+'use strict';
+
+const SECTION_ORDER=[
+  'overview','atlases','resources','families','animations','constructions',
+  'objects','parameterSchemas','placeables','frameGroups','coverage','contract',
+  'attribution','sceneLayers','extended'
+];
+const SECTION_LABELS={
+  overview:'Overview',atlases:'Atlases',resources:'Resources',families:'Families',
+  animations:'Animations',constructions:'Constructions',objects:'Objects',
+  parameterSchemas:'Parameter Schemas',placeables:'Placeables',frameGroups:'Frame Groups',
+  coverage:'Coverage',contract:'Contract',attribution:'Attribution',
+  sceneLayers:'Scene Layers',extended:'Extended'
+};
+const INVENTORY_SECTIONS=new Set(['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']);
+const state={theme:null,fileName:'',section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0};
+
+const $=id=>document.getElementById(id);
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const titleCase=value=>String(value).replace(/([a-z0-9])([A-Z])/g,'$1 $2').replace(/[._-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+const dict=value=>value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+const entries=value=>Object.entries(dict(value));
+const count=value=>Array.isArray(value)?value.length:entries(value).length;
+const simple=value=>value==null||['string','number','boolean'].includes(typeof value);
+
+function validateTheme(theme){
+  const issues=[];
+  if(!theme||typeof theme!=='object'||Array.isArray(theme))return ['Top-level JSON value must be an object.'];
+  if(theme.format!=='llmario-theme-pack-reference')issues.push(`Unexpected format: ${theme.format??'(missing)'}`);
+  if(theme.packVersion!==1)issues.push(`Unexpected packVersion: ${theme.packVersion??'(missing)'}`);
+  for(const key of ['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables']){
+    if(theme[key]!=null&&(typeof theme[key]!=='object'||Array.isArray(theme[key])))issues.push(`${key} must be an object when present.`);
+  }
+  return issues;
+}
+
+function knownTargets(){
+  const out=new Map();
+  if(!state.theme)return out;
+  for(const section of ['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']){
+    for(const [key] of entries(state.theme[section])){
+      if(!out.has(key))out.set(key,[]);
+      out.get(key).push({section,key});
+    }
+  }
+  return out;
+}
+
+function refsIn(value){
+  const targets=knownTargets(),found=[],seen=new Set();
+  function add(section,key,path){
+    const token=section+'\0'+key+'\0'+path;
+    if(seen.has(token))return;seen.add(token);found.push({section,key,path});
+  }
+  function walk(node,path){
+    if(typeof node==='string'){
+      const exact=targets.get(node)||[];
+      for(const hit of exact)add(hit.section,hit.key,path);
+      const first=node.split('.')[0];
+      if(!exact.length&&node.includes('.')&&dict(state.theme?.parameterSchemas)[first])add('parameterSchemas',first,path);
+      return;
+    }
+    if(Array.isArray(node)){node.forEach((item,i)=>walk(item,`${path}[${i}]`));return}
+    if(node&&typeof node==='object')for(const [k,v] of Object.entries(node))walk(v,path?`${path}.${k}`:k);
+  }
+  walk(value,'');
+  return found;
+}
+
+function backlinks(section,key){
+  const out=[];
+  if(!state.theme)return out;
+  for(const sourceSection of ['resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']){
+    for(const [sourceKey,value] of entries(state.theme[sourceSection])){
+      if(sourceSection===section&&sourceKey===key)continue;
+      if(refsIn(value).some(ref=>ref.section===section&&ref.key===key))out.push({section:sourceSection,key:sourceKey});
+    }
+  }
+  return out;
+}
+
+function describe(section,key,value){
+  if(section==='resources')return value.purpose||value.role||value.kind||'resource';
+  if(section==='families')return value.purpose||value.kind||'family';
+  if(section==='animations')return `${count(value.frames)} frames`;
+  if(section==='constructions')return value.family||((value.layout&&value.layout.type)||value.layout)||value.kind||'construction';
+  if(section==='objects')return `${value.engineNoun||value.kind||'object'}${value.capabilities?.length?' · '+value.capabilities.join(', '):''}`;
+  if(section==='parameterSchemas')return `${count(value)} parameter${count(value)===1?'':'s'}`;
+  if(section==='placeables')return value.label||value.authoringGroup||value.object||'placeable';
+  if(section==='atlases')return `${value.mediaType||''}${value.cellSize?` · ${value.cellSize.w}×${value.cellSize.h} cell`:''}`;
+  if(section==='frameGroups')return `${count(value.resources)} resources`;
+  return '';
+}
+
+function sectionCount(section){
+  if(section==='overview')return '';
+  const value=state.theme?.[section];
+  if(INVENTORY_SECTIONS.has(section))return count(value);
+  if(Array.isArray(value))return value.length;
+  return value==null?0:count(value);
+}
+
+function renderSections(){
+  $('sectionList').innerHTML=SECTION_ORDER.filter(section=>state.theme?.[section]!=null||section==='overview').map(section=>
+    `<button class="sectionButton ${state.section===section?'active':''}" data-section="${section}">
+      <span>${escapeHtml(SECTION_LABELS[section]||titleCase(section))}</span>
+      <span>${escapeHtml(sectionCount(section))}</span>
+    </button>`).join('');
+  $('sectionList').querySelectorAll('[data-section]').forEach(button=>button.onclick=()=>selectSection(button.dataset.section));
+}
+
+function renderItems(){
+  const list=$('itemList');
+  const searchable=INVENTORY_SECTIONS.has(state.section);
+  $('search').disabled=!searchable;
+  if(!searchable){list.innerHTML='';return}
+  const items=entries(state.theme?.[state.section]);
+  const q=state.query.trim().toLowerCase();
+  const filtered=!q?items:items.filter(([key,value])=>{
+    const hay=(key+' '+describe(state.section,key,value)+' '+JSON.stringify(value)).toLowerCase();
+    return hay.includes(q);
+  });
+  list.innerHTML=filtered.map(([key,value])=>
+    `<button class="itemButton ${state.key===key?'active':''}" data-key="${escapeHtml(key)}">
+      <b>${escapeHtml(key)}</b><small>${escapeHtml(describe(state.section,key,value))}</small>
+    </button>`).join('') || `<div class="muted" style="padding:8px;font-size:11px">No matches.</div>`;
+  list.querySelectorAll('[data-key]').forEach(button=>button.onclick=()=>selectItem(button.dataset.key));
+}
+
+function selectSection(section){
+  stopAnimation();
+  state.section=section;state.key=null;state.query='';$('search').value='';
+  renderSections();renderItems();renderCenter();renderDetail();
+}
+function selectItem(key){
+  stopAnimation();
+  state.key=key;state.animationIndex=0;
+  renderItems();renderCenter();renderDetail();
+}
+function navigate(section,key){
+  state.section=section;state.query='';$('search').value='';state.key=key;
+  stopAnimation();renderSections();renderItems();renderCenter();renderDetail();
+}
+
+function refButton(section,key,label=key){
+  return `<button class="ref" data-ref-section="${escapeHtml(section)}" data-ref-key="${escapeHtml(key)}">${escapeHtml(label)}</button>`;
+}
+function wireRefs(root=document){
+  root.querySelectorAll('[data-ref-section]').forEach(button=>button.onclick=()=>navigate(button.dataset.refSection,button.dataset.refKey));
+}
+
+function overview(){
+  const t=state.theme;
+  const cards=['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']
+    .filter(k=>t[k]!=null).map(k=>`<div class="card"><div class="value">${count(t[k])}</div><div class="label">${escapeHtml(SECTION_LABELS[k])}</div></div>`).join('');
+  const coverage=t.coverage||{};
+  return `<div class="hero"><div class="grow">
+    <div class="eyebrow">${escapeHtml(t.format||'Theme Pack')}</div>
+    <h1>${escapeHtml(t.title||t.id||'Untitled theme')}</h1>
+    <div class="id">${escapeHtml(t.id||'(no id)')} · packVersion ${escapeHtml(t.packVersion??'?')}</div>
+  </div></div>
+  <div class="cards">${cards}</div>
+  <div class="grid2">
+    <section class="panel"><h2>Theme contract</h2>
+      <dl class="kv">
+        <dt>Policy</dt><dd>${escapeHtml(t.contract?.policy||'—')}</dd>
+        <dt>Coordinates</dt><dd>${escapeHtml(t.contract?.coordinates||'—')}</dd>
+        <dt>Scene layers</dt><dd><div class="chips">${(t.sceneLayers||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')}</div></dd>
+      </dl>
+    </section>
+    <section class="panel"><h2>Coverage</h2>
+      <dl class="kv">
+        <dt>World resources</dt><dd>${escapeHtml(coverage.nonemptyWorldResources??count(t.resources))}</dd>
+        <dt>Unresolved</dt><dd>${escapeHtml(coverage.unresolvedResources??'—')}</dd>
+        <dt>Status</dt><dd>${escapeHtml(coverage.statement||'—')}</dd>
+      </dl>
+    </section>
+  </div>
+  <section class="panel"><h2>Attribution</h2>${renderSimpleObject(t.attribution)}</section>`;
+}
+
+function renderSimpleObject(value){
+  if(simple(value))return `<span>${escapeHtml(value)}</span>`;
+  if(Array.isArray(value))return `<div class="chips">${value.map(v=>`<span class="chip">${escapeHtml(simple(v)?v:JSON.stringify(v))}</span>`).join('')}</div>`;
+  return `<dl class="kv">${Object.entries(value||{}).map(([k,v])=>`<dt>${escapeHtml(k)}</dt><dd>${simple(v)?escapeHtml(v):Array.isArray(v)?`<div class="chips">${v.map(x=>`<span class="chip">${escapeHtml(simple(x)?x:JSON.stringify(x))}</span>`).join('')}</div>`:`<pre>${escapeHtml(JSON.stringify(v,null,2))}</pre>`}</dd>`).join('')}</dl>`;
+}
+
+function currentValue(){return state.key==null?state.theme?.[state.section]:dict(state.theme?.[state.section])[state.key]}
+
+function renderGenericSection(){
+  const value=currentValue();
+  if(state.key==null){
+    return `<div class="hero"><div class="grow"><div class="eyebrow">Theme section</div><h1>${escapeHtml(SECTION_LABELS[state.section]||titleCase(state.section))}</h1>
+      <div class="id">${INVENTORY_SECTIONS.has(state.section)?count(value)+' entries':'Top-level theme metadata'}</div></div></div>
+      <section class="panel">${renderSimpleObject(value)}</section>`;
+  }
+  return itemHero()+`<section class="panel"><h2>Properties</h2>${renderSimpleObject(value)}</section>`;
+}
+
+function itemHero(){
+  const value=currentValue();
+  return `<div class="hero"><div class="grow"><div class="eyebrow">${escapeHtml(SECTION_LABELS[state.section]||state.section)}</div>
+    <h1>${escapeHtml(value?.label||state.key)}</h1>
+    <div class="id">${escapeHtml(state.key)}</div>
+    ${value?.purpose?`<p class="muted">${escapeHtml(value.purpose)}</p>`:''}
+  </div></div>`;
+}
+
+function atlasSrc(atlas){
+  if(!atlas?.data||!atlas?.encoding)return '';
+  if(atlas.encoding==='base64')return `data:${atlas.mediaType||'image/png'};base64,${atlas.data}`;
+  return '';
+}
+function getImage(atlasId){
+  if(state.images.has(atlasId))return state.images.get(atlasId);
+  const atlas=dict(state.theme?.atlases)[atlasId];
+  const src=atlasSrc(atlas);
+  if(!src)return null;
+  const img=new Image();img.src=src;state.images.set(atlasId,img);return img;
+}
+function drawResource(canvas,resource,scale=4){
+  if(!resource?.image)return false;
+  const img=getImage(resource.image.atlas),rect=resource.image.rect;
+  if(!img||!rect)return false;
+  const draw=()=>{
+    const w=rect.w||1,h=rect.h||1,s=Math.max(1,Math.min(scale,Math.floor(240/Math.max(w,h))||1));
+    canvas.width=w*s;canvas.height=h*s;
+    const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,rect.x,rect.y,w,h,0,0,w*s,h*s);
+  };
+  if(img.complete)draw();else img.addEventListener('load',draw,{once:true});
+  return true;
+}
+
+function resourcePreviewHtml(resource,key){
+  if(!resource?.image)return `<div class="previewBox"><span class="muted">No image binding.</span></div>`;
+  const r=resource.image.rect||{};
+  return `<div class="previewBox"><canvas id="resourceCanvas" aria-label="Preview of ${escapeHtml(key)}"></canvas></div>
+    <div class="previewCaption"><span>${escapeHtml(resource.image.atlas||'')} atlas</span><span>${escapeHtml(`${r.x??'?'} , ${r.y??'?'} · ${r.w??'?'}×${r.h??'?'}`)}</span></div>`;
+}
+
+function renderResource(){
+  const resource=currentValue();
+  return itemHero()+resourcePreviewHtml(resource,state.key)+`
+    <div class="grid2">
+      <section class="panel"><h2>Display</h2>${renderSimpleObject(resource.display||{})}</section>
+      <section class="panel"><h2>Provenance</h2>${renderSimpleObject(resource.provenance||{})}</section>
+    </div>
+    ${resource.belongsTo?`<section class="panel"><h2>Family</h2>${targetButtonsForValue(resource.belongsTo)}</section>`:''}`;
+}
+
+function renderAtlas(){
+  const atlas=currentValue(),src=atlasSrc(atlas);
+  return itemHero()+`<div class="previewBox">${src?`<img src="${src}" alt="${escapeHtml(state.key)} atlas">`:`<span class="muted">Atlas data is not inline base64.</span>`}</div>
+    <div class="previewCaption"><span>${escapeHtml(atlas.sourceFile||'embedded atlas')}</span><span>${atlas.cellSize?escapeHtml(`${atlas.cellSize.w}×${atlas.cellSize.h} cells`):''}</span></div>
+    <section class="panel"><h2>Atlas metadata</h2>${renderSimpleObject(Object.fromEntries(Object.entries(atlas).filter(([k])=>k!=='data')))}</section>`;
+}
+
+function stopAnimation(){if(state.animationTimer){clearInterval(state.animationTimer);state.animationTimer=0}}
+function animationFrames(animation){return Array.isArray(animation?.frames)?animation.frames:[]}
+function drawAnimationFrame(){
+  const animation=currentValue(),frames=animationFrames(animation),canvas=$('animationCanvas');
+  if(!canvas||!frames.length)return;
+  const frame=frames[state.animationIndex%frames.length],resource=dict(state.theme.resources)[frame.resource];
+  if(!resource?.image)return;
+  drawResource(canvas,resource,6);
+  $('frameLabel').textContent=`Frame ${state.animationIndex%frames.length+1} / ${frames.length} · ${frame.resource}`;
+}
+function startAnimation(){
+  const frames=animationFrames(currentValue());if(frames.length<2)return;
+  stopAnimation();state.animationTimer=setInterval(()=>{state.animationIndex=(state.animationIndex+1)%frames.length;drawAnimationFrame()},180);
+}
+function renderAnimation(){
+  const animation=currentValue(),frames=animationFrames(animation);
+  return itemHero()+`<div class="previewBox"><canvas id="animationCanvas"></canvas></div>
+    <div class="previewCaption"><span id="frameLabel"></span><span>${escapeHtml(animation.frameTiming||'timing unspecified')}</span></div>
+    <div class="transport" style="margin-top:8px"><button id="playAnimation">Play</button><button id="pauseAnimation">Pause</button><button id="nextFrame">Next frame</button></div>
+    <section class="panel"><h2>Frames</h2><div class="thumbGrid">${frames.map((frame,i)=>resourceThumb(frame.resource,`${i+1}. ${frame.resource}`)).join('')}</div></section>`;
+}
+
+function resourceThumb(resourceId,label=resourceId){
+  const resource=dict(state.theme?.resources)[resourceId];
+  if(!resource)return `<div class="thumb"><div class="name">${escapeHtml(label)} · missing</div></div>`;
+  return `<div class="thumb" data-resource="${escapeHtml(resourceId)}"><canvas data-thumb-resource="${escapeHtml(resourceId)}"></canvas><div class="name">${escapeHtml(label)}</div></div>`;
+}
+function wireThumbs(root=document){
+  root.querySelectorAll('[data-thumb-resource]').forEach(canvas=>drawResource(canvas,dict(state.theme.resources)[canvas.dataset.thumbResource],3));
+  root.querySelectorAll('[data-resource]').forEach(node=>node.onclick=()=>navigate('resources',node.dataset.resource));
+}
+
+function renderFamily(){
+  const family=currentValue();
+  const members=entries(state.theme.resources).filter(([,resource])=>resource.belongsTo===state.key||resource.role===state.key||String(resource.role||'').startsWith(state.key+'.'));
+  return itemHero()+`<section class="panel"><h2>Members (${members.length})</h2><div class="thumbGrid">${members.map(([key])=>resourceThumb(key)).join('')}</div></section>
+    <section class="panel"><h2>Definition</h2>${renderSimpleObject(family)}</section>`;
+}
+
+function renderConstruction(){
+  const c=currentValue(),components=dict(c.components),resources=[];
+  for(const [slot,value] of Object.entries(components)){
+    if(typeof value==='string')resources.push({slot,id:value});
+    else if(Array.isArray(value))value.forEach((id,i)=>resources.push({slot:`${slot}[${i}]`,id}));
+  }
+  return itemHero()+`<section class="panel"><h2>Component resources</h2><div class="thumbGrid">${resources.map(x=>resourceThumb(x.id,`${x.slot}: ${x.id}`)).join('')||'<span class="muted">No directly enumerable components.</span>'}</div></section>
+    <div class="grid2"><section class="panel"><h2>Layout</h2>${renderSimpleObject(c.layout??'—')}</section><section class="panel"><h2>Resize</h2>${renderSimpleObject(c.resize??'—')}</section></div>`;
+}
+
+function targetButtonsForValue(value){
+  const refs=refsIn(value);
+  if(!refs.length)return `<span class="mono">${escapeHtml(value)}</span>`;
+  return `<div class="chips">${refs.map(ref=>refButton(ref.section,ref.key,ref.key)).join('')}</div>`;
+}
+
+function renderObject(){
+  const obj=currentValue(),visuals=dict(obj.visuals);
+  return itemHero()+`<div class="grid2">
+    <section class="panel"><h2>Engine binding</h2><dl class="kv">
+      <dt>Noun</dt><dd>${escapeHtml(obj.engineNoun||obj.kind||'—')}</dd>
+      <dt>Scene layer</dt><dd>${escapeHtml(obj.defaultSceneLayer||'—')}</dd>
+      <dt>Selector</dt><dd>${escapeHtml(obj.visualSelector||'—')}</dd>
+      <dt>Capabilities</dt><dd><div class="chips">${(obj.capabilities||[]).map(x=>`<span class="chip">${escapeHtml(x)}</span>`).join('')||'—'}</div></dd>
+    </dl></section>
+    <section class="panel"><h2>Visual states</h2><div class="linkList">${Object.entries(visuals).map(([name,target])=>`<div class="linkRow"><span class="type">${escapeHtml(name)}</span><div>${targetButtonsForValue(target)}</div></div>`).join('')||'<span class="muted">No visuals.</span>'}</div></section>
+  </div>`;
+}
+
+function renderSchema(){
+  const schema=currentValue();
+  return itemHero()+`<section class="panel"><h2>Parameters</h2>${Object.entries(schema).map(([name,spec])=>
+    `<div class="param"><div class="paramHead"><span>${escapeHtml(state.key+'.'+name)}</span><span>${escapeHtml(spec.type||'')}</span></div>
+      <div class="paramBody">${spec.values?`values: ${escapeHtml(spec.values.join(' · '))}<br>`:''}${spec.default!==undefined?`default: ${escapeHtml(spec.default)}<br>`:''}${spec.required?`required` : ''}${spec.minimum!==undefined?`minimum: ${escapeHtml(spec.minimum)}`:''}</div></div>`).join('')}</section>`;
+}
+
+function renderPlaceable(){
+  const p=currentValue();
+  return itemHero()+`<div class="grid2">
+    <section class="panel"><h2>Authoring</h2><dl class="kv">
+      <dt>Group</dt><dd>${escapeHtml(p.authoringGroup||'—')}</dd>
+      <dt>Object</dt><dd>${p.object?targetButtonsForValue(p.object):'—'}</dd>
+    </dl></section>
+    <section class="panel"><h2>Initial values</h2>${renderSimpleObject(p.initialValues||{})}</section>
+  </div>
+  <section class="panel"><h2>Parameters</h2><div class="linkList">${(p.parameters||[]).map(param=>{
+    const schema=param.split('.')[0];
+    return `<div class="linkRow"><span class="type">parameter</span><div>${dict(state.theme.parameterSchemas)[schema]?refButton('parameterSchemas',schema,param):`<span class="mono">${escapeHtml(param)}</span>`}</div></div>`;
+  }).join('')}</div></section>`;
+}
+
+function renderFrameGroup(){
+  const group=currentValue(),ids=group.resources||[];
+  return itemHero()+`<section class="panel"><h2>Resources</h2><div class="thumbGrid">${ids.map(id=>resourceThumb(id)).join('')}</div></section>
+    <section class="panel"><h2>Definition</h2>${renderSimpleObject(group)}</section>`;
+}
+
+function renderCenter(){
+  const content=$('content');$('welcome').hidden=!!state.theme;content.hidden=!state.theme;
+  if(!state.theme)return;
+  let html='';
+  if(state.section==='overview')html=overview();
+  else if(state.key==null)html=renderGenericSection();
+  else if(state.section==='resources')html=renderResource();
+  else if(state.section==='atlases')html=renderAtlas();
+  else if(state.section==='animations')html=renderAnimation();
+  else if(state.section==='families')html=renderFamily();
+  else if(state.section==='constructions')html=renderConstruction();
+  else if(state.section==='objects')html=renderObject();
+  else if(state.section==='parameterSchemas')html=renderSchema();
+  else if(state.section==='placeables')html=renderPlaceable();
+  else if(state.section==='frameGroups')html=renderFrameGroup();
+  else html=renderGenericSection();
+  content.innerHTML=html;wireRefs(content);wireThumbs(content);
+  if(state.section==='resources'&&state.key)drawResource($('resourceCanvas'),currentValue(),6);
+  if(state.section==='animations'&&state.key){
+    drawAnimationFrame();
+    $('playAnimation').onclick=startAnimation;
+    $('pauseAnimation').onclick=stopAnimation;
+    $('nextFrame').onclick=()=>{const n=animationFrames(currentValue()).length;if(n){state.animationIndex=(state.animationIndex+1)%n;drawAnimationFrame()}};
+  }
+}
+
+function renderDetail(){
+  const root=$('detailScroll');
+  if(!state.theme){root.innerHTML='<div class="muted">Load a theme pack to inspect its references and raw data.</div>';return}
+  if(state.key==null){
+    const value=state.section==='overview'?{
+      format:state.theme.format,packVersion:state.theme.packVersion,id:state.theme.id,title:state.theme.title
+    }:state.theme[state.section];
+    root.innerHTML=`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
+    return;
+  }
+  const value=currentValue(),refs=refsIn(value),backs=backlinks(state.section,state.key);
+  root.innerHTML=`<h2>References</h2>
+    <h3>Points to</h3>${refs.length?`<div class="linkList">${refs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
+    <h3>Referenced by</h3>${backs.length?`<div class="linkList">${backs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
+    <h3>Raw entry</h3><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
+  wireRefs(root);
+}
+
+function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
+  stopAnimation();
+  const issues=validateTheme(theme);
+  state.theme=theme;state.fileName=fileName;state.section='overview';state.key=null;state.query='';state.images.clear();
+  $('fileName').textContent=fileName;$('search').value='';
+  const status=$('status');
+  status.className='badge '+(issues.length?'warn':'good');
+  status.textContent=issues.length?`${issues.length} format warning${issues.length===1?'':'s'}`:'Reference pack v1';
+  renderSections();renderItems();renderCenter();renderDetail();
+  if(issues.length){
+    $('content').insertAdjacentHTML('afterbegin',`<div class="warning">${issues.map(escapeHtml).join('<br>')}</div>`);
+  }
+  return issues;
+}
+
+async function loadFile(file){
+  try{
+    const text=await file.text(),theme=JSON.parse(text);
+    loadThemeDocument(theme,file.name);
+  }catch(error){
+    $('status').className='badge bad';$('status').textContent='Load failed';
+    $('fileName').textContent=file?.name||'';
+    $('welcome').hidden=false;$('content').hidden=true;
+    $('welcome').innerHTML=`<div class="drop"><h1>Could not open theme</h1><div class="error">${escapeHtml(error.message||error)}</div><p><button id="retryLoad">Choose another file…</button></p></div>`;
+    $('retryLoad').onclick=()=>$('fileInput').click();
+  }
+}
+
+$('loadButton').onclick=()=>$('fileInput').click();
+$('welcomeLoad').onclick=()=>$('fileInput').click();
+$('fileInput').onchange=event=>{const file=event.target.files?.[0];if(file)loadFile(file);event.target.value=''};
+$('search').oninput=event=>{state.query=event.target.value;renderItems()};
+window.addEventListener('dragover',event=>{event.preventDefault()});
+window.addEventListener('drop',event=>{event.preventDefault();const file=event.dataTransfer?.files?.[0];if(file)loadFile(file)});
+window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}});
+window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn};
+})();
+</script>
+</body>
+</html>
