@@ -60,19 +60,24 @@ test('resource and atlas inspectors provide integer zoom, drag panning, and atla
   assert.match(html,/navigate\('resources',button\.dataset\.resource\)/);
 });
 
-test('semantic navigation keeps back-forward history and turns resources into usage gateways',()=>{
-  for(const token of ['detailNav','detailTrail','historyDepth','usageSummary','usageGroup'])assert.match(html,new RegExp(token));
+test('semantic navigation keeps global back-forward history and turns resources into usage gateways',()=>{
+  for(const token of ['historyNav','historyBack','historyForward','usageSummary','usageGroup'])assert.match(html,new RegExp(token));
   assert.match(html,/history:\[\],historyIndex:-1/);
   assert.match(html,/function recordHistory\(/);
   assert.match(html,/state\.history\.splice\(state\.historyIndex\+1\)/);
   assert.match(html,/function historyGo\(delta\)/);
-  assert.match(html,/data-history-back/);
-  assert.match(html,/data-history-forward/);
+  assert.match(html,/function renderHistoryNav\(/);
   assert.match(html,/Where this resource is used/);
   assert.match(html,/function resourceUsage\(resourceId\)/);
   assert.match(html,/backlinks\('resources',resourceId\)/);
   assert.match(html,/resource\.belongsTo===familyKey/);
   assert.match(html,/RESOURCE_USAGE_ORDER=\['families','frameGroups','animations','constructions','objects','placeables','resources','parameterSchemas'\]/);
+});
+
+test('narrow layouts stack the detail inspector below the center instead of hiding it',()=>{
+  assert.match(html,/@media\(max-width:1000px\)\{[\s\S]*?#nav\{grid-row:1\/3\}[\s\S]*?#center\{grid-column:2;grid-row:1\}[\s\S]*?#detail\{grid-column:2;grid-row:2;display:flex/);
+  assert.doesNotMatch(html,/@media\(max-width:1000px\)\{[^}]*#detail\{display:none/);
+  assert.match(html,/@media\(max-width:720px\)\{[\s\S]*?#center\{grid-column:1;grid-row:1\}[\s\S]*?#detail\{grid-column:1;grid-row:2\}/);
 });
 
 test('every inline workbench script is syntactically valid JavaScript',()=>{
