@@ -21,6 +21,56 @@ MAP_VERSION = 1
 SCRIPT_BOUNDARY = "</script>\n<script>\n(()=>{\n'use strict';"
 RUNTIME_BOOT = "refreshPair();resize();requestAnimationFrame(frame);"
 EDITOR_BOOT = "window.addEventListener('resize',resize);resize();renderIssues();\n})();"
+EDITOR_HEADER = '<header><b>Reference Pack Editor</b><span class="status" id="status">Load a reference-contract theme to begin.</span><span id="dirty" class="dirty" hidden>● Unsaved</span><span class="spacer"></span><button id="undoBtn" title="Undo (Ctrl/Cmd+Z)" disabled>Undo</button><button id="redoBtn" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>Redo</button><button id="eraserBtn" aria-label="Eraser tool" aria-pressed="false" title="Eraser — drag to remove authored objects">⌫</button><button id="paletteToggle" aria-label="Toggle Palette" aria-pressed="true" title="Show or hide Palette">Palette</button><button id="detailsToggle" aria-label="Toggle Details" aria-pressed="true" title="Show or hide Details">Details</button><button id="openMapBtn" title="Open an authored map">Open…</button><button id="saveMapBtn" title="Save authored map" disabled>Save</button><button id="helpBtn" aria-label="Open help" title="Help and shortcuts">?</button><button id="clearBtn" disabled>Clear</button><button id="loadBtn">Theme…</button><input id="themeFile" type="file" accept=".txt,.json,.llmtheme" hidden><input id="mapFile" type="file" accept=".llmmap.txt,.json,.txt" hidden></header>'
+
+PACKED_EDITOR_HEADER = """
+<header class="packed-editor-header">
+  <div class="packed-menu-row">
+    <div class="packed-menu">
+      <button class="packed-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-menu="packedFileMenu">File</button>
+      <div class="packed-menu-popup" id="packedFileMenu" role="menu" hidden>
+        <button id="openMapBtn" role="menuitem" title="Open an authored map">Open map… <span>Ctrl+O</span></button>
+        <button id="saveMapBtn" role="menuitem" title="Save authored map" disabled>Save map <span>Ctrl+S</span></button>
+        <div class="packed-menu-separator"></div>
+        <button id="loadBtn" role="menuitem">Load theme…</button>
+      </div>
+    </div>
+    <div class="packed-menu">
+      <button class="packed-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" data-menu="packedEditMenu">Edit</button>
+      <div class="packed-menu-popup" id="packedEditMenu" role="menu" hidden>
+        <button id="undoBtn" role="menuitem" title="Undo (Ctrl/Cmd+Z)" disabled>Undo <span>Ctrl+Z</span></button>
+        <button id="redoBtn" role="menuitem" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>Redo <span>Ctrl+Shift+Z</span></button>
+        <div class="packed-menu-separator"></div>
+        <button id="clearBtn" role="menuitem" disabled>Clear map</button>
+      </div>
+    </div>
+    <span class="spacer"></span>
+    <span class="packed-map-name" id="packedMapName">Untitled map</span><span id="dirty" class="dirty" hidden>*</span>
+    <button id="backToGameBtn" type="button">Back to game</button>
+  </div>
+  <div class="packed-toolbar" role="toolbar" aria-label="Map editor tools">
+    <button id="eraserBtn" aria-label="Eraser tool" aria-pressed="false" title="Eraser — drag to remove authored objects">⌫</button>
+    <button id="paletteToggle" aria-label="Toggle Palette" aria-pressed="true" title="Show or hide Palette">Palette</button>
+    <button id="detailsToggle" aria-label="Toggle Details" aria-pressed="true" title="Show or hide Details">Details</button>
+    <button id="helpBtn" aria-label="Open help" title="Help and shortcuts">?</button>
+    <span class="status" id="status">Load a reference-contract theme to begin.</span>
+  </div>
+  <input id="themeFile" type="file" accept=".txt,.json,.llmtheme" hidden><input id="mapFile" type="file" accept=".llmmap.txt,.json,.txt" hidden>
+</header>
+""".strip()
+
+PACKED_EDITOR_STYLE = r"""
+header.packed-editor-header{height:64px;display:grid;grid-template-rows:32px 32px;gap:0;padding:0;background:#111c21;border-bottom:1px solid var(--line)}
+.packed-menu-row,.packed-toolbar{display:flex;align-items:center;gap:5px;min-width:0;padding:3px 8px}
+.packed-menu-row{position:relative;border-bottom:1px solid #263940}.packed-toolbar{background:#101a1f}
+.packed-menu{position:relative;height:100%;display:flex;align-items:center}.packed-menu-trigger{border-color:transparent;background:transparent;padding:4px 9px}
+.packed-menu-trigger:hover,.packed-menu-trigger[aria-expanded="true"]{border-color:var(--line);background:#29372f}
+.packed-menu-popup{position:absolute;left:0;top:29px;z-index:30;min-width:205px;padding:4px;border:1px solid var(--line);border-radius:7px;background:#111c21;box-shadow:0 10px 28px #000b}
+.packed-menu-popup[hidden]{display:none}.packed-menu-popup button{width:100%;display:flex;justify-content:space-between;gap:18px;border:0;background:transparent;text-align:left;padding:6px 9px}.packed-menu-popup button:hover:not(:disabled){background:#29372f}.packed-menu-popup button span{color:var(--muted);font-size:11px}.packed-menu-separator{height:1px;margin:4px;background:var(--line)}
+.packed-map-name{max-width:min(42vw,430px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-size:12px}.packed-editor-header .dirty{font-weight:800}.packed-toolbar .status{flex:1;margin-left:4px;font-size:12px}
+.packed-editor-header+#shell,.shell{height:calc(100vh - 64px)}
+@media(max-width:850px){.side.right{top:64px}.packed-map-name{max-width:32vw}.packed-menu-popup{top:29px}}
+""".strip()
 
 RELEASE_STYLE = r"""
 #releaseEditorButton{margin-left:auto}
@@ -149,7 +199,13 @@ def load_experiences(theme: object) -> list[dict[str, object]]:
 def pack_editor(source: str) -> str:
     if source.count(EDITOR_BOOT) != 1:
         raise RuntimeError("editor boot marker is missing or ambiguous")
-    hook = """function focusPackedEditorMap(){\n  const rect=stage.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height),start=state.markers?.start;\n  if(start&&Number.isFinite(start.x)&&Number.isFinite(start.y)){\n    state.camera={x:w*.28-start.x,y:h*.62-start.y,zoom:1};\n    draw();\n    return;\n  }\n  const boxes=[];\n  for(const inst of state.instances){\n    try{const b=instanceBounds(inst);if(b&&[b.x,b.y,b.w,b.h].every(Number.isFinite))boxes.push(b)}catch{}\n  }\n  for(const marker of Object.values(state.markers||{}))if(marker&&Number.isFinite(marker.x)&&Number.isFinite(marker.y))boxes.push({x:marker.x-16,y:marker.y-32,w:32,h:36});\n  if(!boxes.length){state.camera={x:0,y:0,zoom:1};draw();return}\n  const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y)),maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h)),pad=48,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),zoom=Math.max(.1,Math.min(2,(w-pad*2)/contentW,(h-pad*2)/contentH));\n  state.camera={x:(w-contentW*zoom)/2-minX*zoom,y:(h-contentH*zoom)/2-minY*zoom,zoom};\n  draw();\n}\nconst releaseBack=$('backToGameBtn');\nif(releaseBack){releaseBack.hidden=false;releaseBack.onclick=()=>window.parent?.ReferencePackCloseEditor?.()}\nwindow.ReferencePackEditorReleaseLoad=async(theme,map,mapName='packed.llmmap.txt')=>{\n  const themeFile=new File([JSON.stringify(theme)],'theme_marioai_reference_pack.llmtheme.txt',{type:'application/json'});\n  await loadTheme(themeFile);\n  const mapFile=new File([JSON.stringify(map)],mapName,{type:'application/json'});\n  await openMap(mapFile);\n  focusPackedEditorMap();\n};\n"""
+    if source.count(EDITOR_HEADER) != 1:
+        raise RuntimeError("editor header marker is missing or ambiguous")
+    if source.count("</style>") != 1:
+        raise RuntimeError("editor style boundary is missing or ambiguous")
+    source = source.replace(EDITOR_HEADER, PACKED_EDITOR_HEADER, 1)
+    source = source.replace("</style>", PACKED_EDITOR_STYLE + "\n</style>", 1)
+    hook = """function focusPackedEditorMap(){\n  const rect=stage.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height),start=state.markers?.start;\n  if(start&&Number.isFinite(start.x)&&Number.isFinite(start.y)){\n    state.camera={x:w*.28-start.x,y:h*.62-start.y,zoom:1};\n    draw();\n    return;\n  }\n  const boxes=[];\n  for(const inst of state.instances){\n    try{const b=instanceBounds(inst);if(b&&[b.x,b.y,b.w,b.h].every(Number.isFinite))boxes.push(b)}catch{}\n  }\n  for(const marker of Object.values(state.markers||{}))if(marker&&Number.isFinite(marker.x)&&Number.isFinite(marker.y))boxes.push({x:marker.x-16,y:marker.y-32,w:32,h:36});\n  if(!boxes.length){state.camera={x:0,y:0,zoom:1};draw();return}\n  const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y)),maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h)),pad=48,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),zoom=Math.max(.1,Math.min(2,(w-pad*2)/contentW,(h-pad*2)/contentH));\n  state.camera={x:(w-contentW*zoom)/2-minX*zoom,y:(h-contentH*zoom)/2-minY*zoom,zoom};\n  draw();\n}\nfunction installPackedEditorChrome(){\n  const closeMenus=()=>{for(const menu of document.querySelectorAll('.packed-menu-popup'))menu.hidden=true;for(const trigger of document.querySelectorAll('.packed-menu-trigger'))trigger.setAttribute('aria-expanded','false')};\n  for(const trigger of document.querySelectorAll('.packed-menu-trigger'))trigger.onclick=event=>{event.stopPropagation();const menu=$(trigger.dataset.menu),open=menu.hidden;closeMenus();if(open){menu.hidden=false;trigger.setAttribute('aria-expanded','true')}};\n  for(const menu of document.querySelectorAll('.packed-menu-popup'))menu.addEventListener('click',event=>{if(event.target.closest('button'))closeMenus()});\n  document.addEventListener('pointerdown',event=>{if(!event.target.closest('.packed-menu'))closeMenus()});\n  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('.packed-menu-popup:not([hidden])')){event.preventDefault();event.stopImmediatePropagation();closeMenus()}},true);\n  const back=$('backToGameBtn');if(back)back.onclick=()=>window.parent?.ReferencePackCloseEditor?.();\n}\ninstallPackedEditorChrome();\nwindow.ReferencePackEditorReleaseLoad=async(theme,map,mapName='packed.llmmap.txt')=>{\n  const themeFile=new File([JSON.stringify(theme)],'theme_marioai_reference_pack.llmtheme.txt',{type:'application/json'});\n  await loadTheme(themeFile);\n  const mapFile=new File([JSON.stringify(map)],mapName,{type:'application/json'});\n  await openMap(mapFile);\n  const name=$('packedMapName');if(name)name.textContent=mapName;\n  focusPackedEditorMap();\n};\n"""
     return source.replace(EDITOR_BOOT, "window.addEventListener('resize',resize);resize();renderIssues();\n" + hook + "})();", 1)
 
 
