@@ -50,6 +50,25 @@ test('authoritative player behavior drives bounded reachability and reacts to co
   assert.equal(flight.profile,'raccoonFlight');assert(flight.classes.includes('flight'));
 });
 
+test('reachability pruning is symmetric, order-independent, and preserves the runtime jump apex',()=>{
+  const start={x:400,y:240},map={...validMap,worldBounds:{x:0,y:0,w:800,h:320},instances:[
+    {placeable:'ground',values:{'transform.x':400,'transform.y':240,'terrain.width':50,'terrain.height':1,'terrain.style':'overground'}}
+  ],markers:{start:null,goal:null}},options={horizon:80,maxStates:100,cellSize:8};
+  const forward=api.simulateReachability(theme,map,start,options),reversed=api.simulateReachability(theme,map,start,{...options,reverseControls:true});
+  const xs=forward.samples.map(sample=>sample.x),ys=forward.samples.map(sample=>sample.y),left=start.x-Math.min(...xs),right=Math.max(...xs)-start.x;
+  assert(left>180&&right>180,'normal controls mature into meaningful trajectories on both sides');
+  assert(Math.abs(left-right)<=16,'symmetric geometry produces comparable left/right displacement');
+  assert(Math.min(...ys)<120,'authoritative stepping reaches the full high jump rather than a truncated low cloud');
+  assert.deepEqual(plain(reversed.samples),plain(forward.samples),'survivors do not depend on control generation order');
+});
+
+test('Flight From Here consumes charged runtime flight beyond the former 90-frame horizon',()=>{
+  const start={x:400,y:240},map={...validMap,worldBounds:{x:0,y:-800,w:1200,h:1120},instances:[],markers:{start:null,goal:null}},options={profile:'raccoonFlight',maxStates:70,cellSize:8};
+  const short=api.simulateReachability(theme,map,start,{...options,horizon:90}),complete=api.simulateReachability(theme,map,start,{...options,horizon:180});
+  assert.equal(complete.profile,'raccoonFlight');assert(complete.horizon>90);assert(complete.samples.length>short.samples.length*1.25,'charged flight continues producing useful runtime positions after frame 90');
+  assert(Math.min(...complete.samples.map(sample=>sample.y))<Math.min(...short.samples.map(sample=>sample.y))-100,'the real flight budget materially extends airborne traversal');
+});
+
 test('orders all five declared layers and resolves default and override layers',()=>{
   const runtime=api.compileReferenceRuntime(theme,fixture).runtime;
   assert.deepEqual(plain(runtime.layers),['sky','background','world','actors','foreground']);
