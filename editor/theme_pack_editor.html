@@ -255,11 +255,13 @@ const ImportCore={
   toggleCandidate(selection,candidate){const next=new Set(selection),id=typeof candidate==='string'?candidate:candidate.id;if(next.has(id))next.delete(id);else next.add(id);return next},
   changeGridSetting(transaction,key,value,minimum=0){transaction.settings[key]=Math.max(minimum,Math.trunc(Number(value)||0));transaction.selection=new Set();transaction.cells=[];return transaction},
   gridFromAtlas(atlas){const g=atlas?.authoring?.grid||{},legacy=atlas?.cellSize||{};return {cellW:g.cellW??legacy.w??32,cellH:g.cellH??legacy.h??32,offsetX:g.offsetX??0,offsetY:g.offsetY??0,gutterX:g.gutterX??0,gutterY:g.gutterY??0}},
+  rewriteAtlasHistory(history,oldId,newId){return history.map(entry=>entry?.section==='atlases'&&entry.key===oldId?{...entry,key:newId}:entry)},
   createAtlas(theme,transaction){
     const atlasId=String(transaction.atlasId||'').trim();if(!atlasId)throw new Error('Atlas ID is required.');
     if(Object.hasOwn(theme.atlases||{},atlasId))throw new Error(`Atlas ID already exists: ${atlasId}`);
     const next=structuredClone(theme);next.atlases=next.atlases||{};
-    next.atlases[atlasId]={mediaType:transaction.mediaType,encoding:'base64',data:transaction.base64,sourceFile:transaction.sourceName,imageSize:{w:transaction.width,h:transaction.height},authoring:{grid:{...transaction.settings}}};
+    next.atlases[atlasId]={mediaType:transaction.mediaType,encoding:'base64',data:transaction.base64,sourceFile:transaction.sourceName,imageSize:{w:transaction.width,h:transaction.height}};
+    if(transaction.settings)next.atlases[atlasId].authoring={grid:{...transaction.settings}};
     return {theme:next,atlasId,dirty:true};
   },
   createResources(theme,atlasId,cells,selection,prefix){
@@ -605,11 +607,12 @@ function drawAtlas(){
 }
 function wireAtlasEditor(){
   const atlas=currentValue(),session=atlasSession(state.key);
-  document.querySelectorAll('[data-atlas-grid]').forEach(input=>input.onchange=()=>{atlas.authoring=atlas.authoring||{};atlas.authoring.grid=atlasGrid(atlas);atlas.authoring.grid[input.dataset.atlasGrid]=Math.max(Number(input.min)||0,Math.trunc(Number(input.value)||0));session.selection.clear();setDirty(true);drawAtlas();renderDetail()});
+  const syncSelectionUi=()=>{const count=$('atlasSelectionCount'),create=$('createAtlasResources');if(count)count.textContent=`${session.selection.size} selected`;if(create)create.disabled=!session.selection.size};
+  document.querySelectorAll('[data-atlas-grid]').forEach(input=>input.onchange=()=>{atlas.authoring=atlas.authoring||{};atlas.authoring.grid=atlasGrid(atlas);atlas.authoring.grid[input.dataset.atlasGrid]=Math.max(Number(input.min)||0,Math.trunc(Number(input.value)||0));session.selection.clear();syncSelectionUi();setDirty(true);drawAtlas();renderDetail()});
   $('atlasPrefix').oninput=event=>session.prefix=event.target.value;
   $('clearAtlasSelection').onclick=()=>{session.selection.clear();renderCenter()};
   $('createAtlasResources').onclick=()=>{try{const img=getImage(state.key),cells=ImportCore.gridCells(img.naturalWidth,img.naturalHeight,atlasGrid(atlas)),result=ImportCore.createResources(state.theme,state.key,cells,session.selection,$('atlasPrefix').value);state.theme=result.theme;session.selection.clear();setDirty(true);renderSections();renderItems();renderCenter();renderDetail();report('ok',`Created ${result.resourceIds.length} Resources from ${state.key}.`)}catch(error){report('error',error.message||error);alert(error.message||error)}};
-  $('renameAtlas').onclick=()=>{try{const oldId=state.key,result=ImportCore.renameAtlas(state.theme,oldId,$('atlasRename').value);state.theme=result.theme;if(result.dirty){const saved=state.atlasSelections.get(oldId);state.atlasSelections.delete(oldId);if(saved)state.atlasSelections.set(result.atlasId,saved);state.key=result.atlasId;setDirty(true);renderSections();renderItems();renderCenter();renderDetail();report('ok',`Renamed Atlas ${oldId} to ${result.atlasId}; Resource references were updated.`)}}catch(error){report('error',error.message||error);alert(error.message||error)}};
+  $('renameAtlas').onclick=()=>{try{const oldId=state.key,result=ImportCore.renameAtlas(state.theme,oldId,$('atlasRename').value);state.theme=result.theme;if(result.dirty){const saved=state.atlasSelections.get(oldId);state.atlasSelections.delete(oldId);if(saved)state.atlasSelections.set(result.atlasId,saved);state.history=ImportCore.rewriteAtlasHistory(state.history,oldId,result.atlasId);state.key=result.atlasId;setDirty(true);renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();report('ok',`Renamed Atlas ${oldId} to ${result.atlasId}; Resource references were updated.`)}}catch(error){report('error',error.message||error);alert(error.message||error)}};
   $('exportAtlas').onclick=()=>{const bytes=Uint8Array.from(atob(atlas.data),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:atlas.mediaType||'application/octet-stream'})),link=document.createElement('a'),ext=(atlas.mediaType||'image/png').split('/')[1].replace('jpeg','jpg');link.href=url;link.download=`${state.key}.${ext}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),0);report('ok',`Exported ${link.download}.`)};
 }
 function redrawZoomPreview(){
@@ -762,17 +765,12 @@ function suggestedId(base,values){
   let n=2;while(Object.hasOwn(values,`${base}_${n}`))n++;
   return `${base}_${n}`;
 }
-function importNumber(name){return `<label>${name.label}<input type="number" min="${name.min??0}" step="1" data-grid="${name.key}" value="${state.importSession.settings[name.key]}"></label>`}
 function renderImportWorkspace(){
   const tx=state.importSession,z=tx.zoom;
-  return `<div class="importWorkspace"><div class="importTools"><label>Atlas ID<input class="nameInput" id="importAtlasId" value="${escapeHtml(tx.atlasId)}"></label>${[
-    {key:'cellW',label:'Cell width',min:1},{key:'cellH',label:'Cell height',min:1},{key:'offsetX',label:'X offset'},{key:'offsetY',label:'Y offset'},{key:'gutterX',label:'Horizontal gutter'},{key:'gutterY',label:'Vertical gutter'}
-  ].map(importNumber).join('')}<button type="button" data-import-zoom="-1">−</button><span class="zoomReadout">${z}×</span><button type="button" data-import-zoom="1">+</button><span class="spacer"></span><button type="button" id="cancelImport">Cancel Import</button><button type="button" id="createImportedAtlas">Create Atlas</button></div><div class="importViewport"><div class="importStage" style="width:${tx.width*z}px;height:${tx.height*z}px"><img src="${tx.dataUrl}" alt="Atlas source image" width="${tx.width*z}" height="${tx.height*z}"></div></div></div>`;
+  return `<div class="importWorkspace"><div class="importTools"><label>Atlas ID<input class="nameInput" id="importAtlasId" value="${escapeHtml(tx.atlasId)}"></label><span class="muted">${escapeHtml(tx.sourceName)} · ${tx.width}×${tx.height}</span><span class="spacer"></span><button type="button" id="cancelImport">Cancel Import</button><button type="button" id="createImportedAtlas">Create Atlas</button></div><div class="importViewport"><div class="importStage" style="width:${tx.width*z}px;height:${tx.height*z}px"><img src="${tx.dataUrl}" alt="Atlas source image" width="${tx.width*z}" height="${tx.height*z}"></div></div></div>`;
 }
-function updateImportPreview(){const tx=state.importSession,z=tx.zoom,stage=document.querySelector('.importStage'),image=stage?.querySelector('img');if(stage){stage.style.width=`${tx.width*z}px`;stage.style.height=`${tx.height*z}px`}if(image){image.width=tx.width*z;image.height=tx.height*z}const readout=document.querySelector('.importTools .zoomReadout');if(readout)readout.textContent=`${z}×`}
 function wireImportWorkspace(){
-  const tx=state.importSession;document.querySelectorAll('[data-grid]').forEach(input=>input.oninput=()=>{ImportCore.changeGridSetting(tx,input.dataset.grid,input.value,Number(input.min)||0);updateImportPreview()});
-  $('importAtlasId').oninput=event=>tx.atlasId=event.target.value;document.querySelectorAll('[data-import-zoom]').forEach(button=>button.onclick=()=>{tx.zoom=clamp(tx.zoom+Number(button.dataset.importZoom),1,16);updateImportPreview()});
+  const tx=state.importSession;$('importAtlasId').oninput=event=>tx.atlasId=event.target.value;
   $('cancelImport').onclick=cancelImport;$('createImportedAtlas').onclick=createImportedAtlas;
 }
 function cancelImport(){state.importSession=null;renderSections();renderItems();renderCenter();renderDetail();report('info','Atlas import cancelled; the theme was not changed.')}
@@ -861,7 +859,7 @@ async function beginAtlasImport(file){
     const dataUrl=await readFileAsDataURL(file),image=await decodeImage(dataUrl),comma=dataUrl.indexOf(',');
     const mediaType=(dataUrl.slice(5,comma).split(';')[0]||file.type||'image/png').toLowerCase();
     const atlasBase=(file.name||'atlas').replace(/\.[^.]+$/,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'atlas';
-    state.importSession={sourceName:file.name||'atlas',mediaType,base64:dataUrl.slice(comma+1),dataUrl,width:image.naturalWidth,height:image.naturalHeight,zoom:clamp(Math.floor(480/Math.max(image.naturalWidth,image.naturalHeight)),1,8),settings:{cellW:32,cellH:32,offsetX:0,offsetY:0,gutterX:0,gutterY:0},selection:new Set(),cells:[],atlasId:suggestedId(atlasBase,dict(state.theme.atlases))};
+    state.importSession={sourceName:file.name||'atlas',mediaType,base64:dataUrl.slice(comma+1),dataUrl,width:image.naturalWidth,height:image.naturalHeight,zoom:clamp(Math.floor(480/Math.max(image.naturalWidth,image.naturalHeight)),1,8),atlasId:suggestedId(atlasBase,dict(state.theme.atlases))};
     renderCenter();renderDetail();report('ok',`Opened ${file.name} (${image.naturalWidth}×${image.naturalHeight}) as an Atlas draft.`);
   }catch(error){report('error',`Could not import Atlas: ${error.message||error}`)}
 }

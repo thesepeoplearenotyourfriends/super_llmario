@@ -61,15 +61,16 @@ test('candidate selection is transactional and commit creates only selected atla
   assert.equal(JSON.stringify(original),before,'commit returns a new working document');
 });
 
-test('editing grid geometry clears selection without replacing the transaction',()=>{
+test('editing grid geometry clears selection and synchronizes persistent Atlas controls',()=>{
   const transaction={settings:{cellW:16,cellH:16},selection:new Set(['r0c0']),cells:[{id:'r0c0'}]};
   const returned=ImportCore.changeGridSetting(transaction,'cellW','32',1);
   assert.equal(returned,transaction);
   assert.equal(transaction.settings.cellW,32);
   assert.equal(transaction.selection.size,0);
   assert.equal(transaction.cells.length,0);
-  assert.match(html,/input\.oninput=\(\)=>\{ImportCore\.changeGridSetting\(tx,input\.dataset\.grid,input\.value,Number\(input\.min\)\|\|0\);updateImportPreview\(\)\}/);
-  assert.doesNotMatch(html,/input\.oninput=.*renderCenter\(\)/);
+  assert.match(html,/session\.selection\.clear\(\);syncSelectionUi\(\);setDirty\(true\);drawAtlas\(\)/);
+  assert.match(html,/count\.textContent=`\$\{session\.selection\.size\} selected`/);
+  assert.match(html,/create\.disabled=!session\.selection\.size/);
 });
 
 test('resource creation is row-major and continues after existing IDs without overwriting',()=>{
@@ -155,6 +156,22 @@ test('Atlas model supports persistent grids, resource creation, and atomic renam
   assert.equal(renamed.theme.atlases.map,undefined);
   assert.equal(original.resources.tile.image.atlas,'map','rename is atomic and does not mutate its input');
   assert.throws(()=>ImportCore.renameAtlas({atlases:{map:{},world:{}},resources:{}},'map','world'),/already exists/);
+});
+
+test('Atlas rename rewrites every matching navigation-history destination',()=>{
+  const history=[{section:'overview',key:null},{section:'atlases',key:'map'},{section:'resources',key:'map'},{section:'atlases',key:'map'}];
+  const rewritten=Array.from(ImportCore.rewriteAtlasHistory(history,'map','world'),entry=>({...entry}));
+  assert.deepEqual(rewritten,[{section:'overview',key:null},{section:'atlases',key:'world'},{section:'resources',key:'map'},{section:'atlases',key:'world'}]);
+  assert.equal(history[1].key,'map','history rewriting does not mutate the input');
+  assert.match(html,/state\.history=ImportCore\.rewriteAtlasHistory\(state\.history,oldId,result\.atlasId\)/);
+});
+
+test('Import Atlas is only a constructor; grid authoring lives in the persistent Atlas editor',()=>{
+  const workspace=html.match(/function renderImportWorkspace\(\)\{[\s\S]*?\n\}/)?.[0]||'';
+  assert.match(workspace,/Atlas ID/);
+  assert.match(workspace,/Create Atlas/);
+  assert.doesNotMatch(workspace,/Cell width|Cell height|X offset|Y offset|gutter|data-grid/);
+  assert.match(html,/function renderAtlas\(\)[\s\S]*?data-atlas-grid/);
 });
 
 test('every Atlas uses the persistent editor without exposing embedded payloads as normal metadata',()=>{
