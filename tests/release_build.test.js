@@ -29,11 +29,16 @@ test('release packs every repository map with one shared reference theme and emb
   assert(sandbox.PACKED_EDITOR_HTML.includes('data-menu="packedFileMenu"'));assert(sandbox.PACKED_EDITOR_HTML.includes('data-menu="packedEditMenu"'));assert(sandbox.PACKED_EDITOR_HTML.includes('role="toolbar" aria-label="Map editor tools"'));
   assert(sandbox.PACKED_EDITOR_HTML.includes('id="testPointBtn"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="rangesBtn"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="playFromHereBtn"'));
   assert(sandbox.PACKED_EDITOR_HTML.includes('packedTestState.point={x:point.x,y:point.y}'),'test-point placement preserves exact world coordinates');
-  assert(sandbox.PACKED_EDITOR_HTML.includes('semantics.serializeMap(state.theme,document)'),'play/ranges consume the current in-memory editor document');
+  assert(sandbox.PACKED_EDITOR_HTML.includes('map=semantics.serializeMap(theme,document)'),'play/ranges consume the current in-memory editor document');
   assert(sandbox.PACKED_EDITOR_HTML.includes('semantics.normalizePointForSingleMap(document,packedTestState.point)'),'test spawn follows canonical map-origin normalization');
   assert(sandbox.PACKED_EDITOR_HTML.includes('ReferencePackSimulateReachability'),'packed editor delegates ranges to its parent runtime');
   assert(sandbox.PACKED_EDITOR_HTML.includes("window.parent?.ReferencePackCloseEditor?.()"));assert(html.includes('ReferencePackCloseEditor=closePackedEditor'));assert(!html.includes('id="releaseEditorBar"'));
-  assert(html.includes('B.simulateReachability(state.theme,map,startPoint,options)'));assert(html.includes('ReferencePackPlayFromEditor=playPackedEditorMap'));
+  assert(html.includes('B.simulateReachability(theme,map,startPoint,{profile})'));assert(html.includes('ReferencePackPlayFromEditor=playPackedEditorMap'));
+  assert(sandbox.PACKED_EDITOR_HTML.includes('return{theme,map,startPoint:point,profile:'),'runtime requests include the current editor theme, map, point, and profile');
+  assert(sandbox.PACKED_EDITOR_HTML.includes("selectEditorTool(state.tool==='testPoint'?'select':'testPoint')"),'Test Point uses the shared mutually exclusive tool selector');
+  assert(sandbox.PACKED_EDITOR_HTML.includes("if(state.tool!=='testPoint'||event.button!==0)return false"),'the pointer interceptor follows central tool state');
+  assert(sandbox.PACKED_EDITOR_HTML.includes("kind==='themeLoad'||kind==='mapLoad'"),'document replacement clears stale test/range state');
+  assert.match(html,/grid-template-rows:32px 44px/);assert.match(html,/height:calc\(100vh - 76px\)/);assert.match(html,/\.side\.right\{top:76px\}/);
   assert(html.includes("if(frame.dataset.loaded)return"),'returning to the editor reuses its existing iframe and ephemeral state');
   assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
   assert.match(html,/id="releaseMapPicker"/);assert.match(html,/id="releaseMenu"/);assert.match(html,/<button id="releaseEditorButton">Editor<\/button><\/header>/);

@@ -725,8 +725,19 @@ assert(newEditor.includes('aria-label="Eraser tool" aria-pressed="false"'),
   'the compact eraser control has an accessible label and exposed pressed state');
 assert(newEditor.includes("$('eraserBtn').onclick=()=>setEraserMode(!state.eraser)"),
   'clicking the active eraser toggles it off');
-assert((newEditor.match(/state\.eraser=false;\$\('eraserBtn'\)\.setAttribute\('aria-pressed','false'\)/g)||[]).length>=2,
-  'marker and ordinary palette cards replace eraser mode');
+assert(newEditor.includes("function selectEditorTool(tool='select',brush=null"),
+  'one editor-tool selector owns mutually exclusive interaction state');
+assert(newEditor.includes("b.onclick=()=>selectEditorTool('brush',{markerKind:kind})")&&
+  newEditor.includes("b.onclick=()=>selectEditorTool('brush',semantics.activatePalette(state.brush,item))"),
+  'marker and ordinary palette cards select their brush through the central tool mechanism');
+assert(newEditor.includes("function setEraserMode(active){selectEditorTool(active?'eraser':'select')"),
+  'eraser selection also routes through the central tool mechanism');
+assert(newEditor.includes("if(found){selectEditorTool('select',null,{render:false});state.selected=found"),
+  'object selection exits placement tools through the central tool mechanism');
+assert(newEditor.includes("notifyEditorDocumentChanged('history')"),
+  'undo and redo document restoration notifies runtime-backed overlays');
+assert(newEditor.includes("notifyEditorDocumentChanged('themeLoad')")&&newEditor.includes("notifyEditorDocumentChanged('mapLoad')"),
+  'successful theme and map replacement explicitly notify ephemeral integrations');
 assert(newEditor.includes("e.key==='Escape'&&state.eraser"),'Escape exits eraser mode');
 assert(newEditor.includes('Eraser ready — drag to erase'),'activation feedback names the drag interaction');
 assert(newEditor.includes("Eraser locked to ${layerLabel(result.scope)}${result.scope==='markers'?'':' layer'}"),
