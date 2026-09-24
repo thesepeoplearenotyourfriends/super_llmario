@@ -24,7 +24,7 @@ function scripts(source){
 test('theme pack workbench remains standalone while exposing authoring actions',()=>{
   assert.match(html,/THEME PACK WORKBENCH/);
   assert.match(html,/id="fileInput"/);
-  assert.match(html,/id="importButton"[^>]*>Import Sprite Sheet…/);
+  assert.match(html,/id="importButton"[^>]*>Import Atlas…/);
   assert.match(html,/id="saveButton"[^>]*>Save Theme…/);
   assert.match(html,/window\.ThemePackWorkbench=\{loadThemeDocument,validateTheme,refsIn,report,ImportCore/);
   assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+href=/i);
@@ -57,28 +57,30 @@ test('candidate selection is transactional and commit creates only selected atla
   assert.deepEqual({...result.theme.resources['imported.001'].image.rect},{x:18,y:0,w:16,h:16});
   assert.equal(Object.hasOwn(result.theme.resources['imported.001'],'kind'),false,'unassigned imported resources have no premature semantic kind');
   assert.equal(result.theme.resources['imported.002'],undefined,'unselected candidates create no resources');
-  assert.equal(JSON.stringify(result.theme.atlases.spritesheet_1),JSON.stringify({mediaType:'image/png',encoding:'base64',data:'iVBORw0KGgo=',sourceFile:'sheet.png',cellSize:{w:16,h:16}}));
+  assert.deepEqual(JSON.parse(JSON.stringify(result.theme.atlases.spritesheet_1)),{mediaType:'image/png',encoding:'base64',data:'iVBORw0KGgo=',sourceFile:'sheet.png',imageSize:{},authoring:{grid:{cellW:16,cellH:16}}});
   assert.equal(JSON.stringify(original),before,'commit returns a new working document');
 });
 
-test('editing grid geometry clears selection without replacing the transaction',()=>{
+test('editing grid geometry clears selection and synchronizes persistent Atlas controls',()=>{
   const transaction={settings:{cellW:16,cellH:16},selection:new Set(['r0c0']),cells:[{id:'r0c0'}]};
   const returned=ImportCore.changeGridSetting(transaction,'cellW','32',1);
   assert.equal(returned,transaction);
   assert.equal(transaction.settings.cellW,32);
   assert.equal(transaction.selection.size,0);
   assert.equal(transaction.cells.length,0);
-  assert.match(html,/input\.oninput=\(\)=>\{ImportCore\.changeGridSetting\(tx,input\.dataset\.grid,input\.value,Number\(input\.min\)\|\|0\);updateImportPreview\(\)\}/);
-  assert.doesNotMatch(html,/input\.oninput=.*renderCenter\(\)/);
+  assert.match(html,/session\.selection\.clear\(\);syncSelectionUi\(\);setDirty\(true\);drawAtlas\(\)/);
+  assert.match(html,/count\.textContent=`\$\{session\.selection\.size\} selected`/);
+  assert.match(html,/create\.disabled=!session\.selection\.size/);
 });
 
-test('commit ordering is row-major and collisions never overwrite resources',()=>{
+test('resource creation is row-major and continues after existing IDs without overwriting',()=>{
   const cells=ImportCore.gridCells(32,32,{cellW:16,cellH:16,offsetX:0,offsetY:0,gutterX:0,gutterY:0});
   const base={atlases:{},resources:{'imported.001':{sentinel:true}}};
   const tx={cells,selection:new Set([cells[3].id,cells[0].id]),atlasId:'sheet',prefix:'imported',mediaType:'image/webp',base64:'AAAA',sourceName:'sheet.webp',settings:{cellW:16,cellH:16}};
-  assert.throws(()=>ImportCore.commit(base,tx),/Resource ID already exists: imported\.001/);
+  const result=ImportCore.commit(base,tx);
   assert.equal(base.resources['imported.001'].sentinel,true);
   assert.equal(base.atlases.sheet,undefined);
+  assert.deepEqual(Array.from(result.resourceIds),['imported.002','imported.003']);
 });
 
 test('save serialization round-trips committed embedded data',()=>{
@@ -144,6 +146,39 @@ test('narrow layouts stack the detail inspector below the center instead of hidi
   assert.match(html,/@media\(max-width:1000px\)\{[\s\S]*?#nav\{grid-row:1\/3\}[\s\S]*?#center\{grid-column:2;grid-row:1\}[\s\S]*?#detail\{grid-column:2;grid-row:2;display:flex/);
   assert.doesNotMatch(html,/@media\(max-width:1000px\)\{[^}]*#detail\{display:none/);
   assert.match(html,/@media\(max-width:720px\)\{[\s\S]*?#center\{grid-column:1;grid-row:1\}[\s\S]*?#detail\{grid-column:1;grid-row:2\}/);
+});
+
+test('Atlas model supports persistent grids, resource creation, and atomic rename',()=>{
+  const original={atlases:{map:{mediaType:'image/png',encoding:'base64',data:'AA',cellSize:{w:8,h:9}}},resources:{tile:{image:{atlas:'map',rect:{x:1,y:2,w:3,h:4}}}}};
+  assert.deepEqual({...ImportCore.gridFromAtlas(original.atlases.map)},{cellW:8,cellH:9,offsetX:0,offsetY:0,gutterX:0,gutterY:0});
+  const renamed=ImportCore.renameAtlas(original,'map','world');
+  assert.equal(renamed.theme.resources.tile.image.atlas,'world');
+  assert.equal(renamed.theme.atlases.map,undefined);
+  assert.equal(original.resources.tile.image.atlas,'map','rename is atomic and does not mutate its input');
+  assert.throws(()=>ImportCore.renameAtlas({atlases:{map:{},world:{}},resources:{}},'map','world'),/already exists/);
+});
+
+test('Atlas rename rewrites every matching navigation-history destination',()=>{
+  const history=[{section:'overview',key:null},{section:'atlases',key:'map'},{section:'resources',key:'map'},{section:'atlases',key:'map'}];
+  const rewritten=Array.from(ImportCore.rewriteAtlasHistory(history,'map','world'),entry=>({...entry}));
+  assert.deepEqual(rewritten,[{section:'overview',key:null},{section:'atlases',key:'world'},{section:'resources',key:'map'},{section:'atlases',key:'world'}]);
+  assert.equal(history[1].key,'map','history rewriting does not mutate the input');
+  assert.match(html,/state\.history=ImportCore\.rewriteAtlasHistory\(state\.history,oldId,result\.atlasId\)/);
+});
+
+test('Import Atlas is only a constructor; grid authoring lives in the persistent Atlas editor',()=>{
+  const workspace=html.match(/function renderImportWorkspace\(\)\{[\s\S]*?\n\}/)?.[0]||'';
+  assert.match(workspace,/Atlas ID/);
+  assert.match(workspace,/Create Atlas/);
+  assert.doesNotMatch(workspace,/Cell width|Cell height|X offset|Y offset|gutter|data-grid/);
+  assert.match(html,/function renderAtlas\(\)[\s\S]*?data-atlas-grid/);
+});
+
+test('every Atlas uses the persistent editor without exposing embedded payloads as normal metadata',()=>{
+  for(const text of ['Create Resources from Selection','Rename Atlas','Export Atlas Image…','Existing Resource regions','authoring.grid','sourceFile','imageSize'])assert.match(html,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.match(html,/resource\?\.image\?\.atlas===atlasId/);
+  assert.match(html,/rawValue=state.section==='atlases'/);
+  assert.match(html,/Embedded base64 image/);
 });
 
 test('every inline workbench script is syntactically valid JavaScript',()=>{
