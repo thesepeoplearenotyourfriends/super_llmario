@@ -41,6 +41,7 @@ test('release packs every repository map with one shared reference theme and emb
   assert(sandbox.PACKED_EDITOR_HTML.includes("if(!['playFromHere','rangeTest'].includes(state.tool)||event.button!==0)return false"),'the point interceptor follows central tool state');
   assert(sandbox.PACKED_EDITOR_HTML.includes("selectEditorTool('select');setStatus(`Playing from"),'Play From Here consumes one point and disarms itself');
   assert(sandbox.PACKED_EDITOR_HTML.includes("range.textContent=rangeActive?(packedTestState.profile==='raccoonFlight'?'Range: Flight':'Range: Standing'):'Range Test'"),'the active Range button reports its selected mode');
+  assert(sandbox.PACKED_EDITOR_HTML.includes('.range-mode-dialog{width:min(280px,calc(100% - 32px));max-width:280px'),'the range mode picker overrides the broad base dialog width');
   assert(sandbox.PACKED_EDITOR_HTML.includes("packedTestState.point=chosen;recomputePackedRanges()"),'repeated Range clicks replace the origin without reopening the picker');
   assert(sandbox.PACKED_EDITOR_HTML.includes("kind==='themeLoad'||kind==='mapLoad'"),'document replacement clears stale test/range state');
   assert.match(html,/grid-template-rows:32px 44px/);assert.match(html,/height:calc\(100vh - 76px\)/);assert.match(html,/\.side\.right\{top:76px\}/);
