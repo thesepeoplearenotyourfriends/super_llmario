@@ -262,6 +262,12 @@ const ImportCore={
     if(next.has(id))next.delete(id);else next.add(id);
     return next;
   },
+  changeGridSetting(transaction,key,value,minimum=0){
+    transaction.settings[key]=Math.max(minimum,Math.trunc(Number(value)||0));
+    transaction.selection=new Set();
+    transaction.cells=[];
+    return transaction;
+  },
   commit(theme,transaction){
     const selected=transaction.cells.filter(cell=>transaction.selection.has(cell.id));
     if(!selected.length)throw new Error('Select at least one frame before committing.');
@@ -275,7 +281,7 @@ const ImportCore={
     const next=structuredClone(theme);
     next.atlases=next.atlases||{};next.resources=next.resources||{};
     next.atlases[atlasId]={mediaType:transaction.mediaType,encoding:'base64',data:transaction.base64,sourceFile:transaction.sourceName,cellSize:{w:transaction.settings.cellW,h:transaction.settings.cellH}};
-    selected.forEach((cell,index)=>{next.resources[ids[index]]={kind:'decoration',image:{atlas:atlasId,rect:{x:cell.x,y:cell.y,w:cell.w,h:cell.h}},display:{w:cell.w,h:cell.h,anchor:{x:.5,y:1}},provenance:{sheet:transaction.sourceName,cell:{x:cell.column,y:cell.row}}}});
+    selected.forEach((cell,index)=>{next.resources[ids[index]]={image:{atlas:atlasId,rect:{x:cell.x,y:cell.y,w:cell.w,h:cell.h}},display:{w:cell.w,h:cell.h,anchor:{x:.5,y:1}},provenance:{sheet:transaction.sourceName,cell:{x:cell.column,y:cell.row}}}});
     return {theme:next,atlasId,resourceIds:ids,dirty:true};
   },
   serialize(theme){return JSON.stringify(theme,null,2)+'\n'}
@@ -746,6 +752,7 @@ function suggestedId(base,values){
   return `${base}_${n}`;
 }
 function importNumber(name){return `<label>${name.label}<input type="number" min="${name.min??0}" step="1" data-grid="${name.key}" value="${state.importSession.settings[name.key]}"></label>`}
+function candidateMarkup(tx,cells,z){return cells.map(cell=>`<button type="button" class="candidate ${tx.selection.has(cell.id)?'selected':''}" data-candidate="${cell.id}" title="row ${cell.row}, column ${cell.column} · ${cell.x},${cell.y} ${cell.w}×${cell.h}" style="left:${cell.x*z}px;top:${cell.y*z}px;width:${cell.w*z}px;height:${cell.h*z}px"></button>`).join('')}
 function renderImportWorkspace(){
   const tx=state.importSession,cells=ImportCore.gridCells(tx.width,tx.height,tx.settings);tx.cells=cells;
   for(const id of [...tx.selection])if(!cells.some(cell=>cell.id===id))tx.selection.delete(id);
@@ -764,18 +771,32 @@ function renderImportWorkspace(){
     <span class="spacer"></span><button type="button" id="cancelImport">Cancel Import</button><button type="button" id="commitImport" ${tx.selection.size?'':'disabled'}>Commit Selected Frames</button>
   </div><div class="importViewport" id="importViewport"><div class="importStage" style="width:${tx.width*z}px;height:${tx.height*z}px">
     <img src="${tx.dataUrl}" alt="Imported sprite sheet" width="${tx.width*z}" height="${tx.height*z}">
-    <div class="candidateLayer">${cells.map(cell=>`<button type="button" class="candidate ${tx.selection.has(cell.id)?'selected':''}" data-candidate="${cell.id}" title="row ${cell.row}, column ${cell.column} · ${cell.x},${cell.y} ${cell.w}×${cell.h}" style="left:${cell.x*z}px;top:${cell.y*z}px;width:${cell.w*z}px;height:${cell.h*z}px"></button>`).join('')}</div>
+    <div class="candidateLayer">${candidateMarkup(tx,cells,z)}</div>
   </div></div></div>`;
 }
-function refreshImport(){renderCenter()}
+function updateImportPreview(){
+  const tx=state.importSession,cells=ImportCore.gridCells(tx.width,tx.height,tx.settings),z=tx.zoom,stage=document.querySelector('.importStage'),image=stage?.querySelector('img'),layer=stage?.querySelector('.candidateLayer');
+  tx.cells=cells;
+  if(stage){stage.style.width=`${tx.width*z}px`;stage.style.height=`${tx.height*z}px`}
+  if(image){image.width=tx.width*z;image.height=tx.height*z}
+  if(layer)layer.innerHTML=candidateMarkup(tx,cells,z);
+  const readout=document.querySelector('.importTools .zoomReadout');if(readout)readout.textContent=`${z}×`;
+  const countLabel=document.querySelector('.selectionCount');if(countLabel)countLabel.textContent=`${tx.selection.size} frame${tx.selection.size===1?'':'s'} selected`;
+  const commit=$('commitImport');if(commit)commit.disabled=!tx.selection.size;
+  wireCandidateButtons();
+}
+function wireCandidateButtons(){
+  const tx=state.importSession;
+  document.querySelectorAll('[data-candidate]').forEach(button=>button.onclick=()=>{tx.selection=ImportCore.toggleCandidate(tx.selection,button.dataset.candidate);updateImportPreview()});
+}
 function wireImportWorkspace(){
   const tx=state.importSession;
-  document.querySelectorAll('[data-grid]').forEach(input=>input.oninput=()=>{tx.settings[input.dataset.grid]=Math.max(Number(input.min)||0,Math.trunc(Number(input.value)||0));refreshImport()});
+  document.querySelectorAll('[data-grid]').forEach(input=>input.oninput=()=>{ImportCore.changeGridSetting(tx,input.dataset.grid,input.value,Number(input.min)||0);updateImportPreview()});
   $('importAtlasId').oninput=event=>tx.atlasId=event.target.value;$('importPrefix').oninput=event=>tx.prefix=event.target.value;
-  document.querySelectorAll('[data-import-zoom]').forEach(button=>button.onclick=()=>{tx.zoom=clamp(tx.zoom+Number(button.dataset.importZoom),1,16);refreshImport()});
-  document.querySelectorAll('[data-candidate]').forEach(button=>button.onclick=()=>{tx.selection=ImportCore.toggleCandidate(tx.selection,button.dataset.candidate);refreshImport()});
-  $('selectAllCandidates').onclick=()=>{tx.selection=new Set(tx.cells.map(cell=>cell.id));refreshImport()};
-  $('clearCandidates').onclick=()=>{tx.selection.clear();refreshImport()};
+  document.querySelectorAll('[data-import-zoom]').forEach(button=>button.onclick=()=>{tx.zoom=clamp(tx.zoom+Number(button.dataset.importZoom),1,16);updateImportPreview()});
+  wireCandidateButtons();
+  $('selectAllCandidates').onclick=()=>{tx.selection=new Set(tx.cells.map(cell=>cell.id));updateImportPreview()};
+  $('clearCandidates').onclick=()=>{tx.selection.clear();updateImportPreview()};
   $('cancelImport').onclick=cancelImport;$('commitImport').onclick=commitImport;
 }
 function cancelImport(){state.importSession=null;renderSections();renderItems();renderCenter();renderDetail();report('info','Sprite-sheet import cancelled; the theme was not changed.')}

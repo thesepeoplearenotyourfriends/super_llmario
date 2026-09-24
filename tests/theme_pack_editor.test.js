@@ -55,9 +55,21 @@ test('candidate selection is transactional and commit creates only selected atla
   assert.equal(Object.keys(result.theme.resources).length,2);
   assert.equal(result.dirty,true);
   assert.deepEqual({...result.theme.resources['imported.001'].image.rect},{x:18,y:0,w:16,h:16});
+  assert.equal(Object.hasOwn(result.theme.resources['imported.001'],'kind'),false,'unassigned imported resources have no premature semantic kind');
   assert.equal(result.theme.resources['imported.002'],undefined,'unselected candidates create no resources');
   assert.equal(JSON.stringify(result.theme.atlases.spritesheet_1),JSON.stringify({mediaType:'image/png',encoding:'base64',data:'iVBORw0KGgo=',sourceFile:'sheet.png',cellSize:{w:16,h:16}}));
   assert.equal(JSON.stringify(original),before,'commit returns a new working document');
+});
+
+test('editing grid geometry clears selection without replacing the transaction',()=>{
+  const transaction={settings:{cellW:16,cellH:16},selection:new Set(['r0c0']),cells:[{id:'r0c0'}]};
+  const returned=ImportCore.changeGridSetting(transaction,'cellW','32',1);
+  assert.equal(returned,transaction);
+  assert.equal(transaction.settings.cellW,32);
+  assert.equal(transaction.selection.size,0);
+  assert.equal(transaction.cells.length,0);
+  assert.match(html,/input\.oninput=\(\)=>\{ImportCore\.changeGridSetting\(tx,input\.dataset\.grid,input\.value,Number\(input\.min\)\|\|0\);updateImportPreview\(\)\}/);
+  assert.doesNotMatch(html,/input\.oninput=.*renderCenter\(\)/);
 });
 
 test('commit ordering is row-major and collisions never overwrite resources',()=>{
