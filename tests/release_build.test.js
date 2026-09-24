@@ -20,7 +20,10 @@ test('release packs every repository map with one shared reference theme and emb
   assert.deepEqual(JSON.parse(JSON.stringify(sandbox.PACKED_THEME)),theme);assert.equal(sandbox.PACKED_DEFAULT_EXPERIENCE_ID,expectedIds.includes('demo')?'demo':packedIds[0]);
   const caves=sandbox.PACKED_EXPERIENCES.find(x=>x.id==='breakout_caves');if(caves)assert.equal(caves.label,'Breakout Caves');
   assert(sandbox.PACKED_EDITOR_HTML.includes('Reference Pack Editor'));assert(sandbox.PACKED_EDITOR_HTML.includes('ReferencePackEditorReleaseLoad'));assert(sandbox.PACKED_EDITOR_HTML.includes("mapName='packed.llmmap.txt'"));
-  assert(html.includes('MAP EDITOR'));assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
+  assert(sandbox.PACKED_EDITOR_HTML.includes('class="packed-editor-header"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="packedMapName"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="backToGameBtn"'));
+  assert(sandbox.PACKED_EDITOR_HTML.includes('data-menu="packedFileMenu"'));assert(sandbox.PACKED_EDITOR_HTML.includes('data-menu="packedEditMenu"'));assert(sandbox.PACKED_EDITOR_HTML.includes('role="toolbar" aria-label="Map editor tools"'));
+  assert(sandbox.PACKED_EDITOR_HTML.includes("window.parent?.ReferencePackCloseEditor?.()"));assert(html.includes('ReferencePackCloseEditor=closePackedEditor'));assert(!html.includes('id="releaseEditorBar"'));
+  assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
   assert.match(html,/id="releaseMapPicker"/);assert.match(html,/id="releaseMenu"/);assert.match(html,/<button id="releaseEditorButton">Editor<\/button><\/header>/);
   assert.match(html,/getElementById\('releaseEditorButton'\).*addEventListener\('click',openPackedEditor\)/);assert.match(html,/experience\.theme,experience\.map,experience\.filename/);
 });
