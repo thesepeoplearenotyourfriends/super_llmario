@@ -26,16 +26,13 @@ RELEASE_STYLE = r"""
 #releaseEditorButton{margin-left:auto}
 #releaseMapPicker{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.08em}
 #releaseMenu{border:1px solid #55dbe9;border-radius:8px;padding:6px 8px;background:#17465b;color:var(--ink);font:inherit;font-weight:700;letter-spacing:0}
-#releaseEditorShell{position:fixed;inset:0;z-index:1000;display:grid;grid-template-rows:48px minmax(0,1fr);background:#07131d}
+#releaseEditorShell{position:fixed;inset:0;z-index:1000;background:#07131d}
 #releaseEditorShell[hidden]{display:none}
-#releaseEditorBar{display:flex;align-items:center;gap:12px;padding:7px 12px;background:#0d2635;border-bottom:1px solid #48d7e866;color:var(--ink)}
-#releaseEditorBar span{color:var(--muted);font-size:12px}#releaseEditorBack{margin-left:auto}
-#releaseEditorFrame{width:100%;height:100%;border:0;background:#0b1216}
+#releaseEditorFrame{display:block;width:100%;height:100%;border:0;background:#0b1216}
 """.strip()
 
 RELEASE_EDITOR_SHELL = """
 <div id="releaseEditorShell" hidden>
-  <div id="releaseEditorBar"><strong>MAP EDITOR</strong><span>embedded release tool</span><button id="releaseEditorBack">Back to game</button></div>
   <iframe id="releaseEditorFrame" title="Map editor"></iframe>
 </div>
 """.strip()
@@ -69,10 +66,10 @@ function openPackedEditor(){
 function closePackedEditor(){
   const shell=document.getElementById('releaseEditorShell');if(shell)shell.hidden=true;
 }
+window.ReferencePackCloseEditor=closePackedEditor;
 async function bootPackedRelease(){
   if(!PACKED_EXPERIENCES.length){refreshPair();return}
   document.getElementById('releaseEditorButton')?.addEventListener('click',openPackedEditor);
-  document.getElementById('releaseEditorBack')?.addEventListener('click',closePackedEditor);
   const menu=document.getElementById('releaseMenu'),picker=document.getElementById('releaseMapPicker');
   if(menu){
     for(const experience of PACKED_EXPERIENCES){const option=document.createElement('option');option.value=experience.id;option.textContent=experience.label;menu.append(option)}
@@ -152,7 +149,7 @@ def load_experiences(theme: object) -> list[dict[str, object]]:
 def pack_editor(source: str) -> str:
     if source.count(EDITOR_BOOT) != 1:
         raise RuntimeError("editor boot marker is missing or ambiguous")
-    hook = """function focusPackedEditorMap(){\n  const rect=stage.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height),start=state.markers?.start;\n  if(start&&Number.isFinite(start.x)&&Number.isFinite(start.y)){\n    state.camera={x:w*.28-start.x,y:h*.62-start.y,zoom:1};\n    draw();\n    return;\n  }\n  const boxes=[];\n  for(const inst of state.instances){\n    try{const b=instanceBounds(inst);if(b&&[b.x,b.y,b.w,b.h].every(Number.isFinite))boxes.push(b)}catch{}\n  }\n  for(const marker of Object.values(state.markers||{}))if(marker&&Number.isFinite(marker.x)&&Number.isFinite(marker.y))boxes.push({x:marker.x-16,y:marker.y-32,w:32,h:36});\n  if(!boxes.length){state.camera={x:0,y:0,zoom:1};draw();return}\n  const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y)),maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h)),pad=48,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),zoom=Math.max(.1,Math.min(2,(w-pad*2)/contentW,(h-pad*2)/contentH));\n  state.camera={x:(w-contentW*zoom)/2-minX*zoom,y:(h-contentH*zoom)/2-minY*zoom,zoom};\n  draw();\n}\nwindow.ReferencePackEditorReleaseLoad=async(theme,map,mapName='packed.llmmap.txt')=>{\n  const themeFile=new File([JSON.stringify(theme)],'theme_marioai_reference_pack.llmtheme.txt',{type:'application/json'});\n  await loadTheme(themeFile);\n  const mapFile=new File([JSON.stringify(map)],mapName,{type:'application/json'});\n  await openMap(mapFile);\n  focusPackedEditorMap();\n};\n"""
+    hook = """function focusPackedEditorMap(){\n  const rect=stage.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height),start=state.markers?.start;\n  if(start&&Number.isFinite(start.x)&&Number.isFinite(start.y)){\n    state.camera={x:w*.28-start.x,y:h*.62-start.y,zoom:1};\n    draw();\n    return;\n  }\n  const boxes=[];\n  for(const inst of state.instances){\n    try{const b=instanceBounds(inst);if(b&&[b.x,b.y,b.w,b.h].every(Number.isFinite))boxes.push(b)}catch{}\n  }\n  for(const marker of Object.values(state.markers||{}))if(marker&&Number.isFinite(marker.x)&&Number.isFinite(marker.y))boxes.push({x:marker.x-16,y:marker.y-32,w:32,h:36});\n  if(!boxes.length){state.camera={x:0,y:0,zoom:1};draw();return}\n  const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y)),maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h)),pad=48,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),zoom=Math.max(.1,Math.min(2,(w-pad*2)/contentW,(h-pad*2)/contentH));\n  state.camera={x:(w-contentW*zoom)/2-minX*zoom,y:(h-contentH*zoom)/2-minY*zoom,zoom};\n  draw();\n}\nconst releaseBack=$('backToGameBtn');\nif(releaseBack){releaseBack.hidden=false;releaseBack.onclick=()=>window.parent?.ReferencePackCloseEditor?.()}\nwindow.ReferencePackEditorReleaseLoad=async(theme,map,mapName='packed.llmmap.txt')=>{\n  const themeFile=new File([JSON.stringify(theme)],'theme_marioai_reference_pack.llmtheme.txt',{type:'application/json'});\n  await loadTheme(themeFile);\n  const mapFile=new File([JSON.stringify(map)],mapName,{type:'application/json'});\n  await openMap(mapFile);\n  focusPackedEditorMap();\n};\n"""
     return source.replace(EDITOR_BOOT, "window.addEventListener('resize',resize);resize();renderIssues();\n" + hook + "})();", 1)
 
 
