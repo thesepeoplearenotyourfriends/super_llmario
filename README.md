@@ -70,9 +70,10 @@ Current built-in SFX hooks include:
 The audio system is intentionally ready for future music, but full MIDI parser/drop-folder/song scheduling is not part of the current baseline.
 
 **MAP EDITOR**
-<img width="1157" height="618" alt="image" src="https://github.com/user-attachments/assets/09d18622-c2f7-4eea-8477-1a00c1d22df7" />
 
-the above map is in maps/ and is a work in progress, mainly done while simultaneously getting the map editor working, which it does pretty well. 
+<img width="641" height="564" alt="image" src="https://github.com/user-attachments/assets/6b8e6e27-ea71-4651-a664-67451425aaeb" />
+
+Click the Editor button in the topbar to switch to the map editor. 
 
 **Retro Charm MIDI player**
 <img width="866" height="568" alt="image" src="https://github.com/user-attachments/assets/03500e4d-49f4-4520-b9be-6e2ab5aa2123" />
@@ -87,7 +88,7 @@ Generate retro sound effects and/or tweak existing ones.
 
 ----
 
-**Play the demo level**
+**Live github.io version**
 
 https://thesepeoplearenotyourfriends.github.io/super_llmario/
 
