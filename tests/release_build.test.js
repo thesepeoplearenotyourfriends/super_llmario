@@ -12,6 +12,11 @@ test('release builder is deterministic and never mutates editable engine/editor 
   const engineBefore=fs.readFileSync(enginePath),editorBefore=fs.readFileSync(editorPath),first=build(),engineBetween=fs.readFileSync(enginePath),editorBetween=fs.readFileSync(editorPath),second=build();
   assert.deepEqual(engineBetween,engineBefore);assert.deepEqual(editorBetween,editorBefore);assert.deepEqual(fs.readFileSync(enginePath),engineBefore);assert.deepEqual(fs.readFileSync(editorPath),editorBefore);assert.equal(second,first);assert(first.length>engineBefore.length);
 });
+test('active Block/Brick stamp brush takes pointer priority over ordinary hit-selection',()=>{
+  const editor=fs.readFileSync(editorPath,'utf8'),pointerDown=editor.slice(editor.indexOf("canvas.addEventListener('pointerdown'"),editor.indexOf("canvas.addEventListener('pointermove'"));
+  assert(pointerDown.indexOf('else if(state.brush&&semantics.squareStampCapability')<pointerDown.indexOf('else {const found=hit(p)'),
+    'an active Block/Brick stamp brush must start stamping before object hit-selection can cancel it');
+});
 test('release packs every repository map with one shared reference theme and embedded map editor',()=>{
   const html=build(),source=packedScript(html),sandbox={};vm.createContext(sandbox);vm.runInContext(source.replace(/^const /gm,'var '),sandbox);
   const expectedFiles=mapFiles(),expectedIds=expectedFiles.map(name=>name.slice(0,-'.llmmap.txt'.length)),packedFiles=Array.from(sandbox.PACKED_EXPERIENCES,x=>x.filename),packedIds=Array.from(sandbox.PACKED_EXPERIENCES,x=>x.id);
