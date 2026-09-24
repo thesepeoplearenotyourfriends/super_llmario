@@ -110,11 +110,9 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 .linkRow{display:grid;grid-template-columns:82px minmax(0,1fr);gap:7px;align-items:start;font-size:11px}
 .linkRow .type{color:var(--muted);text-transform:uppercase;font-size:9px;letter-spacing:.08em;padding-top:5px}
 .linkRow button{text-align:left;padding:5px 7px;background:#0a1c25;color:var(--accent);overflow-wrap:anywhere}
-.detailNav{position:sticky;top:-12px;z-index:6;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:6px;margin:-12px -12px 12px;padding:8px 10px;border-bottom:1px solid var(--line);background:#0c1a23f2;backdrop-filter:blur(5px)}
-.detailNav button{width:28px;height:28px;padding:0;display:grid;place-items:center;font-size:15px}
-.detailNav button:disabled{opacity:.35;cursor:default;border-color:var(--line)}
-.detailTrail{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:10px var(--mono);color:var(--muted)}
-.historyDepth{font:9px var(--mono);color:var(--muted);white-space:nowrap}
+.historyNav{display:grid;grid-template-columns:28px 28px;align-items:center;gap:4px;flex:0 0 auto}
+.historyNav button{width:28px;height:28px;padding:0;display:grid;place-items:center;font-size:15px}
+.historyNav button:disabled{opacity:.35;cursor:default;border-color:var(--line)}
 .usageSummary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .usageGroup{display:grid;grid-template-columns:104px minmax(0,1fr);gap:8px;align-items:start;padding:7px 0;border-top:1px solid #17303a}
 .usageGroup:first-of-type{border-top:0}
@@ -143,13 +141,29 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 .logEntry.warn .level{color:var(--warn)}
 .logEntry.error .level{color:var(--bad)}
 .logEntry.ok .level{color:var(--good)}
-@media(max-width:1000px){#layout{grid-template-columns:220px 1fr}#detail{display:none}}
-@media(max-width:720px){#layout{grid-template-columns:1fr}#nav{display:none}header .sub{display:none}}
+@media(max-width:1000px){
+  #layout{grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(150px,38%)}
+  #nav{grid-row:1/3}
+  #center{grid-column:2;grid-row:1}
+  #detail{grid-column:2;grid-row:2;display:flex;border-left:0;border-top:1px solid var(--line)}
+  #fileName{display:none}
+}
+@media(max-width:720px){
+  #layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(150px,38%)}
+  #nav{display:none}
+  #center{grid-column:1;grid-row:1}
+  #detail{grid-column:1;grid-row:2}
+  header .sub{display:none}
+}
 </style>
 </head>
 <body>
 <div id="app">
 <header>
+  <nav id="historyNav" class="historyNav" aria-label="Navigation history">
+    <button id="historyBack" type="button" title="Back" aria-label="Back" disabled>←</button>
+    <button id="historyForward" type="button" title="Forward" aria-label="Forward" disabled>→</button>
+  </nav>
   <div><strong>THEME PACK WORKBENCH</strong><div class="sub">Phase 1 · readonly inspector</div></div>
   <span id="status" class="badge">No theme loaded</span>
   <span id="fileName"></span>
@@ -347,7 +361,7 @@ function applySelection(section,key,{record=true,clearQuery=true}={}){
   if(clearQuery){state.query='';$('search').value=''}
   state.key=key??null;state.animationIndex=0;state.previewZoom=defaultZoom(section);
   if(record)recordHistory(section,state.key);
-  renderSections();renderItems();renderCenter();renderDetail();
+  renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();
   const label=SECTION_LABELS[section]||titleCase(section);
   setStatus('info',state.key==null?label:`${label} · ${state.key}`);
 }
@@ -364,6 +378,12 @@ function historyGo(delta){
   state.historyIndex=next;
   const entry=state.history[next];
   applySelection(entry.section,entry.key,{record:false,clearQuery:true});
+}
+function renderHistoryNav(){
+  const back=$('historyBack'),forward=$('historyForward');
+  if(!back||!forward)return;
+  back.disabled=state.historyIndex<=0;
+  forward.disabled=state.historyIndex<0||state.historyIndex>=state.history.length-1;
 }
 
 function refButton(section,key,label=key){
@@ -682,38 +702,26 @@ function renderCenter(){
     $('nextFrame').onclick=()=>{const n=animationFrames(currentValue()).length;if(n){state.animationIndex=(state.animationIndex+1)%n;drawAnimationFrame()}};
   }
 }
-function detailNavHtml(){
-  const label=SECTION_LABELS[state.section]||titleCase(state.section),trail=state.key==null?label:`${label} / ${state.key}`;
-  const backDisabled=state.historyIndex<=0?' disabled':'',forwardDisabled=state.historyIndex<0||state.historyIndex>=state.history.length-1?' disabled':'';
-  const depth=state.history.length?`${state.historyIndex+1}/${state.history.length}`:'0/0';
-  return `<div class="detailNav"><button type="button" data-history-back title="Back" aria-label="Back"${backDisabled}>←</button><button type="button" data-history-forward title="Forward" aria-label="Forward"${forwardDisabled}>→</button><span class="detailTrail">${escapeHtml(trail)}</span><span class="historyDepth">${escapeHtml(depth)}</span></div>`;
-}
-function wireDetailNav(root){
-  const back=root.querySelector('[data-history-back]'),forward=root.querySelector('[data-history-forward]');
-  if(back)back.onclick=()=>historyGo(-1);
-  if(forward)forward.onclick=()=>historyGo(1);
-}
 function renderDetail(){
   const root=$('detailScroll');
   if(!state.theme){root.innerHTML='<div class="muted">Load a theme pack to inspect its references and raw data.</div>';return}
-  const nav=detailNavHtml();
   if(state.key==null){
     const value=state.section==='overview'?{format:state.theme.format,packVersion:state.theme.packVersion,id:state.theme.id,title:state.theme.title}:state.theme[state.section];
-    root.innerHTML=nav+`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
-    wireDetailNav(root);return;
+    root.innerHTML=`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
+    return;
   }
   const value=currentValue(),refs=refsIn(value),backs=backlinks(state.section,state.key);
-  root.innerHTML=nav+`<h2>References</h2>
+  root.innerHTML=`<h2>References</h2>
     <h3>Points to</h3>${refs.length?`<div class="linkList">${refs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
     <h3>Referenced by</h3>${backs.length?`<div class="linkList">${backs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
     <h3>Raw entry</h3><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
-  wireDetailNav(root);wireRefs(root);
+  wireRefs(root);
 }
 function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
   stopAnimation();
   const issues=validateTheme(theme);
   state.theme=theme;state.fileName=fileName;state.section='overview';state.key=null;state.query='';state.images.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
-  $('fileName').textContent=fileName;$('search').value='';
+  $('fileName').textContent=fileName;$('search').value='';renderHistoryNav();
   const status=$('status');status.className='badge '+(issues.length?'warn':'good');
   status.textContent=issues.length?`${issues.length} format warning${issues.length===1?'':'s'}`:'Reference pack v1';
   renderSections();renderItems();renderCenter();renderDetail();
@@ -745,6 +753,8 @@ $('search').oninput=event=>{state.query=event.target.value;renderItems()};
 window.addEventListener('dragover',event=>event.preventDefault());
 window.addEventListener('drop',event=>{event.preventDefault();const file=event.dataTransfer?.files?.[0];if(file)loadFile(file)});
 window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}});
+$('historyBack').onclick=()=>historyGo(-1);
+$('historyForward').onclick=()=>historyGo(1);
 $('logButton').onclick=()=>toggleLog();
 $('closeLog').onclick=()=>toggleLog(false);
 $('clearLog').onclick=()=>{state.log.length=0;renderLog();setStatus('info','Log cleared.')};
