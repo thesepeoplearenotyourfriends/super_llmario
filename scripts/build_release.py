@@ -50,6 +50,11 @@ PACKED_EDITOR_HEADER = """
   </div>
   <div class="packed-toolbar" role="toolbar" aria-label="Map editor tools">
     <button id="eraserBtn" aria-label="Eraser tool" aria-pressed="false" title="Eraser — drag to remove authored objects">⌫</button>
+    <button id="testPointBtn" aria-label="Test Point tool" aria-pressed="false" title="Place an exact, unsnapped test point">Test Point</button>
+    <button id="clearTestPointBtn" disabled title="Remove the test point">Clear Test</button>
+    <button id="rangesBtn" aria-pressed="false" disabled title="Show real-engine reachability from the test point">Ranges</button>
+    <select id="testProfile" aria-label="Starting movement state" title="Starting movement state"><option value="standing">Standing</option><option value="raccoonFlight">Raccoon P-speed</option></select>
+    <button id="playFromHereBtn" disabled title="Play the current in-memory map from the test point">Play From Here</button>
     <button id="paletteToggle" aria-label="Toggle Palette" aria-pressed="true" title="Show or hide Palette">Palette</button>
     <button id="detailsToggle" aria-label="Toggle Details" aria-pressed="true" title="Show or hide Details">Details</button>
     <button id="helpBtn" aria-label="Open help" title="Help and shortcuts">?</button>
@@ -60,7 +65,7 @@ PACKED_EDITOR_HEADER = """
 """.strip()
 
 PACKED_EDITOR_STYLE = r"""
-header.packed-editor-header{height:64px;display:grid;grid-template-rows:32px 32px;gap:0;padding:0;background:#111c21;border-bottom:1px solid var(--line)}
+header.packed-editor-header{height:76px;display:grid;grid-template-rows:32px 44px;gap:0;padding:0;background:#111c21;border-bottom:1px solid var(--line)}
 .packed-menu-row,.packed-toolbar{display:flex;align-items:center;gap:5px;min-width:0;padding:3px 8px}
 .packed-menu-row{position:relative;border-bottom:1px solid #263940}.packed-toolbar{background:#101a1f}
 .packed-menu{position:relative;height:100%;display:flex;align-items:center}.packed-menu-trigger{border-color:transparent;background:transparent;padding:4px 9px}
@@ -68,8 +73,9 @@ header.packed-editor-header{height:64px;display:grid;grid-template-rows:32px 32p
 .packed-menu-popup{position:absolute;left:0;top:29px;z-index:30;min-width:205px;padding:4px;border:1px solid var(--line);border-radius:7px;background:#111c21;box-shadow:0 10px 28px #000b}
 .packed-menu-popup[hidden]{display:none}.packed-menu-popup button{width:100%;display:flex;justify-content:space-between;gap:18px;border:0;background:transparent;text-align:left;padding:6px 9px}.packed-menu-popup button:hover:not(:disabled){background:#29372f}.packed-menu-popup button span{color:var(--muted);font-size:11px}.packed-menu-separator{height:1px;margin:4px;background:var(--line)}
 .packed-map-name{max-width:min(42vw,430px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-size:12px}.packed-editor-header .dirty{font-weight:800}.packed-toolbar .status{flex:1;margin-left:4px;font-size:12px}
-.packed-editor-header+#shell,.shell{height:calc(100vh - 64px)}
-@media(max-width:850px){.side.right{top:64px}.packed-map-name{max-width:32vw}.packed-menu-popup{top:29px}}
+.packed-toolbar select{display:inline-block;width:auto;min-width:104px;border:1px solid var(--line);border-radius:7px;padding:4px 6px;background:#18272e;color:var(--ink)}.packed-toolbar button.active{background:#7dd3a7;color:#07131d}
+.packed-editor-header+#shell,.shell{height:calc(100vh - 76px)}
+@media(max-width:850px){.side.right{top:76px}.packed-map-name{max-width:32vw}.packed-menu-popup{top:29px}}
 """.strip()
 
 RELEASE_STYLE = r"""
@@ -116,7 +122,17 @@ function openPackedEditor(){
 function closePackedEditor(){
   const shell=document.getElementById('releaseEditorShell');if(shell)shell.hidden=true;
 }
+async function playPackedEditorMap({theme,map,startPoint,profile='standing'}){
+  const errors=B.validateReferencePair(theme,map);if(errors.length)throw new Error(errors[0]);
+  const playable=structuredClone(map);playable.markers={...(playable.markers||{}),start:{x:startPoint.x,y:startPoint.y}};
+  state.theme=structuredClone(theme);state.map=playable;await loadAtlases();refreshPair();if(!state.behavior)throw new Error('The edited map could not start.');
+  if(profile==='raccoonFlight'){state.behavior.setForm('raccoon');Object.assign(state.behavior.player,{runCharge:90,pSpeed:true,flightFrames:150})}
+  closePackedEditor();followPlayer(true);return true;
+}
+function simulatePackedEditorReachability({theme,map,startPoint,profile='standing'}){return B.simulateReachability(theme,map,startPoint,{profile})}
 window.ReferencePackCloseEditor=closePackedEditor;
+window.ReferencePackPlayFromEditor=playPackedEditorMap;
+window.ReferencePackSimulateReachability=simulatePackedEditorReachability;
 async function bootPackedRelease(){
   if(!PACKED_EXPERIENCES.length){refreshPair();return}
   document.getElementById('releaseEditorButton')?.addEventListener('click',openPackedEditor);
@@ -205,7 +221,33 @@ def pack_editor(source: str) -> str:
         raise RuntimeError("editor style boundary is missing or ambiguous")
     source = source.replace(EDITOR_HEADER, PACKED_EDITOR_HEADER, 1)
     source = source.replace("</style>", PACKED_EDITOR_STYLE + "\n</style>", 1)
-    hook = """function focusPackedEditorMap(){\n  const rect=stage.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height),start=state.markers?.start;\n  if(start&&Number.isFinite(start.x)&&Number.isFinite(start.y)){\n    state.camera={x:w*.28-start.x,y:h*.62-start.y,zoom:1};\n    draw();\n    return;\n  }\n  const boxes=[];\n  for(const inst of state.instances){\n    try{const b=instanceBounds(inst);if(b&&[b.x,b.y,b.w,b.h].every(Number.isFinite))boxes.push(b)}catch{}\n  }\n  for(const marker of Object.values(state.markers||{}))if(marker&&Number.isFinite(marker.x)&&Number.isFinite(marker.y))boxes.push({x:marker.x-16,y:marker.y-32,w:32,h:36});\n  if(!boxes.length){state.camera={x:0,y:0,zoom:1};draw();return}\n  const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y)),maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h)),pad=48,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),zoom=Math.max(.1,Math.min(2,(w-pad*2)/contentW,(h-pad*2)/contentH));\n  state.camera={x:(w-contentW*zoom)/2-minX*zoom,y:(h-contentH*zoom)/2-minY*zoom,zoom};\n  draw();\n}\nfunction installPackedEditorChrome(){\n  const closeMenus=()=>{for(const menu of document.querySelectorAll('.packed-menu-popup'))menu.hidden=true;for(const trigger of document.querySelectorAll('.packed-menu-trigger'))trigger.setAttribute('aria-expanded','false')};\n  for(const trigger of document.querySelectorAll('.packed-menu-trigger'))trigger.onclick=event=>{event.stopPropagation();const menu=$(trigger.dataset.menu),open=menu.hidden;closeMenus();if(open){menu.hidden=false;trigger.setAttribute('aria-expanded','true')}};\n  for(const menu of document.querySelectorAll('.packed-menu-popup'))menu.addEventListener('click',event=>{if(event.target.closest('button'))closeMenus()});\n  document.addEventListener('pointerdown',event=>{if(!event.target.closest('.packed-menu'))closeMenus()});\n  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('.packed-menu-popup:not([hidden])')){event.preventDefault();event.stopImmediatePropagation();closeMenus();return}if(!(event.metaKey||event.ctrlKey)||event.altKey||event.shiftKey)return;const key=event.key.toLowerCase();if(key==='o'){event.preventDefault();$('mapFile').click()}else if(key==='s'&&!$('saveMapBtn').disabled){event.preventDefault();$('saveMapBtn').click()}},true);\n  const mapFile=$('mapFile');if(mapFile)mapFile.onchange=async event=>{const file=event.target.files[0];if(file){await openMap(file);if($('status').textContent===`Opened ${file.name}`){const name=$('packedMapName');if(name)name.textContent=file.name}}event.target.value=''};\n  const back=$('backToGameBtn');if(back)back.onclick=()=>window.parent?.ReferencePackCloseEditor?.();\n}\ninstallPackedEditorChrome();\nwindow.ReferencePackEditorReleaseLoad=async(theme,map,mapName='packed.llmmap.txt')=>{\n  const themeFile=new File([JSON.stringify(theme)],'theme_marioai_reference_pack.llmtheme.txt',{type:'application/json'});\n  await loadTheme(themeFile);\n  const mapFile=new File([JSON.stringify(map)],mapName,{type:'application/json'});\n  await openMap(mapFile);\n  const name=$('packedMapName');if(name)name.textContent=mapName;\n  focusPackedEditorMap();\n};\n"""
+    draw_marker = ";drawMarker('start',state.markers.start);"
+    pointer_marker = "if(!state.theme)return;\n  const screen=canvasPoint(e),p=worldPoint(e),"
+    if source.count(draw_marker) != 1 or source.count(pointer_marker) != 1:
+        raise RuntimeError("packed editor ephemeral-tool integration marker is missing or ambiguous")
+    source = source.replace(draw_marker, ";window.ReferencePackEditorDrawEphemera?.(ctx,state.camera);drawMarker('start',state.markers.start);", 1)
+    source = source.replace(pointer_marker, "if(!state.theme)return;\n  const screen=canvasPoint(e),p=worldPoint(e);if(window.ReferencePackEditorHandleTestPoint?.(e,p))return;const ", 1)
+    hook = """const packedTestState={point:null,ranges:false,result:null,pending:0};
+function packedCurrentTest(){
+  const document=documentState(),theme=structuredClone(state.theme),map=semantics.serializeMap(theme,document),point=semantics.normalizePointForSingleMap(document,packedTestState.point);
+  if(point)map.markers={...(map.markers||{}),start:{...point}};
+  return{theme,map,startPoint:point,profile:$('testProfile').value};
+}
+function updatePackedTestUi(){
+  const ready=!!packedTestState.point,test=$('testPointBtn'),ranges=$('rangesBtn');test?.classList.toggle('active',state.tool==='testPoint');test?.setAttribute('aria-pressed',String(state.tool==='testPoint'));
+  if(ranges){ranges.disabled=!ready;ranges.classList.toggle('active',packedTestState.ranges);ranges.setAttribute('aria-pressed',String(packedTestState.ranges))}$('playFromHereBtn').disabled=!ready;$('clearTestPointBtn').disabled=!ready;
+}
+function recomputePackedRanges(){
+  const request=++packedTestState.pending;packedTestState.result=null;draw();if(!packedTestState.ranges||!packedTestState.point)return;
+  setStatus('Computing ranges with the gameplay simulator…');setTimeout(()=>{if(request!==packedTestState.pending)return;const current=packedCurrentTest(),result=window.parent?.ReferencePackSimulateReachability?.(current);if(request!==packedTestState.pending)return;packedTestState.result=result;setStatus(result?.ok?`Ranges: ${result.samples.length} reachable cells (${result.profile}).`:`Ranges failed: ${result?.errors?.[0]||'runtime unavailable'}`,!result?.ok);draw()},0);
+}
+window.ReferencePackEditorDrawEphemera=(c,camera)=>{
+  const point=packedTestState.point;if(!point)return;const z=camera.zoom,result=packedTestState.result;c.save();if(packedTestState.ranges&&result?.ok){for(const sample of result.samples){c.fillStyle=sample.classification==='flight'?'rgba(192,132,252,.24)':'rgba(52,211,153,.24)';const size=result.cellSize||8;c.fillRect(sample.x-size/2,sample.y-size/2,size,size)}}c.strokeStyle='#ffdf6e';c.fillStyle='#ffdf6e';c.lineWidth=2/z;c.beginPath();c.arc(point.x,point.y,9/z,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(point.x-14/z,point.y);c.lineTo(point.x+14/z,point.y);c.moveTo(point.x,point.y-14/z);c.lineTo(point.x,point.y+14/z);c.stroke();c.beginPath();c.moveTo(point.x,point.y);c.lineTo(point.x,point.y-24/z);c.stroke();c.restore();
+};
+window.ReferencePackEditorHandleTestPoint=(event,point)=>{if(state.tool!=='testPoint'||event.button!==0)return false;event.preventDefault();packedTestState.point={x:point.x,y:point.y};updatePackedTestUi();if(packedTestState.ranges)recomputePackedRanges();else draw();setStatus(`Test point: ${point.x.toFixed(1)}, ${point.y.toFixed(1)} (exact feet position)`);return true};
+window.ReferencePackEditorDocumentChanged=kind=>{if(kind==='themeLoad'||kind==='mapLoad'){packedTestState.point=null;packedTestState.result=null;packedTestState.ranges=false;packedTestState.pending++;updatePackedTestUi();draw()}else if(packedTestState.ranges)recomputePackedRanges()};
+window.ReferencePackEditorToolChanged=tool=>updatePackedTestUi();
+function focusPackedEditorMap(){\n  const rect=stage.getBoundingClientRect(),w=Math.max(1,rect.width),h=Math.max(1,rect.height),start=state.markers?.start;\n  if(start&&Number.isFinite(start.x)&&Number.isFinite(start.y)){\n    state.camera={x:w*.28-start.x,y:h*.62-start.y,zoom:1};\n    draw();\n    return;\n  }\n  const boxes=[];\n  for(const inst of state.instances){\n    try{const b=instanceBounds(inst);if(b&&[b.x,b.y,b.w,b.h].every(Number.isFinite))boxes.push(b)}catch{}\n  }\n  for(const marker of Object.values(state.markers||{}))if(marker&&Number.isFinite(marker.x)&&Number.isFinite(marker.y))boxes.push({x:marker.x-16,y:marker.y-32,w:32,h:36});\n  if(!boxes.length){state.camera={x:0,y:0,zoom:1};draw();return}\n  const minX=Math.min(...boxes.map(b=>b.x)),minY=Math.min(...boxes.map(b=>b.y)),maxX=Math.max(...boxes.map(b=>b.x+b.w)),maxY=Math.max(...boxes.map(b=>b.y+b.h)),pad=48,contentW=Math.max(1,maxX-minX),contentH=Math.max(1,maxY-minY),zoom=Math.max(.1,Math.min(2,(w-pad*2)/contentW,(h-pad*2)/contentH));\n  state.camera={x:(w-contentW*zoom)/2-minX*zoom,y:(h-contentH*zoom)/2-minY*zoom,zoom};\n  draw();\n}\nfunction installPackedEditorChrome(){\n  const closeMenus=()=>{for(const menu of document.querySelectorAll('.packed-menu-popup'))menu.hidden=true;for(const trigger of document.querySelectorAll('.packed-menu-trigger'))trigger.setAttribute('aria-expanded','false')};\n  for(const trigger of document.querySelectorAll('.packed-menu-trigger'))trigger.onclick=event=>{event.stopPropagation();const menu=$(trigger.dataset.menu),open=menu.hidden;closeMenus();if(open){menu.hidden=false;trigger.setAttribute('aria-expanded','true')}};\n  for(const menu of document.querySelectorAll('.packed-menu-popup'))menu.addEventListener('click',event=>{if(event.target.closest('button'))closeMenus()});\n  document.addEventListener('pointerdown',event=>{if(!event.target.closest('.packed-menu'))closeMenus()});\n  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('.packed-menu-popup:not([hidden])')){event.preventDefault();event.stopImmediatePropagation();closeMenus();return}if(!(event.metaKey||event.ctrlKey)||event.altKey||event.shiftKey)return;const key=event.key.toLowerCase();if(key==='o'){event.preventDefault();$('mapFile').click()}else if(key==='s'&&!$('saveMapBtn').disabled){event.preventDefault();$('saveMapBtn').click()}},true);\n  const mapFile=$('mapFile');if(mapFile)mapFile.onchange=async event=>{const file=event.target.files[0];if(file){await openMap(file);if($('status').textContent===`Opened ${file.name}`){const name=$('packedMapName');if(name)name.textContent=file.name}}event.target.value=''};\n  const back=$('backToGameBtn');if(back)back.onclick=()=>window.parent?.ReferencePackCloseEditor?.();\n  $('testPointBtn').onclick=()=>{selectEditorTool(state.tool==='testPoint'?'select':'testPoint');if(state.tool==='testPoint')setStatus('Test Point tool: click anywhere for an exact, unsnapped feet position.')};\n  $('clearTestPointBtn').onclick=()=>{packedTestState.point=null;packedTestState.result=null;packedTestState.ranges=false;packedTestState.pending++;updatePackedTestUi();draw();setStatus('Test point cleared.')};\n  $('rangesBtn').onclick=()=>{packedTestState.ranges=!packedTestState.ranges;updatePackedTestUi();if(packedTestState.ranges)recomputePackedRanges();else{packedTestState.pending++;packedTestState.result=null;draw()}};\n  $('testProfile').onchange=()=>{if(packedTestState.ranges)recomputePackedRanges()};\n  $('playFromHereBtn').onclick=()=>{const current=packedCurrentTest();void window.parent?.ReferencePackPlayFromEditor?.(current)};\n  updatePackedTestUi();\n}\ninstallPackedEditorChrome();\nwindow.ReferencePackEditorReleaseLoad=async(theme,map,mapName='packed.llmmap.txt')=>{\n  const themeFile=new File([JSON.stringify(theme)],'theme_marioai_reference_pack.llmtheme.txt',{type:'application/json'});\n  await loadTheme(themeFile);\n  const mapFile=new File([JSON.stringify(map)],mapName,{type:'application/json'});\n  await openMap(mapFile);\n  const name=$('packedMapName');if(name)name.textContent=mapName;\n  focusPackedEditorMap();\n};\n"""
     return source.replace(EDITOR_BOOT, "window.addEventListener('resize',resize);resize();renderIssues();\n" + hook + "})();", 1)
 
 

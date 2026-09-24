@@ -725,8 +725,23 @@ assert(newEditor.includes('aria-label="Eraser tool" aria-pressed="false"'),
   'the compact eraser control has an accessible label and exposed pressed state');
 assert(newEditor.includes("$('eraserBtn').onclick=()=>setEraserMode(!state.eraser)"),
   'clicking the active eraser toggles it off');
-assert((newEditor.match(/state\.eraser=false;\$\('eraserBtn'\)\.setAttribute\('aria-pressed','false'\)/g)||[]).length>=2,
-  'marker and ordinary palette cards replace eraser mode');
+assert(newEditor.includes("function selectEditorTool(tool='select',payload=null"),
+  'one editor-tool selector owns mutually exclusive interaction state');
+assert(newEditor.includes("b.onclick=()=>selectEditorTool('brush',{markerKind:kind})")&&
+  newEditor.includes("b.onclick=()=>selectEditorTool('brush',semantics.activatePalette(state.brush,item))"),
+  'marker and ordinary palette cards select their brush through the central tool mechanism');
+assert(newEditor.includes("function setEraserMode(active){selectEditorTool(active?'eraser':'select')"),
+  'eraser selection also routes through the central tool mechanism');
+assert(newEditor.includes("if(found){selectEditorTool('select',null,{render:false});state.selected=found"),
+  'object selection exits placement tools through the central tool mechanism');
+assert(newEditor.includes("state.destinationPick=tool==='pipeDestination'?payload:null"),
+  'the central tool selector exclusively owns pending pipe destinations');
+assert(!newEditor.includes('state.destinationPick={source'),
+  'pipe destination controls never bypass the central tool selector');
+assert(newEditor.includes("notifyEditorDocumentChanged('history')"),
+  'undo and redo document restoration notifies runtime-backed overlays');
+assert(newEditor.includes("notifyEditorDocumentChanged('themeLoad')")&&newEditor.includes("notifyEditorDocumentChanged('mapLoad')"),
+  'successful theme and map replacement explicitly notify ephemeral integrations');
 assert(newEditor.includes("e.key==='Escape'&&state.eraser"),'Escape exits eraser mode');
 assert(newEditor.includes('Eraser ready — drag to erase'),'activation feedback names the drag interaction');
 assert(newEditor.includes("Eraser locked to ${layerLabel(result.scope)}${result.scope==='markers'?'':' layer'}"),
@@ -765,7 +780,9 @@ const pipeDoc={instances:[{placeable:'pipe',instanceId:'pipe-a',values:pipeA.val
 assert.strictEqual(saved.instances[1].instanceId,'pipe-b','stable identity survives save');assert.deepStrictEqual(plain(saved.instances[0].values['pipe.destination']),{kind:'point',x:501,y:177});
 assert(newEditor.includes("path==='pipe.destination'&&state.selected"),'live pipe destination bypasses generic JSON textarea');
 assert(newEditor.includes("canvas.style.cursor='crosshair'"),'destination pick mode presents a spatial cursor');
-assert(newEditor.includes("if(state.destinationPick){canvas.style.cursor='crosshair';return}"),'destination picker pointermove preserves the crosshair until cancellation');
+assert(newEditor.includes("selectEditorTool('pipeDestination',{source,before:documentState()})"),'Choose destination selects the centralized pipe-destination tool');
+assert(newEditor.includes("if(state.tool==='pipeDestination'){canvas.style.cursor='crosshair';return}"),'destination picker pointermove follows centralized tool state');
+assert(newEditor.includes("e.key==='Escape'&&state.tool==='pipeDestination'"),'Escape exits pipe destination mode through the centralized tool state');
 assert(newEditor.includes("source.values['pipe.travelEnabled']=false"),'Clear disables contradictory travel state');
 assert(newEditor.includes("Destination selection cancelled."),'Escape/right-click cancellation preserves the prior document');
 const pipeHistory=semantics.createHistory(pipeDoc),pipeChanged=plain(pipeDoc);pipeChanged.instances[0].values['pipe.destination']={kind:'pipe',instanceId:'pipe-b'};pipeHistory.push(pipeChanged);assert.strictEqual(pipeHistory.undo().instances[0].values['pipe.destination'].kind,'point');assert.strictEqual(pipeHistory.redo().instances[0].values['pipe.destination'].kind,'pipe');
@@ -893,6 +910,11 @@ const coordinateDocument={worldBounds:{x:-100,y:40,w:500,h:300},instances:[
 ],markers:{start:{x:-40,y:90},goal:null}};
 const migrated=plain(semantics.normalizeSingleMap(coordinateDocument));
 assert.deepStrictEqual(migrated.worldBounds,{x:0,y:0,w:500,h:300});
+assert.deepStrictEqual(plain(semantics.normalizePointForSingleMap(coordinateDocument,{x:37.25,y:91.5})),{x:137.25,y:51.5},
+  'ephemeral test feet receive the exact same origin translation without snapping');
+const serializedWithEphemeral=semantics.serializeMap(theme,{...coordinateDocument,testPoint:{x:37.25,y:91.5},ranges:{samples:[1]}});
+assert(!Object.hasOwn(serializedWithEphemeral,'testPoint')&&!Object.hasOwn(serializedWithEphemeral,'ranges'),
+  'test point and range overlay never enter the authored map envelope');
 assert.deepStrictEqual(migrated.instances[0].values['pipe.destination'],{kind:'point',x:150,y:80},'absolute point destinations translate consistently');
 assert.deepStrictEqual(migrated.instances[1].values['movingPlatform.path'],coordinateDocument.instances[1].values['movingPlatform.path'],'relative moving paths preserve their authored geometry');
 assert.deepStrictEqual(plain(semantics.normalizeSingleMap(migrated)),migrated,'save/reopen migration is deterministic and idempotent');
