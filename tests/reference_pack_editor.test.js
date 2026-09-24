@@ -893,6 +893,11 @@ const coordinateDocument={worldBounds:{x:-100,y:40,w:500,h:300},instances:[
 ],markers:{start:{x:-40,y:90},goal:null}};
 const migrated=plain(semantics.normalizeSingleMap(coordinateDocument));
 assert.deepStrictEqual(migrated.worldBounds,{x:0,y:0,w:500,h:300});
+assert.deepStrictEqual(plain(semantics.normalizePointForSingleMap(coordinateDocument,{x:37.25,y:91.5})),{x:137.25,y:51.5},
+  'ephemeral test feet receive the exact same origin translation without snapping');
+const serializedWithEphemeral=semantics.serializeMap(theme,{...coordinateDocument,testPoint:{x:37.25,y:91.5},ranges:{samples:[1]}});
+assert(!Object.hasOwn(serializedWithEphemeral,'testPoint')&&!Object.hasOwn(serializedWithEphemeral,'ranges'),
+  'test point and range overlay never enter the authored map envelope');
 assert.deepStrictEqual(migrated.instances[0].values['pipe.destination'],{kind:'point',x:150,y:80},'absolute point destinations translate consistently');
 assert.deepStrictEqual(migrated.instances[1].values['movingPlatform.path'],coordinateDocument.instances[1].values['movingPlatform.path'],'relative moving paths preserve their authored geometry');
 assert.deepStrictEqual(plain(semantics.normalizeSingleMap(migrated)),migrated,'save/reopen migration is deterministic and idempotent');

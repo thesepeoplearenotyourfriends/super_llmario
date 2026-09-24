@@ -40,6 +40,16 @@ test('compiles the actual reference theme and representative editor map',()=>{
   assert(result.runtime.drawCommands.every(command=>theme.atlases[command.atlas]&&command.sourceRect));
 });
 
+test('authoritative player behavior drives bounded reachability and reacts to collision geometry',()=>{
+  const base={...validMap,worldBounds:{x:0,y:0,w:320,h:240},markers:{start:{x:80,y:80},goal:null}},start={x:80,y:80};
+  const empty=api.simulateReachability(theme,{...base,instances:[]},start,{horizon:45,maxStates:180,cellSize:8});
+  const floor=api.simulateReachability(theme,{...base,instances:[{placeable:'ground',values:{'transform.x':80,'transform.y':176,'terrain.width':10,'terrain.height':1,'terrain.style':'overground'}}]},start,{horizon:45,maxStates:180,cellSize:8});
+  assert.equal(empty.ok,true);assert.equal(floor.ok,true);assert(empty.samples.length>0);assert(floor.samples.length>0);
+  assert.notDeepEqual(plain(floor.samples),plain(empty.samples),'authored collision changes the real-simulation reachable set');
+  const flight=api.simulateReachability(theme,{...base,instances:[]},start,{profile:'raccoonFlight',horizon:8,maxStates:80});
+  assert.equal(flight.profile,'raccoonFlight');assert(flight.classes.includes('flight'));
+});
+
 test('orders all five declared layers and resolves default and override layers',()=>{
   const runtime=api.compileReferenceRuntime(theme,fixture).runtime;
   assert.deepEqual(plain(runtime.layers),['sky','background','world','actors','foreground']);

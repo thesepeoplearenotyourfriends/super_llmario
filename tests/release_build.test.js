@@ -27,7 +27,14 @@ test('release packs every repository map with one shared reference theme and emb
   assert(sandbox.PACKED_EDITOR_HTML.includes('Reference Pack Editor'));assert(sandbox.PACKED_EDITOR_HTML.includes('ReferencePackEditorReleaseLoad'));assert(sandbox.PACKED_EDITOR_HTML.includes("mapName='packed.llmmap.txt'"));
   assert(sandbox.PACKED_EDITOR_HTML.includes('class="packed-editor-header"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="packedMapName"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="backToGameBtn"'));
   assert(sandbox.PACKED_EDITOR_HTML.includes('data-menu="packedFileMenu"'));assert(sandbox.PACKED_EDITOR_HTML.includes('data-menu="packedEditMenu"'));assert(sandbox.PACKED_EDITOR_HTML.includes('role="toolbar" aria-label="Map editor tools"'));
+  assert(sandbox.PACKED_EDITOR_HTML.includes('id="testPointBtn"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="rangesBtn"'));assert(sandbox.PACKED_EDITOR_HTML.includes('id="playFromHereBtn"'));
+  assert(sandbox.PACKED_EDITOR_HTML.includes('packedTestState.point={x:point.x,y:point.y}'),'test-point placement preserves exact world coordinates');
+  assert(sandbox.PACKED_EDITOR_HTML.includes('semantics.serializeMap(state.theme,document)'),'play/ranges consume the current in-memory editor document');
+  assert(sandbox.PACKED_EDITOR_HTML.includes('semantics.normalizePointForSingleMap(document,packedTestState.point)'),'test spawn follows canonical map-origin normalization');
+  assert(sandbox.PACKED_EDITOR_HTML.includes('ReferencePackSimulateReachability'),'packed editor delegates ranges to its parent runtime');
   assert(sandbox.PACKED_EDITOR_HTML.includes("window.parent?.ReferencePackCloseEditor?.()"));assert(html.includes('ReferencePackCloseEditor=closePackedEditor'));assert(!html.includes('id="releaseEditorBar"'));
+  assert(html.includes('B.simulateReachability(state.theme,map,startPoint,options)'));assert(html.includes('ReferencePackPlayFromEditor=playPackedEditorMap'));
+  assert(html.includes("if(frame.dataset.loaded)return"),'returning to the editor reuses its existing iframe and ephemeral state');
   assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
   assert.match(html,/id="releaseMapPicker"/);assert.match(html,/id="releaseMenu"/);assert.match(html,/<button id="releaseEditorButton">Editor<\/button><\/header>/);
   assert.match(html,/getElementById\('releaseEditorButton'\).*addEventListener\('click',openPackedEditor\)/);assert.match(html,/experience\.theme,experience\.map,experience\.filename/);
