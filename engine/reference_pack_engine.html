@@ -64,19 +64,33 @@ function simulateReachability(theme,map,startPoint,options={}){
   const simulationMap=structuredCopy(map),profile=options.profile==='raccoonFlight'?'raccoonFlight':'standing';
   simulationMap.markers={...(simulationMap.markers||{}),start:{x:startPoint.x,y:startPoint.y}};
   const compiled=compileReferenceRuntime(theme,simulationMap);if(!compiled.ok)return{ok:false,errors:compiled.errors,samples:[],classes:[]};
-  const horizon=Math.max(1,Math.min(300,Math.floor(Number(options.horizon)||90))),cell=Math.max(2,Math.min(32,Number(options.cellSize)||8)),maxStates=Math.max(50,Math.min(2000,Math.floor(Number(options.maxStates)||220)));
+  const defaultHorizon=profile==='raccoonFlight'?240:180,horizon=Math.max(1,Math.min(360,Math.floor(Number(options.horizon)||defaultHorizon))),cell=Math.max(2,Math.min(32,Number(options.cellSize)||8)),maxStates=Math.max(50,Math.min(2000,Math.floor(Number(options.maxStates)||120)));
   const controls=[];for(const horizontal of [-1,0,1])for(const jump of [false,true])for(const run of [false,true])controls.push({left:horizontal<0,right:horizontal>0,jump,up:jump,run});
+  if(options.reverseControls)controls.reverse();
   const initial=createPlayerBehavior(compiled.runtime);if(profile==='raccoonFlight'){initial.setForm('raccoon');Object.assign(initial.player,{runCharge:90,pSpeed:true,flightFrames:150})}
-  const copyState=behavior=>({player:structuredCopy(behavior.player),input:structuredCopy(behavior.input)}),restore=(behavior,snapshot)=>{Object.assign(behavior.player,snapshot.player);Object.assign(behavior.input,snapshot.input)},sampleMap=new Map();
+  const copyState=behavior=>({player:{...behavior.player},input:{...behavior.input}}),restore=(behavior,snapshot)=>{Object.assign(behavior.player,snapshot.player);Object.assign(behavior.input,snapshot.input)},sampleMap=new Map();
   let frontier=[copyState(initial)];
+  function stateKey(snapshot){const p=snapshot.player,i=snapshot.input;return[Math.round(p.x/4),Math.round(p.y/4),Math.round(p.vx*2),Math.round(p.vy*2),p.onGround?1:0,Math.round(p.runCharge/12),p.flightFrames?Math.ceil(p.flightFrames/20):0,i.jump?1:0,i.run?1:0].join(',')}
+  function exactStateKey(snapshot){const p=snapshot.player,i=snapshot.input;return[p.x,p.y,p.vx,p.vy,p.onGround?1:0,p.face,p.runCharge,p.flightFrames,i.left?1:0,i.right?1:0,i.jump?1:0,i.run?1:0].join(',')}
+  function diverseFrontier(states){
+    if(states.length<=maxStates)return states.sort((a,b)=>stateKey(a).localeCompare(stateKey(b)));
+    const originX=startPoint.x-PLAYER_WIDTH/2,chosen=[],chosenKeys=new Set(),take=state=>{const key=stateKey(state);if(!chosenKeys.has(key)&&chosen.length<maxStates){chosenKeys.add(key);chosen.push(state)}};
+    const by=(score,descending=false)=>[...states].sort((a,b)=>(descending?score(b)-score(a):score(a)-score(b))||stateKey(a).localeCompare(stateKey(b)))[0];
+    for(const state of [by(s=>s.player.x),by(s=>s.player.x,true),by(s=>s.player.y),by(s=>s.player.y,true),by(s=>s.player.vx),by(s=>s.player.vx,true),by(s=>s.player.vy),by(s=>s.player.vy,true)])take(state);
+    const buckets=new Map();
+    for(const state of states){const p=state.player,i=state.input,direction=p.x<originX-2?-1:p.x>originX+2?1:0,key=[direction,Math.floor((p.x-originX)/cell),Math.floor((p.y+PLAYER_HEIGHT)/cell),p.onGround?1:0,Math.round(p.vx/2),Math.round(p.vy/3),i.jump?1:0,i.run?1:0,Math.floor(p.runCharge/24),Math.ceil(p.flightFrames/30)].join(',');if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(state)}
+    const groups=[...buckets.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([,group])=>group.sort((a,b)=>stateKey(a).localeCompare(stateKey(b))));
+    for(let depth=0;chosen.length<maxStates;depth++){let added=false;for(const group of groups)if(group[depth]){take(group[depth]);added=true;if(chosen.length===maxStates)break}if(!added)break}
+    return chosen;
+  }
   function recordSample(player,classification){const feetX=player.x+player.w/2,feetY=player.y+player.h,key=`${Math.floor(feetX/cell)},${Math.floor(feetY/cell)},${classification}`;if(!sampleMap.has(key))sampleMap.set(key,{x:(Math.floor(feetX/cell)+.5)*cell,y:(Math.floor(feetY/cell)+.5)*cell,classification})}
   recordSample(initial.player,profile==='raccoonFlight'?'flight':'normal');
   for(let frame=0;frame<horizon&&frontier.length;frame++){
-    const next=new Map();
-    for(const snapshot of frontier)for(const input of controls){const behavior=createPlayerBehavior(compiled.runtime);restore(behavior,snapshot);const player=behavior.step(input);if(player.dead)continue;const classification=profile==='raccoonFlight'||player.flightFrames>0?'flight':'normal';recordSample(player,classification);const key=[Math.round(player.x/4),Math.round(player.y/4),Math.round(player.vx*2),Math.round(player.vy*2),player.onGround?1:0,Math.round(player.runCharge/12),player.flightFrames?Math.ceil(player.flightFrames/20):0,input.jump?1:0,input.run?1:0].join(',');if(!next.has(key))next.set(key,copyState(behavior))}
-    frontier=[...next.values()].slice(0,maxStates);
+    const next=new Map(),behavior=createPlayerBehavior(compiled.runtime);
+    for(const snapshot of frontier)for(const input of controls){restore(behavior,snapshot);const player=behavior.step(input);if(player.dead)continue;const classification=profile==='raccoonFlight'||player.flightFrames>0?'flight':'normal';recordSample(player,classification);const key=[Math.round(player.x/4),Math.round(player.y/4),Math.round(player.vx*2),Math.round(player.vy*2),player.onGround?1:0,Math.round(player.runCharge/12),player.flightFrames?Math.ceil(player.flightFrames/20):0,input.jump?1:0,input.run?1:0].join(','),candidate=copyState(behavior),previous=next.get(key);if(!previous||exactStateKey(candidate)<exactStateKey(previous))next.set(key,candidate)}
+    frontier=diverseFrontier([...next.values()]);
   }
-  const samples=[...sampleMap.values()],classes=[...new Set(samples.map(sample=>sample.classification))];return{ok:true,errors:[],profile,horizon,cellSize:cell,samples,classes};
+  const samples=[...sampleMap.values()].sort((a,b)=>a.x-b.x||a.y-b.y||a.classification.localeCompare(b.classification)),classes=[...new Set(samples.map(sample=>sample.classification))];return{ok:true,errors:[],profile,horizon,cellSize:cell,samples,classes};
 }
 function normalizePipeDestination(value){if(!record(value))return null;if(value.kind==='pipe'&&typeof value.instanceId==='string'&&value.instanceId)return{kind:'pipe',instanceId:value.instanceId};if((value.kind==='point'||value.kind===undefined)&&Number.isFinite(value.x)&&Number.isFinite(value.y))return{kind:'point',x:value.x,y:value.y};return null}
 function pipeMouth(instance){const b=instance.bounds,d=instance.values['pipe.direction']||'up';if(d==='down')return{x:b.x+b.w/2,y:b.y+b.h,axis:{x:0,y:1}};if(d==='left')return{x:b.x,y:b.y+b.h/2,axis:{x:-1,y:0}};if(d==='right')return{x:b.x+b.w,y:b.y+b.h/2,axis:{x:1,y:0}};return{x:b.x+b.w/2,y:b.y,axis:{x:0,y:-1}}}
