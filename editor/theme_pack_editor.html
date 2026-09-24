@@ -19,6 +19,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);c
 button,input,select{font:inherit}
 button{border:1px solid var(--line);border-radius:8px;background:var(--panel3);color:var(--ink);padding:7px 10px;cursor:pointer}
 button:hover{border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #app{height:100%;display:grid;grid-template-rows:52px minmax(0,1fr) 28px}
 header{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a202b;border-bottom:1px solid var(--line);box-shadow:0 4px 20px var(--shadow);z-index:5}
@@ -26,6 +27,7 @@ header strong{font-size:14px;letter-spacing:.08em}
 header .sub{font-size:11px;color:var(--muted)}
 .spacer{flex:1}
 #fileName{max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-family:var(--mono);font-size:11px}
+#dirtyMark{color:var(--warn);font-weight:800}
 .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px}
 .badge.good{color:var(--good);border-color:#397d55}
 .badge.warn{color:var(--warn);border-color:#806b32}
@@ -125,6 +127,19 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 .paramBody{margin-top:5px;font-size:11px;color:var(--muted)}
 .transport{display:flex;gap:6px;align-items:center}
 .transport button{padding:5px 8px}
+.importWorkspace{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px}
+.importTools{display:flex;align-items:end;gap:8px;flex-wrap:wrap;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.importTools label{display:grid;gap:3px;color:var(--muted);font-size:10px}
+.importTools input{width:82px;padding:6px;border:1px solid var(--line);border-radius:6px;background:#07141b;color:var(--ink);font-family:var(--mono)}
+.importTools .nameInput{width:130px}
+.importTools .selectionCount{padding:7px;color:var(--accent);font-size:11px}
+.importViewport{min-height:320px;overflow:auto;position:relative;border:1px solid var(--line);border-radius:12px;background-color:#102029;background-image:linear-gradient(45deg,#081219 25%,transparent 25%),linear-gradient(-45deg,#081219 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#081219 75%),linear-gradient(-45deg,transparent 75%,#081219 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;cursor:grab;user-select:none}
+.importStage{position:relative;margin:18px;width:max-content;height:max-content}
+.importStage img{display:block;image-rendering:pixelated;pointer-events:none}
+.candidateLayer{position:absolute;inset:0}
+.candidate{position:absolute;padding:0;border:1px solid rgba(86,217,232,.62);border-radius:0;background:rgba(86,217,232,.035)}
+.candidate:hover{background:rgba(86,217,232,.18);z-index:2}
+.candidate.selected{border:2px solid #ffd36b;background:rgba(255,211,107,.25);z-index:3}
 #statusBar{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:0 8px;border-top:1px solid var(--line);background:#07141b;color:var(--muted);font-size:11px;z-index:8}
 #statusLamp{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:0 0 auto}
 #statusBar[data-level="ok"] #statusLamp{background:var(--good)}
@@ -164,12 +179,15 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
     <button id="historyBack" type="button" title="Back" aria-label="Back" disabled>←</button>
     <button id="historyForward" type="button" title="Forward" aria-label="Forward" disabled>→</button>
   </nav>
-  <div><strong>THEME PACK WORKBENCH</strong><div class="sub">Phase 1 · readonly inspector</div></div>
+  <div><strong>THEME PACK WORKBENCH</strong><div class="sub">Inspector · sprite-sheet authoring</div></div>
   <span id="status" class="badge">No theme loaded</span>
-  <span id="fileName"></span>
+  <span id="fileName"></span><span id="dirtyMark" hidden title="Unsaved changes">●</span>
   <span class="spacer"></span>
   <button id="loadButton">Load theme…</button>
+  <button id="importButton" disabled>Import Sprite Sheet…</button>
+  <button id="saveButton" disabled>Save Theme…</button>
   <input id="fileInput" type="file" accept=".llmtheme,.txt,.json,application/json,text/plain" hidden>
+  <input id="sheetInput" type="file" accept="image/png,image/webp,image/jpeg,.png,.webp,.jpg,.jpeg" hidden>
 </header>
 <div id="layout">
   <aside id="nav">
@@ -211,7 +229,7 @@ const SECTION_LABELS={
   sceneLayers:'Scene Layers',extended:'Extended'
 };
 const INVENTORY_SECTIONS=new Set(['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']);
-const state={theme:null,fileName:'',section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2,history:[],historyIndex:-1};
+const state={loadedTheme:null,theme:null,fileName:'',dirty:false,section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2,history:[],historyIndex:-1,importSession:null};
 
 const $=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -221,6 +239,48 @@ const entries=value=>Object.entries(dict(value));
 const count=value=>Array.isArray(value)?value.length:entries(value).length;
 const simple=value=>value==null||['string','number','boolean'].includes(typeof value);
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+
+/* IMPORT_CORE_START - pure helpers are intentionally browser-independent and mechanically tested. */
+const ImportCore={
+  gridCells(imageWidth,imageHeight,settings){
+    const cellW=Math.max(1,Math.trunc(Number(settings.cellW)||1));
+    const cellH=Math.max(1,Math.trunc(Number(settings.cellH)||1));
+    const offsetX=Math.max(0,Math.trunc(Number(settings.offsetX)||0));
+    const offsetY=Math.max(0,Math.trunc(Number(settings.offsetY)||0));
+    const gutterX=Math.max(0,Math.trunc(Number(settings.gutterX)||0));
+    const gutterY=Math.max(0,Math.trunc(Number(settings.gutterY)||0));
+    const cells=[];
+    for(let row=0,y=offsetY;y+cellH<=imageHeight;row++,y+=cellH+gutterY){
+      for(let column=0,x=offsetX;x+cellW<=imageWidth;column++,x+=cellW+gutterX){
+        cells.push({id:`r${row}c${column}`,row,column,x,y,w:cellW,h:cellH});
+      }
+    }
+    return cells;
+  },
+  toggleCandidate(selection,candidate){
+    const next=new Set(selection),id=typeof candidate==='string'?candidate:candidate.id;
+    if(next.has(id))next.delete(id);else next.add(id);
+    return next;
+  },
+  commit(theme,transaction){
+    const selected=transaction.cells.filter(cell=>transaction.selection.has(cell.id));
+    if(!selected.length)throw new Error('Select at least one frame before committing.');
+    const atlasId=String(transaction.atlasId||'').trim(),prefix=String(transaction.prefix||'').trim();
+    if(!atlasId||!prefix)throw new Error('Atlas ID and resource prefix are required.');
+    const atlases=theme.atlases||{},resources=theme.resources||{};
+    if(Object.hasOwn(atlases,atlasId))throw new Error(`Atlas ID already exists: ${atlasId}`);
+    const ids=selected.map((cell,index)=>`${prefix}.${String(index+1).padStart(3,'0')}`);
+    const collision=ids.find(id=>Object.hasOwn(resources,id));
+    if(collision)throw new Error(`Resource ID already exists: ${collision}. Nothing was committed.`);
+    const next=structuredClone(theme);
+    next.atlases=next.atlases||{};next.resources=next.resources||{};
+    next.atlases[atlasId]={mediaType:transaction.mediaType,encoding:'base64',data:transaction.base64,sourceFile:transaction.sourceName,cellSize:{w:transaction.settings.cellW,h:transaction.settings.cellH}};
+    selected.forEach((cell,index)=>{next.resources[ids[index]]={kind:'decoration',image:{atlas:atlasId,rect:{x:cell.x,y:cell.y,w:cell.w,h:cell.h}},display:{w:cell.w,h:cell.h,anchor:{x:.5,y:1}},provenance:{sheet:transaction.sourceName,cell:{x:cell.column,y:cell.row}}}});
+    return {theme:next,atlasId,resourceIds:ids,dirty:true};
+  },
+  serialize(theme){return JSON.stringify(theme,null,2)+'\n'}
+};
+/* IMPORT_CORE_END */
 
 function renderLog(){
   const root=$('logEntries');
@@ -676,9 +736,62 @@ function renderFrameGroup(){
     <section class="panel"><h2>Definition</h2>${renderSimpleObject(group)}</section>`;
 }
 
+function setDirty(dirty){
+  state.dirty=!!dirty;$('dirtyMark').hidden=!state.dirty;$('saveButton').disabled=!state.theme;
+  document.title=`${state.dirty?'* ':''}LLMario Theme Pack Workbench`;
+}
+function suggestedId(base,values){
+  if(!Object.hasOwn(values,base))return base;
+  let n=2;while(Object.hasOwn(values,`${base}_${n}`))n++;
+  return `${base}_${n}`;
+}
+function importNumber(name){return `<label>${name.label}<input type="number" min="${name.min??0}" step="1" data-grid="${name.key}" value="${state.importSession.settings[name.key]}"></label>`}
+function renderImportWorkspace(){
+  const tx=state.importSession,cells=ImportCore.gridCells(tx.width,tx.height,tx.settings);tx.cells=cells;
+  for(const id of [...tx.selection])if(!cells.some(cell=>cell.id===id))tx.selection.delete(id);
+  const z=tx.zoom;
+  return `<div class="importWorkspace"><div class="importTools">
+    ${[
+      {key:'cellW',label:'Cell width',min:1},{key:'cellH',label:'Cell height',min:1},
+      {key:'offsetX',label:'X offset'},{key:'offsetY',label:'Y offset'},
+      {key:'gutterX',label:'Horizontal gutter'},{key:'gutterY',label:'Vertical gutter'}
+    ].map(importNumber).join('')}
+    <label>Atlas ID<input class="nameInput" id="importAtlasId" value="${escapeHtml(tx.atlasId)}"></label>
+    <label>Resource prefix<input class="nameInput" id="importPrefix" value="${escapeHtml(tx.prefix)}"></label>
+    <button type="button" data-import-zoom="-1">−</button><span class="zoomReadout">${z}×</span><button type="button" data-import-zoom="1">+</button>
+    <button type="button" id="selectAllCandidates">Select all</button><button type="button" id="clearCandidates">Clear selection</button>
+    <span class="selectionCount">${tx.selection.size} frame${tx.selection.size===1?'':'s'} selected</span>
+    <span class="spacer"></span><button type="button" id="cancelImport">Cancel Import</button><button type="button" id="commitImport" ${tx.selection.size?'':'disabled'}>Commit Selected Frames</button>
+  </div><div class="importViewport" id="importViewport"><div class="importStage" style="width:${tx.width*z}px;height:${tx.height*z}px">
+    <img src="${tx.dataUrl}" alt="Imported sprite sheet" width="${tx.width*z}" height="${tx.height*z}">
+    <div class="candidateLayer">${cells.map(cell=>`<button type="button" class="candidate ${tx.selection.has(cell.id)?'selected':''}" data-candidate="${cell.id}" title="row ${cell.row}, column ${cell.column} · ${cell.x},${cell.y} ${cell.w}×${cell.h}" style="left:${cell.x*z}px;top:${cell.y*z}px;width:${cell.w*z}px;height:${cell.h*z}px"></button>`).join('')}</div>
+  </div></div></div>`;
+}
+function refreshImport(){renderCenter()}
+function wireImportWorkspace(){
+  const tx=state.importSession;
+  document.querySelectorAll('[data-grid]').forEach(input=>input.oninput=()=>{tx.settings[input.dataset.grid]=Math.max(Number(input.min)||0,Math.trunc(Number(input.value)||0));refreshImport()});
+  $('importAtlasId').oninput=event=>tx.atlasId=event.target.value;$('importPrefix').oninput=event=>tx.prefix=event.target.value;
+  document.querySelectorAll('[data-import-zoom]').forEach(button=>button.onclick=()=>{tx.zoom=clamp(tx.zoom+Number(button.dataset.importZoom),1,16);refreshImport()});
+  document.querySelectorAll('[data-candidate]').forEach(button=>button.onclick=()=>{tx.selection=ImportCore.toggleCandidate(tx.selection,button.dataset.candidate);refreshImport()});
+  $('selectAllCandidates').onclick=()=>{tx.selection=new Set(tx.cells.map(cell=>cell.id));refreshImport()};
+  $('clearCandidates').onclick=()=>{tx.selection.clear();refreshImport()};
+  $('cancelImport').onclick=cancelImport;$('commitImport').onclick=commitImport;
+}
+function cancelImport(){state.importSession=null;renderSections();renderItems();renderCenter();renderDetail();report('info','Sprite-sheet import cancelled; the theme was not changed.')}
+function commitImport(){
+  const tx=state.importSession;tx.atlasId=$('importAtlasId').value.trim();tx.prefix=$('importPrefix').value.trim();
+  try{
+    const result=ImportCore.commit(state.theme,tx);state.theme=result.theme;state.images.clear();setDirty(true);state.importSession=null;
+    renderSections();navigate('resources',result.resourceIds[0]);
+    report('ok',`Committed ${result.resourceIds.length} frame${result.resourceIds.length===1?'':'s'} to embedded atlas ${result.atlasId}.`);
+  }catch(error){report('error',error.message||error);alert(error.message||error)}
+}
+
 function renderCenter(){
   const content=$('content');$('welcome').hidden=!!state.theme;content.hidden=!state.theme;
   if(!state.theme)return;
+  if(state.importSession){content.innerHTML=renderImportWorkspace();wireImportWorkspace();return}
   let html='';
   if(state.section==='overview')html=overview();
   else if(state.key==null)html=renderGenericSection();
@@ -720,8 +833,9 @@ function renderDetail(){
 function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
   stopAnimation();
   const issues=validateTheme(theme);
-  state.theme=theme;state.fileName=fileName;state.section='overview';state.key=null;state.query='';state.images.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
+  state.loadedTheme=structuredClone(theme);state.theme=structuredClone(theme);state.fileName=fileName;state.dirty=false;state.importSession=null;state.section='overview';state.key=null;state.query='';state.images.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
   $('fileName').textContent=fileName;$('search').value='';renderHistoryNav();
+  $('importButton').disabled=false;$('saveButton').disabled=false;setDirty(false);
   const status=$('status');status.className='badge '+(issues.length?'warn':'good');
   status.textContent=issues.length?`${issues.length} format warning${issues.length===1?'':'s'}`:'Reference pack v1';
   renderSections();renderItems();renderCenter();renderDetail();
@@ -734,6 +848,7 @@ function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
 }
 async function loadFile(file){
   try{
+    if(state.dirty&&!confirm('Discard unsaved theme changes and open another file?'))return;
     report('info',`Reading ${file.name}…`,{log:false});
     const text=await file.text(),theme=JSON.parse(text);
     loadThemeDocument(theme,file.name);
@@ -746,19 +861,41 @@ async function loadFile(file){
   }
 }
 
+function readFileAsDataURL(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error||new Error('Could not read image.'));reader.readAsDataURL(file)})}
+function decodeImage(src){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('The selected file is not a browser-decodable image.'));image.src=src})}
+async function beginSpriteImport(file){
+  try{
+    const dataUrl=await readFileAsDataURL(file),image=await decodeImage(dataUrl),comma=dataUrl.indexOf(',');
+    const mediaType=(dataUrl.slice(5,comma).split(';')[0]||file.type||'image/png').toLowerCase();
+    const atlasBase='spritesheet_1',prefixBase='imported';
+    state.importSession={sourceName:file.name||'spritesheet',mediaType,base64:dataUrl.slice(comma+1),dataUrl,width:image.naturalWidth,height:image.naturalHeight,zoom:clamp(Math.floor(480/Math.max(image.naturalWidth,image.naturalHeight)),1,8),settings:{cellW:32,cellH:32,offsetX:0,offsetY:0,gutterX:0,gutterY:0},selection:new Set(),cells:[],atlasId:suggestedId(atlasBase,dict(state.theme.atlases)),prefix:suggestedId(prefixBase,dict(state.theme.resources))};
+    renderCenter();renderDetail();report('ok',`Opened ${file.name} (${image.naturalWidth}×${image.naturalHeight}) as an uncommitted import.`);
+  }catch(error){report('error',`Could not import sprite sheet: ${error.message||error}`)}
+}
+function saveTheme(){
+  if(!state.theme)return;
+  const text=ImportCore.serialize(state.theme),blob=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob);
+  const link=document.createElement('a');link.href=url;link.download=state.fileName.endsWith('.llmtheme.txt')?state.fileName:state.fileName.replace(/\.(json|txt|llmtheme)$/i,'')+'.llmtheme.txt';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),0);state.loadedTheme=structuredClone(state.theme);setDirty(false);report('ok',`Saved ${link.download}.`);
+}
+
 $('loadButton').onclick=()=>$('fileInput').click();
+$('importButton').onclick=()=>$('sheetInput').click();
+$('saveButton').onclick=saveTheme;
 $('welcomeLoad').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=event=>{const file=event.target.files?.[0];if(file)loadFile(file);event.target.value=''};
+$('sheetInput').onchange=event=>{const file=event.target.files?.[0];if(file)beginSpriteImport(file);event.target.value=''};
 $('search').oninput=event=>{state.query=event.target.value;renderItems()};
 window.addEventListener('dragover',event=>event.preventDefault());
 window.addEventListener('drop',event=>{event.preventDefault();const file=event.dataTransfer?.files?.[0];if(file)loadFile(file)});
-window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}});
+window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveTheme()}});
+window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue=''}});
 $('historyBack').onclick=()=>historyGo(-1);
 $('historyForward').onclick=()=>historyGo(1);
 $('logButton').onclick=()=>toggleLog();
 $('closeLog').onclick=()=>toggleLog(false);
 $('clearLog').onclick=()=>{state.log.length=0;renderLog();setStatus('info','Log cleared.')};
-window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn,report};
+window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn,report,ImportCore,get workingTheme(){return state.theme},get dirty(){return state.dirty}};
 renderLog();
 })();
 </script>

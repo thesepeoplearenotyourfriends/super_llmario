@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const cp=require('node:child_process');
+const vm=require('node:vm');
 
 const root=path.resolve(__dirname,'..');
 const appPath=path.join(root,'editor/theme_pack_editor.html');
@@ -12,18 +13,71 @@ const themePath=path.join(root,'themes/theme_marioai_reference_pack.llmtheme.txt
 const html=fs.readFileSync(appPath,'utf8');
 const theme=JSON.parse(fs.readFileSync(themePath,'utf8'));
 
+const coreSource=html.match(/\/\* IMPORT_CORE_START[\s\S]*?const ImportCore=(\{[\s\S]*?\});\n\/\* IMPORT_CORE_END \*\//)?.[1];
+assert(coreSource,'import core is embedded in the standalone workbench');
+const ImportCore=vm.runInNewContext(`(${coreSource})`,{structuredClone});
+
 function scripts(source){
   return [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1]);
 }
 
-test('theme pack workbench is a standalone readonly single-file application',()=>{
+test('theme pack workbench remains standalone while exposing authoring actions',()=>{
   assert.match(html,/THEME PACK WORKBENCH/);
-  assert.match(html,/Phase 1 · readonly inspector/);
   assert.match(html,/id="fileInput"/);
-  assert.match(html,/window\.ThemePackWorkbench=\{loadThemeDocument,validateTheme,refsIn,report\}/);
+  assert.match(html,/id="importButton"[^>]*>Import Sprite Sheet…/);
+  assert.match(html,/id="saveButton"[^>]*>Save Theme…/);
+  assert.match(html,/window\.ThemePackWorkbench=\{loadThemeDocument,validateTheme,refsIn,report,ImportCore/);
   assert.doesNotMatch(html,/<script[^>]+src=|<link[^>]+href=/i);
   assert.doesNotMatch(html,/fetch\s*\(|XMLHttpRequest|import\s*\(/);
-  assert.doesNotMatch(html,/contenteditable\s*=|Save theme|Export theme/i);
+  assert.doesNotMatch(html,/contenteditable\s*=/i);
+});
+
+test('grid generation uses source pixels, offsets, gutters, and excludes partial edge cells',()=>{
+  assert.deepEqual(Array.from(ImportCore.gridCells(72,45,{cellW:20,cellH:16,offsetX:4,offsetY:3,gutterX:2,gutterY:3}),cell=>({...cell})),[
+    {id:'r0c0',row:0,column:0,x:4,y:3,w:20,h:16},
+    {id:'r0c1',row:0,column:1,x:26,y:3,w:20,h:16},
+    {id:'r0c2',row:0,column:2,x:48,y:3,w:20,h:16},
+    {id:'r1c0',row:1,column:0,x:4,y:22,w:20,h:16},
+    {id:'r1c1',row:1,column:1,x:26,y:22,w:20,h:16},
+    {id:'r1c2',row:1,column:2,x:48,y:22,w:20,h:16}
+  ]);
+  assert.equal(ImportCore.gridCells(19,16,{cellW:20,cellH:16}).length,0,'partial cells are excluded, never clipped');
+});
+
+test('candidate selection is transactional and commit creates only selected atlas regions',()=>{
+  const original={format:'llmario-theme-pack-reference',packVersion:1,atlases:{old:{mediaType:'image/png',encoding:'base64',data:'OLD'}},resources:{existing:{kind:'decoration'}}};
+  const before=JSON.stringify(original),cells=ImportCore.gridCells(34,16,{cellW:16,cellH:16,offsetX:0,offsetY:0,gutterX:2,gutterY:0});
+  let selection=new Set();selection=ImportCore.toggleCandidate(selection,cells[1]);
+  assert.equal(JSON.stringify(original),before,'selecting a candidate does not mutate the document');
+  const tx={cells,selection,atlasId:'spritesheet_1',prefix:'imported',mediaType:'image/png',base64:'iVBORw0KGgo=',sourceName:'sheet.png',settings:{cellW:16,cellH:16}};
+  const result=ImportCore.commit(original,tx);
+  assert.equal(Object.keys(result.theme.atlases).length,2);
+  assert.equal(Object.keys(result.theme.resources).length,2);
+  assert.equal(result.dirty,true);
+  assert.deepEqual({...result.theme.resources['imported.001'].image.rect},{x:18,y:0,w:16,h:16});
+  assert.equal(result.theme.resources['imported.002'],undefined,'unselected candidates create no resources');
+  assert.equal(JSON.stringify(result.theme.atlases.spritesheet_1),JSON.stringify({mediaType:'image/png',encoding:'base64',data:'iVBORw0KGgo=',sourceFile:'sheet.png',cellSize:{w:16,h:16}}));
+  assert.equal(JSON.stringify(original),before,'commit returns a new working document');
+});
+
+test('commit ordering is row-major and collisions never overwrite resources',()=>{
+  const cells=ImportCore.gridCells(32,32,{cellW:16,cellH:16,offsetX:0,offsetY:0,gutterX:0,gutterY:0});
+  const base={atlases:{},resources:{'imported.001':{sentinel:true}}};
+  const tx={cells,selection:new Set([cells[3].id,cells[0].id]),atlasId:'sheet',prefix:'imported',mediaType:'image/webp',base64:'AAAA',sourceName:'sheet.webp',settings:{cellW:16,cellH:16}};
+  assert.throws(()=>ImportCore.commit(base,tx),/Resource ID already exists: imported\.001/);
+  assert.equal(base.resources['imported.001'].sentinel,true);
+  assert.equal(base.atlases.sheet,undefined);
+});
+
+test('save serialization round-trips committed embedded data',()=>{
+  const cells=ImportCore.gridCells(8,8,{cellW:8,cellH:8});
+  const source={atlases:{},resources:{}};
+  const result=ImportCore.commit(source,{cells,selection:new Set(['r0c0']),atlasId:'sheet',prefix:'new',mediaType:'image/png',base64:'EMBEDDED',sourceName:'tiny.png',settings:{cellW:8,cellH:8}});
+  const serialized=ImportCore.serialize(result.theme),reloaded=JSON.parse(serialized);
+  assert.equal(reloaded.atlases.sheet.data,'EMBEDDED');
+  assert.equal(reloaded.atlases.sheet.encoding,'base64');
+  assert.deepEqual(reloaded.resources['new.001'].image.rect,{x:0,y:0,w:8,h:8});
+  assert.equal(source.atlases.sheet,undefined,'cancel-before-commit is equivalent to discarding the detached transaction');
 });
 
 test('theme pack workbench keeps inventory entries reachable and exposes status logging',()=>{
