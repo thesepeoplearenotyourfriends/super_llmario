@@ -311,11 +311,17 @@ test('grid selection synchronizes its persistent Resource action without rebuild
 
 test('edit restore reconciles deleted navigation targets and tracks saved snapshots by identity',()=>{
   assert.match(html,/function reconcileSelectionAfterRestore\(\)/);
-  assert.match(html,/!Object\.hasOwn\(dict\(state\.theme\?\.\[state\.section\]\),state\.key\)/);
-  assert.match(html,/state\.key=siblings\[0\]\?\?null/);
+  assert.match(html,/resolveSelection\(state\.section,state\.key\)/);
   assert.match(html,/savedEditId/);
   assert.match(html,/newEditEntry\(label\)/);
   assert.doesNotMatch(html,/savedEditIndex/);
+});
+
+test('navigation defensively resolves stale keyed history destinations',()=>{
+  assert.match(html,/function resolveSelection\(section,key\)/);
+  assert.match(html,/Object\.hasOwn\(values,key\)/);
+  assert.match(html,/\(\{section,key\}=resolveSelection\(section,key\)\)/);
+  assert.match(html,/applySelection\(entry\.section,entry\.key,\{record:false/);
 });
 
 test('global mutation undo leaves native field undo intact',()=>{

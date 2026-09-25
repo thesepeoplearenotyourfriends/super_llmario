@@ -437,8 +437,10 @@ function recordHistory(section,key){
   if(state.history.length>100)state.history.shift();
   state.historyIndex=state.history.length-1;
 }
+function resolveSelection(section,key){if(key==null)return{section,key:null};const values=dict(state.theme?.[section]);if(Object.hasOwn(values,key))return{section,key};const sibling=Object.keys(values)[0];return sibling!=null?{section,key:sibling}:INVENTORY_SECTIONS.has(section)?{section:'overview',key:null}:{section,key:null}}
 function applySelection(section,key,{record=true,clearQuery=true}={}){
   if(state.remapSession){if(!confirm('Discard the unfinished Resource remap? The theme has not been changed.'))return;state.remapSession=null}
+  ({section,key}=resolveSelection(section,key));
   state.inspector=null;closeRawInspector();closeMenus();
   stopAnimation();
   state.section=section;
@@ -771,7 +773,7 @@ function updateEditUi(){const undo=$('undoEdit'),redo=$('redoEdit');if(undo){und
 function newEditEntry(label){return{id:state.nextEditId++,theme:structuredClone(state.theme),label}}
 function resetEditHistory(){state.nextEditId=1;state.editHistory=state.theme?[newEditEntry('Open Theme')]:[];state.editIndex=state.editHistory.length-1;state.savedEditId=state.editHistory[state.editIndex]?.id??null;updateEditUi()}
 function recordEdit(label){if(!state.theme)return;state.editHistory=state.editHistory.slice(0,state.editIndex+1);state.editHistory.push(newEditEntry(label));if(state.editHistory.length>40)state.editHistory.shift();state.editIndex=state.editHistory.length-1;setDirty(state.editHistory[state.editIndex].id!==state.savedEditId);updateEditUi()}
-function reconcileSelectionAfterRestore(){for(const [id,session] of state.atlasSelections){const atlas=state.theme.atlases?.[id];if(!atlas){state.atlasSelections.delete(id);continue}const valid=new Set((atlas.authoring?.regions||[]).map(r=>r.id));session.selectedRegions=new Set([...session.selectedRegions].filter(x=>valid.has(x)));if(!valid.has(session.activeRegion))session.activeRegion=[...session.selectedRegions].at(-1)||null}if(state.key!=null&&!Object.hasOwn(dict(state.theme?.[state.section]),state.key)){const siblings=Object.keys(dict(state.theme?.[state.section]));state.key=siblings[0]??null;if(!siblings.length&&INVENTORY_SECTIONS.has(state.section))state.section='overview'}}
+function reconcileSelectionAfterRestore(){for(const [id,session] of state.atlasSelections){const atlas=state.theme.atlases?.[id];if(!atlas){state.atlasSelections.delete(id);continue}const valid=new Set((atlas.authoring?.regions||[]).map(r=>r.id));session.selectedRegions=new Set([...session.selectedRegions].filter(x=>valid.has(x)));if(!valid.has(session.activeRegion))session.activeRegion=[...session.selectedRegions].at(-1)||null}({section:state.section,key:state.key}=resolveSelection(state.section,state.key))}
 function restoreEdit(direction){const target=state.editIndex+direction;if(target<0||target>=state.editHistory.length)return;const label=state.editHistory[direction<0?state.editIndex:target]?.label||'Atlas edit';state.editIndex=target;state.theme=structuredClone(state.editHistory[target].theme);state.images.clear();reconcileSelectionAfterRestore();setDirty(state.editHistory[target].id!==state.savedEditId);updateEditUi();renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();renderShell();report('ok',`${direction<0?'Undid':'Redid'} ${label}.`)}
 
 function suggestedId(base,values){
