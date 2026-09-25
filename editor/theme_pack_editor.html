@@ -21,10 +21,12 @@ button{border:1px solid var(--line);border-radius:8px;background:var(--panel3);c
 button:hover{border-color:var(--accent)}
 button:disabled{opacity:.45;cursor:not-allowed}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#app{height:100%;display:grid;grid-template-rows:52px minmax(0,1fr) 28px}
-header{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a202b;border-bottom:1px solid var(--line);box-shadow:0 4px 20px var(--shadow);z-index:5}
+#app{height:100%;display:grid;grid-template-rows:68px minmax(0,1fr) 28px}
+header{display:grid;grid-template-rows:32px 36px;background:#0a202b;border-bottom:1px solid var(--line);box-shadow:0 4px 20px var(--shadow);z-index:15}
+.titleBar{display:flex;align-items:center;gap:9px;padding:4px 10px;border-bottom:1px solid #173943}.titleBar strong{font-size:12px;letter-spacing:.08em}.titleBar .sub{font-size:10px;color:var(--muted)}
+.menuBar{display:flex;align-items:stretch;padding:2px 7px;gap:2px;position:relative}.menu{position:relative}.menuTrigger{height:30px;padding:4px 9px;border-color:transparent;border-radius:5px;background:transparent}.menu.open .menuTrigger,.menuTrigger:hover{background:var(--panel2);border-color:var(--line)}
+.menuPopup{display:none;position:absolute;top:31px;left:0;z-index:40;min-width:210px;padding:5px;border:1px solid var(--line);border-radius:7px;background:#0b202a;box-shadow:0 12px 30px rgba(0,0,0,.5)}.menu.open .menuPopup{display:grid}.menuPopup button{display:grid;grid-template-columns:1fr auto;gap:18px;text-align:left;padding:7px 9px;border:0;border-radius:4px;background:transparent}.menuPopup button:hover:not(:disabled){background:var(--panel3)}.menuPopup kbd{color:var(--muted);font:10px var(--mono)}.menuSep{height:1px;background:var(--line);margin:4px}
 header strong{font-size:14px;letter-spacing:.08em}
-header .sub{font-size:11px;color:var(--muted)}
 .spacer{flex:1}
 #fileName{max-width:38vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-family:var(--mono);font-size:11px}
 #dirtyMark{color:var(--warn);font-weight:800}
@@ -32,7 +34,7 @@ header .sub{font-size:11px;color:var(--muted)}
 .badge.good{color:var(--good);border-color:#397d55}
 .badge.warn{color:var(--warn);border-color:#806b32}
 .badge.bad{color:var(--bad);border-color:#82484a}
-#layout{min-height:0;display:grid;grid-template-columns:250px minmax(360px,1fr) 360px}
+#layout{min-height:0;position:relative;display:grid;grid-template-columns:250px minmax(360px,1fr)}
 aside,main{min-width:0;min-height:0}
 #nav{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
 #navTop{padding:10px;border-bottom:1px solid var(--line)}
@@ -47,8 +49,9 @@ aside,main{min-width:0;min-height:0}
 .itemButton b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);font-size:11px}
 .itemButton small{display:block;margin-top:2px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #center{overflow:auto;padding:16px 18px 30px}
-#detail{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
-#detailScroll{overflow:auto;padding:12px;min-height:0}
+#inspector{position:absolute;z-index:12;top:0;right:0;bottom:0;width:min(380px,calc(100% - 250px));border-left:1px solid var(--line);background:#0c1a23f5;box-shadow:-12px 0 30px var(--shadow);display:grid;grid-template-rows:44px minmax(0,1fr)}
+#inspector[hidden]{display:none}.inspectorHead{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line)}.inspectorHead button{margin-left:auto;padding:4px 8px}.inspectorScroll{overflow:auto;padding:12px;min-height:0}
+#rawDialog{width:min(840px,calc(100vw - 32px));height:min(76vh,720px);padding:0;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);box-shadow:0 24px 70px #000}#rawDialog::backdrop{background:rgba(0,5,8,.72)}.dialogHead{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}.dialogHead button{margin-left:auto}.dialogBody{height:calc(100% - 50px);overflow:auto;padding:14px}.dialogBody .raw{min-height:100%}
 .empty{height:100%;display:grid;place-items:center;text-align:center;color:var(--muted);padding:30px}
 .empty .drop{max-width:560px;padding:34px;border:1px dashed #3c7180;border-radius:14px;background:#0c1e28}
 .empty h1{margin:0 0 8px;color:var(--ink);font-size:24px}
@@ -162,38 +165,25 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
 .logEntry.warn .level{color:var(--warn)}
 .logEntry.error .level{color:var(--bad)}
 .logEntry.ok .level{color:var(--good)}
-@media(max-width:1000px){
-  #layout{grid-template-columns:220px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(150px,38%)}
-  #nav{grid-row:1/3}
-  #center{grid-column:2;grid-row:1}
-  #detail{grid-column:2;grid-row:2;display:flex;border-left:0;border-top:1px solid var(--line)}
-  #fileName{display:none}
-}
-@media(max-width:720px){
-  #layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(150px,38%)}
-  #nav{display:none}
-  #center{grid-column:1;grid-row:1}
-  #detail{grid-column:1;grid-row:2}
-  header .sub{display:none}
-}
+@media(max-width:1000px){#layout{grid-template-columns:220px minmax(0,1fr)}#fileName{display:none}#inspector{width:min(360px,calc(100% - 220px))}}
+@media(max-width:720px){#app{grid-template-rows:68px minmax(0,1fr) 28px}#layout{grid-template-columns:190px minmax(300px,1fr);overflow:auto}#nav{position:sticky;left:0;z-index:4}.titleBar .sub,#status{display:none}#inspector{position:fixed;top:68px;bottom:28px;width:min(340px,88vw)}.menuPopup{position:fixed;top:66px;left:8px;right:8px}.menuTrigger{padding-inline:7px}}
 </style>
 </head>
 <body>
 <div id="app">
 <header>
-  <nav id="historyNav" class="historyNav" aria-label="Navigation history">
-    <button id="historyBack" type="button" title="Back" aria-label="Back" disabled>←</button>
-    <button id="historyForward" type="button" title="Forward" aria-label="Forward" disabled>→</button>
+  <div class="titleBar">
+    <nav id="historyNav" class="historyNav" aria-label="Navigation history"><button id="historyBack" type="button" title="Back" aria-label="Back" disabled>←</button><button id="historyForward" type="button" title="Forward" aria-label="Forward" disabled>→</button></nav>
+    <div><strong>THEME PACK WORKBENCH</strong><span class="sub"> · authoring workspace</span></div>
+    <span id="status" class="badge">No theme loaded</span><span id="fileName"></span><span id="dirtyMark" hidden title="Unsaved changes">●</span>
+  </div>
+  <nav id="menuBar" class="menuBar" aria-label="Application menu">
+    <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">File</button><div class="menuPopup" role="menu"><button id="loadButton" role="menuitem">Open Theme… <kbd>Ctrl+O</kbd></button><button id="saveButton" role="menuitem" disabled>Save Theme… <kbd>Ctrl+S</kbd></button><div class="menuSep"></div><button id="importButton" role="menuitem" disabled>Import Atlas…</button></div></div>
+    <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">View</button><div class="menuPopup" role="menu"><button data-inspector="details" role="menuitem" disabled>Details…</button><button data-inspector="references" role="menuitem" disabled>References…</button><button id="rawEntryButton" role="menuitem" disabled>Raw Entry…</button><button id="menuLog" role="menuitem">Log…</button></div></div>
+    <div class="menu" id="atlasMenu" hidden><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Atlas</button><div class="menuPopup" role="menu"><button id="menuRenameAtlas" role="menuitem">Rename…</button><button id="menuExportAtlas" role="menuitem">Export Image…</button><button id="menuRemapResources" role="menuitem">Remap Resources…</button></div></div>
+    <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Help</button><div class="menuPopup" role="menu"><button id="aboutButton" role="menuitem">About Workbench</button></div></div>
   </nav>
-  <div><strong>THEME PACK WORKBENCH</strong><div class="sub">Inspector · atlas authoring</div></div>
-  <span id="status" class="badge">No theme loaded</span>
-  <span id="fileName"></span><span id="dirtyMark" hidden title="Unsaved changes">●</span>
-  <span class="spacer"></span>
-  <button id="loadButton">Load theme…</button>
-  <button id="importButton" disabled>Import Atlas…</button>
-  <button id="saveButton" disabled>Save Theme…</button>
-  <input id="fileInput" type="file" accept=".llmtheme,.txt,.json,application/json,text/plain" hidden>
-  <input id="sheetInput" type="file" accept="image/png,image/webp,image/jpeg,.png,.webp,.jpg,.jpeg" hidden>
+  <input id="fileInput" type="file" accept=".llmtheme,.txt,.json,application/json,text/plain" hidden><input id="sheetInput" type="file" accept="image/png,image/webp,image/jpeg,.png,.webp,.jpg,.jpeg" hidden>
 </header>
 <div id="layout">
   <aside id="nav">
@@ -210,13 +200,14 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
     </div></div>
     <div id="content" hidden></div>
   </main>
-  <aside id="detail"><div id="detailScroll"><div class="muted">Load a theme pack to inspect its references and raw data.</div></div></aside>
+  <aside id="inspector" aria-label="Inspector" hidden><div class="inspectorHead"><strong id="inspectorTitle">Inspector</strong><button id="closeInspector" type="button" aria-label="Close inspector">Close</button></div><div id="inspectorScroll" class="inspectorScroll"></div></aside>
 </div>
 <footer id="statusBar" data-level="info"><span id="statusLamp"></span><span id="statusMessage">Ready — load a theme pack.</span><button id="logButton" type="button">Log 0</button></footer>
 <div id="logPanel" hidden>
   <div id="logHead"><strong>Workbench log</strong><span class="muted">load / validation / preview diagnostics</span><span class="spacer"></span><button id="clearLog" type="button">Clear</button><button id="closeLog" type="button">Close</button></div>
   <div id="logEntries"></div>
 </div>
+<dialog id="rawDialog"><div class="dialogHead"><strong id="rawTitle">Raw Entry</strong><button id="closeRaw" type="button">Close</button></div><div id="rawContent" class="dialogBody"></div></dialog>
 </div>
 <script>
 (()=>{
@@ -235,7 +226,7 @@ const SECTION_LABELS={
   sceneLayers:'Scene Layers',extended:'Extended'
 };
 const INVENTORY_SECTIONS=new Set(['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']);
-const state={loadedTheme:null,theme:null,fileName:'',dirty:false,section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2,history:[],historyIndex:-1,importSession:null,remapSession:null,atlasSelections:new Map()};
+const state={loadedTheme:null,theme:null,fileName:'',dirty:false,section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2,history:[],historyIndex:-1,importSession:null,remapSession:null,atlasSelections:new Map(),inspector:null};
 
 const $=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -434,12 +425,13 @@ function recordHistory(section,key){
 }
 function applySelection(section,key,{record=true,clearQuery=true}={}){
   if(state.remapSession){if(!confirm('Discard the unfinished Resource remap? The theme has not been changed.'))return;state.remapSession=null}
+  state.inspector=null;closeRawInspector();closeMenus();
   stopAnimation();
   state.section=section;
   if(clearQuery){state.query='';$('search').value=''}
   state.key=key??null;state.animationIndex=0;state.previewZoom=defaultZoom(section);
   if(record)recordHistory(section,state.key);
-  renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();
+  renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();renderShell();
   const label=SECTION_LABELS[section]||titleCase(section);
   setStatus('info',state.key==null?label:`${label} · ${state.key}`);
 }
@@ -584,7 +576,7 @@ function renderResourceUsage(resourceId){
 }
 function renderResource(){
   const resource=currentValue();
-  return itemHero()+resourcePreviewHtml(resource,state.key)+renderResourceUsage(state.key)+`
+  return itemHero()+resourcePreviewHtml(resource,state.key)+`
     <div class="grid2"><section class="panel"><h2>Display</h2>${renderSimpleObject(resource.display||{})}</section>
     <section class="panel"><h2>Provenance</h2>${renderSimpleObject(resource.provenance||{})}</section></div>`;
 }
@@ -598,14 +590,13 @@ function atlasGrid(atlas){return ImportCore.gridFromAtlas(atlas)}
 function atlasDataSize(atlas){return atlas?.encoding==='base64'&&atlas?.data?Math.ceil(atlas.data.length*3/4):0}
 function renderAtlas(){
   const atlas=currentValue(),src=atlasSrc(atlas),members=atlasResources(state.key),grid=atlasGrid(atlas),session=atlasSession(state.key),size=atlas.imageSize||{};
-  return itemHero()+`<section class="panel atlasActions"><label>Atlas ID<input id="atlasRename" value="${escapeHtml(state.key)}"></label><button id="renameAtlas">Rename Atlas</button><button id="exportAtlas" ${src?'':'disabled'}>Export Atlas Image…</button><button id="remapResources" ${members.length?'':'disabled'}>Remap Resources…</button></section>
-    ${src?`${zoomControls()}<div class="zoomViewport" id="previewViewport"><div class="zoomStage" id="previewStage"><canvas id="atlasCanvas" aria-label="${escapeHtml(state.key)} atlas"></canvas><div id="atlasCandidates"></div><div id="atlasRegions"></div></div></div>`:'<div class="previewBox"><span class="muted">Atlas data is not inline base64.</span></div>'}
+  return itemHero()+`${src?`${zoomControls()}<div class="zoomViewport" id="previewViewport"><div class="zoomStage" id="previewStage"><canvas id="atlasCanvas" aria-label="${escapeHtml(state.key)} atlas"></canvas><div id="atlasCandidates"></div><div id="atlasRegions"></div></div></div>`:'<div class="previewBox"><span class="muted">Atlas data is not inline base64.</span></div>'}
     <div class="previewCaption"><span>${escapeHtml(atlas.sourceFile||'Source filename unavailable')}</span><span>${members.length} authoritative mapped resource${members.length===1?'':'s'}</span></div>
     <section class="panel"><h2>Authoring grid</h2><p class="muted">The grid is a selection aid. Changing it never changes existing Resource rectangles.</p><div class="atlasActions">${[
       {key:'cellW',label:'Cell width',min:1},{key:'cellH',label:'Cell height',min:1},{key:'offsetX',label:'X offset'},{key:'offsetY',label:'Y offset'},{key:'gutterX',label:'Horizontal gutter'},{key:'gutterY',label:'Vertical gutter'}
     ].map(spec=>`<label>${spec.label}<input type="number" min="${spec.min??0}" step="1" data-atlas-grid="${spec.key}" value="${grid[spec.key]}"></label>`).join('')}<label>Resource prefix<input id="atlasPrefix" value="${escapeHtml(session.prefix)}"></label><button id="clearAtlasSelection">Clear selection</button><button id="createAtlasResources" ${session.selection.size?'':'disabled'}>Create Resources from Selection</button><span id="atlasSelectionCount" class="selectionCount">${session.selection.size} selected</span></div></section>
     <section class="panel"><h2>Existing Resource regions</h2><div class="thumbGrid">${members.map(([key])=>resourceThumb(key)).join('')||'<span class="muted">No Resources map into this Atlas yet.</span>'}</div></section>
-    <section class="panel"><h2>Atlas metadata</h2><dl class="kv"><dt>Atlas ID</dt><dd class="mono">${escapeHtml(state.key)}</dd><dt>Source file</dt><dd>${escapeHtml(atlas.sourceFile||'—')}</dd><dt>Media type</dt><dd>${escapeHtml(atlas.mediaType||'—')}</dd><dt>Image dimensions</dt><dd id="atlasDimensions">${escapeHtml(`${size.w||'?'} × ${size.h||'?'}`)}</dd><dt>Mapped Resources</dt><dd>${members.length}</dd><dt>Embedded data</dt><dd>${atlasDataSize(atlas)?`Embedded base64 image · ${Math.ceil(atlasDataSize(atlas)/1024)} KB`:'Unavailable'}</dd></dl></section>`;
+    `;
 }
 function drawAtlas(){
   const atlas=currentValue(),canvas=$('atlasCanvas'),stage=$('previewStage'),regions=$('atlasRegions'),candidates=$('atlasCandidates'),img=getImage(state.key);if(!canvas||!stage||!regions||!candidates||!img)return;
@@ -627,9 +618,6 @@ function wireAtlasEditor(){
   $('atlasPrefix').oninput=event=>session.prefix=event.target.value;
   $('clearAtlasSelection').onclick=()=>{session.selection.clear();renderCenter()};
   $('createAtlasResources').onclick=()=>{try{const img=getImage(state.key),cells=ImportCore.gridCells(img.naturalWidth,img.naturalHeight,atlasGrid(atlas)),result=ImportCore.createResources(state.theme,state.key,cells,session.selection,$('atlasPrefix').value);state.theme=result.theme;session.selection.clear();setDirty(true);renderSections();renderItems();renderCenter();renderDetail();report('ok',`Created ${result.resourceIds.length} Resources from ${state.key}.`)}catch(error){report('error',error.message||error);alert(error.message||error)}};
-  $('renameAtlas').onclick=()=>{try{const oldId=state.key,result=ImportCore.renameAtlas(state.theme,oldId,$('atlasRename').value);state.theme=result.theme;if(result.dirty){const saved=state.atlasSelections.get(oldId);state.atlasSelections.delete(oldId);if(saved)state.atlasSelections.set(result.atlasId,saved);state.history=ImportCore.rewriteAtlasHistory(state.history,oldId,result.atlasId);state.key=result.atlasId;setDirty(true);renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();report('ok',`Renamed Atlas ${oldId} to ${result.atlasId}; Resource references were updated.`)}}catch(error){report('error',error.message||error);alert(error.message||error)}};
-  $('exportAtlas').onclick=()=>{const bytes=Uint8Array.from(atob(atlas.data),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:atlas.mediaType||'application/octet-stream'})),link=document.createElement('a'),ext=(atlas.mediaType||'image/png').split('/')[1].replace('jpeg','jpg');link.href=url;link.download=`${state.key}.${ext}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),0);report('ok',`Exported ${link.download}.`)};
-  $('remapResources').onclick=()=>beginResourceRemap(state.key);
 }
 function redrawZoomPreview(){
   const readout=document.querySelector('.zoomReadout');if(readout)readout.textContent=`${state.previewZoom}×`;
@@ -832,7 +820,7 @@ function wireRemapWorkspace(){
 }
 
 function renderCenter(){
-  const content=$('content');$('welcome').hidden=!!state.theme;content.hidden=!state.theme;
+  const content=$('content');$('welcome').hidden=!!state.theme;content.hidden=!state.theme;renderShell();
   if(!state.theme)return;
   if(state.importSession){content.innerHTML=renderImportWorkspace();wireImportWorkspace();return}
   if(state.remapSession){content.innerHTML=renderRemapWorkspace();wireRemapWorkspace();return}
@@ -859,31 +847,45 @@ function renderCenter(){
     $('nextFrame').onclick=()=>{const n=animationFrames(currentValue()).length;if(n){state.animationIndex=(state.animationIndex+1)%n;drawAnimationFrame()}};
   }
 }
+function inspectorRawValue(){
+  const value=state.key==null?(state.section==='overview'?{format:state.theme?.format,packVersion:state.theme?.packVersion,id:state.theme?.id,title:state.theme?.title}:state.theme?.[state.section]):currentValue();
+  if(state.section==='atlases'&&value){if(state.key!=null)return {...value,data:value.data?`Embedded base64 image · ${Math.ceil(atlasDataSize(value)/1024)} KB`:undefined};return Object.fromEntries(entries(value).map(([id,atlas])=>[id,{...atlas,data:atlas?.data?`Embedded base64 image · ${Math.ceil(atlasDataSize(atlas)/1024)} KB`:undefined}]))}return value;
+}
 function renderDetail(){
-  const root=$('detailScroll');
-  if(!state.theme){root.innerHTML='<div class="muted">Load a theme pack to inspect its references and raw data.</div>';return}
-  if(state.key==null){
-    let value=state.section==='overview'?{format:state.theme.format,packVersion:state.theme.packVersion,id:state.theme.id,title:state.theme.title}:state.theme[state.section];
-    if(state.section==='atlases')value=Object.fromEntries(entries(value).map(([id,atlas])=>[id,{...atlas,data:atlas?.data?`Embedded base64 image · ${Math.ceil(atlasDataSize(atlas)/1024)} KB`:undefined}]));
-    root.innerHTML=`<h2>${escapeHtml(state.section==='overview'?'Pack identity':SECTION_LABELS[state.section])}</h2><div class="raw"><pre>${escapeHtml(JSON.stringify(value,null,2))}</pre></div>`;
-    return;
+  const drawer=$('inspector'),root=$('inspectorScroll');
+  if(!state.inspector||!state.theme){drawer.hidden=true;return}
+  drawer.hidden=false;$('inspectorTitle').textContent=state.inspector==='references'?'References':'Details';
+  const value=currentValue();
+  if(state.inspector==='details'){
+    const details=state.key==null?inspectorRawValue():state.section==='resources'?{display:value?.display||{},provenance:value?.provenance||{}}:state.section==='atlases'?{sourceFile:value?.sourceFile||'—',mediaType:value?.mediaType||'—',imageSize:value?.imageSize||{},mappedResources:atlasResources(state.key).length,embeddedData:atlasDataSize(value)?`${Math.ceil(atlasDataSize(value)/1024)} KB`:'Unavailable'}:value;
+    root.innerHTML=`<h2>${escapeHtml(state.key||SECTION_LABELS[state.section]||'Pack identity')}</h2><section class="panel">${renderSimpleObject(details)}</section>`;return;
   }
-  const value=currentValue(),refs=refsIn(value),backs=backlinks(state.section,state.key),rawValue=state.section==='atlases'?{...value,data:value?.data?`Embedded base64 image · ${Math.ceil(atlasDataSize(value)/1024)} KB`:undefined}:value;
-  root.innerHTML=`<h2>References</h2>
-    <h3>Points to</h3>${refs.length?`<div class="linkList">${refs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
-    <h3>Referenced by</h3>${backs.length?`<div class="linkList">${backs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}
-    <h3>Raw entry</h3><div class="raw"><pre>${escapeHtml(JSON.stringify(rawValue,null,2))}</pre></div>`;
+  if(state.key==null){root.innerHTML='<p class="muted">Select an individual entry to inspect its semantic relationships.</p>';return}
+  const refs=refsIn(value),backs=backlinks(state.section,state.key);
+  root.innerHTML=`<h3>Points to</h3>${refs.length?`<div class="linkList">${refs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}<h3>Referenced by</h3>${backs.length?`<div class="linkList">${backs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}`;
   wireRefs(root);
 }
+function openInspector(kind){if(!state.theme)return;state.inspector=kind;renderDetail()}
+function closeInspector(){state.inspector=null;renderDetail()}
+function openRawInspector(){if(!state.theme)return;$('rawTitle').textContent=`Raw Entry — ${state.key||SECTION_LABELS[state.section]||'Theme'}`;$('rawContent').innerHTML=`<div class="raw"><pre>${escapeHtml(JSON.stringify(inspectorRawValue(),null,2))}</pre></div>`;$('rawDialog').showModal()}
+function closeRawInspector(){if($('rawDialog')?.open)$('rawDialog').close()}
+function closeMenus(){document.querySelectorAll('.menu.open').forEach(menu=>{menu.classList.remove('open');menu.querySelector('.menuTrigger')?.setAttribute('aria-expanded','false')})}
+function renderShell(){
+  const canInspect=!!state.theme;document.querySelectorAll('[data-inspector]').forEach(button=>button.disabled=!canInspect);$('rawEntryButton').disabled=!canInspect;
+  const atlasContext=state.section==='atlases'&&state.key!=null&&!state.importSession&&!state.remapSession;$('atlasMenu').hidden=!atlasContext;
+  if(atlasContext){const atlas=currentValue(),members=atlasResources(state.key);$('menuExportAtlas').disabled=!atlasSrc(atlas);$('menuRemapResources').disabled=!members.length}
+}
+function renameCurrentAtlas(){const oldId=state.key,newId=prompt('Rename Atlas',oldId);if(newId==null)return;try{const result=ImportCore.renameAtlas(state.theme,oldId,newId);state.theme=result.theme;if(result.dirty){const saved=state.atlasSelections.get(oldId);state.atlasSelections.delete(oldId);if(saved)state.atlasSelections.set(result.atlasId,saved);state.history=ImportCore.rewriteAtlasHistory(state.history,oldId,result.atlasId);state.key=result.atlasId;setDirty(true);renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();renderShell();report('ok',`Renamed Atlas ${oldId} to ${result.atlasId}; Resource references were updated.`)}}catch(error){report('error',error.message||error);alert(error.message||error)}}
+function exportCurrentAtlas(){const atlas=currentValue();if(!atlas?.data)return;const bytes=Uint8Array.from(atob(atlas.data),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:atlas.mediaType||'application/octet-stream'})),link=document.createElement('a'),ext=(atlas.mediaType||'image/png').split('/')[1].replace('jpeg','jpg');link.href=url;link.download=`${state.key}.${ext}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),0);report('ok',`Exported ${link.download}.`)}
 function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
   stopAnimation();
   const issues=validateTheme(theme);
-  state.loadedTheme=structuredClone(theme);state.theme=structuredClone(theme);state.fileName=fileName;state.dirty=false;state.importSession=null;state.remapSession=null;state.section='overview';state.key=null;state.query='';state.images.clear();state.atlasSelections.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
+  state.loadedTheme=structuredClone(theme);state.theme=structuredClone(theme);state.fileName=fileName;state.dirty=false;state.inspector=null;closeRawInspector();state.importSession=null;state.remapSession=null;state.section='overview';state.key=null;state.query='';state.images.clear();state.atlasSelections.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
   $('fileName').textContent=fileName;$('search').value='';renderHistoryNav();
   $('importButton').disabled=false;$('saveButton').disabled=false;setDirty(false);
   const status=$('status');status.className='badge '+(issues.length?'warn':'good');
   status.textContent=issues.length?`${issues.length} format warning${issues.length===1?'':'s'}`:'Reference pack v1';
-  renderSections();renderItems();renderCenter();renderDetail();
+  renderSections();renderItems();renderCenter();renderDetail();renderShell();
   if(issues.length){
     $('content').insertAdjacentHTML('afterbegin',`<div class="warning">${issues.map(escapeHtml).join('<br>')}</div>`);
     report('warn',`Loaded ${fileName} with ${issues.length} format warning${issues.length===1?'':'s'}.`);
@@ -924,6 +926,14 @@ function saveTheme(){
   setTimeout(()=>URL.revokeObjectURL(url),0);state.loadedTheme=structuredClone(state.theme);setDirty(false);report('ok',`Saved ${link.download}.`);
 }
 
+document.querySelectorAll('.menuTrigger').forEach(trigger=>trigger.onclick=event=>{event.stopPropagation();const menu=trigger.closest('.menu'),opening=!menu.classList.contains('open');closeMenus();if(opening){menu.classList.add('open');trigger.setAttribute('aria-expanded','true')}});
+$('menuBar').addEventListener('click',event=>{if(event.target.closest('[role="menuitem"]'))closeMenus()});
+document.addEventListener('click',event=>{if(!event.target.closest('.menu'))closeMenus()});
+document.querySelectorAll('[data-inspector]').forEach(button=>button.onclick=()=>openInspector(button.dataset.inspector));
+$('closeInspector').onclick=closeInspector;$('rawEntryButton').onclick=openRawInspector;$('closeRaw').onclick=closeRawInspector;$('rawDialog').addEventListener('click',event=>{if(event.target===$('rawDialog'))closeRawInspector()});
+$('menuLog').onclick=()=>toggleLog();
+$('menuRenameAtlas').onclick=renameCurrentAtlas;$('menuExportAtlas').onclick=exportCurrentAtlas;$('menuRemapResources').onclick=()=>beginResourceRemap(state.key);
+$('aboutButton').onclick=()=>alert('Theme Pack Workbench\nA standalone inspector and atlas-authoring workspace for LLMario theme packs.');
 $('loadButton').onclick=()=>$('fileInput').click();
 $('importButton').onclick=()=>$('sheetInput').click();
 $('saveButton').onclick=saveTheme;
@@ -933,15 +943,15 @@ $('sheetInput').onchange=event=>{const file=event.target.files?.[0];if(file)begi
 $('search').oninput=event=>{state.query=event.target.value;renderItems()};
 window.addEventListener('dragover',event=>event.preventDefault());
 window.addEventListener('drop',event=>{event.preventDefault();const file=event.dataTransfer?.files?.[0];if(file)loadFile(file)});
-window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveTheme()}});
+window.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenus();closeInspector();closeRawInspector()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveTheme()}});
 window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue=''}});
 $('historyBack').onclick=()=>historyGo(-1);
 $('historyForward').onclick=()=>historyGo(1);
 $('logButton').onclick=()=>toggleLog();
 $('closeLog').onclick=()=>toggleLog(false);
 $('clearLog').onclick=()=>{state.log.length=0;renderLog();setStatus('info','Log cleared.')};
-window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn,report,ImportCore,get workingTheme(){return state.theme},get dirty(){return state.dirty}};
-renderLog();
+window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn,report,ImportCore,get workingTheme(){return state.theme},get dirty(){return state.dirty},openInspector,closeInspector,openRawInspector,get selection(){return {section:state.section,key:state.key,historyIndex:state.historyIndex}}};
+renderLog();renderShell();
 })();
 </script>
 </body>

@@ -142,11 +142,13 @@ test('semantic navigation keeps global back-forward history and turns resources 
   assert.match(html,/RESOURCE_USAGE_ORDER=\['families','frameGroups','animations','constructions','objects','placeables','resources','parameterSchemas'\]/);
 });
 
-test('narrow layouts stack the detail inspector below the center instead of hiding it',()=>{
-  assert.match(html,/@media\(max-width:1000px\)\{[\s\S]*?#nav\{grid-row:1\/3\}[\s\S]*?#center\{grid-column:2;grid-row:1\}[\s\S]*?#detail\{grid-column:2;grid-row:2;display:flex/);
-  assert.doesNotMatch(html,/@media\(max-width:1000px\)\{[^}]*#detail\{display:none/);
-  assert.match(html,/@media\(max-width:720px\)\{[\s\S]*?#center\{grid-column:1;grid-row:1\}[\s\S]*?#detail\{grid-column:1;grid-row:2\}/);
+test('narrow layouts preserve navigation while transient inspectors overlay the workspace',()=>{
+  assert.match(html,/#layout\{[^}]*grid-template-columns:250px minmax\(360px,1fr\)/);
+  assert.match(html,/#inspector\{[^}]*position:absolute[^}]*right:0[^}]*bottom:0/);
+  assert.match(html,/@media\(max-width:720px\)\{[\s\S]*?#layout\{grid-template-columns:190px minmax\(300px,1fr\);overflow:auto\}[\s\S]*?#nav\{position:sticky/);
+  assert.doesNotMatch(html,/@media\(max-width:720px\)\{[^}]*#nav\{display:none/);
 });
+
 
 test('Atlas model supports persistent grids, resource creation, and atomic rename',()=>{
   const original={atlases:{map:{mediaType:'image/png',encoding:'base64',data:'AA',cellSize:{w:8,h:9}}},resources:{tile:{image:{atlas:'map',rect:{x:1,y:2,w:3,h:4}}}}};
@@ -208,10 +210,29 @@ test('Import Atlas is only a constructor; grid authoring lives in the persistent
 });
 
 test('every Atlas uses the persistent editor without exposing embedded payloads as normal metadata',()=>{
-  for(const text of ['Create Resources from Selection','Rename Atlas','Export Atlas Image…','Existing Resource regions','authoring.grid','sourceFile','imageSize'])assert.match(html,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  for(const text of ['Create Resources from Selection','Rename…','Export Image…','Existing Resource regions','authoring.grid','sourceFile','imageSize'])assert.match(html,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   assert.match(html,/resource\?\.image\?\.atlas===atlasId/);
-  assert.match(html,/rawValue=state.section==='atlases'/);
+  assert.match(html,/function inspectorRawValue\(\)/);
+  assert.match(html,/if\(state.section==='atlases'&&value\)/);
   assert.match(html,/Embedded base64 image/);
+});
+
+test('desktop menus advertise file, inspection, diagnostics, and contextual Atlas capabilities',()=>{
+  for(const label of ['File','View','Atlas','Help','Open Theme…','Save Theme…','Import Atlas…','Details…','References…','Raw Entry…','Log…'])assert.match(html,new RegExp(`>${label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}`));
+  assert.match(html,/id="atlasMenu" hidden/);
+  assert.match(html,/const atlasContext=state\.section==='atlases'&&state\.key!=null/);
+  assert.match(html,/aria-haspopup="menu" aria-expanded="false"/);
+  assert.doesNotMatch(html,/>Edit<|id="menuBack"|id="menuForward"/,'history stays in the persistent arrow controls until genuine Edit commands exist');
+  assert.match(html,/\$\('menuBar'\)\.addEventListener\('click',event=>\{if\(event\.target\.closest\('\[role="menuitem"\]'\)\)closeMenus\(\)\}\)/,'all menu commands dismiss through one delegated handler');
+});
+
+test('secondary information uses context-preserving drawer, modal, and diagnostics surfaces',()=>{
+  for(const id of ['inspector','inspectorScroll','rawDialog','rawContent','logPanel'])assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(html,/function openInspector\(kind\)/);
+  assert.match(html,/function closeInspector\(\)/);
+  assert.match(html,/function openRawInspector\(\)/);
+  assert.match(html,/state\.inspector=null;closeRawInspector\(\);closeMenus\(\);[\s\S]*state\.section=section/,'navigation dismisses transient aids before changing selection');
+  assert.doesNotMatch(html,/id="detail"/);
 });
 
 test('every inline workbench script is syntactically valid JavaScript',()=>{
