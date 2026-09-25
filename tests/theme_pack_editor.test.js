@@ -166,6 +166,39 @@ test('Atlas rename rewrites every matching navigation-history destination',()=>{
   assert.match(html,/state\.history=ImportCore\.rewriteAtlasHistory\(state\.history,oldId,result\.atlasId\)/);
 });
 
+test('Resource remapping is transactional and preserves stable identities and metadata',()=>{
+  const original={atlases:{old:{},replacement:{}},resources:{
+    'player.run.1':{image:{atlas:'old',rect:{x:0,y:0,w:16,h:16}},display:{w:20},role:'player',provenance:{author:'keep'}},
+    'player.run.2':{image:{atlas:'old',rect:{x:16,y:0,w:16,h:16}},kind:'sprite'},
+    untouched:{image:{atlas:'old',rect:{x:32,y:0,w:16,h:16}}}
+  },animations:{run:{frames:[{resource:'player.run.1'},{resource:'player.run.2'}]}}};
+  const before=JSON.stringify(original),cells=ImportCore.gridCells(32,16,{cellW:16,cellH:16});
+  const assignments=ImportCore.pairRemap(['player.run.1','player.run.2'],cells,['r0c1','r0c0']);
+  assert.equal(JSON.stringify(original),before,'draft pairing does not mutate the theme');
+  const result=ImportCore.applyRemap(original,'replacement',['player.run.1','player.run.2'],assignments);
+  assert.deepEqual({...result.theme.resources['player.run.1'].image.rect},{x:16,y:0,w:16,h:16});
+  assert.equal(result.theme.resources['player.run.1'].image.atlas,'replacement');
+  assert.deepEqual(JSON.parse(JSON.stringify(result.theme.resources['player.run.1'].provenance)),{author:'keep'});
+  assert.equal(result.theme.resources.untouched.image.atlas,'old','resources outside the explicit scope stay untouched');
+  assert.deepEqual(JSON.parse(JSON.stringify(result.theme.animations)),original.animations,'higher-level references stay byte-for-byte equivalent');
+  assert.deepEqual(Object.keys(result.theme.resources),Object.keys(original.resources),'no Resource is created or renamed');
+  assert.equal(JSON.stringify(original),before,'apply returns a detached atomic document');
+});
+
+test('Resource remapping requires complete unique assignments',()=>{
+  const theme={atlases:{old:{},replacement:{}},resources:{a:{image:{atlas:'old',rect:{x:0,y:0,w:8,h:8}}},b:{image:{atlas:'old',rect:{x:8,y:0,w:8,h:8}}}}};
+  assert.throws(()=>ImportCore.applyRemap(theme,'replacement',['a','b'],new Map([['a',{x:0,y:0,w:8,h:8}]])),/not mapped: b/);
+  assert.throws(()=>ImportCore.applyRemap(theme,'replacement',['a','b'],new Map([['a',{x:0,y:0,w:8,h:8}],['b',{x:0,y:0,w:8,h:8}]])),/assigned more than once/);
+  assert.throws(()=>ImportCore.pairRemap(['a','b'],[{id:'r0c0',x:0,y:0,w:8,h:8}],['r0c0']),/needs 2 selected regions/);
+});
+
+test('Atlas editor exposes visual scoped remapping and review-before-apply',()=>{
+  for(const text of ['Remap Resources…','Destination Atlas:','Pair by order','Back to Mapping','Apply Remap','Click a destination cell to assign and advance.'])assert.match(html,new RegExp(text));
+  assert.match(html,/resource\?\.image\?\.atlas===atlasId/,'scope derives from authoritative Resource image bindings');
+  assert.match(html,/state\.theme=result\.theme;state\.remapSession=null;setDirty\(true\)/,'only Apply commits and dirties the theme');
+  assert.match(html,/Resource identities and semantic references were preserved/);
+});
+
 test('Import Atlas is only a constructor; grid authoring lives in the persistent Atlas editor',()=>{
   const workspace=html.match(/function renderImportWorkspace\(\)\{[\s\S]*?\n\}/)?.[0]||'';
   assert.match(workspace,/Atlas ID/);
