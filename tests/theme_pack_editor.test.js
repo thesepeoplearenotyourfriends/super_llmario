@@ -68,8 +68,8 @@ test('editing grid geometry clears selection and synchronizes persistent Atlas c
   assert.equal(transaction.settings.cellW,32);
   assert.equal(transaction.selection.size,0);
   assert.equal(transaction.cells.length,0);
-  assert.match(html,/session\.selection\.clear\(\);setDirty\(true\);renderCenter\(\)/);
-  assert.match(html,/id=\"atlasSelectionCount\" class=\"selectionCount\"/);
+  assert.match(html,/session\.gridSelection\.clear\(\);recordEdit\('Change Atlas Grid'\);renderCenter\(\)/);
+  assert.match(html,/session=\{gridSelection:new Set\(\),selectedRegions:new Set\(\),activeRegion:null/);
 });
 
 test('resource creation is row-major and continues after existing IDs without overwriting',()=>{
@@ -196,7 +196,7 @@ test('Resource remapping requires complete unique assignments',()=>{
 test('Atlas editor exposes visual scoped remapping and review-before-apply',()=>{
   for(const text of ['Remap Resources…','Destination Atlas:','Pair by order','Back to Mapping','Apply Remap','to assign and advance.'])assert.match(html,new RegExp(text));
   assert.match(html,/resource\?\.image\?\.atlas===atlasId/,'scope derives from authoritative Resource image bindings');
-  assert.match(html,/state\.theme=result\.theme;state\.remapSession=null;setDirty\(true\)/,'only Apply commits and dirties the theme');
+  assert.match(html,/state\.theme=result\.theme;state\.remapSession=null;recordEdit\('Apply Resource Remap'\)/,'only Apply commits and dirties the theme');
   assert.match(html,/Resource identities and semantic references were preserved/);
 });
 
@@ -209,7 +209,7 @@ test('Import Atlas is only a constructor; grid authoring lives in the persistent
 });
 
 test('every Atlas uses the persistent editor without exposing embedded payloads as normal metadata',()=>{
-  for(const text of ['Create Resources from Selection','Rename…','Export Image…','Existing Resource regions','authoring.grid','sourceFile','imageSize'])assert.match(html,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  for(const text of ['Create Resources from Grid Selection','Rename…','Export Image…','Existing Resource regions','authoring.grid','sourceFile','imageSize'])assert.match(html,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   assert.match(html,/resource\?\.image\?\.atlas===atlasId/);
   assert.match(html,/function inspectorRawValue\(\)/);
   assert.match(html,/if\(state.section==='atlases'&&value\)/);
@@ -217,11 +217,12 @@ test('every Atlas uses the persistent editor without exposing embedded payloads 
 });
 
 test('desktop menus advertise file, inspection, diagnostics, and contextual Atlas capabilities',()=>{
-  for(const label of ['File','View','Atlas','Help','Open Theme…','Save Theme…','Import Atlas…','Details…','References…','Raw Entry…','Log…'])assert.match(html,new RegExp(`>${label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}`));
+  for(const label of ['File','Edit','View','Atlas','Help','Open Theme…','Save Theme…','Import Atlas…','Details…','References…','Raw Entry…','Log…'])assert.match(html,new RegExp(`>${label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}`));
   assert.match(html,/id="atlasMenu" hidden/);
   assert.match(html,/const atlasContext=state\.section==='atlases'&&state\.key!=null/);
   assert.match(html,/aria-haspopup="menu" aria-expanded="false"/);
-  assert.doesNotMatch(html,/>Edit<|id="menuBack"|id="menuForward"/,'history stays in the persistent arrow controls until genuine Edit commands exist');
+  assert.match(html,/id="undoEdit"[\s\S]*Ctrl\+Z/);
+  assert.match(html,/id="redoEdit"[\s\S]*Ctrl\+Shift\+Z/);
   assert.match(html,/\$\('menuBar'\)\.addEventListener\('click',event=>\{if\(event\.target\.closest\('\[role="menuitem"\]'\)\)closeMenus\(\)\}\)/,'all menu commands dismiss through one delegated handler');
 });
 
@@ -234,16 +235,17 @@ test('secondary information uses context-preserving drawer, modal, and diagnosti
   assert.doesNotMatch(html,/id="detail"/);
 });
 
-test('layout selects a primary recipe while alternate helpers stay collapsed',()=>{
-  assert.match(html,/layout==='regular'.*Regular grid workflow/);
-  assert.match(html,/layout==='loose'.*Loose Region workflow/);
-  assert.match(html,/layout==='irregular'.*Irregular Region workflow/);
-  assert.match(html,/<details class="panel"><summary><b>All tools<\/b>/);
+test('layout helpers distinguish repeating cells from rows and columns',()=>{
+  assert.match(html,/layout==='regular'.*Regular grid/);
+  assert.match(html,/layout==='loose'.*Split into Rows \/ Columns/);
+  assert.match(html,/id="regionColumns"[\s\S]*id="regionRows"[\s\S]*Split into Rows \/ Columns/);
+  assert.doesNotMatch(html,/All tools · alternate helpers|repeating grid is primary/);
 });
 
 test('Atlas import requires an explicit visible layout choice',()=>{
   assert.match(html,/id="importLayout"/);
-  assert.match(html,/Origin and filename do not determine layout/);
+  for(const text of ['One repeating grid across the whole image.','Frames follow rough rows or columns','Frames have arbitrary positions and sizes.'])assert.match(html,new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.doesNotMatch(html,/Origin and filename do not determine layout/);
   assert.match(html,/layout:''/);
   assert.doesNotMatch(html,/layout:'loose'/);
 });
@@ -257,10 +259,11 @@ test('Regions support direct drawing, moving, resizing, and pixel color picking'
   assert.doesNotMatch(html,/Exact edge-connected background color/);
 });
 
-test('normalization never repacks beneath authoritative Resource rectangles',()=>{
-  assert.match(html,/newId=members\.length\?suggestedId\(sourceId\+'\.packed'/);
-  assert.match(html,/existing mappings will remain untouched/);
-  assert.doesNotMatch(html,/members\.length===regions\.length/);
+test('packing is an explicit selection extract that preserves the source Atlas',()=>{
+  assert.match(html,/Extract \/ Pack Selection/);
+  assert.match(html,/newId=suggestedId\(sourceId\+'\.extract'/);
+  assert.match(html,/source Atlas and its imagery remain unchanged/);
+  assert.doesNotMatch(html,/Normalize \/ Pack/);
 });
 
 test('destination-first replacement prefers authored Regions over grid cells',()=>{
@@ -268,10 +271,62 @@ test('destination-first replacement prefers authored Regions over grid cells',()
 });
 
 test('authoring overlays follow the active interaction mode',()=>{
-  assert.match(html,/const gridActive=atlas\.layout==='regular'\|\|session\.gridActive===true/);
+  assert.match(html,/const gridActive=!\(atlas\.authoring\?\.regions\|\|\[\]\)\.length&&\(atlas\.layout==='regular'\|\|session\.gridActive===true\)/);
   assert.match(html,/candidates\.style\.pointerEvents=gridActive&&!session\.tool\?'auto':'none'/);
   assert.match(html,/regions\.style\.pointerEvents=session\.tool\?'none':'auto'/);
   assert.match(html,/data-activate-grid/);
+});
+
+test('authored Regions have batch selection, direct Resource creation, sticky tools, and edit history',()=>{
+  assert.match(html,/selectedRegions:new Set\(\),activeRegion:null/);
+  assert.match(html,/e\.ctrlKey\|\|e\.metaKey/);
+  assert.match(html,/createSelectedResources\(false\)/);
+  assert.match(html,/selectedAuthoringRegions/);
+  assert.match(html,/position:sticky/);
+  assert.match(html,/function recordEdit\(label\)/);
+  assert.match(html,/restoreEdit\(event\.shiftKey\?1:-1\)/);
+});
+
+test('remap review thumbnails reopen one assignment without clearing it',()=>{
+  assert.match(html,/data-reassign/);
+  assert.match(html,/s\.activeId=button\.dataset\.reassign;s\.review=false/);
+  assert.doesNotMatch(html,/data-reassign[^}]+assignments\.delete/);
+});
+
+
+test('sticky Atlas zoom controls use the established zoom event contract',()=>{
+  assert.match(html,/data-zoom="-1"/);
+  assert.match(html,/data-zoom="1"/);
+  assert.match(html,/data-zoom-value="1"/);
+  assert.match(html,/data-zoom-fit/);
+  assert.doesNotMatch(html,/data-zoom="(?:out|in|actual|fit)"/);
+});
+
+test('grid selection synchronizes its persistent Resource action without rebuilding the workspace',()=>{
+  assert.match(html,/id="createGridResources"[^>]*disabled/);
+  assert.match(html,/id="gridSelectionCount"/);
+  assert.match(html,/function syncGridSelectionUi\(session\)/);
+  assert.match(html,/classList\.toggle\('selected',[^;]+;syncGridSelectionUi\(session\)/);
+});
+
+test('edit restore reconciles deleted navigation targets and tracks saved snapshots by identity',()=>{
+  assert.match(html,/function reconcileSelectionAfterRestore\(\)/);
+  assert.match(html,/resolveSelection\(state\.section,state\.key\)/);
+  assert.match(html,/savedEditId/);
+  assert.match(html,/newEditEntry\(label\)/);
+  assert.doesNotMatch(html,/savedEditIndex/);
+});
+
+test('navigation defensively resolves stale keyed history destinations',()=>{
+  assert.match(html,/function resolveSelection\(section,key\)/);
+  assert.match(html,/Object\.hasOwn\(values,key\)/);
+  assert.match(html,/\(\{section,key\}=resolveSelection\(section,key\)\)/);
+  assert.match(html,/applySelection\(entry\.section,entry\.key,\{record:false/);
+});
+
+test('global mutation undo leaves native field undo intact',()=>{
+  assert.match(html,/closest\?\.\('input,textarea'\)/);
+  assert.match(html,/!event\.target\.isContentEditable/);
 });
 
 test('Fit zoom never exceeds the mathematical viewport ratio',()=>{
