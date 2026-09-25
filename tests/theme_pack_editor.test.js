@@ -267,6 +267,21 @@ test('destination-first replacement prefers authored Regions over grid cells',()
   assert.match(html,/if\(regions\?\.length\)return regions\.map/);
 });
 
+test('authoring overlays follow the active interaction mode',()=>{
+  assert.match(html,/const gridActive=atlas\.layout==='regular'\|\|session\.gridActive===true/);
+  assert.match(html,/candidates\.style\.pointerEvents=gridActive&&!session\.tool\?'auto':'none'/);
+  assert.match(html,/regions\.style\.pointerEvents=session\.tool\?'none':'auto'/);
+  assert.match(html,/data-activate-grid/);
+});
+
+test('Fit zoom never exceeds the mathematical viewport ratio',()=>{
+  const ratio=ImportCore.fitZoom(1600,970,701,441);
+  assert.equal(ratio,Math.min(701/1600,441/970));
+  assert.ok(1600*ratio<=701+Number.EPSILON);
+  assert.ok(970*ratio<=441+Number.EPSILON);
+  assert.equal(ImportCore.fitZoom(16000,9700,500,300),300/9700,'Fit may go below 1/16 when required');
+});
+
 test('every inline workbench script is syntactically valid JavaScript',()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'llmario-theme-editor-'));
   try{

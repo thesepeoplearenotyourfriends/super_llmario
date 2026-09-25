@@ -9,6 +9,8 @@ const theme = JSON.parse(fs.readFileSync('themes/theme_marioai_reference_pack.ll
 assert(newEditor.includes('placeables → object → visuals'), 'editor documents its native resolution path');
 assert(newEditor.includes('Contract gaps needed by a preview'), 'editor reports contract gaps');
 assert(!/\bfetch\s*\(|XMLHttpRequest|import\s*\(/.test(newEditor), 'standalone editor has no runtime repository dependency');
+assert(/state\.theme=theme;state\.mapFileHandle=null;state\.mapFileName='reference-map\.llmmap\.txt';/.test(newEditor), 'loading a theme resets the map to an explicit first-save destination state');
+assert(/state\.history\.reset\(documentState\(\)\);state\.mapFileHandle=null;state\.mapFileName=file\.name;/.test(newEditor), 'opening a map also requires a first-save destination choice while preserving its suggested name');
 assert.strictEqual(theme.format, 'llmario-theme-pack-reference');
 assert(Object.keys(theme.placeables).length > 0, 'reference theme declares a palette');
 assert.deepStrictEqual(theme.sceneLayers, ['sky','background','world','actors','foreground']);
