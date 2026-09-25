@@ -68,9 +68,8 @@ test('editing grid geometry clears selection and synchronizes persistent Atlas c
   assert.equal(transaction.settings.cellW,32);
   assert.equal(transaction.selection.size,0);
   assert.equal(transaction.cells.length,0);
-  assert.match(html,/session\.selection\.clear\(\);syncSelectionUi\(\);setDirty\(true\);drawAtlas\(\)/);
-  assert.match(html,/count\.textContent=`\$\{session\.selection\.size\} selected`/);
-  assert.match(html,/create\.disabled=!session\.selection\.size/);
+  assert.match(html,/session\.selection\.clear\(\);setDirty\(true\);renderCenter\(\)/);
+  assert.match(html,/id=\"atlasSelectionCount\" class=\"selectionCount\"/);
 });
 
 test('resource creation is row-major and continues after existing IDs without overwriting',()=>{
@@ -195,7 +194,7 @@ test('Resource remapping requires complete unique assignments',()=>{
 });
 
 test('Atlas editor exposes visual scoped remapping and review-before-apply',()=>{
-  for(const text of ['Remap Resources…','Destination Atlas:','Pair by order','Back to Mapping','Apply Remap','Click a destination cell to assign and advance.'])assert.match(html,new RegExp(text));
+  for(const text of ['Remap Resources…','Destination Atlas:','Pair by order','Back to Mapping','Apply Remap','to assign and advance.'])assert.match(html,new RegExp(text));
   assert.match(html,/resource\?\.image\?\.atlas===atlasId/,'scope derives from authoritative Resource image bindings');
   assert.match(html,/state\.theme=result\.theme;state\.remapSession=null;setDirty\(true\)/,'only Apply commits and dirties the theme');
   assert.match(html,/Resource identities and semantic references were preserved/);
@@ -233,6 +232,39 @@ test('secondary information uses context-preserving drawer, modal, and diagnosti
   assert.match(html,/function openRawInspector\(\)/);
   assert.match(html,/state\.inspector=null;closeRawInspector\(\);closeMenus\(\);[\s\S]*state\.section=section/,'navigation dismisses transient aids before changing selection');
   assert.doesNotMatch(html,/id="detail"/);
+});
+
+test('layout selects a primary recipe while alternate helpers stay collapsed',()=>{
+  assert.match(html,/layout==='regular'.*Regular grid workflow/);
+  assert.match(html,/layout==='loose'.*Loose Region workflow/);
+  assert.match(html,/layout==='irregular'.*Irregular Region workflow/);
+  assert.match(html,/<details class="panel"><summary><b>All tools<\/b>/);
+});
+
+test('Atlas import requires an explicit visible layout choice',()=>{
+  assert.match(html,/id="importLayout"/);
+  assert.match(html,/Origin and filename do not determine layout/);
+  assert.match(html,/layout:''/);
+  assert.doesNotMatch(html,/layout:'loose'/);
+});
+
+test('Regions support direct drawing, moving, resizing, and pixel color picking',()=>{
+  assert.match(html,/function wireRegionPointerEditing/);
+  assert.match(html,/session\.tool!=='draw'/);
+  assert.match(html,/resize=rect\.right-e\.clientX<12/);
+  assert.match(html,/getImageData\(p\.x,p\.y,1,1\)/);
+  assert.doesNotMatch(html,/prompt\('Region x, y, width, height'/);
+  assert.doesNotMatch(html,/Exact edge-connected background color/);
+});
+
+test('normalization never repacks beneath authoritative Resource rectangles',()=>{
+  assert.match(html,/newId=members\.length\?suggestedId\(sourceId\+'\.packed'/);
+  assert.match(html,/existing mappings will remain untouched/);
+  assert.doesNotMatch(html,/members\.length===regions\.length/);
+});
+
+test('destination-first replacement prefers authored Regions over grid cells',()=>{
+  assert.match(html,/if\(regions\?\.length\)return regions\.map/);
 });
 
 test('every inline workbench script is syntactically valid JavaScript',()=>{
