@@ -293,6 +293,36 @@ test('remap review thumbnails reopen one assignment without clearing it',()=>{
   assert.doesNotMatch(html,/data-reassign[^}]+assignments\.delete/);
 });
 
+
+test('sticky Atlas zoom controls use the established zoom event contract',()=>{
+  assert.match(html,/data-zoom="-1"/);
+  assert.match(html,/data-zoom="1"/);
+  assert.match(html,/data-zoom-value="1"/);
+  assert.match(html,/data-zoom-fit/);
+  assert.doesNotMatch(html,/data-zoom="(?:out|in|actual|fit)"/);
+});
+
+test('grid selection synchronizes its persistent Resource action without rebuilding the workspace',()=>{
+  assert.match(html,/id="createGridResources"[^>]*disabled/);
+  assert.match(html,/id="gridSelectionCount"/);
+  assert.match(html,/function syncGridSelectionUi\(session\)/);
+  assert.match(html,/classList\.toggle\('selected',[^;]+;syncGridSelectionUi\(session\)/);
+});
+
+test('edit restore reconciles deleted navigation targets and tracks saved snapshots by identity',()=>{
+  assert.match(html,/function reconcileSelectionAfterRestore\(\)/);
+  assert.match(html,/!Object\.hasOwn\(dict\(state\.theme\?\.\[state\.section\]\),state\.key\)/);
+  assert.match(html,/state\.key=siblings\[0\]\?\?null/);
+  assert.match(html,/savedEditId/);
+  assert.match(html,/newEditEntry\(label\)/);
+  assert.doesNotMatch(html,/savedEditIndex/);
+});
+
+test('global mutation undo leaves native field undo intact',()=>{
+  assert.match(html,/closest\?\.\('input,textarea'\)/);
+  assert.match(html,/!event\.target\.isContentEditable/);
+});
+
 test('Fit zoom never exceeds the mathematical viewport ratio',()=>{
   const ratio=ImportCore.fitZoom(1600,970,701,441);
   assert.equal(ratio,Math.min(701/1600,441/970));
