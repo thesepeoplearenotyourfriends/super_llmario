@@ -179,7 +179,6 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
   </div>
   <nav id="menuBar" class="menuBar" aria-label="Application menu">
     <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">File</button><div class="menuPopup" role="menu"><button id="loadButton" role="menuitem">Open Theme… <kbd>Ctrl+O</kbd></button><button id="saveButton" role="menuitem" disabled>Save Theme… <kbd>Ctrl+S</kbd></button><div class="menuSep"></div><button id="importButton" role="menuitem" disabled>Import Atlas…</button></div></div>
-    <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Edit</button><div class="menuPopup" role="menu"><button id="menuBack" role="menuitem" disabled>Back <kbd>Alt+←</kbd></button><button id="menuForward" role="menuitem" disabled>Forward <kbd>Alt+→</kbd></button></div></div>
     <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">View</button><div class="menuPopup" role="menu"><button data-inspector="details" role="menuitem" disabled>Details…</button><button data-inspector="references" role="menuitem" disabled>References…</button><button id="rawEntryButton" role="menuitem" disabled>Raw Entry…</button><button id="menuLog" role="menuitem">Log…</button></div></div>
     <div class="menu" id="atlasMenu" hidden><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Atlas</button><div class="menuPopup" role="menu"><button id="menuRenameAtlas" role="menuitem">Rename…</button><button id="menuExportAtlas" role="menuitem">Export Image…</button><button id="menuRemapResources" role="menuitem">Remap Resources…</button></div></div>
     <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Help</button><div class="menuPopup" role="menu"><button id="aboutButton" role="menuitem">About Workbench</button></div></div>
@@ -866,15 +865,14 @@ function renderDetail(){
   root.innerHTML=`<h3>Points to</h3>${refs.length?`<div class="linkList">${refs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}<h3>Referenced by</h3>${backs.length?`<div class="linkList">${backs.map(ref=>`<div class="linkRow"><span class="type">${escapeHtml(ref.section)}</span>${refButton(ref.section,ref.key,ref.key)}</div>`).join('')}</div>`:'<div class="muted">None detected.</div>'}`;
   wireRefs(root);
 }
-function openInspector(kind){if(!state.theme)return;state.inspector=kind;renderDetail();closeMenus()}
+function openInspector(kind){if(!state.theme)return;state.inspector=kind;renderDetail()}
 function closeInspector(){state.inspector=null;renderDetail()}
-function openRawInspector(){if(!state.theme)return;$('rawTitle').textContent=`Raw Entry — ${state.key||SECTION_LABELS[state.section]||'Theme'}`;$('rawContent').innerHTML=`<div class="raw"><pre>${escapeHtml(JSON.stringify(inspectorRawValue(),null,2))}</pre></div>`;$('rawDialog').showModal();closeMenus()}
+function openRawInspector(){if(!state.theme)return;$('rawTitle').textContent=`Raw Entry — ${state.key||SECTION_LABELS[state.section]||'Theme'}`;$('rawContent').innerHTML=`<div class="raw"><pre>${escapeHtml(JSON.stringify(inspectorRawValue(),null,2))}</pre></div>`;$('rawDialog').showModal()}
 function closeRawInspector(){if($('rawDialog')?.open)$('rawDialog').close()}
 function closeMenus(){document.querySelectorAll('.menu.open').forEach(menu=>{menu.classList.remove('open');menu.querySelector('.menuTrigger')?.setAttribute('aria-expanded','false')})}
 function renderShell(){
   const canInspect=!!state.theme;document.querySelectorAll('[data-inspector]').forEach(button=>button.disabled=!canInspect);$('rawEntryButton').disabled=!canInspect;
   const atlasContext=state.section==='atlases'&&state.key!=null&&!state.importSession&&!state.remapSession;$('atlasMenu').hidden=!atlasContext;
-  $('menuBack').disabled=state.historyIndex<=0;$('menuForward').disabled=state.historyIndex<0||state.historyIndex>=state.history.length-1;
   if(atlasContext){const atlas=currentValue(),members=atlasResources(state.key);$('menuExportAtlas').disabled=!atlasSrc(atlas);$('menuRemapResources').disabled=!members.length}
 }
 function renameCurrentAtlas(){const oldId=state.key,newId=prompt('Rename Atlas',oldId);if(newId==null)return;try{const result=ImportCore.renameAtlas(state.theme,oldId,newId);state.theme=result.theme;if(result.dirty){const saved=state.atlasSelections.get(oldId);state.atlasSelections.delete(oldId);if(saved)state.atlasSelections.set(result.atlasId,saved);state.history=ImportCore.rewriteAtlasHistory(state.history,oldId,result.atlasId);state.key=result.atlasId;setDirty(true);renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();renderShell();report('ok',`Renamed Atlas ${oldId} to ${result.atlasId}; Resource references were updated.`)}}catch(error){report('error',error.message||error);alert(error.message||error)}}
@@ -929,12 +927,13 @@ function saveTheme(){
 }
 
 document.querySelectorAll('.menuTrigger').forEach(trigger=>trigger.onclick=event=>{event.stopPropagation();const menu=trigger.closest('.menu'),opening=!menu.classList.contains('open');closeMenus();if(opening){menu.classList.add('open');trigger.setAttribute('aria-expanded','true')}});
+$('menuBar').addEventListener('click',event=>{if(event.target.closest('[role="menuitem"]'))closeMenus()});
 document.addEventListener('click',event=>{if(!event.target.closest('.menu'))closeMenus()});
 document.querySelectorAll('[data-inspector]').forEach(button=>button.onclick=()=>openInspector(button.dataset.inspector));
 $('closeInspector').onclick=closeInspector;$('rawEntryButton').onclick=openRawInspector;$('closeRaw').onclick=closeRawInspector;$('rawDialog').addEventListener('click',event=>{if(event.target===$('rawDialog'))closeRawInspector()});
-$('menuLog').onclick=()=>toggleLog();$('menuBack').onclick=()=>historyGo(-1);$('menuForward').onclick=()=>historyGo(1);
+$('menuLog').onclick=()=>toggleLog();
 $('menuRenameAtlas').onclick=renameCurrentAtlas;$('menuExportAtlas').onclick=exportCurrentAtlas;$('menuRemapResources').onclick=()=>beginResourceRemap(state.key);
-$('aboutButton').onclick=()=>{closeMenus();alert('Theme Pack Workbench\nA standalone inspector and atlas-authoring workspace for LLMario theme packs.')};
+$('aboutButton').onclick=()=>alert('Theme Pack Workbench\nA standalone inspector and atlas-authoring workspace for LLMario theme packs.');
 $('loadButton').onclick=()=>$('fileInput').click();
 $('importButton').onclick=()=>$('sheetInput').click();
 $('saveButton').onclick=saveTheme;

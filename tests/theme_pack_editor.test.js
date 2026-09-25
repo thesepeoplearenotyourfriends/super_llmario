@@ -218,10 +218,12 @@ test('every Atlas uses the persistent editor without exposing embedded payloads 
 });
 
 test('desktop menus advertise file, inspection, diagnostics, and contextual Atlas capabilities',()=>{
-  for(const label of ['File','Edit','View','Atlas','Help','Open Theme…','Save Theme…','Import Atlas…','Details…','References…','Raw Entry…','Log…'])assert.match(html,new RegExp(`>${label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}`));
+  for(const label of ['File','View','Atlas','Help','Open Theme…','Save Theme…','Import Atlas…','Details…','References…','Raw Entry…','Log…'])assert.match(html,new RegExp(`>${label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}`));
   assert.match(html,/id="atlasMenu" hidden/);
   assert.match(html,/const atlasContext=state\.section==='atlases'&&state\.key!=null/);
   assert.match(html,/aria-haspopup="menu" aria-expanded="false"/);
+  assert.doesNotMatch(html,/>Edit<|id="menuBack"|id="menuForward"/,'history stays in the persistent arrow controls until genuine Edit commands exist');
+  assert.match(html,/\$\('menuBar'\)\.addEventListener\('click',event=>\{if\(event\.target\.closest\('\[role="menuitem"\]'\)\)closeMenus\(\)\}\)/,'all menu commands dismiss through one delegated handler');
 });
 
 test('secondary information uses context-preserving drawer, modal, and diagnostics surfaces',()=>{
