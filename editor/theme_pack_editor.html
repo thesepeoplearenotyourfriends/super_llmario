@@ -178,9 +178,9 @@ pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.45 var(--mo
     <span id="status" class="badge">No theme loaded</span><span id="fileName"></span><span id="dirtyMark" hidden title="Unsaved changes">●</span>
   </div>
   <nav id="menuBar" class="menuBar" aria-label="Application menu">
-    <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">File</button><div class="menuPopup" role="menu"><button id="loadButton" role="menuitem">Open Theme… <kbd>Ctrl+O</kbd></button><button id="saveButton" role="menuitem" disabled>Save Theme… <kbd>Ctrl+S</kbd></button><div class="menuSep"></div><button id="importButton" role="menuitem" disabled>Import Atlas…</button></div></div>
+    <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">File</button><div class="menuPopup" role="menu"><button id="loadButton" role="menuitem">Open Theme… <kbd>Ctrl+O</kbd></button><button id="saveButton" role="menuitem" disabled>Save Theme… <kbd>Ctrl+S</kbd></button><button id="saveAsButton" role="menuitem" disabled>Save As… <kbd>Ctrl+Shift+S</kbd></button><div class="menuSep"></div><button id="importButton" role="menuitem" disabled>Import Atlas…</button></div></div>
     <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">View</button><div class="menuPopup" role="menu"><button data-inspector="details" role="menuitem" disabled>Details…</button><button data-inspector="references" role="menuitem" disabled>References…</button><button id="rawEntryButton" role="menuitem" disabled>Raw Entry…</button><button id="menuLog" role="menuitem">Log…</button></div></div>
-    <div class="menu" id="atlasMenu" hidden><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Atlas</button><div class="menuPopup" role="menu"><button id="menuRenameAtlas" role="menuitem">Rename…</button><button id="menuExportAtlas" role="menuitem">Export Image…</button><button id="menuRemapResources" role="menuitem">Remap Resources…</button></div></div>
+    <div class="menu" id="atlasMenu" hidden><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Atlas</button><div class="menuPopup" role="menu"><button id="menuRenameAtlas" role="menuitem">Rename…</button><button id="menuExportAtlas" role="menuitem">Export Image…</button><button id="menuRemapResources" role="menuitem" title="Remap Resources… destination-first">Replace Existing Resources…</button></div></div>
     <div class="menu"><button class="menuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">Help</button><div class="menuPopup" role="menu"><button id="aboutButton" role="menuitem">About Workbench</button></div></div>
   </nav>
   <input id="fileInput" type="file" accept=".llmtheme,.txt,.json,application/json,text/plain" hidden><input id="sheetInput" type="file" accept="image/png,image/webp,image/jpeg,.png,.webp,.jpg,.jpeg" hidden>
@@ -226,7 +226,7 @@ const SECTION_LABELS={
   sceneLayers:'Scene Layers',extended:'Extended'
 };
 const INVENTORY_SECTIONS=new Set(['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables','frameGroups']);
-const state={loadedTheme:null,theme:null,fileName:'',dirty:false,section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2,history:[],historyIndex:-1,importSession:null,remapSession:null,atlasSelections:new Map(),inspector:null};
+const state={loadedTheme:null,theme:null,fileName:'',fileHandle:null,dirty:false,section:'overview',key:null,query:'',images:new Map(),animationTimer:0,animationIndex:0,log:[],previewZoom:2,history:[],historyIndex:-1,importSession:null,remapSession:null,atlasSelections:new Map(),inspector:null};
 
 const $=id=>document.getElementById(id);
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -239,6 +239,17 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 /* IMPORT_CORE_START - pure helpers are intentionally browser-independent and mechanically tested. */
 const ImportCore={
+  layouts:['regular','loose','irregular'],
+  validLayout(value){return this.layouts.includes(value)},
+  regionsFromRows(imageWidth,imageHeight,columns,rows){columns=Math.max(1,Math.trunc(columns));rows=Math.max(1,Math.trunc(rows));const result=[];for(let row=0;row<rows;row++)for(let column=0;column<columns;column++){const x=Math.floor(column*imageWidth/columns),y=Math.floor(row*imageHeight/rows),right=Math.floor((column+1)*imageWidth/columns),bottom=Math.floor((row+1)*imageHeight/rows);result.push({id:`region-${String(result.length+1).padStart(3,'0')}`,x,y,w:right-x,h:bottom-y})}return result},
+  normalizeRegion(region,imageWidth=Infinity,imageHeight=Infinity){const x=clamp(Math.round(Number(region.x)||0),0,imageWidth),y=clamp(Math.round(Number(region.y)||0),0,imageHeight);return {...region,x,y,w:Math.max(1,Math.min(Math.round(Number(region.w)||1),imageWidth-x)),h:Math.max(1,Math.min(Math.round(Number(region.h)||1),imageHeight-y))}},
+  upsertRegion(regions,region,imageWidth,imageHeight){const clean=this.normalizeRegion(region,imageWidth,imageHeight),next=regions.map(x=>({...x})),index=next.findIndex(x=>x.id===clean.id);if(index<0)next.push(clean);else next[index]=clean;return next},
+  removeRegion(regions,id){return regions.filter(region=>region.id!==id).map(region=>({...region}))},
+  duplicateRegion(regions,id,imageWidth,imageHeight){const source=regions.find(region=>region.id===id);if(!source)return regions.map(x=>({...x}));let n=1,newId;do newId=`region-${String(regions.length+n++).padStart(3,'0')}`;while(regions.some(x=>x.id===newId));return this.upsertRegion(regions,{...source,id:newId,x:source.x+1,y:source.y+1},imageWidth,imageHeight)},
+  trimTransparent(pixels,width,height,region,alphaThreshold=0){const r=this.normalizeRegion(region,width,height);let left=r.x,top=r.y,right=r.x+r.w-1,bottom=r.y+r.h-1,opaque=(x,y)=>pixels[(y*width+x)*4+3]>alphaThreshold;while(top<=bottom&&!Array.from({length:r.w},(_,i)=>opaque(r.x+i,top)).some(Boolean))top++;while(bottom>=top&&!Array.from({length:r.w},(_,i)=>opaque(r.x+i,bottom)).some(Boolean))bottom--;while(left<=right&&!Array.from({length:bottom-top+1},(_,i)=>opaque(left,top+i)).some(Boolean))left++;while(right>=left&&!Array.from({length:bottom-top+1},(_,i)=>opaque(right,top+i)).some(Boolean))right--;return top>bottom?{...r,w:1,h:1}:{...r,x:left,y:top,w:right-left+1,h:bottom-top+1}},
+  removeEdgeColor(pixels,width,height,region,color){const out=new Uint8ClampedArray(pixels),r=this.normalizeRegion(region,width,height),seen=new Set(),queue=[];const matches=(x,y)=>{const i=(y*width+x)*4;return out[i]===color[0]&&out[i+1]===color[1]&&out[i+2]===color[2]&&out[i+3]===color[3]};for(let x=r.x;x<r.x+r.w;x++){queue.push([x,r.y],[x,r.y+r.h-1])}for(let y=r.y;y<r.y+r.h;y++){queue.push([r.x,y],[r.x+r.w-1,y])}while(queue.length){const [x,y]=queue.pop(),key=x+','+y;if(seen.has(key)||x<r.x||y<r.y||x>=r.x+r.w||y>=r.y+r.h||!matches(x,y))continue;seen.add(key);out[(y*width+x)*4+3]=0;queue.push([x-1,y],[x+1,y],[x,y-1],[x,y+1])}return out},
+  packPlan(regions,cellW,cellH,alignment='bottom-center',padding=0){cellW=Math.max(1,Math.trunc(cellW));cellH=Math.max(1,Math.trunc(cellH));const usableW=Math.max(1,cellW-padding*2),usableH=Math.max(1,cellH-padding*2),scale=Math.min(...regions.map(r=>Math.min(usableW/r.w,usableH/r.h)),1),columns=Math.max(1,Math.ceil(Math.sqrt(regions.length))),rows=Math.ceil(regions.length/columns);return {cellW,cellH,columns,rows,width:columns*cellW,height:rows*cellH,scale,alignment,placements:regions.map((r,i)=>{const w=Math.max(1,Math.round(r.w*scale)),h=Math.max(1,Math.round(r.h*scale)),cx=(i%columns)*cellW,cy=Math.floor(i/columns)*cellH;return {id:r.id,source:{x:r.x,y:r.y,w:r.w,h:r.h},rect:{x:cx,y:cy,w:cellW,h:cellH},draw:{x:cx+Math.round((cellW-w)/2),y:alignment.startsWith('bottom')?cy+cellH-padding-h:cy+Math.round((cellH-h)/2),w,h}}})}},
+  applyNormalizedAtlas(theme,atlasId,payload,resourceIds=[],placements=[]){if(!theme.atlases?.[atlasId])throw new Error(`Atlas does not exist: ${atlasId}`);const next=structuredClone(theme);next.atlases[atlasId]={...next.atlases[atlasId],layout:'regular',encoding:'base64',mediaType:'image/png',data:payload.data,imageSize:{w:payload.width,h:payload.height},authoring:{grid:{cellW:payload.cellW,cellH:payload.cellH,offsetX:0,offsetY:0,gutterX:0,gutterY:0},regions:placements.map(p=>({id:p.id,...p.rect}))}};resourceIds.forEach((id,i)=>{if(!next.resources?.[id]||!placements[i])throw new Error(`Cannot coherently update Resource ${id}.`);next.resources[id].image={...(next.resources[id].image||{}),atlas:atlasId,rect:{...placements[i].rect}}});return {theme:next,dirty:true}},
   gridCells(imageWidth,imageHeight,settings){
     const cellW=Math.max(1,Math.trunc(Number(settings.cellW)||1)),cellH=Math.max(1,Math.trunc(Number(settings.cellH)||1));
     const offsetX=Math.max(0,Math.trunc(Number(settings.offsetX)||0)),offsetY=Math.max(0,Math.trunc(Number(settings.offsetY)||0));
@@ -254,7 +265,7 @@ const ImportCore={
     const atlasId=String(transaction.atlasId||'').trim();if(!atlasId)throw new Error('Atlas ID is required.');
     if(Object.hasOwn(theme.atlases||{},atlasId))throw new Error(`Atlas ID already exists: ${atlasId}`);
     const next=structuredClone(theme);next.atlases=next.atlases||{};
-    next.atlases[atlasId]={mediaType:transaction.mediaType,encoding:'base64',data:transaction.base64,sourceFile:transaction.sourceName,imageSize:{w:transaction.width,h:transaction.height}};
+    next.atlases[atlasId]={...(transaction.layout?{layout:transaction.layout}:{}),mediaType:transaction.mediaType,encoding:'base64',data:transaction.base64,sourceFile:transaction.sourceName,imageSize:{w:transaction.width,h:transaction.height}};
     if(transaction.settings)next.atlases[atlasId].authoring={grid:{...transaction.settings}};
     return {theme:next,atlasId,dirty:true};
   },
@@ -325,6 +336,7 @@ function validateTheme(theme){
   for(const key of ['atlases','resources','families','animations','constructions','objects','parameterSchemas','placeables']){
     if(theme[key]!=null&&(typeof theme[key]!=='object'||Array.isArray(theme[key])))issues.push(`${key} must be an object when present.`);
   }
+  for(const [id,atlas] of Object.entries(theme.atlases||{}))if(!ImportCore.validLayout(atlas.layout))issues.push(`Atlas ${id} must declare layout as regular, loose, or irregular.`);
   return issues;
 }
 
@@ -584,7 +596,7 @@ function atlasResources(atlasId){
   return entries(state.theme?.resources).filter(([,resource])=>resource?.image?.atlas===atlasId&&resource.image.rect);
 }
 function atlasSession(atlasId){
-  let session=state.atlasSelections.get(atlasId);if(!session){session={selection:new Set(),prefix:`${atlasId}_resource`};state.atlasSelections.set(atlasId,session)}return session;
+  let session=state.atlasSelections.get(atlasId);if(!session){session={selection:new Set(),selectedRegion:null,prefix:`${atlasId}_resource`};state.atlasSelections.set(atlasId,session)}return session;
 }
 function atlasGrid(atlas){return ImportCore.gridFromAtlas(atlas)}
 function atlasDataSize(atlas){return atlas?.encoding==='base64'&&atlas?.data?Math.ceil(atlas.data.length*3/4):0}
@@ -592,7 +604,8 @@ function renderAtlas(){
   const atlas=currentValue(),src=atlasSrc(atlas),members=atlasResources(state.key),grid=atlasGrid(atlas),session=atlasSession(state.key),size=atlas.imageSize||{};
   return itemHero()+`${src?`${zoomControls()}<div class="zoomViewport" id="previewViewport"><div class="zoomStage" id="previewStage"><canvas id="atlasCanvas" aria-label="${escapeHtml(state.key)} atlas"></canvas><div id="atlasCandidates"></div><div id="atlasRegions"></div></div></div>`:'<div class="previewBox"><span class="muted">Atlas data is not inline base64.</span></div>'}
     <div class="previewCaption"><span>${escapeHtml(atlas.sourceFile||'Source filename unavailable')}</span><span>${members.length} authoritative mapped resource${members.length===1?'':'s'}</span></div>
-    <section class="panel"><h2>Authoring grid</h2><p class="muted">The grid is a selection aid. Changing it never changes existing Resource rectangles.</p><div class="atlasActions">${[
+    <section class="panel"><h2>Atlas workflow</h2><p class="muted">Layout changes emphasis only; every Region, cleanup, grid, and packing tool remains available.</p><div class="atlasActions"><label>Layout<select id="atlasLayout"><option value="">Not declared</option>${ImportCore.layouts.map(x=>`<option ${atlas.layout===x?'selected':''}>${x}</option>`).join('')}</select></label><label>Columns<input id="regionColumns" type="number" min="1" value="5"></label><label>Rows<input id="regionRows" type="number" min="1" value="3"></label><button id="generateRegions">Generate Regions</button><button id="drawRegion">Draw Region</button><button id="duplicateRegion" ${session.selectedRegion?'':'disabled'}>Duplicate</button><button id="deleteRegion" ${session.selectedRegion?'':'disabled'}>Delete</button><button id="trimRegion" ${session.selectedRegion?'':'disabled'}>Trim</button><button id="removeBackground" ${session.selectedRegion?'':'disabled'}>Remove Background Color…</button><button id="normalizeAtlas" ${(atlas.authoring?.regions||[]).length?'':'disabled'}>Normalize / Pack…</button></div><div class="previewCaption"><span>${(atlas.authoring?.regions||[]).length} authoring Regions</span><span>${atlas.layout?'Declared '+atlas.layout:'Layout not declared — choose explicitly'}</span></div></section>
+    <section class="panel"><h2>Authoring grid</h2><p class="muted">The grid is a Region/selection aid. Changing it never changes existing Resource rectangles.</p><div class="atlasActions">${[
       {key:'cellW',label:'Cell width',min:1},{key:'cellH',label:'Cell height',min:1},{key:'offsetX',label:'X offset'},{key:'offsetY',label:'Y offset'},{key:'gutterX',label:'Horizontal gutter'},{key:'gutterY',label:'Vertical gutter'}
     ].map(spec=>`<label>${spec.label}<input type="number" min="${spec.min??0}" step="1" data-atlas-grid="${spec.key}" value="${grid[spec.key]}"></label>`).join('')}<label>Resource prefix<input id="atlasPrefix" value="${escapeHtml(session.prefix)}"></label><button id="clearAtlasSelection">Clear selection</button><button id="createAtlasResources" ${session.selection.size?'':'disabled'}>Create Resources from Selection</button><span id="atlasSelectionCount" class="selectionCount">${session.selection.size} selected</span></div></section>
     <section class="panel"><h2>Existing Resource regions</h2><div class="thumbGrid">${members.map(([key])=>resourceThumb(key)).join('')||'<span class="muted">No Resources map into this Atlas yet.</span>'}</div></section>
@@ -606,9 +619,10 @@ function drawAtlas(){
     const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,w,h,0,0,canvas.width,canvas.height);
     const occupied=atlasResources(state.key).map(([,resource])=>resource.image.rect),unused=cell=>!occupied.some(r=>cell.x<r.x+r.w&&cell.x+cell.w>r.x&&cell.y<r.y+r.h&&cell.y+cell.h>r.y);
     candidates.innerHTML=cells.filter(unused).map(cell=>`<button type="button" class="atlasCandidate ${session.selection.has(cell.id)?'selected':''}" data-atlas-candidate="${cell.id}" title="Candidate row ${cell.row}, column ${cell.column} · ${cell.x},${cell.y} ${cell.w}×${cell.h}" style="left:${cell.x*z}px;top:${cell.y*z}px;width:${cell.w*z}px;height:${cell.h*z}px"></button>`).join('');
-    regions.innerHTML=atlasResources(state.key).map(([key,resource])=>{const r=resource.image.rect;return `<button type="button" class="atlasRegion" data-resource="${escapeHtml(key)}" data-label="${escapeHtml(key)}" title="Existing Resource ${escapeHtml(key)} · ${r.x},${r.y} ${r.w}×${r.h}" style="left:${r.x*z}px;top:${r.y*z}px;width:${Math.max(1,r.w*z)}px;height:${Math.max(1,r.h*z)}px"></button>`}).join('');
+    regions.innerHTML=(atlas.authoring?.regions||[]).map(r=>`<button type="button" class="atlasRegion ${session.selectedRegion===r.id?'selected':''}" data-authoring-region="${escapeHtml(r.id)}" data-label="${escapeHtml(r.id)}" title="Authoring Region ${r.x},${r.y} ${r.w}×${r.h}" style="left:${r.x*z}px;top:${r.y*z}px;width:${Math.max(1,r.w*z)}px;height:${Math.max(1,r.h*z)}px"></button>`).join('')+atlasResources(state.key).map(([key,resource])=>{const r=resource.image.rect;return `<button type="button" class="atlasRegion" data-resource="${escapeHtml(key)}" data-label="${escapeHtml(key)}" title="Existing Resource ${escapeHtml(key)} · ${r.x},${r.y} ${r.w}×${r.h}" style="left:${r.x*z}px;top:${r.y*z}px;width:${Math.max(1,r.w*z)}px;height:${Math.max(1,r.h*z)}px"></button>`}).join('');
     candidates.querySelectorAll('[data-atlas-candidate]').forEach(button=>button.onclick=event=>{event.stopPropagation();session.selection=ImportCore.toggleCandidate(session.selection,button.dataset.atlasCandidate);drawAtlas();const count=$('atlasSelectionCount');if(count)count.textContent=`${session.selection.size} selected`;const create=$('createAtlasResources');if(create)create.disabled=!session.selection.size});
     regions.querySelectorAll('[data-resource]').forEach(button=>button.onclick=event=>{event.stopPropagation();navigate('resources',button.dataset.resource)});
+    regions.querySelectorAll('[data-authoring-region]').forEach(button=>button.onclick=event=>{event.stopPropagation();session.selectedRegion=button.dataset.authoringRegion;renderCenter()});
   };if(img.complete&&img.naturalWidth)draw();else img.addEventListener('load',draw,{once:true});
 }
 function wireAtlasEditor(){
@@ -618,7 +632,17 @@ function wireAtlasEditor(){
   $('atlasPrefix').oninput=event=>session.prefix=event.target.value;
   $('clearAtlasSelection').onclick=()=>{session.selection.clear();renderCenter()};
   $('createAtlasResources').onclick=()=>{try{const img=getImage(state.key),cells=ImportCore.gridCells(img.naturalWidth,img.naturalHeight,atlasGrid(atlas)),result=ImportCore.createResources(state.theme,state.key,cells,session.selection,$('atlasPrefix').value);state.theme=result.theme;session.selection.clear();setDirty(true);renderSections();renderItems();renderCenter();renderDetail();report('ok',`Created ${result.resourceIds.length} Resources from ${state.key}.`)}catch(error){report('error',error.message||error);alert(error.message||error)}};
+  $('atlasLayout').onchange=event=>{atlas.layout=event.target.value||undefined;setDirty(true);renderCenter();renderDetail()};
+  $('generateRegions').onclick=()=>{const img=getImage(state.key);atlas.authoring=atlas.authoring||{};atlas.authoring.regions=ImportCore.regionsFromRows(img.naturalWidth,img.naturalHeight,$('regionColumns').value,$('regionRows').value);session.selectedRegion=atlas.authoring.regions[0]?.id||null;setDirty(true);renderCenter();renderDetail()};
+  $('drawRegion').onclick=()=>{const img=getImage(state.key),raw=prompt('Region x, y, width, height','0, 0, 32, 32');if(!raw)return;const [x,y,w,h]=raw.split(',').map(Number);atlas.authoring=atlas.authoring||{};const regions=atlas.authoring.regions||[],id=`region-${String(regions.length+1).padStart(3,'0')}`;atlas.authoring.regions=ImportCore.upsertRegion(regions,{id,x,y,w,h},img.naturalWidth,img.naturalHeight);session.selectedRegion=id;setDirty(true);renderCenter();renderDetail()};
+  $('duplicateRegion').onclick=()=>{const img=getImage(state.key);atlas.authoring.regions=ImportCore.duplicateRegion(atlas.authoring.regions||[],session.selectedRegion,img.naturalWidth,img.naturalHeight);session.selectedRegion=atlas.authoring.regions.at(-1)?.id;setDirty(true);renderCenter()};
+  $('deleteRegion').onclick=()=>{atlas.authoring.regions=ImportCore.removeRegion(atlas.authoring.regions||[],session.selectedRegion);session.selectedRegion=null;setDirty(true);renderCenter()};
+  $('trimRegion').onclick=()=>editAtlasPixels((pixels,w,h,region)=>({pixels,region:ImportCore.trimTransparent(pixels,w,h,region)}),'Trimmed transparent bounds.');
+  $('removeBackground').onclick=()=>{const hex=prompt('Exact edge-connected background color (#RRGGBB)','#ffffff');if(!/^#[0-9a-f]{6}$/i.test(hex||''))return;const color=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)).concat(255);editAtlasPixels((pixels,w,h,region)=>({pixels:ImportCore.removeEdgeColor(pixels,w,h,region,color),region}),'Removed edge-connected background color.')};
+  $('normalizeAtlas').onclick=normalizeCurrentAtlas;
 }
+function editAtlasPixels(operation,message){const atlas=currentValue(),session=atlasSession(state.key),region=(atlas.authoring?.regions||[]).find(r=>r.id===session.selectedRegion),img=getImage(state.key);if(!region)return;const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0);const data=ctx.getImageData(0,0,canvas.width,canvas.height),result=operation(data.data,canvas.width,canvas.height,region);data.data.set(result.pixels);ctx.putImageData(data,0,0);atlas.data=canvas.toDataURL('image/png').split(',')[1];atlas.mediaType='image/png';atlas.encoding='base64';atlas.authoring.regions=ImportCore.upsertRegion(atlas.authoring.regions,result.region,canvas.width,canvas.height);state.images.delete(state.key);setDirty(true);renderCenter();report('ok',message)}
+function normalizeCurrentAtlas(){const atlas=currentValue(),regions=atlas.authoring?.regions||[],members=atlasResources(state.key),suggest=members[0]?.[1]?.display||{},cellW=Number(prompt('Target cell width',suggest.w||32)),cellH=Number(prompt('Target cell height',suggest.h||32));if(!cellW||!cellH)return;const plan=ImportCore.packPlan(regions,cellW,cellH,'bottom-center',1),original=atlasDataSize(atlas),estimate=plan.width*plan.height*4;if(!confirm(`Normalize / Pack preview\n\nSource: ${atlas.imageSize?.w||'?'}×${atlas.imageSize?.h||'?'} (${regions.length} Regions)\nOutput: ${plan.width}×${plan.height} (${plan.placements.length} Regions)\nCells: ${cellW}×${cellH} · bottom-center\nEmbedded: ~${original} bytes → at most ~${estimate} raw bytes\n\nApply as one edit?`))return;const img=getImage(state.key),canvas=document.createElement('canvas');canvas.width=plan.width;canvas.height=plan.height;const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;for(const p of plan.placements)ctx.drawImage(img,p.source.x,p.source.y,p.source.w,p.source.h,p.draw.x,p.draw.y,p.draw.w,p.draw.h);const payload={data:canvas.toDataURL('image/png').split(',')[1],width:plan.width,height:plan.height,cellW,cellH};const ids=members.length===regions.length?members.map(([id])=>id):[];const result=ImportCore.applyNormalizedAtlas(state.theme,state.key,payload,ids,plan.placements);state.theme=result.theme;state.images.delete(state.key);setDirty(true);renderCenter();renderDetail();report('ok',`Packed ${regions.length} Regions into ${plan.width}×${plan.height} compact pixels.`)}
 function redrawZoomPreview(){
   const readout=document.querySelector('.zoomReadout');if(readout)readout.textContent=`${state.previewZoom}×`;
   if(state.section==='resources'&&state.key)drawResource($('resourceCanvas'),currentValue(),state.previewZoom);
@@ -626,7 +650,7 @@ function redrawZoomPreview(){
 }
 function setPreviewZoom(value,{anchor=null}={}){
   const viewport=$('previewViewport');if(!viewport)return;
-  const old=state.previewZoom,newZoom=clamp(Math.round(value),1,16);
+  const old=state.previewZoom,newZoom=clamp(Math.round(value*8)/8,.0625,16);
   if(newZoom===old)return;
   const contentX=anchor?((viewport.scrollLeft+anchor.x)/old):((viewport.scrollLeft+viewport.clientWidth/2)/old);
   const contentY=anchor?((viewport.scrollTop+anchor.y)/old):((viewport.scrollTop+viewport.clientHeight/2)/old);
@@ -646,11 +670,11 @@ function fitPreview(){
     const img=getImage(state.key);w=img?.naturalWidth||1;h=img?.naturalHeight||1;
   }
   const availableW=Math.max(1,viewport.clientWidth-32),availableH=Math.max(1,viewport.clientHeight-32);
-  setPreviewZoom(clamp(Math.floor(Math.min(availableW/w,availableH/h)),1,16));
+  setPreviewZoom(clamp(Math.min(availableW/w,availableH/h),.0625,16));
 }
 function wireZoom(){
   const viewport=$('previewViewport');if(!viewport)return;
-  document.querySelectorAll('[data-zoom]').forEach(button=>button.onclick=()=>setPreviewZoom(state.previewZoom+(Number(button.dataset.zoom)||0)));
+  document.querySelectorAll('[data-zoom]').forEach(button=>button.onclick=()=>setPreviewZoom(state.previewZoom*(Number(button.dataset.zoom)>0?2:.5)));
   document.querySelectorAll('[data-zoom-value]').forEach(button=>button.onclick=()=>setPreviewZoom(Number(button.dataset.zoomValue)||1));
   const fit=document.querySelector('[data-zoom-fit]');if(fit)fit.onclick=fitPreview;
   let drag=null;
@@ -671,7 +695,7 @@ function wireZoom(){
     if(!(event.ctrlKey||event.metaKey))return;
     event.preventDefault();
     const rect=viewport.getBoundingClientRect(),anchor={x:event.clientX-rect.left,y:event.clientY-rect.top};
-    setPreviewZoom(state.previewZoom+(event.deltaY<0?1:-1),{anchor});
+    setPreviewZoom(state.previewZoom*(event.deltaY<0?2:.5),{anchor});
   },{passive:false});
 }
 
@@ -782,20 +806,20 @@ function createImportedAtlas(){
   const tx=state.importSession;tx.atlasId=$('importAtlasId').value.trim();try{const result=ImportCore.createAtlas(state.theme,tx);state.theme=result.theme;state.images.clear();setDirty(true);state.importSession=null;renderSections();navigate('atlases',result.atlasId);report('ok',`Created Atlas ${result.atlasId}. Select candidate regions to create Resources.`)}catch(error){report('error',error.message||error);alert(error.message||error)}
 }
 
-function beginResourceRemap(sourceAtlasId){
-  const resources=atlasResources(sourceAtlasId).map(([id])=>id),destinations=Object.keys(dict(state.theme.atlases)).filter(id=>id!==sourceAtlasId);
-  if(!destinations.length){alert('Import or create a destination Atlas first.');return}
-  state.remapSession={sourceAtlasId,destinationAtlasId:destinations[0],allResourceIds:resources,selected:new Set(resources),assignments:new Map(),activeId:resources[0]||null,batchSelection:[],batchMode:false,review:false};
-  renderCenter();renderDetail();report('info',`Remap draft opened for ${resources.length} Resources. The theme is unchanged until Apply Remap.`);
+function beginResourceRemap(destinationAtlasId){
+  const sources=Object.keys(dict(state.theme.atlases)).filter(id=>id!==destinationAtlasId&&atlasResources(id).length),sourceAtlasId=prompt(`Current Atlas ${destinationAtlasId} is the destination/new artwork.\nChoose the existing Resource Atlas to replace:\n\n${sources.join('\n')}`,sources[0]||'');
+  if(!sources.includes(sourceAtlasId)){if(sourceAtlasId!=null)alert('Choose one of the listed Atlases with existing Resources.');return}const resources=atlasResources(sourceAtlasId).map(([id])=>id);
+  state.remapSession={sourceAtlasId,destinationAtlasId,allResourceIds:resources,selected:new Set(resources),assignments:new Map(),activeId:resources[0]||null,batchSelection:[],batchMode:false,review:false};
+  renderCenter();renderDetail();report('info',`Destination-first replacement opened for ${resources.length} stable Resource IDs. The theme is unchanged until Apply Remap.`);
 }
 function remapCells(session){const atlas=state.theme.atlases[session.destinationAtlasId],img=getImage(session.destinationAtlasId),size=atlas?.imageSize||{};return ImportCore.gridCells(img?.naturalWidth||size.w||0,img?.naturalHeight||size.h||0,atlasGrid(atlas))}
 function selectedRemapIds(session){return session.allResourceIds.filter(id=>session.selected.has(id))}
 function rectToken(rect){return rect&&[rect.x,rect.y,rect.w,rect.h].join(',')}
 function renderRemapWorkspace(){
-  const s=state.remapSession,ids=selectedRemapIds(s),mapped=ids.filter(id=>s.assignments.has(id)).length,destinations=Object.keys(dict(state.theme.atlases)).filter(id=>id!==s.sourceAtlasId);
+  const s=state.remapSession,ids=selectedRemapIds(s),mapped=ids.filter(id=>s.assignments.has(id)).length,destinations=[s.destinationAtlasId];
   if(s.review)return `<div class="remapWorkspace"><div class="remapHead"><div><div class="eyebrow">Review resource remap</div><h1>${mapped} / ${ids.length} mapped</h1><div class="id">${escapeHtml(s.sourceAtlasId)} → ${escapeHtml(s.destinationAtlasId)}</div></div><span class="spacer"></span><button id="remapBack">Back to Mapping</button><button id="remapCancel">Cancel</button><button id="remapApply" ${mapped===ids.length&&ids.length?'':'disabled'}>Apply Remap</button></div><section class="panel">${ids.map(id=>`<div class="pairRow"><span class="mono">${escapeHtml(id)}</span><canvas width="52" height="52" data-old-thumb="${escapeHtml(id)}"></canvas><span>→</span><canvas width="52" height="52" data-new-thumb="${escapeHtml(id)}"></canvas></div>`).join('')}</section></div>`;
   const active=s.activeId,activeIndex=ids.indexOf(active),cells=remapCells(s),atlas=state.theme.atlases[s.destinationAtlasId],img=getImage(s.destinationAtlasId),size={w:img?.naturalWidth||atlas.imageSize?.w||1,h:img?.naturalHeight||atlas.imageSize?.h||1},z=2;
-  return `<div class="remapWorkspace"><div class="remapHead"><div><div class="eyebrow">Visual resource remapping</div><h1>Source Atlas: <span class="mono">${escapeHtml(s.sourceAtlasId)}</span></h1></div><label>Destination Atlas: <select id="remapDestination">${destinations.map(id=>`<option ${id===s.destinationAtlasId?'selected':''}>${escapeHtml(id)}</option>`).join('')}</select></label><span class="spacer"></span><button id="remapCancel">Cancel</button><button id="remapReview" ${mapped===ids.length&&ids.length?'':'disabled'}>Review ${mapped} / ${ids.length}</button></div>
+  return `<div class="remapWorkspace"><div class="remapHead"><div><div class="eyebrow">Replace existing Resources</div><h1>Existing IDs: <span class="mono">${escapeHtml(s.sourceAtlasId)}</span></h1></div><label>Destination Atlas: new artwork <select id="remapDestination" disabled>${destinations.map(id=>`<option ${id===s.destinationAtlasId?'selected':''}>${escapeHtml(id)}</option>`).join('')}</select></label><span class="spacer"></span><button id="remapCancel">Cancel</button><button id="remapReview" ${mapped===ids.length&&ids.length?'':'disabled'}>Review ${mapped} / ${ids.length}</button></div>
     <div class="remapProgress"><strong>${active?`Mapping ${activeIndex+1} / ${ids.length}`:'Choose Resources'}</strong><span class="mono">${escapeHtml(active||'No Resource selected')}</span><span class="muted">Click a destination cell to assign and advance.</span><span class="spacer"></span><label><input type="checkbox" id="remapBatchMode" ${s.batchMode?'checked':''}> Batch select</label><button id="pairByOrder" ${s.batchSelection.length===ids.length&&ids.length?'':'disabled'}>Pair by order (${s.batchSelection.length}/${ids.length})</button></div>
     <div class="remapBody"><section class="panel remapList"><h2>Scope · ${ids.length} of ${s.allResourceIds.length} Resources</h2>${s.allResourceIds.map(id=>`<div class="remapRow ${id===active?'active':''} ${s.assignments.has(id)?'mapped':''}" data-remap-resource="${escapeHtml(id)}"><input type="checkbox" data-remap-scope="${escapeHtml(id)}" ${s.selected.has(id)?'checked':''} aria-label="Include ${escapeHtml(id)}"><canvas width="52" height="52" data-old-thumb="${escapeHtml(id)}"></canvas><span class="mono">${escapeHtml(id)}</span><canvas width="52" height="52" data-new-thumb="${escapeHtml(id)}"></canvas></div>`).join('')}</section>
     <div class="remapAtlas"><div class="remapStage" style="width:${(size.w||1)*z}px;height:${(size.h||1)*z}px"><img src="${atlasSrc(atlas)}" alt="Destination Atlas ${escapeHtml(s.destinationAtlasId)}" width="${(size.w||1)*z}" height="${(size.h||1)*z}">${cells.map(cell=>{const token=rectToken(cell),owner=[...s.assignments].find(([,r])=>rectToken(r)===token)?.[0];return `<button class="remapCell ${owner?'assigned':''} ${owner===active?'current':''} ${s.batchSelection.includes(cell.id)?'batch':''}" data-remap-cell="${cell.id}" title="${owner?`Assigned to ${escapeHtml(owner)}`:`Row ${cell.row}, column ${cell.column}`}" style="left:${cell.x*z}px;top:${cell.y*z}px;width:${cell.w*z}px;height:${cell.h*z}px"></button>`}).join('')}</div></div></div></div>`;
@@ -873,16 +897,16 @@ function closeMenus(){document.querySelectorAll('.menu.open').forEach(menu=>{men
 function renderShell(){
   const canInspect=!!state.theme;document.querySelectorAll('[data-inspector]').forEach(button=>button.disabled=!canInspect);$('rawEntryButton').disabled=!canInspect;
   const atlasContext=state.section==='atlases'&&state.key!=null&&!state.importSession&&!state.remapSession;$('atlasMenu').hidden=!atlasContext;
-  if(atlasContext){const atlas=currentValue(),members=atlasResources(state.key);$('menuExportAtlas').disabled=!atlasSrc(atlas);$('menuRemapResources').disabled=!members.length}
+  if(atlasContext){const atlas=currentValue();$('menuExportAtlas').disabled=!atlasSrc(atlas);$('menuRemapResources').disabled=!Object.keys(state.theme.resources||{}).length}
 }
 function renameCurrentAtlas(){const oldId=state.key,newId=prompt('Rename Atlas',oldId);if(newId==null)return;try{const result=ImportCore.renameAtlas(state.theme,oldId,newId);state.theme=result.theme;if(result.dirty){const saved=state.atlasSelections.get(oldId);state.atlasSelections.delete(oldId);if(saved)state.atlasSelections.set(result.atlasId,saved);state.history=ImportCore.rewriteAtlasHistory(state.history,oldId,result.atlasId);state.key=result.atlasId;setDirty(true);renderHistoryNav();renderSections();renderItems();renderCenter();renderDetail();renderShell();report('ok',`Renamed Atlas ${oldId} to ${result.atlasId}; Resource references were updated.`)}}catch(error){report('error',error.message||error);alert(error.message||error)}}
 function exportCurrentAtlas(){const atlas=currentValue();if(!atlas?.data)return;const bytes=Uint8Array.from(atob(atlas.data),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:atlas.mediaType||'application/octet-stream'})),link=document.createElement('a'),ext=(atlas.mediaType||'image/png').split('/')[1].replace('jpeg','jpg');link.href=url;link.download=`${state.key}.${ext}`;link.click();setTimeout(()=>URL.revokeObjectURL(url),0);report('ok',`Exported ${link.download}.`)}
 function loadThemeDocument(theme,fileName='theme.llmtheme.txt'){
   stopAnimation();
   const issues=validateTheme(theme);
-  state.loadedTheme=structuredClone(theme);state.theme=structuredClone(theme);state.fileName=fileName;state.dirty=false;state.inspector=null;closeRawInspector();state.importSession=null;state.remapSession=null;state.section='overview';state.key=null;state.query='';state.images.clear();state.atlasSelections.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
+  state.loadedTheme=structuredClone(theme);state.theme=structuredClone(theme);state.fileName=fileName;state.fileHandle=null;state.dirty=false;state.inspector=null;closeRawInspector();state.importSession=null;state.remapSession=null;state.section='overview';state.key=null;state.query='';state.images.clear();state.atlasSelections.clear();state.previewZoom=2;state.history=[{section:'overview',key:null}];state.historyIndex=0;
   $('fileName').textContent=fileName;$('search').value='';renderHistoryNav();
-  $('importButton').disabled=false;$('saveButton').disabled=false;setDirty(false);
+  $('importButton').disabled=false;$('saveButton').disabled=false;$('saveAsButton').disabled=false;setDirty(false);
   const status=$('status');status.className='badge '+(issues.length?'warn':'good');
   status.textContent=issues.length?`${issues.length} format warning${issues.length===1?'':'s'}`:'Reference pack v1';
   renderSections();renderItems();renderCenter();renderDetail();renderShell();
@@ -915,16 +939,13 @@ async function beginAtlasImport(file){
     const dataUrl=await readFileAsDataURL(file),image=await decodeImage(dataUrl),comma=dataUrl.indexOf(',');
     const mediaType=(dataUrl.slice(5,comma).split(';')[0]||file.type||'image/png').toLowerCase();
     const atlasBase=(file.name||'atlas').replace(/\.[^.]+$/,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'atlas';
-    state.importSession={sourceName:file.name||'atlas',mediaType,base64:dataUrl.slice(comma+1),dataUrl,width:image.naturalWidth,height:image.naturalHeight,zoom:clamp(Math.floor(480/Math.max(image.naturalWidth,image.naturalHeight)),1,8),atlasId:suggestedId(atlasBase,dict(state.theme.atlases))};
+    state.importSession={sourceName:file.name||'atlas',mediaType,base64:dataUrl.slice(comma+1),dataUrl,width:image.naturalWidth,height:image.naturalHeight,zoom:clamp(480/Math.max(image.naturalWidth,image.naturalHeight),.0625,8),layout:'loose',atlasId:suggestedId(atlasBase,dict(state.theme.atlases))};
     renderCenter();renderDetail();report('ok',`Opened ${file.name} (${image.naturalWidth}×${image.naturalHeight}) as an Atlas draft.`);
   }catch(error){report('error',`Could not import Atlas: ${error.message||error}`)}
 }
-function saveTheme(){
-  if(!state.theme)return;
-  const text=ImportCore.serialize(state.theme),blob=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob);
-  const link=document.createElement('a');link.href=url;link.download=state.fileName.endsWith('.llmtheme.txt')?state.fileName:state.fileName.replace(/\.(json|txt|llmtheme)$/i,'')+'.llmtheme.txt';link.click();
-  setTimeout(()=>URL.revokeObjectURL(url),0);state.loadedTheme=structuredClone(state.theme);setDirty(false);report('ok',`Saved ${link.download}.`);
-}
+const SaveCore={suggestedName(name,suffix){return name.endsWith(suffix)?name:name.replace(/\.(json|txt|llmtheme)$/i,'')+suffix},async save(text,{handle=null,saveAs=false,suggestedName,showPicker=window.showSaveFilePicker,download}={}){if(handle&&!saveAs){const writable=await handle.createWritable();await writable.write(text);await writable.close();return {handle,name:handle.name,mode:'handle'}}if(showPicker){const chosen=await showPicker({suggestedName,types:[{description:'LLMario text document',accept:{'text/plain':['.txt']}}]});const writable=await chosen.createWritable();await writable.write(text);await writable.close();return {handle:chosen,name:chosen.name,mode:'handle'}}if(!download)throw new Error('This browser cannot save files in place.');download(text,suggestedName);return {handle:null,name:suggestedName,mode:'download-copy'}}};
+function downloadCopy(text,name){const blob=new Blob([text],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),0)}
+async function saveTheme(saveAs=false){if(!state.theme)return;const name=SaveCore.suggestedName(state.fileName,'.llmtheme.txt');try{const result=await SaveCore.save(ImportCore.serialize(state.theme),{handle:state.fileHandle,saveAs,suggestedName:name,download:(text,file)=>{if(confirm('This browser cannot save in place. Download a copy instead?'))downloadCopy(text,file);else throw new Error('Save cancelled: writable file handles are unavailable.')}});state.fileHandle=result.handle;state.fileName=result.name;state.loadedTheme=structuredClone(state.theme);setDirty(false);report(result.mode==='handle'?'ok':'warn',result.mode==='handle'?`Saved ${result.name} to the selected destination.`:`Downloaded ${result.name}; this browser cannot update it in place, so the next Save will ask again.`)}catch(error){if(error?.name!=='AbortError')report('warn',error.message||error)}}
 
 document.querySelectorAll('.menuTrigger').forEach(trigger=>trigger.onclick=event=>{event.stopPropagation();const menu=trigger.closest('.menu'),opening=!menu.classList.contains('open');closeMenus();if(opening){menu.classList.add('open');trigger.setAttribute('aria-expanded','true')}});
 $('menuBar').addEventListener('click',event=>{if(event.target.closest('[role="menuitem"]'))closeMenus()});
@@ -936,21 +957,21 @@ $('menuRenameAtlas').onclick=renameCurrentAtlas;$('menuExportAtlas').onclick=exp
 $('aboutButton').onclick=()=>alert('Theme Pack Workbench\nA standalone inspector and atlas-authoring workspace for LLMario theme packs.');
 $('loadButton').onclick=()=>$('fileInput').click();
 $('importButton').onclick=()=>$('sheetInput').click();
-$('saveButton').onclick=saveTheme;
+$('saveButton').onclick=()=>saveTheme(false);$('saveAsButton').onclick=()=>saveTheme(true);
 $('welcomeLoad').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=event=>{const file=event.target.files?.[0];if(file)loadFile(file);event.target.value=''};
 $('sheetInput').onchange=event=>{const file=event.target.files?.[0];if(file)beginAtlasImport(file);event.target.value=''};
 $('search').oninput=event=>{state.query=event.target.value;renderItems()};
 window.addEventListener('dragover',event=>event.preventDefault());
 window.addEventListener('drop',event=>{event.preventDefault();const file=event.dataTransfer?.files?.[0];if(file)loadFile(file)});
-window.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenus();closeInspector();closeRawInspector()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveTheme()}});
+window.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenus();closeInspector();closeRawInspector()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='o'){event.preventDefault();$('fileInput').click()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();saveTheme(event.shiftKey)}});
 window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue=''}});
 $('historyBack').onclick=()=>historyGo(-1);
 $('historyForward').onclick=()=>historyGo(1);
 $('logButton').onclick=()=>toggleLog();
 $('closeLog').onclick=()=>toggleLog(false);
 $('clearLog').onclick=()=>{state.log.length=0;renderLog();setStatus('info','Log cleared.')};
-window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn,report,ImportCore,get workingTheme(){return state.theme},get dirty(){return state.dirty},openInspector,closeInspector,openRawInspector,get selection(){return {section:state.section,key:state.key,historyIndex:state.historyIndex}}};
+window.ThemePackWorkbench={loadThemeDocument,validateTheme,refsIn,report,ImportCore,get workingTheme(){return state.theme},get dirty(){return state.dirty},SaveCore,openInspector,closeInspector,openRawInspector,get selection(){return {section:state.section,key:state.key,historyIndex:state.historyIndex}}};
 renderLog();renderShell();
 })();
 </script>
