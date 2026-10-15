@@ -1,136 +1,376 @@
-@llmario-ascii 3
-@cell 16
-@note "Updraft" — a vertical shaft. Switchbacks, jump-throughs, safety-net ledges, a feather, and a flight-only secret pipe.
-
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU..................o.o.o.o.o.........UU
-UU................................G...UU
-UU..............UUUUUUUUUUUUUUUUUUUUUUUU
-UU..............UUUUUUUUUUUUUUUUUUUUUUUU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UUUUUUUUUUU...........................UU
-UUUUUUUUUUU...........................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU............===========.............UU
-UU....................................UU
-UUUUUUUU..............................UU
-UUUUUUUU..............................UU
-UUUUUUUU..............................UU
-UUUUUUUU..............................UU
-UUUUUUUU.........................k....UU
-UU............................UUUUUUUUUU
-UU............................UUUUUUUUUU
-UU....................................UU
-UU....................................UU
-UUpP..................................UU
-UUpP..................................UU
-UUUUUU..................===...........UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU..............===...............UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU...........................s....UU
-UUUUUU.......................UUUUUUUUUUU
-UUUUUU.......................UUUUUUUUUUU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................=========.......UU
-UUUUUU................................UU
-UUUUUU..............K.................UU
-UUUUUU..L?............................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUU................................UU
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.......UU
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.......UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU..........................UUUUUUUUUUUU
-UU..........................UUUUUUUUUUUU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................o...............UU
-UU..................=====.............UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU........o...........................UU
-UU......=====.........................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU..............=====.................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU............................g.......UU
-UU....................UUUUUUUUUUUUUUUUUU
-UU....................UUUUUUUUUUUUUUUUUU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UUUUUUUUUUUUUUUU......................UU
-UUUUUUUUUUUUUUUU......................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU.........................o.o.o......UU
-UU......................UUUUUUUUUUUUUUUU
-UU......................UUUUUUUUUUUUUUUU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU....................................UU
-UU..S.................................UU
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
-
-@at 30,97 walker.patrolRange=40
-@at 33,53 walker.patrolRange=40
-@at 33,34 walker.patrolRange=40
-@at 20,62 flight.hasWings=true flight.flying=true walker.patrolRange=60
-@at 20,47 movingPlatform.range=48 movingPlatform.speed=0.6
-@at 24,41 movingPlatform.range=48 movingPlatform.speed=0.6
-@pipe A -> 30.5,15
+{
+  "format": "llmario-reference-editor-map",
+  "mapVersion": 1,
+  "theme": {
+    "id": "marioai-reference-complete",
+    "packVersion": 1
+  },
+  "worldBounds": {
+    "x": 0,
+    "y": 0,
+    "w": 640,
+    "h": 1984
+  },
+  "instances": [
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 320,
+        "transform.y": 32,
+        "terrain.width": 40,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 16,
+        "transform.y": 1984,
+        "terrain.width": 2,
+        "terrain.height": 122,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 624,
+        "transform.y": 1984,
+        "terrain.width": 2,
+        "terrain.height": 122,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 432,
+        "transform.y": 272,
+        "terrain.width": 22,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 104,
+        "transform.y": 384,
+        "terrain.width": 9,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 80,
+        "transform.y": 560,
+        "terrain.width": 6,
+        "terrain.height": 5,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 544,
+        "transform.y": 592,
+        "terrain.width": 8,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 64,
+        "transform.y": 1104,
+        "terrain.width": 4,
+        "terrain.height": 28,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 536,
+        "transform.y": 896,
+        "terrain.width": 9,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 296,
+        "transform.y": 1104,
+        "terrain.width": 25,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 528,
+        "transform.y": 1200,
+        "terrain.width": 10,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 480,
+        "transform.y": 1600,
+        "terrain.width": 16,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 144,
+        "transform.y": 1712,
+        "terrain.width": 14,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 496,
+        "transform.y": 1824,
+        "terrain.width": 14,
+        "terrain.height": 2,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "ground",
+      "values": {
+        "transform.x": 320,
+        "transform.y": 1984,
+        "terrain.width": 36,
+        "terrain.height": 4,
+        "terrain.style": "underground"
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "transform.x": 312,
+        "transform.y": 464,
+        "extent.width": 11
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "transform.x": 408,
+        "transform.y": 672,
+        "extent.width": 3,
+        "movingPlatform.range": 48,
+        "movingPlatform.speed": 0.6
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "transform.x": 344,
+        "transform.y": 768,
+        "extent.width": 3,
+        "movingPlatform.range": 48,
+        "movingPlatform.speed": 0.6
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "transform.x": 424,
+        "transform.y": 976,
+        "extent.width": 9
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "transform.x": 360,
+        "transform.y": 1280,
+        "extent.width": 5
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "transform.x": 168,
+        "transform.y": 1376,
+        "extent.width": 5
+      }
+    },
+    {
+      "placeable": "whitePlatform",
+      "values": {
+        "transform.x": 296,
+        "transform.y": 1472,
+        "extent.width": 5
+      }
+    },
+    {
+      "placeable": "pipe",
+      "values": {
+        "transform.x": 32,
+        "transform.y": 640,
+        "pipe.direction": "right",
+        "pipe.length": 2,
+        "pipe.travelEnabled": true,
+        "pipe.destination": {
+          "kind": "point",
+          "x": 488,
+          "y": 240
+        }
+      },
+      "instanceId": "pipe-A"
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 328,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 360,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 392,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 424,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 456,
+        "transform.y": 224
+      }
+    },
+    {
+      "placeable": "koopaGreen",
+      "values": {
+        "transform.x": 536,
+        "transform.y": 560,
+        "walker.direction": "left",
+        "walker.patrolRange": 40
+      }
+    },
+    {
+      "placeable": "spiky",
+      "values": {
+        "transform.x": 536,
+        "transform.y": 864,
+        "walker.direction": "left",
+        "walker.patrolRange": 40
+      }
+    },
+    {
+      "placeable": "koopaRed",
+      "values": {
+        "transform.x": 328,
+        "transform.y": 1008,
+        "walker.direction": "left",
+        "flight.hasWings": true,
+        "flight.flying": true,
+        "walker.patrolRange": 60
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "values": {
+        "transform.x": 136,
+        "transform.y": 1024,
+        "rewardBlock.contents": "raccoonFeather"
+      }
+    },
+    {
+      "placeable": "questionBlock",
+      "values": {
+        "transform.x": 152,
+        "transform.y": 1024,
+        "rewardBlock.contents": "coin"
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 360,
+        "transform.y": 1264
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 168,
+        "transform.y": 1360
+      }
+    },
+    {
+      "placeable": "goomba",
+      "values": {
+        "transform.x": 488,
+        "transform.y": 1568,
+        "walker.direction": "left",
+        "walker.patrolRange": 40
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 440,
+        "transform.y": 1792
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 472,
+        "transform.y": 1792
+      }
+    },
+    {
+      "placeable": "coin",
+      "values": {
+        "transform.x": 504,
+        "transform.y": 1792
+      }
+    }
+  ],
+  "markers": {
+    "start": {
+      "x": 72,
+      "y": 1920
+    },
+    "goal": {
+      "x": 552,
+      "y": 240
+    }
+  }
+}
