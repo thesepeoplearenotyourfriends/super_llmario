@@ -575,7 +575,7 @@ test('top-bar HUD shows current coins and lives from player state',async()=>{
 });
 
 test('standalone chrome uses concise controls without combined-mode navigation',()=>{
-  assert.match(html,/<header><span class="counter">COINS <output id="coinCount">0<\/output><\/span><span class="counter">LIVES <output id="livesCount">3<\/output><\/span><\/header>/);
+  assert.match(html,/<header><span class="counter">COINS <output id="coinCount">0<\/output><\/span><span class="counter">LIVES <output id="livesCount">3<\/output><\/span><button id="fullscreenButton" type="button" title="Fullscreen" aria-label="Toggle fullscreen" hidden>⛶<\/button><\/header>/);
   assert.match(html,/<button id="themeButton">Load theme…<\/button>/);assert.match(html,/<button id="mapButton">Load map…<\/button>/);assert.match(html,/<button id="fitButton">Restart<\/button>/);
   assert.doesNotMatch(html,/REFERENCE-PACK ENGINE|static runtime compiler|releaseMenu|releaseEditorButton/);
 });
