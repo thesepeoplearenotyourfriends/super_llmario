@@ -11,6 +11,10 @@
 .touch-face{--face:255 255 255;display:grid;place-items:center;font-weight:800;color:#ffffffaa;border:2px solid rgb(var(--face) / .55);background:rgb(var(--face) / .22);transition:transform .05s}.touch-face.on{background:rgb(var(--face) / .62);color:#fff;transform:scale(.93)}
 .touch-face[data-button="a"]{--face:216 67 75}.touch-face[data-button="b"]{--face:232 192 58}.touch-face[data-button="x"]{--face:74 123 216}.touch-face[data-button="y"]{--face:63 174 90}
 #touchSystem{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);display:flex;gap:14px;pointer-events:auto;touch-action:none}header{cursor:pointer}header select,header button,header label{cursor:auto}
+#fullscreenButton{padding:4px 9px;font-size:15px;line-height:1}#fullscreenButton[hidden]{display:none}
+/* Theater: fullscreen, or a short landscape touch screen. The game fills the viewport; the frame and file panels step aside once a map is playing. */
+:root.theater body{display:block;background:#040c12}:root.theater main{width:100%;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none;display:flex;flex-direction:column}
+:root.theater header{padding:3px 12px;gap:12px}:root.theater #stage{flex:1;aspect-ratio:auto;min-height:0}:root.theater.playing .controls,:root.theater.playing #diagnostics{display:none}
 #pauseMenu{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:12px;background:#040c12a6;touch-action:manipulation}#pauseMenu[hidden],#pauseMenu [hidden]{display:none}
 #pauseMenu>section{width:min(430px,100%);max-height:100%;overflow:auto;padding:14px 16px;border:2px solid var(--edge);border-radius:18px;background:#061b2ef2;box-shadow:0 14px 38px #000a,inset 0 0 26px #2bdfff1f;text-align:center}
 #pauseMenu h2{margin:0 0 10px;font-size:22px;color:#ffe477;letter-spacing:.04em}.pause-list{display:grid;gap:8px}.pause-row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:10px}
@@ -22,8 +26,8 @@
 .key-list{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:12px;color:var(--muted)}.key-list b{color:var(--ink)}
 #creditCard{text-align:left;font-size:12px;color:var(--muted);min-height:70px;overflow-wrap:anywhere}#creditCard b{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
 #touchSystem button{padding:3px 12px;border-radius:999px;border:1px solid #ffffff40;background:#00000059;color:#ffffffb3;font-size:10px;letter-spacing:.12em}
-</style></head><body><main><header><span class="counter">COINS <output id="coinCount">0</output></span><span class="counter">LIVES <output id="livesCount">3</output></span></header><section id="stage"><canvas id="screen" width="960" height="480" aria-label="Reference engine viewport"></canvas><div id="touchControls" hidden aria-hidden="true"><div class="touch-zone" id="touchStick"></div><div class="touch-zone" id="touchButtons"></div><div class="stick-base" id="stickBase"><div class="stick-knob" id="stickKnob"></div></div><div class="touch-face" data-button="x">X</div><div class="touch-face" data-button="y">Y</div><div class="touch-face" data-button="a">A</div><div class="touch-face" data-button="b">B</div><div id="touchSystem"><button type="button" data-system="select">SELECT</button><button type="button" data-system="start">START</button></div></div><div id="pauseMenu" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
-<section data-view="main"><h2 id="pauseTitle">Paused</h2><div class="pause-list"><button type="button" data-action="resume">Resume</button><button type="button" data-action="restart">Restart</button><button type="button" data-open="controls">Controls</button><button type="button" data-open="credits">Attributions</button></div><p class="pause-hint">Start · P · Esc resume. Tap the status bar to pause.</p></section>
+</style></head><body><main><header><span class="counter">COINS <output id="coinCount">0</output></span><span class="counter">LIVES <output id="livesCount">3</output></span><button id="fullscreenButton" type="button" title="Fullscreen" aria-label="Toggle fullscreen" hidden>⛶</button></header><section id="stage"><canvas id="screen" width="960" height="480" aria-label="Reference engine viewport"></canvas><div id="touchControls" hidden aria-hidden="true"><div class="touch-zone" id="touchStick"></div><div class="touch-zone" id="touchButtons"></div><div class="stick-base" id="stickBase"><div class="stick-knob" id="stickKnob"></div></div><div class="touch-face" data-button="x">X</div><div class="touch-face" data-button="y">Y</div><div class="touch-face" data-button="a">A</div><div class="touch-face" data-button="b">B</div><div id="touchSystem"><button type="button" data-system="select">SELECT</button><button type="button" data-system="start">START</button><button type="button" data-system="fullscreen" aria-label="Toggle fullscreen" hidden>⛶</button></div></div><div id="pauseMenu" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+<section data-view="main"><h2 id="pauseTitle">Paused</h2><div class="pause-list"><button type="button" data-action="resume">Resume</button><button type="button" data-action="restart">Restart</button><button type="button" data-action="fullscreen" hidden>Fullscreen</button><button type="button" data-open="controls">Controls</button><button type="button" data-open="credits">Attributions</button></div><p class="pause-hint">Start · P · Esc resume. Tap the status bar to pause.</p></section>
 <section data-view="controls" hidden><h2>Controls</h2><div class="pause-tabs" role="tablist"><button type="button" data-tab="gamepad">Gamepad</button><button type="button" data-tab="touch">Touch</button><button type="button" data-tab="keyboard">Keyboard</button></div>
 <div data-panel="gamepad"><div id="padSeen">No gamepad yet. Press any button on it.</div><div id="padRows"></div><div class="pause-field"><span>Analog stick</span><div class="pause-seg" data-setting="padAnalog"><button type="button" data-value="on">Moves too</button><button type="button" data-value="off">Ignored</button></div></div><div class="pause-row"><button type="button" id="padDefaults">Reset to defaults</button></div><p class="pause-note">Buttons only. Learn waits for the next new press; Esc cancels. Saved in this browser.</p></div>
 <div data-panel="touch" hidden><div class="pause-field"><span>Overlay</span><div class="pause-seg" data-setting="touchMode"><button type="button" data-value="auto">Auto</button><button type="button" data-value="on">On</button><button type="button" data-value="off">Off</button></div></div><div class="pause-field"><span>Size</span><div class="pause-seg" data-setting="touchSize"><button type="button" data-value="small">Small</button><button type="button" data-value="medium">Medium</button><button type="button" data-value="large">Large</button></div></div><p class="pause-note">Auto shows the overlay on touch screens or after the first touch. Left: stick. Right: B/Y run, A/X jump; roll B into A to jump without letting go of run.</p></div>
@@ -391,7 +395,7 @@ function invalidate(kind,messages){
   state.platformBehavior=null;
   state.tick=0;
   if(kind==='theme'){state.atlases.clear();state.atlasIssues=[]}
-  empty.hidden=false;
+  empty.hidden=false;syncLayout();
   report(messages);
   draw();
 }
@@ -435,11 +439,11 @@ function draw(){
 }
 function resize(){const r=stage.getBoundingClientRect();state.dpr=Math.max(1,devicePixelRatio||1);canvas.width=Math.round(r.width*state.dpr);canvas.height=Math.round(r.height*state.dpr);if(state.runtime){if(state.behavior)followPlayer(true);else fitScene()}draw()}
 function refreshPair(){
-  state.runtime=null;state.behavior=null;state.pipeBehavior=null;state.actorBehavior=null;state.blockBehavior=null;state.powerupBehavior=null;state.projectileBehavior=null;state.platformBehavior=null;state.tick=0;empty.hidden=false;
+  state.runtime=null;state.behavior=null;state.pipeBehavior=null;state.actorBehavior=null;state.blockBehavior=null;state.powerupBehavior=null;state.projectileBehavior=null;state.platformBehavior=null;state.tick=0;empty.hidden=false,syncLayout();
   if(!state.theme||!state.map){report(`Waiting for ${state.theme?'a compatible editor map':'a compatible reference theme'}; no level is loaded.`,'');draw();return}
   const result=B.compileReferenceRuntime(state.theme,state.map);
   if(!result.ok){report(result.errors);draw();return}
-  state.runtime=result.runtime;state.behavior=result.runtime.playerSpawn?B.createPlayerBehavior(result.runtime):null;state.pipeBehavior=B.createPipeTravelBehavior(result.runtime,state.behavior);state.actorBehavior=B.createActorBehavior(result.runtime,state.behavior);state.blockBehavior=B.createBlockBehavior(result.runtime,state.behavior);state.powerupBehavior=B.createPowerupBehavior(result.runtime);state.projectileBehavior=B.createProjectileBehavior(result.runtime,state.behavior,state.actorBehavior);state.platformBehavior=B.createMovingPlatformBehavior(result.runtime,state.behavior);if(state.behavior){state.camera.zoom=DEFAULT_GAME_ZOOM;followPlayer(true)}else fitScene();empty.hidden=true;
+  state.runtime=result.runtime;state.behavior=result.runtime.playerSpawn?B.createPlayerBehavior(result.runtime):null;state.pipeBehavior=B.createPipeTravelBehavior(result.runtime,state.behavior);state.actorBehavior=B.createActorBehavior(result.runtime,state.behavior);state.blockBehavior=B.createBlockBehavior(result.runtime,state.behavior);state.powerupBehavior=B.createPowerupBehavior(result.runtime);state.projectileBehavior=B.createProjectileBehavior(result.runtime,state.behavior,state.actorBehavior);state.platformBehavior=B.createMovingPlatformBehavior(result.runtime,state.behavior);if(state.behavior){state.camera.zoom=DEFAULT_GAME_ZOOM;followPlayer(true)}else fitScene();empty.hidden=true;syncLayout();
   const problems=[...result.diagnostics,...state.atlasIssues.map(message=>({message}))];
   report(problems.length?problems:`Rendered ${result.runtime.instances.length} instances in ${result.runtime.drawCommands.length} atlas commands; bounds: ${result.runtime.boundsSource}.`,problems.some(x=>x.severity==='error')?'bad':'good');draw();
 }
@@ -489,7 +493,26 @@ function pollGamepad(){
 function pressed(action){return state.input.has(action)||state.padInput.has(action)||state.touchInput.has(action)}
 function stepPlayer(next){if(!state.behavior)return null;const controls=next||{left:pressed('left'),right:pressed('right'),up:pressed('up'),down:pressed('down'),jump:pressed('jump'),run:pressed('run')},travel=state.pipeBehavior?.step(controls,pipeCamera());state.suppressSimulationThisFrame=!!travel?.suppressSimulationThisFrame;const player=state.pipeBehavior?.active||state.suppressSimulationThisFrame?state.behavior.player:state.behavior.step(controls);if(state.behavior.consumeRestart()){state.pipeBehavior?.reset();state.actorBehavior?.reset();state.blockBehavior?.reset();state.powerupBehavior?.reset(false);state.projectileBehavior?.reset();state.platformBehavior?.reset();followPlayer(true)}else if(!state.pipeBehavior?.active)followPlayer();return player}
 function frame(time){state.lastTime=time;pollGamepad();if(state.paused){draw();drawPaused();requestAnimationFrame(frame);return}state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);draw();requestAnimationFrame(frame)}
+const fullscreenTarget=document.documentElement,canFullscreen=!!(fullscreenTarget?.requestFullscreen||fullscreenTarget?.webkitRequestFullscreen);
+function isFullscreen(){return!!(document.fullscreenElement||document.webkitFullscreenElement)}
+async function toggleFullscreen(){
+  // Needs a user gesture; the documentElement goes fullscreen so the touch overlay and pause menu come along.
+  try{if(isFullscreen())await(document.exitFullscreen||document.webkitExitFullscreen).call(document);else{await(fullscreenTarget.requestFullscreen?fullscreenTarget.requestFullscreen({navigationUI:'hide'}):fullscreenTarget.webkitRequestFullscreen());try{await screen.orientation?.lock?.('landscape')}catch(_){}}}catch(_){}
+  syncLayout();
+}
+function syncLayout(){
+  const root=fullscreenTarget?.classList;if(!root)return;
+  const shortLandscapeTouch=typeof matchMedia==='function'&&matchMedia('(pointer: coarse) and (orientation: landscape) and (max-height: 560px)').matches;
+  const theater=isFullscreen()||shortLandscapeTouch,playing=!!state.runtime,changed=root.contains('theater')!==theater||root.contains('playing')!==playing;
+  root.toggle('theater',theater);root.toggle('playing',playing);
+  for(const el of document.querySelectorAll?.('#fullscreenButton,[data-action="fullscreen"],[data-system="fullscreen"]')||[]){el.hidden=!canFullscreen;if(el.dataset.action)el.textContent=isFullscreen()?'Exit fullscreen':'Fullscreen'}
+  if(changed){resize();touchControls?.layout()}
+}
+document.getElementById('fullscreenButton')?.addEventListener?.('click',e=>{e.stopPropagation();toggleFullscreen()});
+for(const type of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener?.(type,syncLayout);
+addEventListener('resize',syncLayout);addEventListener('orientationchange',syncLayout);
 const touchControls=setupTouchControls(),pauseMenu=setupPauseMenu();
+syncLayout();
 function setupPauseMenu(){
   // Pause menu: Resume / Restart / Controls (gamepad Learn, touch overlay, keyboard) / Attributions. Driven by mouse,
   // touch, keyboard, or the gamepad itself (mapped up/down/left/right move, Jump confirms, Run backs out).
@@ -514,7 +537,7 @@ function setupPauseMenu(){
   }
   root.addEventListener('click',e=>{
     const button=e.target.closest('button');if(!button){if(e.target===root)setPaused(false);return}
-    if(button.dataset.action==='resume')setPaused(false);else if(button.dataset.action==='restart')restartLevel();
+    if(button.dataset.action==='resume')setPaused(false);else if(button.dataset.action==='fullscreen')toggleFullscreen();else if(button.dataset.action==='restart')restartLevel();
     else if(button.dataset.open)open(button.dataset.open);else if(button.dataset.tab)showTab(button.dataset.tab);
     else if(button.dataset.value){setControlOption(button.closest('[data-setting]').dataset.setting,button.dataset.value);renderSettings()}
     else if(button.id==='padDefaults'){resetPadMap();learning=null;renderPad()}else if(button.id==='creditPrev'){creditIndex--;renderCredit()}else if(button.id==='creditNext'){creditIndex++;renderCredit()}
@@ -563,7 +586,7 @@ function setupTouchControls(){
   function moveStick(p){const result=B.touchStickActions(p.x-stick.origin.x,p.y-stick.origin.y,geometry.radius);stick.actions=result.actions;stick.knob=result.knob;placeStick(stick.origin,stick.knob);publish()}
   function end(e){if(stick?.id===e.pointerId){stick=null;placeStick(geometry.rest,{x:0,y:0})}pointers.delete(e.pointerId);publish()}
   for(const zone of [buttonZone,stickZone])for(const type of ['pointerup','pointercancel','lostpointercapture'])zone.addEventListener(type,end);
-  for(const button of root.querySelectorAll('[data-system]'))button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(button.dataset.system==='start')togglePause();else restartLevel()});
+  for(const button of root.querySelectorAll('[data-system]'))button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(button.dataset.system==='start')togglePause();else if(button.dataset.system==='fullscreen')toggleFullscreen();else restartLevel()});
   root.addEventListener('contextmenu',e=>e.preventDefault());
   addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){touched=true;show()}},{capture:true});
   addEventListener('resize',()=>{if(!root.hidden)layout()});
