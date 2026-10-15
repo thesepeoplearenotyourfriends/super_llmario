@@ -40,33 +40,62 @@ test('compiles the actual reference theme and representative editor map',()=>{
   assert(result.runtime.drawCommands.every(command=>theme.atlases[command.atlas]&&command.sourceRect));
 });
 
-test('authoritative player behavior drives bounded reachability and reacts to collision geometry',()=>{
-  const base={...validMap,worldBounds:{x:0,y:0,w:320,h:240},markers:{start:{x:80,y:80},goal:null}},start={x:80,y:80};
-  const empty=api.simulateReachability(theme,{...base,instances:[]},start,{horizon:45,maxStates:180,cellSize:8});
-  const floor=api.simulateReachability(theme,{...base,instances:[{placeable:'ground',values:{'transform.x':80,'transform.y':176,'terrain.width':10,'terrain.height':1,'terrain.style':'overground'}}]},start,{horizon:45,maxStates:180,cellSize:8});
-  assert.equal(empty.ok,true);assert.equal(floor.ok,true);assert(empty.samples.length>0);assert(floor.samples.length>0);
-  assert.notDeepEqual(plain(floor.samples),plain(empty.samples),'authored collision changes the real-simulation reachable set');
-  const flight=api.simulateReachability(theme,{...base,instances:[]},start,{profile:'raccoonFlight',horizon:8,maxStates:80});
-  assert.equal(flight.profile,'raccoonFlight');assert(flight.classes.includes('flight'));
+const groundAt=(left,top,width,height=2,extra={})=>({placeable:'ground',values:{'transform.x':left+width*8,'transform.y':top+height*16,'terrain.width':width,'terrain.height':height,'terrain.style':'overground',...extra}});
+const reachMap=(instances,worldBounds,goal=null)=>({...validMap,worldBounds,instances,markers:{start:null,goal}});
+const spanUnder=(result,x,y)=>result.spans.find(span=>span.y===y&&x>=span.x&&x<=span.x+span.w);
+
+test('reachability is a surface graph found by authoritative human-shaped input programs',()=>{
+  // A: start floor. B: across a 64px gap. C: 320px further, beyond any standing jump.
+  const map=reachMap([groundAt(0,256,10),groundAt(224,256,10),groundAt(704,256,10)],{x:0,y:0,w:1000,h:320},{x:300,y:256});
+  const result=api.simulateReachability(theme,map,{x:40,y:240});
+  assert.equal(result.ok,true);assert.equal(result.algorithm,'macro-surface-graph');
+  const a=spanUnder(result,40,256),b=spanUnder(result,300,256),c=spanUnder(result,760,256);
+  assert.equal(result.origin,a.id);assert.equal(a.hop,0);assert.equal(b.hop,1,'the 64px gap is one jump');assert.equal(c.hop,null,'a 320px gap is not jumpable');
+  assert(result.edges.some(edge=>edge.from===a.id&&edge.to===b.id&&edge.kind==='jump'),'the crossing is recorded as a jump edge');
+  assert(result.edges.some(edge=>edge.from===b.id&&edge.to===a.id),'and the way back exists');
+  assert.deepEqual(plain(result.pockets),[],'a two-way pair is not a pocket');
+  assert.deepEqual(plain(result.goal),{reachable:true,hop:1});
+  assert.equal(result.stats.truncated,false);
+  assert.deepEqual(plain(api.simulateReachability(theme,map,{x:40,y:240})),plain(result),'deterministic');
 });
 
-test('reachability pruning is symmetric, order-independent, and preserves the runtime jump apex',()=>{
-  const start={x:400,y:240},map={...validMap,worldBounds:{x:0,y:0,w:800,h:320},instances:[
-    {placeable:'ground',values:{'transform.x':400,'transform.y':240,'terrain.width':50,'terrain.height':1,'terrain.style':'overground'}}
-  ],markers:{start:null,goal:null}},options={horizon:80,maxStates:100,cellSize:8};
-  const forward=api.simulateReachability(theme,map,start,options),reversed=api.simulateReachability(theme,map,start,{...options,reverseControls:true});
-  const xs=forward.samples.map(sample=>sample.x),ys=forward.samples.map(sample=>sample.y),left=start.x-Math.min(...xs),right=Math.max(...xs)-start.x;
-  assert(left>180&&right>180,'normal controls mature into meaningful trajectories on both sides');
+test('the clicked point gets a symmetric jump-arc fan that reaches the runtime apex',()=>{
+  const start={x:400,y:240},map=reachMap([groundAt(0,224,50,1)],{x:0,y:0,w:800,h:320});
+  const result=api.simulateReachability(theme,map,start,{cellSize:8});
+  const xs=result.samples.map(sample=>sample.x),ys=result.samples.map(sample=>sample.y),left=start.x-Math.min(...xs),right=Math.max(...xs)-start.x;
+  assert(left>180&&right>180,'running jumps from here carry well past 180px on both sides');
   assert(Math.abs(left-right)<=16,'symmetric geometry produces comparable left/right displacement');
-  assert(Math.min(...ys)<120,'authoritative stepping reaches the full high jump rather than a truncated low cloud');
-  assert.deepEqual(plain(reversed.samples),plain(forward.samples),'survivors do not depend on control generation order');
+  assert(Math.min(...ys)<224-110,'the full held jump reaches the real apex');
 });
 
-test('Flight From Here consumes charged runtime flight beyond the former 90-frame horizon',()=>{
-  const start={x:400,y:240},map={...validMap,worldBounds:{x:0,y:-800,w:1200,h:1120},instances:[],markers:{start:null,goal:null}},options={profile:'raccoonFlight',maxStates:70,cellSize:8};
-  const short=api.simulateReachability(theme,map,start,{...options,horizon:90}),complete=api.simulateReachability(theme,map,start,{...options,horizon:180});
-  assert.equal(complete.profile,'raccoonFlight');assert(complete.horizon>90);assert(complete.samples.length>short.samples.length*1.25,'charged flight continues producing useful runtime positions after frame 90');
-  assert(Math.min(...complete.samples.map(sample=>sample.y))<Math.min(...short.samples.map(sample=>sample.y))-100,'the real flight budget materially extends airborne traversal');
+test('pipe routes use the real pipe behavior and one-way routes surface as pockets',()=>{
+  const pipe=(id,x,top,destination)=>({placeable:'pipe',instanceId:id,values:{'transform.x':x,'transform.y':top+32,'pipe.direction':'up','pipe.length':2,'pipe.travelEnabled':!!destination,...(destination?{'pipe.destination':{kind:'pipe',instanceId:destination}}:{})}});
+  const floors=[groundAt(0,256,14),groundAt(800,256,14)];
+  const oneWay=api.simulateReachability(theme,reachMap([...floors,pipe('in',160,224,'out'),pipe('out',960,224,null)],{x:0,y:0,w:1100,h:320}),{x:40,y:240});
+  const a=spanUnder(oneWay,40,256),far=spanUnder(oneWay,880,256);
+  assert.equal(far.hop,2,'the far floor is reached only by riding the pipe, then stepping off its exit');
+  const route=oneWay.edges.find(edge=>edge.kind==='pipe');
+  assert.equal(route.pipe,'in');assert(route.entry&&route.landing.x>900,'the edge carries the real entry and arrival points');
+  assert(oneWay.pockets.some(pocket=>pocket.spans.includes(far.id)&&!pocket.containsOrigin),'no route back makes the far side a pocket');
+  const twoWay=api.simulateReachability(theme,reachMap([...floors,pipe('in',160,224,'out'),pipe('out',960,224,'in')],{x:0,y:0,w:1100,h:320}),{x:40,y:240});
+  assert.equal(spanUnder(twoWay,880,256).hop,2);assert.deepEqual(plain(twoWay.pockets),[],'a return pipe closes the loop');
+  assert.equal(a.hop,0);
+});
+
+test('Flight From Here crosses gaps that standing jumps cannot, using the charged runtime flight budget',()=>{
+  const map=reachMap([groundAt(0,256,10),groundAt(560,256,10)],{x:0,y:-800,w:800,h:1120});
+  const standing=api.simulateReachability(theme,map,{x:80,y:240}),flight=api.simulateReachability(theme,map,{x:80,y:160},{profile:'raccoonFlight'});
+  assert.equal(spanUnder(standing,600,256).hop,null);
+  assert.equal(flight.profile,'raccoonFlight');assert(flight.classes.includes('flight'));
+  assert(spanUnder(flight,600,256).hop!==null,'flight reaches the far floor');assert(flight.edges.some(edge=>edge.kind==='flight'));
+  const open=reachMap([],{x:0,y:-800,w:1200,h:1120}),short=api.simulateReachability(theme,open,{x:400,y:240},{profile:'raccoonFlight',horizon:90}),complete=api.simulateReachability(theme,open,{x:400,y:240},{profile:'raccoonFlight'});
+  assert(complete.horizon>90);assert(Math.min(...complete.samples.map(sample=>sample.y))<Math.min(...short.samples.map(sample=>sample.y))-100,'the real flight budget extends airborne traversal past frame 90');
+});
+
+test('reachability reports a partial result instead of hanging when the step budget runs out',()=>{
+  const result=api.simulateReachability(theme,reachMap([groundAt(0,256,10),groundAt(224,256,10)],{x:0,y:0,w:640,h:320}),{x:40,y:240},{maxSteps:1000});
+  assert.equal(result.ok,true);assert.equal(result.stats.truncated,true);
+  assert.equal(api.simulateReachability(theme,validMap,{x:'nope',y:0}).ok,false);
 });
 
 test('orders all five declared layers and resolves default and override layers',()=>{
