@@ -96,7 +96,15 @@ function simulateReachability(theme,map,startPoint,options={}){
   const simulationMap=structuredCopy(map),profile=options.profile==='raccoonFlight'?'raccoonFlight':'standing';
   simulationMap.markers={...(simulationMap.markers||{}),start:{x:startPoint.x,y:startPoint.y}};
   const compiled=compileReferenceRuntime(theme,simulationMap);if(!compiled.ok)return fail(compiled.errors);
-  const runtime=compiled.runtime,bounds=runtime.bounds,W=PLAYER_WIDTH,H=PLAYER_HEIGHT;
+  const W=PLAYER_WIDTH,H=PLAYER_HEIGHT,runtime=traversalRuntime(compiled.runtime),bounds=runtime.bounds;
+  function traversalRuntime(source){
+    // Spin blocks with open space beneath can be bumped into spinning and passed through from below, and they are solid
+    // underfoot: for traversal that is a one-way platform. Spin blocks you cannot get under stay solid walls.
+    const solid=source.surfaces?.solid||[],spin=new Set((source.instances||[]).filter(i=>(i.bumpTriggers||[]).some(t=>t.type==='temporarySpin'&&t.collisionWhileActive==='none')).map(i=>i.index));
+    const reachableBelow=s=>!solid.some(o=>o!==s&&!o.disabled&&o.x<s.x+s.w&&o.x+o.w>s.x&&o.y<s.y+s.h+H&&o.y+o.h>s.y+s.h);
+    const opens=solid.filter(s=>spin.has(s.instanceIndex)&&reachableBelow(s));if(!opens.length)return source;
+    return{...source,surfaces:{...source.surfaces,solid:solid.filter(s=>!opens.includes(s)),solidTop:[...(source.surfaces?.solidTop||[]),...opens]}};
+  }
   const horizon=Math.max(1,Math.min(600,Math.floor(Number(options.horizon)||(profile==='raccoonFlight'?400:240))));
   const cell=Math.max(2,Math.min(32,Number(options.cellSize)||8)),maxSteps=Math.max(1000,Math.floor(Number(options.maxSteps)||600000));
   const maxHops=Number.isFinite(Number(options.hops))?Math.max(0,Math.floor(Number(options.hops))):Infinity;
@@ -118,7 +126,7 @@ function simulateReachability(theme,map,startPoint,options={}){
     const raw=[];
     for(const [kind,list] of [['solid',solids],['oneWay',tops]])for(const s of list){
       let pieces=[{l:s.x,r:s.x+s.w,bl:s.x<=bounds.x,br:s.x+s.w>=bounds.x+bounds.w}];
-      for(const b of solids){if(b===s||!(b.y<s.y&&b.y+b.h>s.y-H)||b.x>=s.x+s.w||b.x+b.w<=s.x)continue;const next=[];for(const p of pieces){if(b.x+b.w<=p.l||b.x>=p.r){next.push(p);continue}if(b.x>p.l)next.push({l:p.l,r:b.x,bl:p.bl,br:true});if(b.x+b.w<p.r)next.push({l:b.x+b.w,r:p.r,bl:true,br:p.br})}pieces=next}
+      for(const b of solids){if(b===s||!(b.y<s.y&&b.y+b.h>s.y-H)||b.x>s.x+s.w||b.x+b.w<s.x)continue;const next=[];for(const p of pieces){if(b.x+b.w===p.l||b.x===p.r){next.push(b.x===p.r?{...p,br:true}:{...p,bl:true});continue}if(b.x+b.w<p.l||b.x>p.r){next.push(p);continue}if(b.x>p.l)next.push({l:p.l,r:b.x,bl:p.bl,br:true});if(b.x+b.w<p.r)next.push({l:b.x+b.w,r:p.r,bl:true,br:p.br})}pieces=next}
       for(const p of pieces)raw.push({...p,y:s.y,kind,instanceIndex:s.instanceIndex});
     }
     raw.sort((a,b)=>a.y-b.y||a.l-b.l||a.r-b.r);const merged=[];
@@ -199,7 +207,7 @@ function simulateReachability(theme,map,startPoint,options={}){
     const push=spec=>{const key=[Math.round(spec.startCenter/4),spec.jumpCenter===null?'n':Math.round(spec.jumpCenter/4),spec.dir,spec.run?1:0,spec.hold,spec.air,spec.drift||0,spec.lift||0].join(',');if(!seen.has(key)){seen.add(key);list.push(spec)}};
     for(const side of [-1,1]){
       const edge=side<0?span.minCenter:span.maxCenter,blocked=side<0?span.blockedLeft:span.blockedRight;
-      if(blocked){push({dir:side,run:false,startCenter:clamp(edge-side*RUNWAY),jumpCenter:null,hold:0,air:'hold',approachMax:40});continue}
+      if(blocked){push({dir:side,run:false,startCenter:clamp(edge-side*RUNWAY),jumpCenter:null,hold:0,air:'hold',approachMax:40});if(form==='raccoon'&&span.maxCenter-span.minCenter>=360)for(const lift of ['hold','pump',60])for(const steer of [Infinity,90])push({dir:side,run:true,startCenter:side>0?span.minCenter:span.maxCenter,jumpCenter:edge,hold:22,air:'hold',lift,steer,approachMax:400});continue}
       for(const runFlag of [false,true])for(const hold of [0,...HOLDS])for(const air of AIRS)push({dir:side,run:runFlag,startCenter:clamp(edge-side*RUNWAY),jumpCenter:edge,hold,air,approachMax:RUNWAY+30});
       for(const hold of HOLDS)for(const air of AIRS)push({dir:side,run:false,startCenter:clamp(edge-side*W/2),jumpCenter:null,hold,air,approachMax:0});
       if(form==='raccoon'&&span.maxCenter-span.minCenter>=360)for(const lift of ['hold','pump',60])for(const steer of [Infinity,90])push({dir:side,run:true,startCenter:side>0?span.minCenter:span.maxCenter,jumpCenter:edge,hold:22,air:'hold',lift,steer,approachMax:400});
