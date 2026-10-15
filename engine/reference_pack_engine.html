@@ -60,37 +60,185 @@ function createPlayerBehavior(runtime){
   reset();return{player,input,reset,beginDeath,setForm,applyPowerup,hurt,consumeRestart,consumeRunRelease,consumeHeadHit,step,resolvePlayer,animationState};
 }
 function simulateReachability(theme,map,startPoint,options={}){
-  if(!record(startPoint)||!Number.isFinite(startPoint.x)||!Number.isFinite(startPoint.y))return{ok:false,errors:['reachability startPoint must contain finite x/y'],samples:[],classes:[]};
+  // Reachability is a graph over standable surfaces. Each edge is found by running a short, human-shaped input
+  // program (approach, jump hold, air control) through the authoritative player step, so physics stays the engine's.
+  const fail=errors=>({ok:false,errors,samples:[],classes:[],spans:[],edges:[],pockets:[]});
+  if(!record(startPoint)||!Number.isFinite(startPoint.x)||!Number.isFinite(startPoint.y))return fail(['reachability startPoint must contain finite x/y']);
   const simulationMap=structuredCopy(map),profile=options.profile==='raccoonFlight'?'raccoonFlight':'standing';
   simulationMap.markers={...(simulationMap.markers||{}),start:{x:startPoint.x,y:startPoint.y}};
-  const compiled=compileReferenceRuntime(theme,simulationMap);if(!compiled.ok)return{ok:false,errors:compiled.errors,samples:[],classes:[]};
-  const defaultHorizon=profile==='raccoonFlight'?240:180,horizon=Math.max(1,Math.min(360,Math.floor(Number(options.horizon)||defaultHorizon))),cell=Math.max(2,Math.min(32,Number(options.cellSize)||8)),maxStates=Math.max(50,Math.min(2000,Math.floor(Number(options.maxStates)||120)));
-  const controls=[];for(const horizontal of [-1,0,1])for(const jump of [false,true])for(const run of [false,true])controls.push({left:horizontal<0,right:horizontal>0,jump,up:jump,run});
-  if(options.reverseControls)controls.reverse();
-  const initial=createPlayerBehavior(compiled.runtime);if(profile==='raccoonFlight'){initial.setForm('raccoon');Object.assign(initial.player,{runCharge:90,pSpeed:true,flightFrames:150})}
-  const copyState=behavior=>({player:{...behavior.player},input:{...behavior.input}}),restore=(behavior,snapshot)=>{Object.assign(behavior.player,snapshot.player);Object.assign(behavior.input,snapshot.input)},sampleMap=new Map();
-  let frontier=[copyState(initial)];
-  function stateKey(snapshot){const p=snapshot.player,i=snapshot.input;return[Math.round(p.x/4),Math.round(p.y/4),Math.round(p.vx*2),Math.round(p.vy*2),p.onGround?1:0,Math.round(p.runCharge/12),p.flightFrames?Math.ceil(p.flightFrames/20):0,i.jump?1:0,i.run?1:0].join(',')}
-  function exactStateKey(snapshot){const p=snapshot.player,i=snapshot.input;return[p.x,p.y,p.vx,p.vy,p.onGround?1:0,p.face,p.runCharge,p.flightFrames,i.left?1:0,i.right?1:0,i.jump?1:0,i.run?1:0].join(',')}
-  function diverseFrontier(states){
-    if(states.length<=maxStates)return states.sort((a,b)=>stateKey(a).localeCompare(stateKey(b)));
-    const originX=startPoint.x-PLAYER_WIDTH/2,chosen=[],chosenKeys=new Set(),take=state=>{const key=stateKey(state);if(!chosenKeys.has(key)&&chosen.length<maxStates){chosenKeys.add(key);chosen.push(state)}};
-    const by=(score,descending=false)=>[...states].sort((a,b)=>(descending?score(b)-score(a):score(a)-score(b))||stateKey(a).localeCompare(stateKey(b)))[0];
-    for(const state of [by(s=>s.player.x),by(s=>s.player.x,true),by(s=>s.player.y),by(s=>s.player.y,true),by(s=>s.player.vx),by(s=>s.player.vx,true),by(s=>s.player.vy),by(s=>s.player.vy,true)])take(state);
-    const buckets=new Map();
-    for(const state of states){const p=state.player,i=state.input,direction=p.x<originX-2?-1:p.x>originX+2?1:0,key=[direction,Math.floor((p.x-originX)/cell),Math.floor((p.y+PLAYER_HEIGHT)/cell),p.onGround?1:0,Math.round(p.vx/2),Math.round(p.vy/3),i.jump?1:0,i.run?1:0,Math.floor(p.runCharge/24),Math.ceil(p.flightFrames/30)].join(',');if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(state)}
-    const groups=[...buckets.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([,group])=>group.sort((a,b)=>stateKey(a).localeCompare(stateKey(b))));
-    for(let depth=0;chosen.length<maxStates;depth++){let added=false;for(const group of groups)if(group[depth]){take(group[depth]);added=true;if(chosen.length===maxStates)break}if(!added)break}
-    return chosen;
+  const compiled=compileReferenceRuntime(theme,simulationMap);if(!compiled.ok)return fail(compiled.errors);
+  const runtime=compiled.runtime,bounds=runtime.bounds,W=PLAYER_WIDTH,H=PLAYER_HEIGHT;
+  const horizon=Math.max(1,Math.min(600,Math.floor(Number(options.horizon)||(profile==='raccoonFlight'?400:240))));
+  const cell=Math.max(2,Math.min(32,Number(options.cellSize)||8)),maxSteps=Math.max(1000,Math.floor(Number(options.maxSteps)||600000));
+  const maxHops=Number.isFinite(Number(options.hops))?Math.max(0,Math.floor(Number(options.hops))):Infinity;
+  const RUNWAY=64,RISE=150,REACH=260,HOLDS=[2,6,10,22],AIRS=['hold','neutral','reverse'];
+  const solids=(runtime.surfaces?.solid||[]).filter(s=>!s.disabled),tops=(runtime.surfaces?.solidTop||[]).filter(s=>!s.disabled);
+  const spans=buildSpans(),travelPipes=(runtime.instances||[]).filter(i=>i.objectId==='pipe'&&i.values['pipe.travelEnabled']&&normalizePipeDestination(i.values['pipe.destination']));
+  const pipeZones=travelPipes.map(pipe=>({pipe,l:pipe.bounds.x-W-8,r:pipe.bounds.x+pipe.bounds.w+8,t:pipe.bounds.y-H-8,b:pipe.bounds.y+pipe.bounds.h+8}));
+  const goal=record(runtime.markers?.goal)&&Number.isFinite(runtime.markers.goal.x)?{x:runtime.markers.goal.x-16,y:runtime.markers.goal.y-32,w:32,h:36}:null;
+  const fullBehavior=createPlayerBehavior(runtime),pipeProbe=createPipeTravelBehavior(runtime,fullBehavior),sampleMap=new Map(),edgeMap=new Map(),pipeCache=new Map();
+  let steps=0,programs=0,truncated=false,goalReach=null,behavior=fullBehavior,windowL=-Infinity,windowR=Infinity;
+  function useWindow(span){
+    // Collision outside a generous horizontal window cannot touch a program that stays inside it; programs that leave abort.
+    if(!span){behavior=fullBehavior;windowL=-Infinity;windowR=Infinity;return}
+    windowL=span.x-1000;windowR=span.x+span.w+1000;const near=s=>s.x<windowR+W&&s.x+s.w>windowL-W;
+    behavior=createPlayerBehavior({...runtime,surfaces:{...runtime.surfaces,solid:runtime.surfaces.solid.filter(near),solidTop:runtime.surfaces.solidTop.filter(near)}});
   }
-  function recordSample(player,classification){const feetX=player.x+player.w/2,feetY=player.y+player.h,key=`${Math.floor(feetX/cell)},${Math.floor(feetY/cell)},${classification}`;if(!sampleMap.has(key))sampleMap.set(key,{x:(Math.floor(feetX/cell)+.5)*cell,y:(Math.floor(feetY/cell)+.5)*cell,classification})}
-  recordSample(initial.player,profile==='raccoonFlight'?'flight':'normal');
-  for(let frame=0;frame<horizon&&frontier.length;frame++){
-    const next=new Map(),behavior=createPlayerBehavior(compiled.runtime);
-    for(const snapshot of frontier)for(const input of controls){restore(behavior,snapshot);const player=behavior.step(input);if(player.dead)continue;const classification=profile==='raccoonFlight'||player.flightFrames>0?'flight':'normal';recordSample(player,classification);const key=[Math.round(player.x/4),Math.round(player.y/4),Math.round(player.vx*2),Math.round(player.vy*2),player.onGround?1:0,Math.round(player.runCharge/12),player.flightFrames?Math.ceil(player.flightFrames/20):0,input.jump?1:0,input.run?1:0].join(','),candidate=copyState(behavior),previous=next.get(key);if(!previous||exactStateKey(candidate)<exactStateKey(previous))next.set(key,candidate)}
-    frontier=diverseFrontier([...next.values()]);
+  function buildSpans(){
+    // A span is a run of surface tops at one height with room for the player's body above it.
+    const raw=[];
+    for(const [kind,list] of [['solid',solids],['oneWay',tops]])for(const s of list){
+      let pieces=[{l:s.x,r:s.x+s.w,bl:s.x<=bounds.x,br:s.x+s.w>=bounds.x+bounds.w}];
+      for(const b of solids){if(b===s||!(b.y<s.y&&b.y+b.h>s.y-H)||b.x>=s.x+s.w||b.x+b.w<=s.x)continue;const next=[];for(const p of pieces){if(b.x+b.w<=p.l||b.x>=p.r){next.push(p);continue}if(b.x>p.l)next.push({l:p.l,r:b.x,bl:p.bl,br:true});if(b.x+b.w<p.r)next.push({l:b.x+b.w,r:p.r,bl:true,br:p.br})}pieces=next}
+      for(const p of pieces)raw.push({...p,y:s.y,kind,instanceIndex:s.instanceIndex});
+    }
+    raw.sort((a,b)=>a.y-b.y||a.l-b.l||a.r-b.r);const merged=[];
+    for(const p of raw){const last=merged[merged.length-1];if(last&&last.y===p.y&&p.l<=last.r&&!(p.l===last.r&&(last.br||p.bl))){if(p.r>last.r){last.r=p.r;last.br=p.br}else if(p.r===last.r)last.br=last.br&&p.br;if(p.kind!==last.kind)last.kind='mixed';continue}merged.push({...p})}
+    return merged.map(p=>({x:p.l,y:p.y,w:p.r-p.l,kind:p.kind,instanceIndex:p.instanceIndex,blockedLeft:p.bl,blockedRight:p.br,minCenter:p.bl?p.l+W/2:p.l,maxCenter:p.br?p.r-W/2:p.r})).filter(p=>p.maxCenter>=p.minCenter&&(!p.blockedLeft||!p.blockedRight||p.w>=W)).map((p,id)=>({id,...p}));
   }
-  const samples=[...sampleMap.values()].sort((a,b)=>a.x-b.x||a.y-b.y||a.classification.localeCompare(b.classification)),classes=[...new Set(samples.map(sample=>sample.classification))];return{ok:true,errors:[],profile,horizon,cellSize:cell,samples,classes};
+  function spanAt(player){
+    const feet=player.y+H;let best=null,overlap=0;
+    for(const s of spans){if(Math.abs(s.y-feet)>.5)continue;const o=Math.min(player.x+W,s.x+s.w)-Math.max(player.x,s.x);if(o>overlap){overlap=o;best=s}}
+    return best;
+  }
+  function place(center,span,form,extra={}){
+    Object.assign(behavior.player,{x:center-W/2,y:span?span.y-H:0,vx:0,vy:0,onGround:!!span,face:1,runCharge:0,pSpeed:false,flightFrames:0,dead:false,inv:0,tick:0,...extra});
+    Object.assign(behavior.input,{left:false,right:false,up:false,down:false,jump:false,jumpTap:false,run:false,runTap:false,runRelease:false});
+    behavior.setForm(form);
+  }
+  function recordSample(player,classification){const feetX=player.x+W/2,feetY=player.y+H,key=`${Math.floor(feetX/cell)},${Math.floor(feetY/cell)},${classification}`;if(!sampleMap.has(key))sampleMap.set(key,{x:Math.floor(feetX/cell)*cell+cell/2,y:Math.floor(feetY/cell)*cell+cell/2,classification})}
+  function controller(spec){
+    // Closed-loop like a player: approach until the takeoff point, hold jump for a fixed count, then steer.
+    let phase=spec.flight?'air':'approach',approach=0,held=0,air=0;
+    return p=>{
+      const toward=spec.dir<0?{left:true}:spec.dir>0?{right:true}:{},away=spec.dir<0?{right:true}:spec.dir>0?{left:true}:{};
+      if(phase==='approach'){
+        const reached=spec.jumpCenter===null||spec.dir===0||(spec.dir>0?p.x+W/2>=spec.jumpCenter:p.x+W/2<=spec.jumpCenter);
+        if(!p.onGround&&approach>0){phase='air'}else if(reached||approach>=spec.approachMax){phase=spec.hold>0?'jump':'air';if(spec.hold<=0&&!reached&&approach>=spec.approachMax)return null}
+        else{approach++;return{...toward,run:spec.run}}
+      }
+      if(phase==='jump'){if(held++<spec.hold)return{...toward,run:spec.run,jump:true,up:false};phase='air'}
+      air++;
+      if(spec.lift!==undefined){const lift=spec.lift==='hold'||(spec.lift==='pump'&&air%20<10)||(Number.isFinite(spec.lift)&&air<=spec.lift);if(spec.steer!==undefined&&air>spec.steer)return{...(Math.sign(p.vx)===spec.dir?away:{}),run:true,jump:lift,up:false};return{...toward,run:true,jump:lift,up:false}}
+      if(spec.air==='neutral')return{run:spec.run,...(spec.drift<0?{left:p.vy>=0}:spec.drift>0?{right:p.vy>=0}:{})};
+      if(spec.air==='reverse'&&p.vy>=0)return{...away,run:spec.run};
+      return{...toward,run:spec.run};
+    };
+  }
+  function run(spec,start,form,collect){
+    // One program from one standing (or flying) state; returns where it settles.
+    place(spec.startCenter,start,form,spec.state);programs++;const drive=controller(spec),touched=[];let left=false,flew=false,frames=0;
+    while(frames<horizon){
+      if(steps>=maxSteps){truncated=true;return null}
+      const p=behavior.player,input=drive(p);if(!input)return null;
+      behavior.step({left:false,right:false,up:false,down:false,jump:false,run:false,...input});steps++;frames++;
+      if(p.dead)return{dead:true,frames,touched,flew};
+      if(p.x<windowL||p.x>windowR)return null;
+      if(!p.onGround)left=true;if(p.flightFrames>0)flew=true;
+      if(!left&&frames>(spec.approachMax||0)+(spec.hold||0)+45)break;
+      if(collect)recordSample(p,spec.flight||p.flightFrames>0?'flight':'normal');
+      for(const zone of pipeZones)if(p.x>=zone.l&&p.x<=zone.r&&p.y>=zone.t&&p.y<=zone.b&&!touched.some(t=>t.pipe===zone.pipe)&&pipeProbe.aligned(zone.pipe,p))touched.push({pipe:zone.pipe,snapshot:{...p}});
+      if(goal&&p.x<goal.x+goal.w&&p.x+W>goal.x&&p.y<goal.y+goal.h&&p.y+H>goal.y)touched.push({goal:true});
+      if(left&&p.onGround)break;
+    }
+    const p=behavior.player;return p.onGround?{span:spanAt(p),x:p.x+W/2,y:p.y+H,frames,touched,flew}:{airborne:true,frames,touched,flew};
+  }
+  function settle(player,form,collect){
+    // Drop from a point or pipe exit without input until the player stands somewhere.
+    const local=behavior;behavior=fullBehavior;place(player.x+W/2,null,form,{x:player.x,y:player.y,vx:player.vx||0,vy:player.vy||0});
+    let outcome={airborne:true};
+    for(let frame=0;frame<600;frame++){fullBehavior.step({});steps++;const p=fullBehavior.player;if(p.dead){outcome={dead:true};break}if(collect)recordSample(p,'normal');if(p.onGround&&frame>0){outcome={span:spanAt(p),x:p.x+W/2,y:p.y+H};break}}
+    behavior=local;return outcome;
+  }
+  function travel(pipe,snapshot,form){
+    // Pipe hops use the real pipe behavior, so arrival positions match gameplay exactly.
+    if(pipeCache.has(pipe.index))return pipeCache.get(pipe.index);
+    const traveller=createPlayerBehavior(runtime),route=createPipeTravelBehavior(runtime,traveller);traveller.setForm(form);Object.assign(traveller.player,{...snapshot,vx:0,vy:0,dead:false});
+    let result=route.step({[route.requiredInput(pipe.values['pipe.direction']||'up')]:true});
+    for(let tick=0;tick<400&&result&&!result.complete;tick++)result=route.step({});
+    const outcome=result?.complete?settle(traveller.player,form,false):{airborne:true};outcome.pipe=pipe;outcome.entry={x:Math.round(snapshot.x+W/2),y:Math.round(snapshot.y+H)};pipeCache.set(pipe.index,outcome);return outcome;
+  }
+  function addEdge(from,outcome,spec,kind){
+    if(!outcome?.span||outcome.span.id===from?.id&&kind!=='pipe')return null;
+    const to=outcome.span.id,key=`${from?from.id:'origin'}>${to}>${kind}`,needs=[...(spec?.run?['run']:[]),...(spec?.hold>=22?['fullJump']:[]),...(outcome.flew?['flight']:[])],cost=needs.length;
+    const known=edgeMap.get(key);if(known&&known.needs.length<=cost)return known;
+    const edge={from:from?from.id:null,to,kind,needs,landing:{x:Math.round(outcome.x),y:Math.round(outcome.y)},...(outcome.pipe?{pipe:outcome.pipe.instanceId||`pipe@${outcome.pipe.index}`,entry:outcome.entry}:{})};edgeMap.set(key,edge);return edge;
+  }
+  function programsFor(span,form){
+    // Edge takeoffs (run-ups, walk-offs, hops) plus aimed takeoffs under anything within jump reach above.
+    const list=[],seen=new Set(),clamp=x=>Math.max(span.minCenter,Math.min(span.maxCenter,x));
+    const push=spec=>{const key=[Math.round(spec.startCenter/4),spec.jumpCenter===null?'n':Math.round(spec.jumpCenter/4),spec.dir,spec.run?1:0,spec.hold,spec.air,spec.drift||0,spec.lift||0].join(',');if(!seen.has(key)){seen.add(key);list.push(spec)}};
+    for(const side of [-1,1]){
+      const edge=side<0?span.minCenter:span.maxCenter,blocked=side<0?span.blockedLeft:span.blockedRight;
+      if(blocked){push({dir:side,run:false,startCenter:clamp(edge-side*RUNWAY),jumpCenter:null,hold:0,air:'hold',approachMax:40});continue}
+      for(const runFlag of [false,true])for(const hold of [0,...HOLDS])for(const air of AIRS)push({dir:side,run:runFlag,startCenter:clamp(edge-side*RUNWAY),jumpCenter:edge,hold,air,approachMax:RUNWAY+30});
+      for(const hold of HOLDS)for(const air of AIRS)push({dir:side,run:false,startCenter:clamp(edge-side*W/2),jumpCenter:null,hold,air,approachMax:0});
+      if(form==='raccoon'&&span.maxCenter-span.minCenter>=360)for(const lift of ['hold','pump',60])for(const steer of [Infinity,90])push({dir:side,run:true,startCenter:side>0?span.minCenter:span.maxCenter,jumpCenter:edge,hold:22,air:'hold',lift,steer,approachMax:400});
+    }
+    if(span===origin){
+      // The clicked spot also gets the classic arc fan, so the overlay shows the jump envelope from exactly here.
+      const at=clamp(originCenter);
+      for(const dir of [-1,1])for(const runFlag of [false,true])for(const hold of HOLDS)for(const air of AIRS){push({dir,run:runFlag,startCenter:clamp(at-dir*RUNWAY),jumpCenter:at,hold,air,approachMax:RUNWAY+30});push({dir,run:false,startCenter:at,jumpCenter:null,hold,air,approachMax:0})}
+      for(const hold of HOLDS)for(const drift of [0,-1,1])push({dir:0,run:false,startCenter:at,jumpCenter:null,hold,air:'neutral',drift,approachMax:0});
+    }
+    const aims=[];
+    for(const t of spans){if(t===span||t.y>=span.y||span.y-t.y>RISE||t.x>span.maxCenter+REACH||t.x+t.w<span.minCenter-REACH)continue;aims.push({l:t.x,r:t.x+t.w})}
+    for(const pipe of travelPipes){const m=pipeMouth(pipe),d=pipe.values['pipe.direction']||'up';if(d==='up')continue;const feet=d==='down'?m.y+H:m.y+H/2;if(feet>=span.y||span.y-feet>RISE+H||m.x>span.maxCenter+REACH||m.x<span.minCenter-REACH)continue;aims.push(d==='down'?{l:m.x-4,r:m.x+4}:d==='left'?{l:m.x,r:m.x+W}:{l:m.x-W,r:m.x})}
+    for(const aim of aims){
+      for(const [x,dir] of [[aim.l-8,1],[aim.l-64,1],[aim.l-128,1],[aim.r+8,-1],[aim.r+64,-1],[aim.r+128,-1]]){
+        const at=clamp(x);if(Math.abs(at-x)>24)continue;
+        for(const runFlag of [false,true])for(const hold of [6,10,22])for(const air of ['hold','neutral'])push({dir,run:runFlag,startCenter:clamp(at-dir*RUNWAY),jumpCenter:at,hold,air,approachMax:RUNWAY+30});
+        for(const hold of [10,22])for(const air of ['hold','neutral'])push({dir,run:false,startCenter:at,jumpCenter:null,hold,air,approachMax:0});
+      }
+      const mid=clamp((aim.l+aim.r)/2);for(const hold of [10,22])for(const drift of [0,-1,1])push({dir:0,run:false,startCenter:mid,jumpCenter:null,hold,air:'neutral',drift,approachMax:0});
+    }
+    return list;
+  }
+  function expand(span,form,collect,onEdge){
+    useWindow(span);
+    for(const spec of programsFor(span,form)){
+      const outcome=run(spec,span,form,collect);if(!outcome){if(truncated)return;continue}
+      for(const t of outcome.touched){if(t.goal){if(!goalReach||goalReach.hop>span.hop+1)goalReach={span:span.id,hop:span.hop+1};continue}const via=travel(t.pipe,t.snapshot,form);onEdge(span,via,null,'pipe')}
+      if(outcome.span)onEdge(span,outcome,spec,outcome.flew?'flight':spec.hold>0?'jump':'walk');
+    }
+  }
+  // Origin: settle from the clicked point (standing) or fly from it (raccoonFlight).
+  const form=profile==='raccoonFlight'?'raccoon':'small',hop=new Map(),queue=[];
+  const spawn=runtime.playerSpawn;let origin=null,originCenter=startPoint.x;
+  const reach=(from,outcome,spec,kind)=>{const edge=addEdge(from,outcome,spec,kind);if(!edge)return;const next=(from?hop.get(from.id):-1)+1;if(!hop.has(edge.to)||hop.get(edge.to)>next){hop.set(edge.to,next);if(next<=maxHops)queue.push(spans[edge.to])}};
+  if(profile==='raccoonFlight'){
+    for(const dir of [-1,0,1])for(const lift of ['hold','pump',40,90,'none'])for(const steer of dir?[Infinity,40,80,120]:[Infinity]){
+      const outcome=run({dir,run:true,startCenter:startPoint.x,jumpCenter:null,hold:0,air:'hold',flight:true,lift:lift==='none'?0:lift,steer,approachMax:0,state:{x:spawn.x,y:spawn.y,onGround:false,runCharge:90,pSpeed:true,flightFrames:150}},null,form,true);
+      if(!outcome)break;for(const t of outcome.touched)if(t.goal)goalReach={span:null,hop:1};else reach(null,travel(t.pipe,t.snapshot,form),null,'pipe');
+      if(outcome.span)reach(null,outcome,null,'flight');
+    }
+  }else{
+    const settled=settle({x:spawn.x,y:spawn.y},form,true);
+    if(settled.span){origin=settled.span;originCenter=settled.x;hop.set(origin.id,0);queue.push(origin)}
+  }
+  for(let index=0;index<queue.length&&!truncated;index++){
+    const span=queue[index];if(span.expanded)continue;span.expanded=true;span.hop=hop.get(span.id);
+    expand(span,form,span===origin||(profile==='raccoonFlight'&&span.hop===0),reach);
+  }
+  // Graph shape: strongly connected components with no way out are pockets (traps or intentional dead ends).
+  const reached=[...hop.keys()],adjacency=new Map(reached.map(id=>[id,[]]));
+  for(const edge of edgeMap.values())if(edge.from!==null&&adjacency.has(edge.from)&&adjacency.has(edge.to)&&edge.from!==edge.to)adjacency.get(edge.from).push(edge.to);
+  const index=new Map(),low=new Map(),stack=[],onStack=new Set(),components=[];let counter=0;
+  const connect=root=>{const work=[[root,0]];index.set(root,counter);low.set(root,counter++);stack.push(root);onStack.add(root);
+    while(work.length){const frame=work[work.length-1],[node,i]=frame,next=adjacency.get(node)[i];
+      if(next!==undefined){frame[1]++;if(!index.has(next)){index.set(next,counter);low.set(next,counter++);stack.push(next);onStack.add(next);work.push([next,0])}else if(onStack.has(next))low.set(node,Math.min(low.get(node),index.get(next)));continue}
+      work.pop();if(work.length)low.set(work[work.length-1][0],Math.min(low.get(work[work.length-1][0]),low.get(node)));
+      if(low.get(node)===index.get(node)){const component=[];let member;do{member=stack.pop();onStack.delete(member);component.push(member)}while(member!==node);components.push(component.sort((a,b)=>a-b))}}};
+  for(const id of reached)if(!index.has(id))connect(id);
+  const componentOf=new Map();components.forEach((c,i)=>c.forEach(id=>componentOf.set(id,i)));
+  const goalSpans=new Set(goal?spans.filter(s=>s.y>goal.y&&s.y-H<goal.y+goal.h&&s.x<goal.x+goal.w+W&&s.x+s.w>goal.x-W).map(s=>s.id):[]);
+  for(const id of goalSpans)if(hop.has(id)&&(!goalReach||goalReach.hop>hop.get(id)))goalReach={span:id,hop:hop.get(id)};
+  const pockets=components.filter(c=>!c.some(id=>adjacency.get(id).some(to=>componentOf.get(to)!==componentOf.get(id)))).filter(()=>components.length>1).map(c=>({spans:c,containsOrigin:origin?c.includes(origin.id):false,containsGoal:c.some(id=>goalSpans.has(id)),complete:!truncated&&c.every(id=>spans[id].expanded)}));
+  const samples=[...sampleMap.values()].sort((a,b)=>a.x-b.x||a.y-b.y||a.classification.localeCompare(b.classification)),classes=[...new Set(samples.map(s=>s.classification))].sort();
+  return{ok:true,errors:[],algorithm:'macro-surface-graph',profile,horizon,cellSize:cell,startPoint:{x:startPoint.x,y:startPoint.y},origin:origin?origin.id:null,
+    spans:spans.map(({id,x,y,w,kind,blockedLeft,blockedRight,instanceIndex})=>{const source=runtime.instances[instanceIndex];return{id,x,y,w,kind,blockedLeft,blockedRight,hop:hop.has(id)?hop.get(id):null,source:source?{placeable:source.placeable,instanceId:source.instanceId||null}:null}}),
+    edges:[...edgeMap.values()].sort((a,b)=>(a.from??-1)-(b.from??-1)||a.to-b.to||a.kind.localeCompare(b.kind)),reached:reached.sort((a,b)=>a-b),pockets,
+    goal:goal?{reachable:!!goalReach,hop:goalReach?goalReach.hop:null}:null,samples,classes,stats:{steps,programs,truncated,maxSteps}};
 }
 function normalizePipeDestination(value){if(!record(value))return null;if(value.kind==='pipe'&&typeof value.instanceId==='string'&&value.instanceId)return{kind:'pipe',instanceId:value.instanceId};if((value.kind==='point'||value.kind===undefined)&&Number.isFinite(value.x)&&Number.isFinite(value.y))return{kind:'point',x:value.x,y:value.y};return null}
 function pipeMouth(instance){const b=instance.bounds,d=instance.values['pipe.direction']||'up';if(d==='down')return{x:b.x+b.w/2,y:b.y+b.h,axis:{x:0,y:1}};if(d==='left')return{x:b.x,y:b.y+b.h/2,axis:{x:-1,y:0}};if(d==='right')return{x:b.x+b.w,y:b.y+b.h/2,axis:{x:1,y:0}};return{x:b.x+b.w/2,y:b.y,axis:{x:0,y:-1}}}

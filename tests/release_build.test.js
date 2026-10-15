@@ -59,3 +59,10 @@ test('every generated inline script is syntactically valid JavaScript',()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'llmario-release-'));
   try{scripts(build()).forEach((source,index)=>{const file=path.join(dir,index+'.js');fs.writeFileSync(file,source);cp.execFileSync('node',['--check',file],{stdio:'pipe'})})}finally{fs.rmSync(dir,{recursive:true,force:true})}
 });
+test('packed editor keeps every element the editor script looks up by id',()=>{
+  // A missing id throws during editor startup and silently skips every handler registered after it.
+  const html=build(),source=packedScript(html),sandbox={};vm.createContext(sandbox);vm.runInContext(source.replace(/^const /gm,'var '),sandbox);
+  const editor=fs.readFileSync(editorPath,'utf8'),ids=new Set([...sandbox.PACKED_EDITOR_HTML.matchAll(/id="([^"]+)"/g)].map(match=>match[1]));
+  const looked=[...new Set([...editor.matchAll(/\$\('([A-Za-z][\w-]*)'\)/g)].map(match=>match[1]))];
+  assert.deepEqual(looked.filter(id=>!ids.has(id)),[]);
+});
