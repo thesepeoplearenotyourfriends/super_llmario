@@ -26,8 +26,9 @@ const theme=JSON.parse(fs.readFileSync(options.theme,'utf8')),map=JSON.parse(fs.
 if(!from)usage('map has no start marker; pass --from X,Y');
 const started=Date.now(),result=api.simulateReachability(theme,map,from,{profile:options.profile,maxSteps:options.maxSteps});
 if(!result.ok){console.error(result.errors.join('\n'));process.exit(1)}
-if(options.json){process.stdout.write(JSON.stringify(result,null,2)+'\n');process.exit(0)}
 
+if(options.json)process.stdout.write(JSON.stringify(result,null,2)+'\n');else report();
+function report(){
 const spans=result.spans,reached=spans.filter(span=>span.hop!==null),byHop=new Map();
 for(const span of reached)byHop.set(span.hop,[...(byHop.get(span.hop)||[]),span]);
 const out=[];
@@ -43,3 +44,4 @@ if(result.pockets.length){out.push('');out.push('Pockets (reachable, but no rout
 const needs=new Map();for(const edge of result.edges)for(const need of edge.needs)needs.set(need,(needs.get(need)||0)+1);
 if(needs.size){out.push('');out.push(`Edge requirements (cheapest known): ${[...needs].map(([need,count])=>`${need} ×${count}`).join(', ')}`)}
 process.stdout.write(out.join('\n')+'\n');
+}
