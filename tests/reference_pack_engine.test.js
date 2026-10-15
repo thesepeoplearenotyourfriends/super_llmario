@@ -16,7 +16,7 @@ const api=context.globalThis.ReferencePackBoundary;
 const plain=value=>JSON.parse(JSON.stringify(value));
 const validMap={format:'llmario-reference-editor-map',mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},instances:[],markers:{start:null,goal:null}};
 
-function engineHarness(){
+function engineHarness(extra={}){
   const operations={fillRect:0,drawImage:0,drawCalls:[],translates:[],scales:[],texts:[]};
   const frames=[],events={};
   const ctx={setTransform(){},save(){},restore(){},translate(...args){operations.translates.push(args)},scale(...args){operations.scales.push(args)},rotate(){},fillRect(){operations.fillRect++},fillText(...args){operations.texts.push(args)},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
@@ -26,7 +26,7 @@ function engineHarness(){
   };
   class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
   const window={ReferencePackBoundary:api};
-  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(type,fn){events[type]=fn},Map,Set,Math,Promise,console};
+  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(type,fn){events[type]=fn},Map,Set,Math,Promise,console,...extra};
   vm.runInNewContext(applicationSource,domContext);
   return{engine:window.ReferenceEngine,elements,operations,frames,events};
 }
@@ -1006,4 +1006,40 @@ test('runtime diagnoses complete authored geometry outside finite worldBounds',(
     {placeable:'whitePlatform',values:{'transform.x':96,'transform.y':80,'extent.width':3,'movingPlatform.range':0}},
   ],markers:{start:{x:16,y:32},goal:null}});
   assert(result.diagnostics.some(item=>item.code==='outside-world-bounds'&&item.instanceIndex===0));
+});
+
+test('touch face buttons glide, chord, and latch run through the B→A roll',()=>{
+  const centers={x:{x:100,y:40},y:{x:60,y:80},a:{x:140,y:80},b:{x:100,y:120}},engage=32,release=40,step=(held,point)=>plain(api.touchFaceButtons(held,point,centers,engage,release));
+  let held=step(null,{x:100,y:120});assert.deepEqual(held.held,['b'],'thumb lands on B');
+  held=step(held,{x:120,y:100});assert.deepEqual(held.held,['a','b'],'the overlap between B and A presses both');
+  held=step(held,{x:140,y:80});assert.deepEqual(held.held,['a','b'],'B stays latched while A, acquired during B, is held');
+  held=step(held,{x:100,y:40});assert.deepEqual(held.held,['x'],'leaving A drops the latch with it');
+  assert.deepEqual(step(null,{x:100,y:80}).held,[],'the diamond centre is dead space, not four buttons');
+  assert.deepEqual(step(step(null,{x:60,y:80}),{x:60,y:118}).held,['y'],'hysteresis keeps a held button until the release radius');
+});
+
+test('touch stick maps horizontal early and vertical only on a deliberate push',()=>{
+  const actions=(dx,dy)=>plain(api.touchStickActions(dx,dy,50)).actions;
+  assert.deepEqual(actions(10,0),[]);assert.deepEqual(actions(20,0),['right']);assert.deepEqual(actions(-40,-20),['left'],'a running diagonal does not press up');
+  assert.deepEqual(actions(10,-45),['up']);assert.deepEqual(actions(35,35),['right','down']);
+  assert.deepEqual(plain(api.touchStickActions(300,0,50)).knob,{x:50,y:0},'the knob is clamped to the base');
+});
+
+test('pause freezes simulation and restart clears it',async()=>{
+  const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+  const tick=engine.state.tick;assert.equal(engine.togglePause(),true);frames.shift()(16);assert.equal(engine.state.tick,tick,'paused frames do not advance the game');
+  engine.state.touchInput.add('right');frames.shift()(32);assert.equal(engine.state.tick,tick);
+  engine.restartLevel();assert.equal(engine.state.paused,false);frames.shift()(48);assert(engine.state.tick>tick);
+});
+
+test('gamepad mappings load from storage, drive actions, and the mapped pause button toggles pause',async()=>{
+  const store={super_llmario_button_gamepad_map_v2:JSON.stringify({jump:5,run:'junk',bogus:3}),super_llmario_controls_v1:JSON.stringify({padAnalog:'off'})},pressed=new Set(),axes=[-1,0];
+  const localStorage={getItem:key=>store[key]??null,setItem:(key,value)=>{store[key]=value}},navigator={getGamepads:()=>[{id:'Test Pad',axes,buttons:Array.from({length:17},(_,i)=>({pressed:pressed.has(i)}))}]};
+  const {engine}=engineHarness({localStorage,navigator});await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+  assert.deepEqual(plain(engine.padMap()),{left:14,right:15,up:12,down:13,run:0,jump:5,pause:9},'valid stored bindings merge over defaults; junk is ignored');
+  pressed.add(5);engine.pollGamepad();assert(engine.state.padInput.has('jump'));assert(!engine.state.padInput.has('left'),'analog stick ignored when the option is off');
+  pressed.clear();pressed.add(1);engine.pollGamepad();assert(!engine.state.padInput.has('jump'),'the default jump button no longer jumps');
+  pressed.clear();engine.pollGamepad();pressed.add(9);engine.pollGamepad();assert.equal(engine.state.paused,true,'pause press edge pauses');
+  engine.pollGamepad();assert.equal(engine.state.paused,true,'holding pause does not toggle again');
+  pressed.clear();engine.pollGamepad();pressed.add(9);engine.pollGamepad();assert.equal(engine.state.paused,false);
 });
