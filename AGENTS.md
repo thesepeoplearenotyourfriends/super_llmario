@@ -79,6 +79,13 @@ Default gamepad mapping:
 * Jump: Button 1
 * Pause/Start: Button 9
 
+Touchscreen (canonical engine; appears on coarse pointers or the first touch):
+
+* Left half: floating virtual stick. Horizontal engages early; up/down need a deliberate push, and up never jumps.
+* Right half: SNES diamond. B and Y run, A and X jump. One touch surface hit-tests each pointer against invisible regions larger than the buttons: thumbs glide between buttons, the B/A overlap presses both, and rolling B → A keeps B latched while A is held, so the run continues through the jump.
+* Bottom bar: Select restarts, Start pauses.
+* Translucent overlay with `touch-action: none`; stuck touches are released on blur or when the page is hidden.
+
 Gamepad Learn lives in the pause/status-bar menu. The visible always-on gamepad icon was removed. Tapping/clicking the top status bar opens pause/settings.
 
 CURRENT AUDIO STATE:

@@ -1007,3 +1007,27 @@ test('runtime diagnoses complete authored geometry outside finite worldBounds',(
   ],markers:{start:{x:16,y:32},goal:null}});
   assert(result.diagnostics.some(item=>item.code==='outside-world-bounds'&&item.instanceIndex===0));
 });
+
+test('touch face buttons glide, chord, and latch run through the B→A roll',()=>{
+  const centers={x:{x:100,y:40},y:{x:60,y:80},a:{x:140,y:80},b:{x:100,y:120}},engage=32,release=40,step=(held,point)=>plain(api.touchFaceButtons(held,point,centers,engage,release));
+  let held=step(null,{x:100,y:120});assert.deepEqual(held.held,['b'],'thumb lands on B');
+  held=step(held,{x:120,y:100});assert.deepEqual(held.held,['a','b'],'the overlap between B and A presses both');
+  held=step(held,{x:140,y:80});assert.deepEqual(held.held,['a','b'],'B stays latched while A, acquired during B, is held');
+  held=step(held,{x:100,y:40});assert.deepEqual(held.held,['x'],'leaving A drops the latch with it');
+  assert.deepEqual(step(null,{x:100,y:80}).held,[],'the diamond centre is dead space, not four buttons');
+  assert.deepEqual(step(step(null,{x:60,y:80}),{x:60,y:118}).held,['y'],'hysteresis keeps a held button until the release radius');
+});
+
+test('touch stick maps horizontal early and vertical only on a deliberate push',()=>{
+  const actions=(dx,dy)=>plain(api.touchStickActions(dx,dy,50)).actions;
+  assert.deepEqual(actions(10,0),[]);assert.deepEqual(actions(20,0),['right']);assert.deepEqual(actions(-40,-20),['left'],'a running diagonal does not press up');
+  assert.deepEqual(actions(10,-45),['up']);assert.deepEqual(actions(35,35),['right','down']);
+  assert.deepEqual(plain(api.touchStickActions(300,0,50)).knob,{x:50,y:0},'the knob is clamped to the base');
+});
+
+test('pause freezes simulation and restart clears it',async()=>{
+  const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+  const tick=engine.state.tick;assert.equal(engine.togglePause(),true);frames.shift()(16);assert.equal(engine.state.tick,tick,'paused frames do not advance the game');
+  engine.state.touchInput.add('right');frames.shift()(32);assert.equal(engine.state.tick,tick);
+  engine.restartLevel();assert.equal(engine.state.paused,false);frames.shift()(48);assert(engine.state.tick>tick);
+});
