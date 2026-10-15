@@ -16,7 +16,7 @@ const api=context.globalThis.ReferencePackBoundary;
 const plain=value=>JSON.parse(JSON.stringify(value));
 const validMap={format:'llmario-reference-editor-map',mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},instances:[],markers:{start:null,goal:null}};
 
-function engineHarness(){
+function engineHarness(extra={}){
   const operations={fillRect:0,drawImage:0,drawCalls:[],translates:[],scales:[],texts:[]};
   const frames=[],events={};
   const ctx={setTransform(){},save(){},restore(){},translate(...args){operations.translates.push(args)},scale(...args){operations.scales.push(args)},rotate(){},fillRect(){operations.fillRect++},fillText(...args){operations.texts.push(args)},drawImage(...args){operations.drawImage++;operations.drawCalls.push(args)}};
@@ -26,7 +26,7 @@ function engineHarness(){
   };
   class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
   const window={ReferencePackBoundary:api};
-  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(type,fn){events[type]=fn},Map,Set,Math,Promise,console};
+  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(type,fn){events[type]=fn},Map,Set,Math,Promise,console,...extra};
   vm.runInNewContext(applicationSource,domContext);
   return{engine:window.ReferenceEngine,elements,operations,frames,events};
 }
@@ -1030,4 +1030,16 @@ test('pause freezes simulation and restart clears it',async()=>{
   const tick=engine.state.tick;assert.equal(engine.togglePause(),true);frames.shift()(16);assert.equal(engine.state.tick,tick,'paused frames do not advance the game');
   engine.state.touchInput.add('right');frames.shift()(32);assert.equal(engine.state.tick,tick);
   engine.restartLevel();assert.equal(engine.state.paused,false);frames.shift()(48);assert(engine.state.tick>tick);
+});
+
+test('gamepad mappings load from storage, drive actions, and the mapped pause button toggles pause',async()=>{
+  const store={super_llmario_button_gamepad_map_v2:JSON.stringify({jump:5,run:'junk',bogus:3}),super_llmario_controls_v1:JSON.stringify({padAnalog:'off'})},pressed=new Set(),axes=[-1,0];
+  const localStorage={getItem:key=>store[key]??null,setItem:(key,value)=>{store[key]=value}},navigator={getGamepads:()=>[{id:'Test Pad',axes,buttons:Array.from({length:17},(_,i)=>({pressed:pressed.has(i)}))}]};
+  const {engine}=engineHarness({localStorage,navigator});await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+  assert.deepEqual(plain(engine.padMap()),{left:14,right:15,up:12,down:13,run:0,jump:5,pause:9},'valid stored bindings merge over defaults; junk is ignored');
+  pressed.add(5);engine.pollGamepad();assert(engine.state.padInput.has('jump'));assert(!engine.state.padInput.has('left'),'analog stick ignored when the option is off');
+  pressed.clear();pressed.add(1);engine.pollGamepad();assert(!engine.state.padInput.has('jump'),'the default jump button no longer jumps');
+  pressed.clear();engine.pollGamepad();pressed.add(9);engine.pollGamepad();assert.equal(engine.state.paused,true,'pause press edge pauses');
+  engine.pollGamepad();assert.equal(engine.state.paused,true,'holding pause does not toggle again');
+  pressed.clear();engine.pollGamepad();pressed.add(9);engine.pollGamepad();assert.equal(engine.state.paused,false);
 });
