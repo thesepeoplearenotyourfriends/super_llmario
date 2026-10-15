@@ -31,6 +31,7 @@ PACKED_EDITOR_HEADER = """
       <div class="packed-menu-popup" id="packedFileMenu" role="menu" hidden>
         <button id="openMapBtn" role="menuitem" title="Open an authored map">Open map… <span>Ctrl+O</span></button>
         <button id="saveMapBtn" role="menuitem" title="Save authored map" disabled>Save map <span>Ctrl+S</span></button>
+        <button id="saveAsMapBtn" role="menuitem" title="Save authored map as" disabled>Save map as… <span>Ctrl+Shift+S</span></button>
         <div class="packed-menu-separator"></div>
         <button id="loadBtn" role="menuitem">Load theme…</button>
       </div>
