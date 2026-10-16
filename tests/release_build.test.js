@@ -45,7 +45,7 @@ test('release packs every repository map with one shared reference theme and emb
   assert(sandbox.PACKED_EDITOR_HTML.includes("packedTestState.point=chosen;recomputePackedRanges()"),'repeated Range clicks replace the origin without reopening the picker');
   assert(sandbox.PACKED_EDITOR_HTML.includes("kind==='themeLoad'||kind==='mapLoad'"),'document replacement clears stale test/range state');
   assert.match(html,/grid-template-rows:32px 44px/);assert.match(html,/height:calc\(100vh - 76px\)/);assert.match(html,/\.side\.right\{top:76px\}/);
-  assert(html.includes("if(frame.dataset.loaded){if(activePackedExperienceId===PACKED_WORLD_ID)void loadPackedExperienceIntoEditor({id:PACKED_WORLD_ID});return}"),'returning to the editor reuses its existing iframe and ephemeral state (in World it re-captures the current area)');
+  assert(html.includes("if(frame.dataset.loaded){if(state.world)void loadPackedExperienceIntoEditor({id:PACKED_WORLD_ID});return}"),'returning to the editor reuses its existing iframe and ephemeral state (in World it re-captures the current area)');
   assert(html.includes('bootPackedRelease();'));assert(!/fetch\s*\(|XMLHttpRequest|import\s*\(/.test(html));
   assert.match(html,/id="releaseMapPicker"/);assert.match(html,/id="releaseMenu"/);assert.match(html,/<button id="releaseEditorButton">Editor<\/button><\/header>/);
   assert.match(html,/getElementById\('releaseEditorButton'\).*addEventListener\('click',openPackedEditor\)/);assert.match(html,/experience\.theme,experience\.map,experience\.filename/);
@@ -70,5 +70,5 @@ test('release packs the compiled world rooms and offers World in the map picker'
   const html=build(),source=packedScript(html),sandbox={};vm.createContext(sandbox);vm.runInContext(source.replace(/^const /gm,'var '),sandbox);
   const files=fs.readdirSync(path.join(root,'world/rooms')).filter(name=>name.endsWith('.llmroom.txt')).map(name=>name.slice(0,-'.llmroom.txt'.length)).sort();
   assert.deepEqual(Array.from(sandbox.PACKED_WORLD.rooms,room=>room.id).sort(),files);
-  assert(html.includes("option.textContent='World (explore)'"));assert(html.includes('startWorld(PACKED_WORLD)'));
+  assert(html.includes("option.textContent='World (explore)'"));assert(html.includes('startWorld(PACKED_WORLD,{seed,plots:'));assert(html.includes('window.ReferencePackWorld='),'the game offers plots to the editor');assert(html.includes('plotArea')&&html.includes('Restore original'),'the packed editor has the plot UI');
 });
