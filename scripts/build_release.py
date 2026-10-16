@@ -427,6 +427,38 @@ async function settlePlot(){
   $('plotList').addEventListener('click',async event=>{const id=event.target.closest('[data-plot]')?.dataset.plot;if(!id||id===plotUi.plot?.id||!await settlePlot())return;const next=worldApi()?.open(id);if(next)await loadPlotMap(next.map,next.filename,next.plot)});
   $('saveWorldBtn').onclick=()=>{const file=worldApi()?.file();if(!file)return;const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([file.text],{type:'text/plain'}));link.download=file.filename;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);setStatus(`Saved ${file.filename}. Drop it in /maps to make it part of the game.`)};
   const back=$('backToGameBtn');if(back)back.onclick=async()=>{if(await settlePlot())window.parent?.ReferencePackCloseEditor?.()};
+  // ASCII sketch for plots: the export carries a screen map and the edge rules as @note lines (the codec ignores them),
+  // Apply keeps the plot's exact size, and the reachability checker reports places you can't get back from.
+  const screenName=(x,y)=>{let n=x,name='';do{name=String.fromCharCode(65+n%26)+name;n=Math.floor(n/26)-1}while(n>=0);return`${name}${y+1}`};
+  $('asciiOpenBtn').onclick=()=>{
+    openAsciiSketch();if(!plotUi.plot)return;const r=plotRect(),s=plotUi.plot.screen,api=worldApi(),text=$('asciiText').value;
+    const origin=(text.match(/^@origin\\s+(-?[\\d.]+)\\s+(-?[\\d.]+)/m)||[0,0,0]).slice(1).map(Number),col=px=>Math.round((px-origin[0])/16),row=px=>Math.round((px-origin[1])/16);
+    const grid=[];for(let y=0;y<r.h;y++)grid.push(Array.from({length:r.w},(_,x)=>`${screenName(x,y)}${api?.isSaved(r.cx+x,r.cy+y)?'*':''}`).join(' '));
+    const ranges=[];for(let y=0;y<r.h;y++)for(let x=0;x<r.w;x++)ranges.push(`${screenName(x,y)} = columns ${col(x*s.w)}–${col((x+1)*s.w)-1}, rows ${row(y*s.h)}–${row((y+1)*s.h)-1}`);
+    const notes=[`@note Plot "${plotUi.plot.name}": ${r.w} × ${r.h} screens, each 40 columns × 24 rows. Keep the grid exactly this size; Apply refuses any other.`,
+      `@note Screens (* = saved; the rest are what the world generated): ${grid.join(' / ')}`,`@note ${ranges.join('; ')}.`,
+      '@note Edges: where a screen meets the world outside this plot, keep its floor in the bottom 4 rows of the screen (rows 20–23 of it). A hole in a floor belongs at columns 17–22 of that screen and needs a way back up from below.'];
+    const lines=text.split('\\n');lines.splice(1,0,...notes);$('asciiText').value=lines.join('\\n');
+    $('asciiInfo').textContent+=` Screens are labelled in the @note lines, so you can say "redo B2".`;
+  };
+  $('asciiApplyBtn').onclick=()=>{
+    if(!plotUi.plot){applyAsciiSketch();return}
+    let converted;try{converted=window.LLMarioAscii.asciiToMap($('asciiText').value,state.theme)}catch(error){$('asciiInfo').textContent=`Not applied: ${error.message}`;return}
+    const envelope=converted.map,errors=semantics.validateMap(state.theme,envelope),r=plotRect(),s=plotUi.plot.screen,b=envelope.worldBounds;
+    if(errors.length){$('asciiInfo').textContent=`Not applied: ${errors[0]}`;return}
+    if(!b||b.w!==r.w*s.w||b.h!==r.h*s.h){$('asciiInfo').textContent=`Not applied: this plot is ${r.w} × ${r.h} screens (${r.w*40} × ${r.h*24} cells) and the sketch is ${b?`${b.w/16} × ${b.h/16}`:'an unknown size'}. Keep the size; use Add screen for more room.`;return}
+    const before=documentState();applyDocument({worldBounds:b,instances:envelope.instances,markers:{start:envelope.markers?.start||before.markers.start,goal:envelope.markers?.goal||null}});
+    selectEditorTool('select',null,{render:false});state.selected=null;state.gesture=null;if(documentChanged(before))commitDocument();renderPalette();renderParameters();recomputeIssues();draw();$('asciiDialog').close();
+    setStatus(`Applied ASCII sketch: ${envelope.instances.length} objects. ${plotCheck()} Undo restores the previous plot.`);
+  };
+  function plotCheck(){
+    // Reachability inside this plot from the start marker (where you stood). Neighbouring screens aren't included, so a
+    // way back that runs through the world outside the plot shows up here as a pocket.
+    const start=state.markers?.start,simulate=window.parent?.ReferencePackSimulateReachability;if(!start||!simulate)return'';
+    let result;try{result=simulate({theme:state.theme,map:semantics.serializeMap(state.theme,documentState()),startPoint:start})}catch(_){return''}
+    const s=plotUi.plot.screen,places=(result.pockets||[]).filter(p=>!p.containsOrigin).map(p=>{const span=result.spans[p.spans[0]];return`${screenName(Math.floor(span.x/s.w),Math.floor(span.y/s.h))} (column ${Math.round(span.x/16)}, row ${Math.round(span.y/16)})`});
+    return places.length?`Checker: ${places.length} place${places.length===1?'':'s'} you can't get back from inside this plot: ${places.slice(0,4).join(', ')}${places.length>4?', …':''}.`:'Checker: nowhere reachable inside this plot traps you.';
+  }
   const plainDraw=draw;draw=function(){
     // Dotted lines on every screen seam; gold where the screen is saved, so you can see where your work is.
     plainDraw();if(!plotUi.plot||!state.theme)return;const r=plotRect(),s=plotUi.plot.screen,cam=state.camera,api=worldApi();

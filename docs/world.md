@@ -121,6 +121,12 @@ In the interface the unit is a **screen** (one 40×24-cell section of the world)
   `…:file:NAME` for a packed world file). **File ▸ Save world file** downloads it; dropped in
   `/maps`, it shows up in the picker as *World · Name*, and the browser's working copy of it,
   once there is one, wins over the packed starting point.
+- **ASCII sketch of a plot** (side panel ▸ ASCII sketch). The export starts with `@note` lines
+  naming each screen (`A1 B1 / A2 B2`, `*` for saved), its column and row range, and the edge
+  rules, so a person or a language model can be asked to "redo B2" with the neighbours as
+  context. Paste the reply over it and **Apply**: the sketch must keep the plot's exact size
+  (`@world`), and the status line then reports any place inside the plot you can't get back
+  from, checked from where you stood.
 - **Help.** A *Plots (World)* section in the editor's **?** modal.
 - **Not yet:** renaming or deleting a plot (new plots are named after where they are, such
   as *Plot →3 ↓1*); floors keep their end caps where two screens meet, so a seam can show in
