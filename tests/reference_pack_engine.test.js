@@ -59,6 +59,24 @@ test('reachability is a surface graph found by authoritative human-shaped input 
   assert.deepEqual(plain(api.simulateReachability(theme,map,{x:40,y:240})),plain(result),'deterministic');
 });
 
+test('walls that only touch a floor still bound its span, so test players never start inside a wall',()=>{
+  // Floor between two wall columns that touch it edge-to-edge (as ASCII rectangle merging produces).
+  const wall=(left,top,height)=>groundAt(left,top,2,height),map=reachMap([wall(0,32,18),groundAt(32,288,16,2),wall(288,32,18)],{x:0,y:0,w:320,h:320});
+  const result=api.simulateReachability(theme,map,{x:160,y:280}),floor=spanUnder(result,160,288);
+  assert.equal(floor.blockedLeft,true);assert.equal(floor.blockedRight,true);
+  assert(result.spans.filter(span=>span.hop!==null).every(span=>span.y>=32),'nothing reaches the tops of the wall columns from inside the room');
+});
+
+test('spin blocks you can get under open from below, while a stacked spin column stays a wall',()=>{
+  const spin=(cx,top)=>({placeable:'rotatingBlock',values:{'transform.x':cx,'transform.y':top+16}});
+  // A ceiling of spin blocks 5 cells over the floor, and a 3-high spin column standing on the floor to its right.
+  const ceiling=[0,1,2,3].map(i=>spin(104+i*16,176)),column=[0,1,2].map(i=>spin(200,240-i*16));
+  const map=reachMap([groundAt(0,256,20),...ceiling,...column],{x:0,y:0,w:320,h:320}),result=api.simulateReachability(theme,map,{x:40,y:240});
+  const top=result.spans.find(span=>span.y===176&&span.x<=104&&span.x+span.w>=150);
+  assert(top&&top.hop!==null,'bumping the ceiling from below gets you on top of it');assert.equal(top.kind,'oneWay');
+  assert(result.spans.some(span=>span.y===208&&span.kind==='solid'),'the top of a spin column resting on the floor is still a solid surface');
+});
+
 test('the clicked point gets a symmetric jump-arc fan that reaches the runtime apex',()=>{
   const start={x:400,y:240},map=reachMap([groundAt(0,224,50,1)],{x:0,y:0,w:800,h:320});
   const result=api.simulateReachability(theme,map,start,{cellSize:8});

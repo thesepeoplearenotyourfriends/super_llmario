@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 
@@ -12,6 +13,7 @@ ENGINE = ROOT / "engine" / "reference_pack_engine.html"
 EDITOR = ROOT / "editor" / "reference_pack_editor.html"
 THEME = ROOT / "themes" / "theme_marioai_reference_pack.llmtheme.txt"
 MAPS = ROOT / "maps"
+WORLD_ROOMS = ROOT / "world" / "rooms"
 OUTPUT = ROOT / "dist" / "super_llmario.html"
 DEFAULT_EXPERIENCE_ID = "demo"
 MAP_SUFFIX = ".llmmap.txt"
@@ -96,11 +98,22 @@ RELEASE_MAP_PICKER = '<label id="releaseMapPicker">MAP <select id="releaseMenu" 
 
 RELEASE_RUNTIME = r"""
 let activePackedExperienceId='';
+const PACKED_WORLD_ID='world';
+function worldCaptureExperience(){
+  // While exploring, the editor opens on the area around the player.
+  const map=captureWorld(),center=state.world?.center||{cx:0,cy:0};
+  return map&&{id:PACKED_WORLD_ID,theme:PACKED_THEME,map,filename:`world-${state.world.seed}-${center.cx}_${center.cy}.llmmap.txt`};
+}
 async function loadPackedExperienceIntoEditor(experience){
   const frame=document.getElementById('releaseEditorFrame');
   if(!frame?.dataset.loaded)return;
+  if(experience?.id===PACKED_WORLD_ID)experience=worldCaptureExperience();if(!experience)return;
   try{await frame.contentWindow?.ReferencePackEditorReleaseLoad?.(experience.theme,experience.map,experience.filename)}
   catch(error){report(`Embedded editor failed: ${error.message||error}`)}
+}
+async function startPackedWorld(){
+  state.theme=PACKED_THEME;await loadAtlases();const errors=startWorld(PACKED_WORLD);if(errors.length){report(errors);return false}
+  activePackedExperienceId=PACKED_WORLD_ID;const menu=document.getElementById('releaseMenu');if(menu)menu.value=PACKED_WORLD_ID;return true;
 }
 async function applyPackedExperience(experience){
   if(!experience)throw new Error('Unknown packed experience.');
@@ -114,8 +127,8 @@ async function applyPackedExperience(experience){
 function openPackedEditor(){
   const shell=document.getElementById('releaseEditorShell'),frame=document.getElementById('releaseEditorFrame');
   if(!shell||!frame)return;shell.hidden=false;
-  if(frame.dataset.loaded)return;
-  frame.onload=async()=>{frame.dataset.loaded='1';const experience=PACKED_EXPERIENCES.find(item=>item.id===activePackedExperienceId)||PACKED_EXPERIENCES[0];await loadPackedExperienceIntoEditor(experience)};
+  if(frame.dataset.loaded){if(activePackedExperienceId===PACKED_WORLD_ID)void loadPackedExperienceIntoEditor({id:PACKED_WORLD_ID});return}
+  frame.onload=async()=>{frame.dataset.loaded='1';const experience=activePackedExperienceId===PACKED_WORLD_ID?{id:PACKED_WORLD_ID}:PACKED_EXPERIENCES.find(item=>item.id===activePackedExperienceId)||PACKED_EXPERIENCES[0];await loadPackedExperienceIntoEditor(experience)};
   frame.srcdoc=PACKED_EDITOR_HTML;
 }
 function closePackedEditor(){
@@ -138,9 +151,10 @@ async function bootPackedRelease(){
   const menu=document.getElementById('releaseMenu'),picker=document.getElementById('releaseMapPicker');
   if(menu){
     for(const experience of PACKED_EXPERIENCES){const option=document.createElement('option');option.value=experience.id;option.textContent=experience.label;menu.append(option)}
-    menu.addEventListener('change',()=>{const experience=PACKED_EXPERIENCES.find(item=>item.id===menu.value);if(experience)void applyPackedExperience(experience)});
+    if(PACKED_WORLD?.rooms?.length){const option=document.createElement('option');option.value=PACKED_WORLD_ID;option.textContent='World (explore)';menu.append(option)}
+    menu.addEventListener('change',()=>{if(menu.value===PACKED_WORLD_ID){void startPackedWorld();return}const experience=PACKED_EXPERIENCES.find(item=>item.id===menu.value);if(experience)void applyPackedExperience(experience)});
   }
-  if(picker)picker.hidden=PACKED_EXPERIENCES.length<2;
+  if(picker)picker.hidden=PACKED_EXPERIENCES.length+(PACKED_WORLD?.rooms?.length?1:0)<2;
   const initial=PACKED_EXPERIENCES.find(item=>item.id===PACKED_DEFAULT_EXPERIENCE_ID)||PACKED_EXPERIENCES[0];
   await applyPackedExperience(initial);
 }
@@ -302,7 +316,17 @@ window.ReferencePackEditorReleaseLoad=async(theme,map,mapName='packed.llmmap.txt
     return source.replace(EDITOR_BOOT, "window.addEventListener('resize',resize);resize();renderIssues();\n" + hook + "})();", 1)
 
 
-def release_data(theme: object, experiences: list[dict[str, object]], editor_html: str) -> str:
+def load_world() -> object:
+    # Rooms are ASCII sketches; the editor's codec (JavaScript) compiles them, so the build asks Node for the result.
+    if not WORLD_ROOMS.is_dir() or not any(WORLD_ROOMS.glob("*.llmroom.txt")):
+        return {"format": "llmario-world-rooms", "version": 1, "rooms": []}
+    completed = subprocess.run(["node", str(ROOT / "scripts" / "world_rooms.js"), str(WORLD_ROOMS)], cwd=ROOT, capture_output=True, text=True)
+    if completed.returncode != 0:
+        raise RuntimeError(f"world rooms failed to compile: {completed.stderr.strip()}")
+    return json.loads(completed.stdout)
+
+
+def release_data(theme: object, experiences: list[dict[str, object]], editor_html: str, world: object) -> str:
     entries = []
     for experience in experiences:
         entries.append(
@@ -325,13 +349,14 @@ def release_data(theme: object, experiences: list[dict[str, object]], editor_htm
             f"const PACKED_THEME = {javascript_json_parse(theme)};",
             f"const PACKED_EXPERIENCES = [\n{','.join(entries)}\n];",
             f"const PACKED_DEFAULT_EXPERIENCE_ID = {json.dumps(default_id)};",
+            f"const PACKED_WORLD = {javascript_json_parse(world)};",
             f"const PACKED_EDITOR_HTML = {javascript_string(editor_html)};",
             "</script>",
         )
     )
 
 
-def build(engine: str, editor: str, theme: object, experiences: list[dict[str, object]]) -> str:
+def build(engine: str, editor: str, theme: object, experiences: list[dict[str, object]], world: object) -> str:
     if engine.count(SCRIPT_BOUNDARY) != 1:
         raise RuntimeError("engine script boundary is missing or ambiguous")
     if engine.count(RUNTIME_BOOT) != 1:
@@ -349,7 +374,7 @@ def build(engine: str, editor: str, theme: object, experiences: list[dict[str, o
     output = engine.replace("</style></head>", RELEASE_STYLE + "\n</style></head>", 1)
     output = output.replace("</header>", RELEASE_MAP_PICKER + '<button id="releaseEditorButton">Editor</button></header>', 1)
     output = output.replace("</main>", "</main>\n" + RELEASE_EDITOR_SHELL, 1)
-    output = output.replace(SCRIPT_BOUNDARY, "</script>\n" + release_data(theme, experiences, packed_editor) + "\n<script>\n(()=>{\n'use strict';", 1)
+    output = output.replace(SCRIPT_BOUNDARY, "</script>\n" + release_data(theme, experiences, packed_editor, world) + "\n<script>\n(()=>{\n'use strict';", 1)
     output = output.replace(RUNTIME_BOOT, RELEASE_RUNTIME + "\nbootPackedRelease();resize();requestAnimationFrame(frame);", 1)
     return output
 
@@ -357,10 +382,11 @@ def build(engine: str, editor: str, theme: object, experiences: list[dict[str, o
 def main() -> int:
     theme = load_document(THEME)
     experiences = load_experiences(theme)
-    output = build(ENGINE.read_text(encoding="utf-8"), EDITOR.read_text(encoding="utf-8"), theme, experiences)
+    world = load_world()
+    output = build(ENGINE.read_text(encoding="utf-8"), EDITOR.read_text(encoding="utf-8"), theme, experiences, world)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(output, encoding="utf-8")
-    print(f"wrote {OUTPUT.relative_to(ROOT)} ({len(output.encode('utf-8'))} bytes, {len(experiences)} maps)")
+    print(f"wrote {OUTPUT.relative_to(ROOT)} ({len(output.encode('utf-8'))} bytes, {len(experiences)} maps, {len(world['rooms'])} world rooms)")
     return 0
 
 
