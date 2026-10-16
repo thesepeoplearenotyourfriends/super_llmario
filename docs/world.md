@@ -83,10 +83,9 @@ reason. The room compiler's rules (such as `solidfloor`) are checked before anyt
 written, and the tests then put the room through the reachability checks. Captured enemies
 keep their exact type, so a koopa captured in Pipeworks stays a koopa everywhere.
 
-## Planned: plots
+## Plots: your edits to the world
 
-The agreed design for keeping your edits to the world. Not built yet. In the interface the unit
-is a **screen** (one 40×24-cell section of the world).
+In the interface the unit is a **screen** (one 40×24-cell section of the world).
 
 - **Flow.** Exploring, press **Editor**: it opens at the screen you're standing on. Edit. Press
   **Back to game**; if anything changed, *"Save changes to N screens? Save / Discard / Cancel"*.
@@ -105,28 +104,32 @@ is a **screen** (one 40×24-cell section of the world).
   make there (compare at save time, so edit-then-undo saves nothing). Looking around saves
   nothing. The same comparison greys out **Restore original**.
 - **Side panel.** For plots, the *Map area* section (pixel left/top/width/height, Fit map)
-  becomes *Plot area*: a small diagram of the plot's screens, `3 × 2 screens`, and
-  **Add screen ← ↑ → ↓**, each adding one whole screen. Revealed screens show what the game
+  becomes *Plot area*: `3 × 2 screens` and **Add screen ← ↑ → ↓**, each adding one whole
+  screen; undo removes it again. Revealed screens show what the game
   would show: saved content if that screen was edited (by any plot), generation otherwise.
-  Dotted lines mark every screen seam, with a distinct style where saved meets generated.
+  Dotted lines mark every screen; saved screens are outlined in gold.
   The world has no top or bottom, so nothing greys out.
-- **Restore original** (Edit menu): puts the screen under the cursor back the way the world
-  made it, after a confirm; one undo step. *Restore all screens in this plot* too.
+- **Restore original** (Edit menu): puts the screen you last pointed at back the way the world
+  made it, after a confirm; one undo step. *Restore all screens in this plot* too. Both are
+  greyed out when there's nothing to restore.
 - **Where generated meets saved,** the generator closes its doors on that edge (no generated
   hole drops into a plot, no generated room expects a climb the plot didn't build). A plot's
   own edges are the author's call; a reachability check at save time warns, never blocks.
-- **The file** is an ordinary `.llmmap.txt` with a `world:{seed}` header, the edited-screen
-  list and the plot views. It lives in browser storage while you play; **File ▸ Save**
-  downloads it; dropped in `/maps`, the build packs it into the picker as that world.
-- **Help.** A *Plots* entry in the **?** modal: Editor while exploring edits the screen you're
-  on; Add screen reaches around it; only changed screens are saved; plots are bookmarks
-  (deleting one keeps your changes); Restore original undoes a screen for good; File ▸ Save
-  keeps a copy, `/maps` makes it part of the game.
+- **The file** is an ordinary `.llmmap.txt` with a `world:{seed, screens, plots}` header
+  (`worldPlotFile` / `worldPlots` in the engine boundary). It lives in browser storage while
+  you play, one working copy per world (`super_llmario_world_plots_v1:seed:1987`, or
+  `…:file:NAME` for a packed world file). **File ▸ Save world file** downloads it; dropped in
+  `/maps`, it shows up in the picker as *World · Name*, and the browser's working copy of it,
+  once there is one, wins over the packed starting point.
+- **Help.** A *Plots (World)* section in the editor's **?** modal.
+- **Not yet:** renaming or deleting a plot (new plots are named after where they are, such
+  as *Plot →3 ↓1*); floors keep their end caps where two screens meet, so a seam can show in
+  the grass; Pause ▸ New world starts a fresh seed with that seed's own plots, if any.
 
 ## Not in this version
 
-- **Plots** (see *Planned: plots* above), and with them persistence across reloads. Session
-  memory of coins and blocks is in-memory only.
+- **Persistence of coins and blocks** across reloads. Session memory is in-memory only;
+  plots are what persists.
 - **Moving-platform positions** across rebuilds. The current rooms only use static
   platforms.
 - **The standalone engine has no World.** Rooms are packed by the release build, like maps.

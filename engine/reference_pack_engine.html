@@ -396,8 +396,12 @@ function worldBiome(seed,cx,cy){
   const shift=worldHash(seed,'district',Math.floor(cx/8))%3-1,depth=cy+shift;
   return depth<=-3?{id:'sky',style:'overground',favor:{sky:3}}:depth<=1?{id:'ground',style:'overground',favor:{}}:depth<=4?{id:'caves',style:'underground',favor:{pipes:2}}:{id:'castle',style:'castle',favor:{blocks:2}};
 }
-function worldScreen(world,seed,cx,cy){
-  const C=WORLD_SCREEN,W=C.cols*C.cell,H=C.rows*C.cell,ox=cx*W,oy=cy*H,rooms=world?.rooms||[],topOpen=worldDoorOpen(seed,cx,cy-1),bottomOpen=worldDoorOpen(seed,cx,cy),biome=worldBiome(seed,cx,cy),district=worldDistrict(seed,cx,cy);
+function worldScreen(world,seed,cx,cy,plots=null){
+  // A saved screen (from a plot file) replaces generation completely, floor band included. Generated neighbours close their
+  // doors on any edge they share with a saved screen, so no generated hole drops into a plot and none expects a climb from one.
+  const C=WORLD_SCREEN,W=C.cols*C.cell,H=C.rows*C.cell,ox=cx*W,oy=cy*H,rooms=world?.rooms||[],biome=worldBiome(seed,cx,cy),district=worldDistrict(seed,cx,cy),saved=plots?.saved;
+  if(saved?.has(`${cx},${cy}`))return{cx,cy,room:null,saved:true,mirror:false,topOpen:false,bottomOpen:false,biome,district,instances:structuredCopy(saved.get(`${cx},${cy}`)),floor:[]};
+  const topOpen=worldDoorOpen(seed,cx,cy-1)&&!saved?.has(`${cx},${cy-1}`),bottomOpen=worldDoorOpen(seed,cx,cy)&&!saved?.has(`${cx},${cy+1}`);
   const home=cx===0&&cy===0?rooms.find(room=>room.home):null,pool=home?[home]:rooms.filter(room=>!room.home&&(!topOpen||room.kind==='ascent')&&!(bottomOpen&&room.solidFloor));
   if(!pool.length)return{cx,cy,room:null,mirror:false,topOpen,bottomOpen,biome,district,instances:[],floor:[{left:0,width:C.cols}]};
   const weight=room=>Math.max(1,room.weight||1)*(room.tags||[]).reduce((m,tag)=>m*(district.favor[tag]||1)*(biome.favor?.[tag]||1),1);
@@ -417,19 +421,67 @@ function worldScreen(world,seed,cx,cy){
   const floor=bottomOpen?[{left:0,width:C.holeLeft},{left:C.holeLeft+C.holeWidth,width:C.cols-C.holeLeft-C.holeWidth}]:[{left:0,width:C.cols}];
   return{cx,cy,room:room.id,mirror,topOpen,bottomOpen,biome,district,instances,floor};
 }
-function worldWindowMap(theme,world,seed,cx,cy,start,radius=1){
+function worldWindowMap(theme,world,seed,cx,cy,start,radius=1,plots=null){
   // A finite reference map of the screens around (cx,cy); the engine plays it and rebuilds it as the player crosses screens.
+  return worldAreaMap(theme,world,seed,{cx:cx-radius,cy:cy-radius,w:radius*2+1,h:radius*2+1},{plots,start:start||{x:cx*WORLD_SCREEN.cols*WORLD_SCREEN.cell+5*WORLD_SCREEN.cell,y:cy*WORLD_SCREEN.rows*WORLD_SCREEN.cell+WORLD_SCREEN.interiorRows*WORLD_SCREEN.cell}});
+}
+function worldAreaMap(theme,world,seed,rect,{plots=null,start=null,mergeFloors=true}={}){
+  // Any rectangle of screens as an ordinary map. Play merges touching floors so continuous floor has no seam; the editor
+  // keeps every screen's floor its own, so each object belongs to exactly one screen.
   const C=WORLD_SCREEN,W=C.cols*C.cell,H=C.rows*C.cell,instances=[],screens=[];
-  for(let y=cy-radius;y<=cy+radius;y++){
+  for(let y=rect.cy;y<rect.cy+rect.h;y++){
     // Floors that touch and share a style become one ground piece, so continuous floor has no seam at screen edges.
     let run=null;const flush=()=>{if(run)instances.push({placeable:'ground',instanceId:`w${run.cx}_${y}_floor${run.left}`,values:{'transform.x':run.x+run.width*C.cell/2,'transform.y':y*H+H,'terrain.width':run.width,'terrain.height':C.rows-C.interiorRows,'terrain.style':run.style}});run=null};
-    for(let x=cx-radius;x<=cx+radius;x++){
-      const screen=worldScreen(world,seed,x,y);screens.push({cx:x,cy:y,room:screen.room,mirror:screen.mirror,biome:screen.biome.id,district:screen.district.id,topOpen:screen.topOpen,bottomOpen:screen.bottomOpen});instances.push(...screen.instances);
-      for(const segment of screen.floor){const left=x*W+segment.left*C.cell;if(run&&run.style===screen.biome.style&&run.x+run.width*C.cell===left)run.width+=segment.width;else{flush();run={cx:x,left:segment.left,x:left,width:segment.width,style:screen.biome.style}}}
+    for(let x=rect.cx;x<rect.cx+rect.w;x++){
+      const screen=worldScreen(world,seed,x,y,plots);screens.push({cx:x,cy:y,room:screen.room,saved:!!screen.saved,mirror:screen.mirror,biome:screen.biome.id,district:screen.district.id,topOpen:screen.topOpen,bottomOpen:screen.bottomOpen});instances.push(...screen.instances);
+      if(!screen.floor.length)flush();
+      for(const segment of screen.floor){const left=x*W+segment.left*C.cell;if(mergeFloors&&run&&run.style===screen.biome.style&&run.x+run.width*C.cell===left)run.width+=segment.width;else{flush();run={cx:x,left:segment.left,x:left,width:segment.width,style:screen.biome.style}}}
     }
     flush();
   }
-  return{map:{format:MAP_FORMAT,mapVersion:MAP_VERSION,theme:{id:theme?.id,packVersion:theme?.packVersion},worldBounds:{x:(cx-radius)*W,y:(cy-radius)*H,w:(radius*2+1)*W,h:(radius*2+1)*H},instances,markers:{start:start?{x:start.x,y:start.y}:{x:cx*W+5*C.cell,y:cy*H+C.interiorRows*C.cell},goal:null}},screens};
+  return{map:{format:MAP_FORMAT,mapVersion:MAP_VERSION,theme:{id:theme?.id,packVersion:theme?.packVersion},worldBounds:{x:rect.cx*W,y:rect.cy*H,w:rect.w*W,h:rect.h*H},instances,markers:{start:start?{x:start.x,y:start.y}:null,goal:null}},screens};
+}
+// Plots: your edits to the world, stored by screen position. A plot file is an ordinary map whose objects sit at true world
+// positions, plus world:{seed, screens:[[cx,cy],…] (every saved screen, even an emptied one), plots:[{id,name,cx,cy,w,h}]}.
+// A plot is only a named view; it owns nothing. An object belongs to the screen its anchor (bottom centre) is in.
+function worldAnchorScreen(instance){return worldScreenAt(instance.values['transform.x'],instance.values['transform.y']-1)}
+function worldPlots(file){
+  // A plot file → {seed, saved: Map("cx,cy" → instances with stable ids), plots}. Ids are rewritten per screen (p{cx}_{cy}_{n})
+  // so they never collide with generated ones, and pipe destinations follow them.
+  const info=file?.world||{},saved=new Map(),ids=new Map(),counts=new Map();
+  for(const [cx,cy] of info.screens||[])saved.set(`${cx},${cy}`,[]);
+  for(const source of file?.instances||[]){
+    const {cx,cy}=worldAnchorScreen(source),key=`${cx},${cy}`;if(!saved.has(key))continue;
+    const n=counts.get(key)||0;counts.set(key,n+1);const id=`p${cx}_${cy}_${n}`;if(source.instanceId)ids.set(source.instanceId,id);
+    const out={placeable:source.placeable,instanceId:id,values:structuredCopy(source.values)};if(source.sceneLayer)out.sceneLayer=source.sceneLayer;saved.get(key).push(out);
+  }
+  for(const list of saved.values())for(const i of list){const d=i.values['pipe.destination'];if(d?.kind==='pipe')i.values['pipe.destination']={kind:'pipe',instanceId:ids.get(d.instanceId)||d.instanceId}}
+  return{seed:Number.isFinite(Number(info.seed))?Math.trunc(Number(info.seed)):null,saved,plots:structuredCopy(info.plots||[])};
+}
+function worldPlotFile(theme,seed,plots){
+  // The inverse of worldPlots: one ordinary map holding every saved screen, ready to download or drop in /maps.
+  const C=WORLD_SCREEN,W=C.cols*C.cell,H=C.rows*C.cell,keys=[...(plots?.saved?.keys()||[])].sort(),screens=keys.map(key=>key.split(',').map(Number));
+  const xs=screens.map(s=>s[0]),ys=screens.map(s=>s[1]),bounds=screens.length?{x:Math.min(...xs)*W,y:Math.min(...ys)*H,w:(Math.max(...xs)-Math.min(...xs)+1)*W,h:(Math.max(...ys)-Math.min(...ys)+1)*H}:{x:0,y:0,w:W,h:H};
+  return{format:MAP_FORMAT,mapVersion:MAP_VERSION,theme:{id:theme?.id,packVersion:theme?.packVersion},worldBounds:bounds,instances:keys.flatMap(key=>structuredCopy(plots.saved.get(key))),markers:{start:null,goal:null},world:{seed,screens,plots:structuredCopy(plots?.plots||[])}};
+}
+function worldScreenKey(instances){
+  // What a screen's content is, ignoring instance ids: equal keys mean nothing was changed.
+  const id=i=>i.instanceId,named=new Map(instances.map((i,n)=>[id(i),n]));
+  return JSON.stringify(instances.map(i=>{const values=structuredCopy(i.values),d=values['pipe.destination'];if(d?.kind==='pipe')values['pipe.destination']={kind:'pipe',target:named.has(d.instanceId)?'local':'other'};return[i.placeable,i.sceneLayer||'',Object.keys(values).sort().map(k=>[k,values[k]])]}).map(x=>JSON.stringify(x)).sort());
+}
+function worldSaveScreens(theme,world,seed,plots,rect,instances){
+  // Saved means changed: each screen of rect is stored if its edited content differs from what the generator would make
+  // there, and dropped back to generation if it doesn't. Returns new plots and the screens whose saved state changed.
+  const next={seed,saved:new Map(plots?.saved||[]),plots:structuredCopy(plots?.plots||[])},changed=[];
+  for(let cy=rect.cy;cy<rect.cy+rect.h;cy++)for(let cx=rect.cx;cx<rect.cx+rect.w;cx++){
+    const key=`${cx},${cy}`,mine=instances.filter(i=>{const a=worldAnchorScreen(i);return a.cx===cx&&a.cy===cy});
+    // "What the generator would make" depends on neighbouring saved screens (they close doors), so either version counts.
+    const before=next.saved.has(key)?worldScreenKey(next.saved.get(key)):null,others={saved:new Map([...next.saved].filter(([k])=>k!==key))};
+    const original=[null,others].map(p=>worldScreenKey(worldAreaMap(theme,world,seed,{cx,cy,w:1,h:1},{plots:p,mergeFloors:false}).map.instances));
+    if(original.includes(worldScreenKey(mine))){if(next.saved.delete(key))changed.push(key);continue}
+    const copy=structuredCopy(mine);if(before!==worldScreenKey(copy))changed.push(key);next.saved.set(key,copy);
+  }
+  return{plots:worldPlots(worldPlotFile(theme,seed,next)),changed};
 }
 function worldScreenAt(x,y){const C=WORLD_SCREEN;return{cx:Math.floor(x/(C.cols*C.cell)),cy:Math.floor(y/(C.rows*C.cell))}}
 function touchFaceButtons(previous,point,centers,engageRadius,releaseRadius){
@@ -449,7 +501,7 @@ function touchStickActions(dx,dy,radius){
   if(nx<-.3)actions.push('left');if(nx>.3)actions.push('right');if(ny<-.6)actions.push('up');if(ny>.6)actions.push('down');
   return{actions,knob:{x:dx*scale,y:dy*scale}};
 }
-root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
+root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldAreaMap,worldAnchorScreen,worldPlots,worldPlotFile,worldScreenKey,worldSaveScreens,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
 })(typeof window==='object'?window:globalThis);
 </script>
 <script>
@@ -579,7 +631,7 @@ function startWorld(world,options={}){
   if(!state.theme)return['Load the reference theme before starting a world.'];
   if(!Array.isArray(world?.rooms)||!world.rooms.length)return['A world needs compiled rooms.'];
   const seed=Number.isFinite(Number(options.seed))?Math.trunc(Number(options.seed)):1987,C=B.WORLD_SCREEN;
-  state.map=null;state.behavior=null;state.world={def:world,seed,center:null,memory:new Map()};state.paused=false;pauseMenu?.sync();
+  state.map=null;state.behavior=null;state.world={def:world,seed,center:null,memory:new Map(),plots:options.plots!==undefined?options.plots:(window.ReferenceWorldPlotsFor?.(seed)||null)};state.paused=false;pauseMenu?.sync();
   if(!buildWorldWindow(0,0,{x:5*C.cell+8,y:C.interiorRows*C.cell}))return['The world window could not be compiled.'];
   report(`World ${seed}: wander off in any direction. Home is where you started.`,'good');return[];
 }
@@ -599,7 +651,7 @@ function harvestWorld(){
 }
 function buildWorldWindow(cx,cy,start,carry=null){
   const world=state.world,player=state.behavior?{player:{...state.behavior.player},input:{...state.behavior.input}}:null;
-  const {map,screens}=B.worldWindowMap(state.theme,world.def,world.seed,cx,cy,start),result=B.compileReferenceRuntime(state.theme,map);
+  const {map,screens}=B.worldWindowMap(state.theme,world.def,world.seed,cx,cy,start,1,world.plots),result=B.compileReferenceRuntime(state.theme,map);
   if(!result.ok){report(result.errors);return false}
   installRuntime(result,{keepCamera:!!player});world.center={cx,cy};world.screens=screens;world.map=map;
   const byId=new Map(result.runtime.instances.map(instance=>[instance.instanceId,instance.index]));
@@ -630,6 +682,11 @@ function updateWorldReadout(){
   if(!readout){readout=document.createElement('span');readout.id='worldReadout';readout.className='counter';header.querySelector('#livesCount')?.closest('.counter')?.after(readout)}
   const {cx,cy}=state.world.center||{cx:0,cy:0},dx=cx?`${cx<0?'←':'→'}${Math.abs(cx)}`:'',dy=cy?`${cy<0?'↑':'↓'}${Math.abs(cy)}`:'';
   readout.hidden=false;readout.textContent=`WORLD ${state.world.seed} · ${B.worldDistrict(state.world.seed,cx,cy).name} · ⌂ ${dx||dy?[dx,dy].filter(Boolean).join(' '):'home'}`;
+}
+function setWorldPlots(plots){
+  // New saved screens take effect at once: rebuild the window around the player, carrying everything as on a screen change.
+  const world=state.world,p=state.behavior?.player;if(!world||!p)return false;world.plots=plots;
+  return buildWorldWindow(world.center.cx,world.center.cy,{x:p.x+p.w/2,y:p.y+p.h},harvestWorld());
 }
 function captureWorld(){
   // The current window as an ordinary editor map, starting where the player stands.
@@ -741,7 +798,7 @@ function setupTouchControls(){
 }
 refreshPair();resize();requestAnimationFrame(frame);
 window.ReferenceEngine={
-  state,fitScene,followPlayer,stepPlayer,togglePause,setPaused,restartLevel,startWorld,captureWorld,pollGamepad,padMap:()=>({...padMap}),controlOptions:()=>({...controlOptions}),currentPlayerVisual:playerVisual,currentPlayerFit:()=>fitPlayerVisual(state.behavior?.player,playerVisual()),
+  state,fitScene,followPlayer,stepPlayer,togglePause,setPaused,restartLevel,startWorld,captureWorld,setWorldPlots,pollGamepad,padMap:()=>({...padMap}),controlOptions:()=>({...controlOptions}),currentPlayerVisual:playerVisual,currentPlayerFit:()=>fitPlayerVisual(state.behavior?.player,playerVisual()),
   loadReferenceTheme:async document=>{const errors=B.validateReferenceTheme(document);if(errors.length){invalidate('theme',errors);return errors}state.theme=document;await loadAtlases();refreshPair();return[]},
   loadReferenceEditorMap:document=>{const errors=B.validateReferenceEditorMap(document,state.theme);if(errors.length){invalidate('map',errors);return errors}state.map=document;refreshPair();return[]},
   validateAndPrepare:B.compileReferenceRuntime

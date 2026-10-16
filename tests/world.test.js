@@ -64,6 +64,39 @@ test('districts give regions a character: hole density, favoured rooms and swapp
   for(const [cx,cy] of [[0,0],[9,0],[-17,4],[30,-4]])assert.deepEqual(plain(api.validateReferenceEditorMap(api.worldWindowMap(theme,world,77,cx,cy).map,theme)),[],`window at ${cx},${cy} is valid`);
 });
 
+test('plots: only changed screens are saved, a plot file is a valid map, and saved screens replace generation',()=>{
+  const rect={cx:2,cy:0,w:2,h:1},area=api.worldAreaMap(theme,world,1987,rect,{mergeFloors:false}).map;
+  assert.deepEqual(plain(api.validateReferenceEditorMap(area,theme)),[]);
+  assert.deepEqual(plain(api.worldSaveScreens(theme,world,1987,null,rect,area.instances).changed),[],'looking saves nothing');
+  // Empty screen (2,0) completely and add a coin to (3,0).
+  const edited=area.instances.filter(i=>api.worldAnchorScreen(i).cx!==2);edited.push({placeable:'coin',instanceId:'new',values:{'transform.x':3*W+100,'transform.y':200}});
+  let saved=api.worldSaveScreens(theme,world,1987,null,rect,edited);
+  assert.deepEqual(plain(saved.changed),['2,0','3,0']);
+  const file=api.worldPlotFile(theme,1987,saved.plots);file.world.plots=[{id:'a',name:'Test',...rect}];
+  assert.deepEqual(plain(api.validateReferenceEditorMap(file,theme)),[],'a plot file is an ordinary valid map');
+  const plots=api.worldPlots(plain(file));assert.deepEqual([...plots.saved.keys()],['2,0','3,0']);assert.equal(plots.seed,1987);
+  assert.deepEqual(plain(plots.saved.get('2,0')),[],'an emptied screen stays empty instead of regenerating');
+  const win=api.worldWindowMap(theme,world,1987,2,0,null,1,plots);
+  assert.deepEqual(plain(api.validateReferenceEditorMap(win.map,theme)),[]);assert.equal(api.compileReferenceRuntime(theme,win.map).ok,true);
+  assert(!win.map.instances.some(i=>api.worldAnchorScreen(i).cx===2&&api.worldAnchorScreen(i).cy===0),'the emptied screen has nothing, not even generated floor');
+  assert(win.map.instances.some(i=>i.placeable==='coin'&&i.values['transform.x']===3*W+100),'the added coin is there');
+  // Re-saving what you were shown is a no-op; restoring a screen drops it back to generation.
+  const shown=api.worldAreaMap(theme,world,1987,rect,{plots,mergeFloors:false}).map.instances;
+  assert.deepEqual(plain(api.worldSaveScreens(theme,world,1987,plots,rect,shown).changed),[]);
+  const restored=[...shown.filter(i=>api.worldAnchorScreen(i).cx!==2),...api.worldAreaMap(theme,world,1987,{cx:2,cy:0,w:1,h:1},{mergeFloors:false}).map.instances];
+  saved=api.worldSaveScreens(theme,world,1987,plots,rect,restored);
+  assert.deepEqual(plain(saved.changed),['2,0']);assert.deepEqual([...saved.plots.saved.keys()],['3,0']);
+});
+
+test('generated screens close their doors on edges they share with a saved screen',()=>{
+  let seed=1;while(!api.worldScreen(world,seed,4,0).bottomOpen)seed++;
+  const plots={saved:new Map([['4,1',[]]])},above=api.worldScreen(world,seed,4,0,plots);
+  assert.equal(above.bottomOpen,false,'no generated hole drops into a plot');
+  let s2=1;while(!api.worldScreen(world,s2,4,1).topOpen)s2++;
+  assert.equal(api.worldScreen(world,s2,4,1,{saved:new Map([['4,0',[]]])}).topOpen,false,'no generated room expects a climb from a plot');
+  assert.equal(api.worldScreen(world,seed,4,1,plots).saved,true);
+});
+
 test('a window is an ordinary valid reference map with seamless floors',()=>{
   const {map,screens}=api.worldWindowMap(theme,world,1987,4,2);
   assert.equal(screens.length,9);assert.deepEqual(plain(api.validateReferenceEditorMap(map,theme)),[]);
