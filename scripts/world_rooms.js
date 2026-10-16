@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// Compiles world/rooms/*.llmroom.txt (an "@room" header line + an LLMario ASCII v3 sketch of a 40×20-cell chunk interior)
+// Compiles world/rooms/*.llmroom.txt (an "@room" header line + an LLMario ASCII v3 sketch of a 40×20-cell screen interior)
 // into the room list the engine's world generator consumes. Uses the codec embedded in the canonical editor.
 // Usage: node scripts/world_rooms.js [ROOM_DIR] [--theme THEME]   → JSON on stdout
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
