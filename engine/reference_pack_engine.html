@@ -27,7 +27,7 @@
 #creditCard{text-align:left;font-size:12px;color:var(--muted);min-height:70px;overflow-wrap:anywhere}#creditCard b{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
 #touchSystem button{padding:3px 12px;border-radius:999px;border:1px solid #ffffff40;background:#00000059;color:#ffffffb3;font-size:10px;letter-spacing:.12em}
 </style></head><body><main><header><span class="counter">COINS <output id="coinCount">0</output></span><span class="counter">LIVES <output id="livesCount">3</output></span><button id="fullscreenButton" type="button" title="Fullscreen" aria-label="Toggle fullscreen" hidden>⛶</button></header><section id="stage"><canvas id="screen" width="960" height="480" aria-label="Reference engine viewport"></canvas><div id="touchControls" hidden aria-hidden="true"><div class="touch-zone" id="touchStick"></div><div class="touch-zone" id="touchButtons"></div><div class="stick-base" id="stickBase"><div class="stick-knob" id="stickKnob"></div></div><div class="touch-face" data-button="x">X</div><div class="touch-face" data-button="y">Y</div><div class="touch-face" data-button="a">A</div><div class="touch-face" data-button="b">B</div><div id="touchSystem"><button type="button" data-system="select">SELECT</button><button type="button" data-system="start">START</button><button type="button" data-system="fullscreen" aria-label="Toggle fullscreen" hidden>⛶</button></div></div><div id="pauseMenu" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
-<section data-view="main"><h2 id="pauseTitle">Paused</h2><div class="pause-list"><button type="button" data-action="resume">Resume</button><button type="button" data-action="restart">Restart</button><button type="button" data-action="fullscreen" hidden>Fullscreen</button><button type="button" data-open="controls">Controls</button><button type="button" data-open="credits">Attributions</button></div><p class="pause-hint">Start · P · Esc resume. Tap the status bar to pause.</p></section>
+<section data-view="main"><h2 id="pauseTitle">Paused</h2><div class="pause-list"><button type="button" data-action="resume">Resume</button><button type="button" data-action="restart">Restart</button><button type="button" data-action="newWorld" hidden>New world</button><button type="button" data-action="fullscreen" hidden>Fullscreen</button><button type="button" data-open="controls">Controls</button><button type="button" data-open="credits">Attributions</button></div><p class="pause-hint">Start · P · Esc resume. Tap the status bar to pause.</p></section>
 <section data-view="controls" hidden><h2>Controls</h2><div class="pause-tabs" role="tablist"><button type="button" data-tab="gamepad">Gamepad</button><button type="button" data-tab="touch">Touch</button><button type="button" data-tab="keyboard">Keyboard</button></div>
 <div data-panel="gamepad"><div id="padSeen">No gamepad yet. Press any button on it.</div><div id="padRows"></div><div class="pause-field"><span>Analog stick</span><div class="pause-seg" data-setting="padAnalog"><button type="button" data-value="on">Moves too</button><button type="button" data-value="off">Ignored</button></div></div><div class="pause-row"><button type="button" id="padDefaults">Reset to defaults</button></div><p class="pause-note">Buttons only. Learn waits for the next new press; Esc cancels. Saved in this browser.</p></div>
 <div data-panel="touch" hidden><div class="pause-field"><span>Overlay</span><div class="pause-seg" data-setting="touchMode"><button type="button" data-value="auto">Auto</button><button type="button" data-value="on">On</button><button type="button" data-value="off">Off</button></div></div><div class="pause-field"><span>Size</span><div class="pause-seg" data-setting="touchSize"><button type="button" data-value="small">Small</button><button type="button" data-value="medium">Medium</button><button type="button" data-value="large">Large</button></div></div><p class="pause-note">Auto shows the overlay on touch screens or after the first touch. Left: stick. Right: B/Y run, A/X jump; roll B into A to jump without letting go of run.</p></div>
@@ -228,6 +228,8 @@ function simulateReachability(theme,map,startPoint,options={}){
         for(const hold of [10,22])for(const air of ['hold','neutral'])push({dir,run:false,startCenter:at,jumpCenter:null,hold,air,approachMax:0});
       }
       const mid=clamp((aim.l+aim.r)/2);for(const hold of [10,22])for(const drift of [0,-1,1])push({dir:0,run:false,startCenter:mid,jumpCenter:null,hold,air:'neutral',drift,approachMax:0});
+      // Straight up through the gap beside a ledge (a hole in a floor above), drifting onto it after the apex.
+      for(const [x,drift] of [[aim.r+W/2+2,-1],[aim.l-W/2-2,1]]){const at=clamp(x);if(Math.abs(at-x)>8)continue;for(const hold of [10,22])push({dir:0,run:false,startCenter:at,jumpCenter:null,hold,air:'neutral',drift,approachMax:0})}
     }
     return list;
   }
@@ -365,6 +367,60 @@ function createActorBehavior(runtime,playerBehavior){
   function commandAt(command,tick){const actor=byInstance.get(command.instanceIndex);if(!actor)return commandAtTick(command,tick);if(!actor.active)return null;if(command.attachment){if(!actor.winged||actor.state!=='walking')return null;const animated=commandAtTick(command,actor.tick);return{...animated,worldX:actor.x,worldY:actor.y,worldOffsetX:(actor.mirror?-1:1)*command.rawOffsetX,worldOffsetY:command.rawOffsetY,mirror:actor.mirror!==command.attachmentMirror}}let source=command;if(['shellStopped','shellMoving','shellHeld'].includes(actor.state))source=actor.instance.visualCommands.shell||command;let animated=commandAtTick(source,tick);if(actor.state==='defeated'){const squash=Math.max(.24,actor.flat/18);animated={...animated,h:animated.h*squash}}return{...animated,worldX:actor.x,worldY:actor.y,mirror:actor.mirror}}
   return{actors,byInstance,reset,step,collide,actorBox,commandAt,carry,releaseHeld,hitByProjectile,get carriedActor(){return carriedActor}};
 }
+// Rolling world: a pure function of (seed, chunk x, chunk y). Rooms are 40×20-cell interiors authored as ASCII and compiled
+// at build time; the generator owns every chunk's 4-row floor band, so chunks always meet at one floor height. A vertical
+// door is a 6-cell hole in a floor; the chunk beneath a hole always gets an ascent room whose top ledge sits under it.
+const WORLD_CHUNK={cols:40,rows:24,interiorRows:20,cell:16,holeLeft:17,holeWidth:6};
+function worldHash(seed,...parts){
+  let h=(Math.trunc(Number(seed))||0)^0x9e3779b9;
+  for(const part of parts){const text=String(part);for(let i=0;i<text.length;i++){h=Math.imul(h^text.charCodeAt(i),0x01000193)}h=Math.imul(h^(h>>>15),0x85ebca6b);h^=h>>>13}
+  h=Math.imul(h^(h>>>16),0x7feb352d);h=Math.imul(h^(h>>>15),0x846ca68b);return(h^(h>>>16))>>>0;
+}
+function worldDoorOpen(seed,cx,cy){
+  // The floor of chunk (cx,cy) has a hole into (cx,cy+1). Home (0,0) is closed above and below.
+  if(cx===0&&(cy===0||cy===-1))return false;
+  return worldHash(seed,'door',cx,cy)%100<42;
+}
+function worldBiome(seed,cx,cy){
+  // Depth reads at a glance (sky, ground, caves, castle); districts nudge the band edges every 8 chunks.
+  const shift=worldHash(seed,'district',Math.floor(cx/8))%3-1,depth=cy+shift;
+  return depth<=-3?{id:'sky',style:'overground'}:depth<=1?{id:'ground',style:'overground'}:depth<=4?{id:'caves',style:'underground'}:{id:'castle',style:'castle'};
+}
+function worldChunk(world,seed,cx,cy){
+  const C=WORLD_CHUNK,W=C.cols*C.cell,H=C.rows*C.cell,ox=cx*W,oy=cy*H,rooms=world?.rooms||[],topOpen=worldDoorOpen(seed,cx,cy-1),bottomOpen=worldDoorOpen(seed,cx,cy),biome=worldBiome(seed,cx,cy);
+  const home=cx===0&&cy===0?rooms.find(room=>room.home):null,pool=home?[home]:rooms.filter(room=>!room.home&&(!topOpen||room.kind==='ascent')&&!(bottomOpen&&room.solidFloor));
+  if(!pool.length)return{cx,cy,room:null,mirror:false,topOpen,bottomOpen,biome,instances:[],floor:[{left:0,width:C.cols}]};
+  const total=pool.reduce((sum,room)=>sum+Math.max(1,room.weight||1),0);let pick=worldHash(seed,'room',cx,cy)%total,room=pool[0];
+  for(const candidate of pool){pick-=Math.max(1,candidate.weight||1);if(pick<0){room=candidate;break}}
+  const mirror=!home&&worldHash(seed,'mirror',cx,cy)%2===1,id=`w${cx}_${cy}_`,localIds=new Map((room.instances||[]).filter(i=>i.instanceId).map((i,n)=>[i.instanceId,`${id}${i.instanceId}`]));
+  const flipX=x=>mirror?W-x:x,instances=[];
+  for(const [n,source] of (room.instances||[]).entries()){
+    const values=structuredCopy(source.values),out={placeable:source.placeable,instanceId:localIds.get(source.instanceId)||`${id}${n}`,values};
+    values['transform.x']=flipX(values['transform.x'])+ox;values['transform.y']+=oy;
+    if(mirror){if(values['walker.direction'])values['walker.direction']=values['walker.direction']==='left'?'right':'left';if(values['pipe.direction']==='left'||values['pipe.direction']==='right')values['pipe.direction']=values['pipe.direction']==='left'?'right':'left'}
+    if(source.placeable==='ground')values['terrain.style']=biome.style;
+    const d=values['pipe.destination'];if(d?.kind==='pipe'&&localIds.has(d.instanceId))values['pipe.destination']={kind:'pipe',instanceId:localIds.get(d.instanceId)};else if(d?.kind==='point')values['pipe.destination']={kind:'point',x:flipX(d.x)+ox,y:d.y+oy};
+    if(source.sceneLayer)out.sceneLayer=source.sceneLayer;instances.push(out);
+  }
+  // Floor band segments (in cells), with the hole when this chunk's bottom door is open.
+  const floor=bottomOpen?[{left:0,width:C.holeLeft},{left:C.holeLeft+C.holeWidth,width:C.cols-C.holeLeft-C.holeWidth}]:[{left:0,width:C.cols}];
+  return{cx,cy,room:room.id,mirror,topOpen,bottomOpen,biome,instances,floor};
+}
+function worldWindowMap(theme,world,seed,cx,cy,start,radius=1){
+  // A finite reference map of the chunks around (cx,cy); the engine plays it and rebuilds it as the player crosses chunks.
+  const C=WORLD_CHUNK,W=C.cols*C.cell,H=C.rows*C.cell,instances=[],chunks=[];
+  for(let y=cy-radius;y<=cy+radius;y++){
+    // Floors that touch and share a style become one ground piece, so continuous floor has no seam at chunk edges.
+    let run=null;const flush=()=>{if(run)instances.push({placeable:'ground',instanceId:`w${run.cx}_${y}_floor${run.left}`,values:{'transform.x':run.x+run.width*C.cell/2,'transform.y':y*H+H,'terrain.width':run.width,'terrain.height':C.rows-C.interiorRows,'terrain.style':run.style}});run=null};
+    for(let x=cx-radius;x<=cx+radius;x++){
+      const chunk=worldChunk(world,seed,x,y);chunks.push({cx:x,cy:y,room:chunk.room,mirror:chunk.mirror,biome:chunk.biome.id,topOpen:chunk.topOpen,bottomOpen:chunk.bottomOpen});instances.push(...chunk.instances);
+      for(const segment of chunk.floor){const left=x*W+segment.left*C.cell;if(run&&run.style===chunk.biome.style&&run.x+run.width*C.cell===left)run.width+=segment.width;else{flush();run={cx:x,left:segment.left,x:left,width:segment.width,style:chunk.biome.style}}}
+    }
+    flush();
+  }
+  return{map:{format:MAP_FORMAT,mapVersion:MAP_VERSION,theme:{id:theme?.id,packVersion:theme?.packVersion},worldBounds:{x:(cx-radius)*W,y:(cy-radius)*H,w:(radius*2+1)*W,h:(radius*2+1)*H},instances,markers:{start:start?{x:start.x,y:start.y}:{x:cx*W+5*C.cell,y:cy*H+C.interiorRows*C.cell},goal:null}},chunks};
+}
+function worldChunkAt(x,y){const C=WORLD_CHUNK;return{cx:Math.floor(x/(C.cols*C.cell)),cy:Math.floor(y/(C.rows*C.cell))}}
 function touchFaceButtons(previous,point,centers,engageRadius,releaseRadius){
   // One thumb, many buttons: engage inside engageRadius, hold until releaseRadius (hysteresis), and keep every button that
   // was already held when another was acquired latched for as long as the newer one stays held. That makes the
@@ -382,14 +438,14 @@ function touchStickActions(dx,dy,radius){
   if(nx<-.3)actions.push('left');if(nx>.3)actions.push('right');if(ny<-.6)actions.push('up');if(ny>.6)actions.push('down');
   return{actions,knob:{x:dx*scale,y:dy*scale}};
 }
-root.ReferencePackBoundary={touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
+root.ReferencePackBoundary={WORLD_CHUNK,worldHash,worldDoorOpen,worldBiome,worldChunk,worldWindowMap,worldChunkAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
 })(typeof window==='object'?window:globalThis);
 </script>
 <script>
 (()=>{
 'use strict';
 const B=window.ReferencePackBoundary,canvas=document.getElementById('screen'),ctx=canvas.getContext('2d'),stage=document.getElementById('stage'),diagnostics=document.getElementById('diagnostics'),empty=document.getElementById('empty'),coinCount=document.getElementById('coinCount'),livesCount=document.getElementById('livesCount'),DEFAULT_GAME_ZOOM=2;
-const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:0,tick:0,dpr:1};
+const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),world:null,paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:0,tick:0,dpr:1};
 function report(messages,kind='bad'){const list=(Array.isArray(messages)?messages:[messages]).map(x=>x.message||x);diagnostics.textContent=list.join(' · ');diagnostics.className=kind}
 function invalidate(kind,messages){
   state[kind]=null;
@@ -446,12 +502,16 @@ function draw(){
   ctx.restore();
 }
 function resize(){const r=stage.getBoundingClientRect();state.dpr=Math.max(1,devicePixelRatio||1);canvas.width=Math.round(r.width*state.dpr);canvas.height=Math.round(r.height*state.dpr);if(state.runtime){if(state.behavior)followPlayer(true);else fitScene()}draw()}
+function installRuntime(result,{keepCamera=false}={}){
+  state.runtime=result.runtime;state.behavior=result.runtime.playerSpawn?B.createPlayerBehavior(result.runtime):null;state.pipeBehavior=B.createPipeTravelBehavior(result.runtime,state.behavior);state.actorBehavior=B.createActorBehavior(result.runtime,state.behavior);state.blockBehavior=B.createBlockBehavior(result.runtime,state.behavior);state.powerupBehavior=B.createPowerupBehavior(result.runtime);state.projectileBehavior=B.createProjectileBehavior(result.runtime,state.behavior,state.actorBehavior);state.platformBehavior=B.createMovingPlatformBehavior(result.runtime,state.behavior);if(state.behavior&&!keepCamera){state.camera.zoom=DEFAULT_GAME_ZOOM;followPlayer(true)}else if(!state.behavior)fitScene();empty.hidden=true;syncLayout();
+}
 function refreshPair(){
+  state.world=null;updateWorldReadout();
   state.runtime=null;state.behavior=null;state.pipeBehavior=null;state.actorBehavior=null;state.blockBehavior=null;state.powerupBehavior=null;state.projectileBehavior=null;state.platformBehavior=null;state.tick=0;empty.hidden=false,syncLayout();
   if(!state.theme||!state.map){report(`Waiting for ${state.theme?'a compatible editor map':'a compatible reference theme'}; no level is loaded.`,'');draw();return}
   const result=B.compileReferenceRuntime(state.theme,state.map);
   if(!result.ok){report(result.errors);draw();return}
-  state.runtime=result.runtime;state.behavior=result.runtime.playerSpawn?B.createPlayerBehavior(result.runtime):null;state.pipeBehavior=B.createPipeTravelBehavior(result.runtime,state.behavior);state.actorBehavior=B.createActorBehavior(result.runtime,state.behavior);state.blockBehavior=B.createBlockBehavior(result.runtime,state.behavior);state.powerupBehavior=B.createPowerupBehavior(result.runtime);state.projectileBehavior=B.createProjectileBehavior(result.runtime,state.behavior,state.actorBehavior);state.platformBehavior=B.createMovingPlatformBehavior(result.runtime,state.behavior);if(state.behavior){state.camera.zoom=DEFAULT_GAME_ZOOM;followPlayer(true)}else fitScene();empty.hidden=true;syncLayout();
+  installRuntime(result);
   const problems=[...result.diagnostics,...state.atlasIssues.map(message=>({message}))];
   report(problems.length?problems:`Rendered ${result.runtime.instances.length} instances in ${result.runtime.drawCommands.length} atlas commands; bounds: ${result.runtime.boundsSource}.`,problems.some(x=>x.severity==='error')?'bad':'good');draw();
 }
@@ -500,7 +560,72 @@ function pollGamepad(){
 }
 function pressed(action){return state.input.has(action)||state.padInput.has(action)||state.touchInput.has(action)}
 function stepPlayer(next){if(!state.behavior)return null;const controls=next||{left:pressed('left'),right:pressed('right'),up:pressed('up'),down:pressed('down'),jump:pressed('jump'),run:pressed('run')},travel=state.pipeBehavior?.step(controls,pipeCamera());state.suppressSimulationThisFrame=!!travel?.suppressSimulationThisFrame;const player=state.pipeBehavior?.active||state.suppressSimulationThisFrame?state.behavior.player:state.behavior.step(controls);if(state.behavior.consumeRestart()){state.pipeBehavior?.reset();state.actorBehavior?.reset();state.blockBehavior?.reset();state.powerupBehavior?.reset(false);state.projectileBehavior?.reset();state.platformBehavior?.reset();followPlayer(true)}else if(!state.pipeBehavior?.active)followPlayer();return player}
-function frame(time){state.lastTime=time;pollGamepad();if(state.paused){draw();drawPaused();requestAnimationFrame(frame);return}state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);draw();requestAnimationFrame(frame)}
+// Rolling world: the engine plays a 3×3-chunk window around the player and rebuilds it when they cross into another chunk,
+// carrying the player, nearby enemies and in-flight pickups across. Coins and blocks the player changed are remembered by
+// stable instance id for the whole session, even after their chunk leaves the window.
+const WORLD_CARRY_ACTOR=['x','y','direction','mirror','winged','flying','wingPhase','wingFalling','wingVy','state','pickupLock','shellVx','shellVy','shellOnGround','knockVx','knockVy','flat','active','collisionEligible','tick','previousX','previousY'];
+function startWorld(world,options={}){
+  if(!state.theme)return['Load the reference theme before starting a world.'];
+  if(!Array.isArray(world?.rooms)||!world.rooms.length)return['A world needs compiled rooms.'];
+  const seed=Number.isFinite(Number(options.seed))?Math.trunc(Number(options.seed)):1987,C=B.WORLD_CHUNK;
+  state.map=null;state.behavior=null;state.world={def:world,seed,center:null,memory:new Map()};state.paused=false;pauseMenu?.sync();
+  if(!buildWorldWindow(0,0,{x:5*C.cell+8,y:C.interiorRows*C.cell}))return['The world window could not be compiled.'];
+  report(`World ${seed}: wander off in any direction. Home is where you started.`,'good');return[];
+}
+function worldInstanceId(index){return state.runtime?.instances[index]?.instanceId||null}
+function harvestWorld(){
+  // Everything the player changed in the outgoing window: persistent (memory) and transient (this rebuild only).
+  const memory=state.world.memory,carry={actors:new Map(),blocks:new Map(),surfaces:new Map(),spawned:[],carried:null};
+  for(const pickup of state.powerupBehavior?.powerups||[]){
+    if(pickup.authoredInstance!==undefined){const id=worldInstanceId(pickup.authoredInstance);if(id&&pickup.taken)memory.set(id,{...memory.get(id),taken:true})}
+    else if(!pickup.taken)carry.spawned.push({...pickup,source:worldInstanceId(pickup.sourceInstance)});
+  }
+  for(const block of state.blockBehavior?.blocks||[]){const id=block.instance.instanceId;if(!id)continue;if(block.used||block.broken||block.remainingUses!==block.initialUses)memory.set(id,{...memory.get(id),block:{used:block.used,broken:block.broken,remainingUses:block.remainingUses}});carry.blocks.set(id,{bump:block.bump,spinTicks:block.spinTicks,spinDuration:block.spinDuration,spinTrigger:block.spinTrigger})}
+  for(const surface of state.runtime?.surfaces?.solid||[]){const id=worldInstanceId(surface.instanceIndex);if(id)carry.surfaces.set(id,[...(carry.surfaces.get(id)||[]),!!surface.disabled])}
+  for(const actor of state.actorBehavior?.actors||[]){const id=actor.instance.instanceId;if(id)carry.actors.set(id,Object.fromEntries(WORLD_CARRY_ACTOR.map(key=>[key,actor[key]])))}
+  const held=state.actorBehavior?.carriedActor;if(held)carry.carried=held.instance.instanceId;
+  return carry;
+}
+function buildWorldWindow(cx,cy,start,carry=null){
+  const world=state.world,player=state.behavior?{player:{...state.behavior.player},input:{...state.behavior.input}}:null;
+  const {map,chunks}=B.worldWindowMap(state.theme,world.def,world.seed,cx,cy,start),result=B.compileReferenceRuntime(state.theme,map);
+  if(!result.ok){report(result.errors);return false}
+  installRuntime(result,{keepCamera:!!player});world.center={cx,cy};world.chunks=chunks;world.map=map;
+  const byId=new Map(result.runtime.instances.map(instance=>[instance.instanceId,instance.index]));
+  if(player&&state.behavior){Object.assign(state.behavior.player,player.player);Object.assign(state.behavior.input,player.input)}
+  for(const pickup of state.powerupBehavior.powerups)if(pickup.authoredInstance!==undefined&&world.memory.get(worldInstanceId(pickup.authoredInstance))?.taken)pickup.taken=true;
+  for(const block of state.blockBehavior.blocks){const id=block.instance.instanceId,saved=world.memory.get(id)?.block,live=carry?.blocks.get(id);if(saved)Object.assign(block,saved);if(live)Object.assign(block,live)}
+  const surfaceSeen=new Map();
+  for(const surface of result.runtime.surfaces.solid){
+    const id=worldInstanceId(surface.instanceIndex),n=surfaceSeen.get(id)||0;surfaceSeen.set(id,n+1);
+    const live=carry?.surfaces.get(id);if(live&&n<live.length)surface.disabled=live[n];else if(world.memory.get(id)?.block?.broken)surface.disabled=true;
+  }
+  for(const actor of state.actorBehavior.actors){const live=carry?.actors.get(actor.instance.instanceId);if(live)Object.assign(actor,live)}
+  if(carry?.carried){const actor=state.actorBehavior.actors.find(a=>a.instance.instanceId===carry.carried);if(actor){actor.pickupLock=false;state.actorBehavior.carry(actor,state.behavior.player)}}
+  for(const pickup of carry?.spawned||[]){const template=result.runtime.pickupTemplates[pickup.id];if(template)state.powerupBehavior.powerups.push({...pickup,template,sourceInstance:byId.get(pickup.source)??null})}
+  updateWorldReadout();return true;
+}
+function stepWorld(){
+  // Rebuild once the player is a little way inside a different chunk (the margin stops boundary ping-pong).
+  const world=state.world,p=state.behavior?.player;if(!world||!p||p.dead||state.pipeBehavior?.transit)return;
+  const C=B.WORLD_CHUNK,W=C.cols*C.cell,H=C.rows*C.cell,fx=p.x+p.w/2,fy=p.y+p.h-1,{cx,cy}=B.worldChunkAt(fx,fy);
+  if(cx===world.center.cx&&cy===world.center.cy)return;
+  const lx=fx-cx*W,ly=fy-cy*H;if(lx<16||lx>W-16||ly<4||ly>H-4)return;
+  buildWorldWindow(cx,cy,{x:fx,y:p.y+p.h},harvestWorld());
+}
+function updateWorldReadout(){
+  const header=document.querySelector?.('header');if(!header)return;let readout=document.getElementById('worldReadout');
+  if(!state.world){if(readout)readout.hidden=true;return}
+  if(!readout){readout=document.createElement('span');readout.id='worldReadout';readout.className='counter';header.querySelector('#livesCount')?.closest('.counter')?.after(readout)}
+  const {cx,cy}=state.world.center||{cx:0,cy:0},dx=cx?`${cx<0?'←':'→'}${Math.abs(cx)}`:'',dy=cy?`${cy<0?'↑':'↓'}${Math.abs(cy)}`:'';
+  readout.hidden=false;readout.textContent=`WORLD ${state.world.seed} · ⌂ ${dx||dy?[dx,dy].filter(Boolean).join(' '):'home'}`;
+}
+function captureWorld(){
+  // The current window as an ordinary editor map, starting where the player stands.
+  if(!state.world?.map||!state.behavior)return null;const map=structuredClone(state.world.map),p=state.behavior.player;
+  map.markers={start:{x:p.x+p.w/2,y:p.y+p.h},goal:null};return map;
+}
+function frame(time){state.lastTime=time;pollGamepad();if(state.paused){draw();drawPaused();requestAnimationFrame(frame);return}state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);stepWorld();draw();requestAnimationFrame(frame)}
 const fullscreenTarget=document.documentElement,canFullscreen=!!(fullscreenTarget?.requestFullscreen||fullscreenTarget?.webkitRequestFullscreen);
 function isFullscreen(){return!!(document.fullscreenElement||document.webkitFullscreenElement)}
 async function toggleFullscreen(){
@@ -545,14 +670,14 @@ function setupPauseMenu(){
   }
   root.addEventListener('click',e=>{
     const button=e.target.closest('button');if(!button){if(e.target===root)setPaused(false);return}
-    if(button.dataset.action==='resume')setPaused(false);else if(button.dataset.action==='fullscreen')toggleFullscreen();else if(button.dataset.action==='restart')restartLevel();
+    if(button.dataset.action==='resume')setPaused(false);else if(button.dataset.action==='fullscreen')toggleFullscreen();else if(button.dataset.action==='newWorld'&&state.world){startWorld(state.world.def,{seed:Math.floor(Math.random()*1e6)});setPaused(false)}else if(button.dataset.action==='restart')restartLevel();
     else if(button.dataset.open)open(button.dataset.open);else if(button.dataset.tab)showTab(button.dataset.tab);
     else if(button.dataset.value){setControlOption(button.closest('[data-setting]').dataset.setting,button.dataset.value);renderSettings()}
     else if(button.id==='padDefaults'){resetPadMap();learning=null;renderPad()}else if(button.id==='creditPrev'){creditIndex--;renderCredit()}else if(button.id==='creditNext'){creditIndex++;renderCredit()}
   });
   const header=document.querySelector?.('header');header?.addEventListener('click',e=>{if(!e.target.closest('select,button,label,input,a')&&state.behavior&&!state.paused)setPaused(true)});
   return{
-    sync(){root.hidden=!state.paused;if(state.paused)open('main');else learning=null},
+    sync(){root.hidden=!state.paused;const newWorld=root.querySelector('[data-action="newWorld"]');if(newWorld)newWorld.hidden=!state.world;if(state.paused)open('main');else learning=null},
     escape(){if(!state.paused)return false;if(learning){learning=null;renderPad();return true}if(view!=='main'){open('main');return true}return false},
     learnFrom(fresh){if(!learning||root.hidden)return false;if(fresh.length){setPadBinding(learning,fresh[0]);learning=null;renderPad();try{rows.querySelectorAll('button')[PAD_ACTIONS.indexOf(Object.keys(padMap).find(action=>padMap[action]===fresh[0]))]?.focus({preventScroll:true})}catch(_){}}return true},
     navigate(edges){
@@ -605,7 +730,7 @@ function setupTouchControls(){
 }
 refreshPair();resize();requestAnimationFrame(frame);
 window.ReferenceEngine={
-  state,fitScene,followPlayer,stepPlayer,togglePause,setPaused,restartLevel,pollGamepad,padMap:()=>({...padMap}),controlOptions:()=>({...controlOptions}),currentPlayerVisual:playerVisual,currentPlayerFit:()=>fitPlayerVisual(state.behavior?.player,playerVisual()),
+  state,fitScene,followPlayer,stepPlayer,togglePause,setPaused,restartLevel,startWorld,captureWorld,pollGamepad,padMap:()=>({...padMap}),controlOptions:()=>({...controlOptions}),currentPlayerVisual:playerVisual,currentPlayerFit:()=>fitPlayerVisual(state.behavior?.player,playerVisual()),
   loadReferenceTheme:async document=>{const errors=B.validateReferenceTheme(document);if(errors.length){invalidate('theme',errors);return errors}state.theme=document;await loadAtlases();refreshPair();return[]},
   loadReferenceEditorMap:document=>{const errors=B.validateReferenceEditorMap(document,state.theme);if(errors.length){invalidate('map',errors);return errors}state.map=document;refreshPair();return[]},
   validateAndPrepare:B.compileReferenceRuntime
