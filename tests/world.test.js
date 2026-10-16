@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 
-const root=path.resolve(__dirname,'..'),{compileRooms}=require('../scripts/world_rooms.js');
+const os=require('node:os'),root=path.resolve(__dirname,'..'),{compileRooms,HOLE_LEFT,HOLE_WIDTH}=require('../scripts/world_rooms.js');
 const html=fs.readFileSync(path.join(root,'engine/reference_pack_engine.html'),'utf8'),theme=JSON.parse(fs.readFileSync(path.join(root,'themes/theme_marioai_reference_pack.llmtheme.txt'),'utf8'));
 const boundary=html.match(/<script id="referencePackBoundary">([\s\S]*?)<\/script>/)[1],application=html.match(/<script>\s*([\s\S]*?)<\/script><\/body>/)[1];
 const context={globalThis:{}};vm.runInNewContext(boundary,context);
@@ -12,6 +12,19 @@ test('rooms compile from ASCII with a header, one home, and ascent rooms',()=>{
   assert(world.rooms.length>=8);assert.equal(world.rooms.filter(room=>room.home).length,1);
   assert(world.rooms.some(room=>room.kind==='ascent')&&world.rooms.some(room=>room.kind==='plain'&&!room.home));
   for(const room of world.rooms)assert(room.instances.every(i=>i.values['transform.y']<=FLOOR),`${room.id} stays inside its 20-row interior`);
+});
+
+test('a room that stands something over the hole columns is refused unless it says solidfloor',()=>{
+  assert.deepEqual([HOLE_LEFT,HOLE_WIDTH],[C.holeLeft,C.holeWidth],'compiler and generator agree on the hole');
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rooms-')),blank='.'.repeat(40);
+  const room=header=>[header,'@llmario-ascii 3','@cell 16','',...Array(19).fill(blank),'.'.repeat(18)+'XXXX'+'.'.repeat(18)].join('\n');
+  try{
+    fs.writeFileSync(path.join(dir,'home.llmroom.txt'),room('@room kind=plain home').replace(/X/g,'.'));
+    fs.writeFileSync(path.join(dir,'stump.llmroom.txt'),room('@room kind=ascent'));
+    assert.throws(()=>compileRooms(dir,theme),/stump\.llmroom\.txt: ground stands on the floor over the hole/);
+    fs.writeFileSync(path.join(dir,'stump.llmroom.txt'),room('@room kind=ascent solidfloor'));
+    assert.equal(compileRooms(dir,theme).rooms.length,2);
+  }finally{fs.rmSync(dir,{recursive:true,force:true})}
 });
 
 test('the generator is a pure function of seed and chunk coordinates',()=>{
@@ -32,6 +45,23 @@ test('doors are shared, holes always land in ascent rooms, and solid-floor rooms
     if(chunk.bottomOpen)assert(!solid.has(chunk.room),`(${x},${y}) has a hole under a solid-floor room`);
   }
   const home=api.worldChunk(world,4417,0,0);assert.equal(world.rooms.find(room=>room.id===home.room).home,true);assert.equal(home.topOpen,false);assert.equal(home.bottomOpen,false);
+});
+
+test('districts give regions a character: hole density, favoured rooms and swapped enemies',()=>{
+  const tally={};
+  for(let x=-200;x<200;x++)for(let y=-3;y<9;y++){
+    const chunk=api.worldChunk(world,77,x,y),t=tally[chunk.district.id]??={chunks:0,holes:0,rooms:{},walkers:{}};
+    assert.equal(chunk.district.id,api.worldDistrict(77,x,y).id);t.chunks++;if(chunk.bottomOpen)t.holes++;t.rooms[chunk.room]=(t.rooms[chunk.room]||0)+1;
+    for(const i of chunk.instances)if(theme.objects[theme.placeables[i.placeable].object].engineNoun==='walker')t.walkers[i.placeable]=(t.walkers[i.placeable]||0)+1;
+  }
+  assert.deepEqual(Object.keys(tally).sort(),plain(api.WORLD_DISTRICTS.map(d=>d.id).sort()),'every district shows up');
+  const rate=id=>tally[id].holes/tally[id].chunks,share=(id,room)=>(tally[id].rooms[room]||0)/tally[id].chunks;
+  assert(rate('warren')>rate('meadow')+0.3,'warrens are riddled with holes, meadows mostly are not');
+  assert(share('pipeworks','pipes')>2*share('meadow','pipes'),'pipeworks favour pipe rooms');
+  assert(share('meadow','hills')>2*share('pipeworks','hills'),'meadows favour hills');
+  assert(!tally.thorns.walkers.goomba&&tally.thorns.walkers.spiky,'thorns swap goombas for spikies');
+  assert(!tally.pipeworks.walkers.goomba&&tally.pipeworks.walkers.koopaGreen,'pipeworks swap goombas for koopas');
+  for(const [cx,cy] of [[0,0],[9,0],[-17,4],[30,-4]])assert.deepEqual(plain(api.validateReferenceEditorMap(api.worldWindowMap(theme,world,77,cx,cy).map,theme)),[],`window at ${cx},${cy} is valid`);
 });
 
 test('a window is an ordinary valid reference map with seamless floors',()=>{
@@ -62,6 +92,18 @@ test('every room passes the checker in its neighbourhood: floor both ways, with 
   }
 });
 
+test('any chunk of a captured window promotes back into a room that regenerates the same chunk',()=>{
+  const {promoteChunk,checkRoom}=require('../scripts/world_room_from_map.js'),seen=new Set(),key=i=>JSON.stringify([i.placeable,Object.entries(i.values).sort()]).replace(/w-?\d+_-?\d+_pipe/g,'pipe');
+  for(let x=-30;x<30&&seen.size<world.rooms.length;x++){
+    const chunk=api.worldChunk(world,1987,x,1);if(seen.has(chunk.room))continue;seen.add(chunk.room);
+    const capture=plain(api.worldWindowMap(theme,world,1987,x,1,{x:x*W+100,y:H+FLOOR}).map),source=world.rooms.find(room=>room.id===chunk.room);
+    const text=promoteChunk(capture,theme,{header:`kind=${source.kind}${source.solidFloor?' solidfloor':''}`});
+    const room=checkRoom(text,theme),expected=chunk.instances.map(i=>({placeable:i.placeable,values:{...i.values,'transform.x':i.values['transform.x']-x*W,'transform.y':i.values['transform.y']-H}}));
+    assert.deepEqual(plain(room.instances.map(key).sort()),plain(expected.map(key).sort()),`${chunk.room}${chunk.mirror?' (mirrored)':''} survives the round trip`);
+  }
+  assert(seen.size>=world.rooms.length-1,'covered every room but home');
+});
+
 function harness(){
   const ctx={setTransform(){},save(){},restore(){},translate(){},scale(){},rotate(){},fillRect(){},fillText(){},drawImage(){},clearRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},fill(){},arc(){},strokeRect(){},set fillStyle(v){},set strokeStyle(v){},set lineWidth(v){},set font(v){},set textAlign(v){},set textBaseline(v){},set imageSmoothingEnabled(v){},set globalAlpha(v){}};
   const elements={screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},themeButton:{},mapButton:{},fitButton:{},coinCount:{value:'',textContent:''},livesCount:{value:'',textContent:''},themeFile:{files:[],value:''},mapFile:{files:[],value:''}};
@@ -75,10 +117,16 @@ async function worldEngine(seed){const {engine,frames}=harness();await engine.lo
 test('the window rolls with the player and carries speed across the rebuild',async()=>{
   const {engine,run}=await worldEngine(1987),s=engine.state;
   assert.deepEqual(plain(s.world.center),{cx:0,cy:0});
-  const hop=(player,i)=>({right:true,run:true,jump:i%50<14});
-  run(700,hop);
+  // Watch every frame: whenever the window rebuilds mid-run, the speed on either side of the rebuild is the same.
+  const crossings=[];let before=null;
+  for(let i=0;i<500&&s.world.center.cx<2;i++){
+    const center=JSON.stringify(s.world.center);
+    run(1,player=>{before={vx:player.vx};return{right:true,run:true,jump:i%50<14}});
+    if(JSON.stringify(s.world.center)!==center)crossings.push({center:plain(s.world.center),vx:s.behavior.player.vx,before:before.vx});
+  }
   assert(s.world.center.cx>=2,'running right crosses into later chunks');
-  assert(Math.abs(s.behavior.player.vx)>4,'momentum survives rebuilds');
+  assert(crossings.some(c=>Math.abs(c.vx)>4),'crossed at least once at running speed');
+  for(const c of crossings)assert(Math.abs(c.vx)>=Math.abs(c.before)-0.5,`momentum survives the rebuild into ${JSON.stringify(c.center)}`);
 });
 
 test('coins taken stay taken after their chunk leaves the window and comes back',async()=>{
@@ -95,9 +143,10 @@ test('coins taken stay taken after their chunk leaves the window and comes back'
 });
 
 test('drop through a hole, then jump back up through it from the ascent room below',async()=>{
-  // Seed 1987: chunk (1,0) has a hole into (1,1).
-  assert.equal(api.worldChunk(world,1987,1,0).bottomOpen,true);
-  const {engine,run}=await worldEngine(1987),s=engine.state,p=()=>s.behavior.player;
+  // A seed where chunk (1,0) has a hole into (1,1) and neither chunk has an enemy to get in the way of the test.
+  const calm=(seed,cx,cy)=>api.worldChunk(world,seed,cx,cy).instances.every(i=>theme.objects[theme.placeables[i.placeable].object].engineNoun!=='walker');
+  let seed=1;while(!api.worldChunk(world,seed,1,0).bottomOpen||!calm(seed,1,0)||!calm(seed,1,1))seed++;
+  const {engine,run}=await worldEngine(seed),s=engine.state,p=()=>s.behavior.player;
   Object.assign(p(),{x:W+(C.holeLeft+C.holeWidth/2)*C.cell-12,y:FLOOR-40,vx:0,vy:0});run(120);
   assert.deepEqual(plain(s.world.center),{cx:1,cy:1},'fell into the chunk below');assert.equal(p().onGround,true);
   const ledgeY=p().y;assert(ledgeY<H+4*C.cell,'landed on the ascent ledge near the top of the chunk');
