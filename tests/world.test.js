@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 
-const root=path.resolve(__dirname,'..'),{compileRooms}=require('../scripts/world_rooms.js');
+const os=require('node:os'),root=path.resolve(__dirname,'..'),{compileRooms,HOLE_LEFT,HOLE_WIDTH}=require('../scripts/world_rooms.js');
 const html=fs.readFileSync(path.join(root,'engine/reference_pack_engine.html'),'utf8'),theme=JSON.parse(fs.readFileSync(path.join(root,'themes/theme_marioai_reference_pack.llmtheme.txt'),'utf8'));
 const boundary=html.match(/<script id="referencePackBoundary">([\s\S]*?)<\/script>/)[1],application=html.match(/<script>\s*([\s\S]*?)<\/script><\/body>/)[1];
 const context={globalThis:{}};vm.runInNewContext(boundary,context);
@@ -12,6 +12,19 @@ test('rooms compile from ASCII with a header, one home, and ascent rooms',()=>{
   assert(world.rooms.length>=8);assert.equal(world.rooms.filter(room=>room.home).length,1);
   assert(world.rooms.some(room=>room.kind==='ascent')&&world.rooms.some(room=>room.kind==='plain'&&!room.home));
   for(const room of world.rooms)assert(room.instances.every(i=>i.values['transform.y']<=FLOOR),`${room.id} stays inside its 20-row interior`);
+});
+
+test('a room that stands something over the hole columns is refused unless it says solidfloor',()=>{
+  assert.deepEqual([HOLE_LEFT,HOLE_WIDTH],[C.holeLeft,C.holeWidth],'compiler and generator agree on the hole');
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rooms-')),blank='.'.repeat(40);
+  const room=header=>[header,'@llmario-ascii 3','@cell 16','',...Array(19).fill(blank),'.'.repeat(18)+'XXXX'+'.'.repeat(18)].join('\n');
+  try{
+    fs.writeFileSync(path.join(dir,'home.llmroom.txt'),room('@room kind=plain home').replace(/X/g,'.'));
+    fs.writeFileSync(path.join(dir,'stump.llmroom.txt'),room('@room kind=ascent'));
+    assert.throws(()=>compileRooms(dir,theme),/stump\.llmroom\.txt: ground stands on the floor over the hole/);
+    fs.writeFileSync(path.join(dir,'stump.llmroom.txt'),room('@room kind=ascent solidfloor'));
+    assert.equal(compileRooms(dir,theme).rooms.length,2);
+  }finally{fs.rmSync(dir,{recursive:true,force:true})}
 });
 
 test('the generator is a pure function of seed and chunk coordinates',()=>{

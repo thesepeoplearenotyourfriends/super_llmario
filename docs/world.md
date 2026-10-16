@@ -46,7 +46,8 @@ release build's map picker. There's no goal: you wander, and home is where you s
   one-way ledge at **row 2 spanning cols 15–24** (under the hole above, cols 17–22).
 - `weight=N`: pick frequency. `home`: exactly one room, always at (0,0).
 - `solidfloor`: the generator never cuts a hole under this room (for rooms with something
-  standing over the middle of the floor).
+  standing over the middle of the floor). The compiler refuses a room without it that stands
+  anything but enemies or pickups on the floor across cols 17–22.
 - Row 19 stands on the floor band, so don't draw the floor. Keep the floor walkable end to
   end, including hopping a 6-cell hole at cols 17–22 unless the room is `solidfloor`.
 

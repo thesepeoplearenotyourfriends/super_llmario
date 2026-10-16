@@ -1,4 +1,4 @@
-@room kind=ascent
+@room kind=ascent solidfloor
 @llmario-ascii 3
 @cell 16
 @note Mushroom caps of a giant tree; hop cap to cap up into the canopy.
