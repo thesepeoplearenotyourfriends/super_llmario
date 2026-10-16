@@ -83,12 +83,51 @@ reason. The room compiler's rules (such as `solidfloor`) are checked before anyt
 written, and the tests then put the room through the reachability checks. Captured enemies
 keep their exact type, so a koopa captured in Pipeworks stays a koopa everywhere.
 
+## Planned: plots
+
+The agreed design for keeping your edits to the world. Not built yet. In the interface the unit
+is a **screen** (one 40×24-cell section of the world). The code's `WORLD_CHUNK` / `worldChunk`
+names get renamed to screen when this lands.
+
+- **Flow.** Exploring, press **Editor**: it opens at the screen you're standing on. Edit. Press
+  **Back to game**; if anything changed, *"Save changes to N screens? Save / Discard / Cancel"*.
+  The window rebuilds and your edits are there. Find another spot, repeat: the new edit is
+  appended to the same file.
+- **Storage is by position, not by plot.** The file holds edited screens keyed by screen
+  coordinates, with their objects at true world positions, plus an explicit list of edited
+  screen coordinates (an emptied screen must stay empty, not regenerate). A saved screen
+  replaces generation there completely, floor band included. An object belongs to the screen
+  its anchor is in.
+- **A plot is a named view**, not a container: a name plus the rectangle of screens you were
+  looking at. Plots own nothing and may overlap. **Edit ▸ Plots** lists them and switches the
+  editor between them; the editor shows one plot at a time, so unrelated plots never look like
+  neighbours. Deleting a plot removes the bookmark only.
+- **Saved means changed.** A screen is saved only if it differs from what the generator would
+  make there (compare at save time, so edit-then-undo saves nothing). Looking around saves
+  nothing. The same comparison greys out **Restore original**.
+- **Side panel.** For plots, the *Map area* section (pixel left/top/width/height, Fit map)
+  becomes *Plot area*: a small diagram of the plot's screens, `3 × 2 screens`, and
+  **Add screen ← ↑ → ↓**, each adding one whole screen. Revealed screens show what the game
+  would show: saved content if that screen was edited (by any plot), generation otherwise.
+  Dotted lines mark every screen seam, with a distinct style where saved meets generated.
+  The world has no top or bottom, so nothing greys out.
+- **Restore original** (Edit menu): puts the screen under the cursor back the way the world
+  made it, after a confirm; one undo step. *Restore all screens in this plot* too.
+- **Where generated meets saved,** the generator closes its doors on that edge (no generated
+  hole drops into a plot, no generated room expects a climb the plot didn't build). A plot's
+  own edges are the author's call; a reachability check at save time warns, never blocks.
+- **The file** is an ordinary `.llmmap.txt` with a `world:{seed}` header, the edited-screen
+  list and the plot views. It lives in browser storage while you play; **File ▸ Save**
+  downloads it; dropped in `/maps`, the build packs it into the picker as that world.
+- **Help.** A *Plots* entry in the **?** modal: Editor while exploring edits the screen you're
+  on; Add screen reaches around it; only changed screens are saved; plots are bookmarks
+  (deleting one keeps your changes); Restore original undoes a screen for good; File ▸ Save
+  keeps a copy, `/maps` makes it part of the game.
+
 ## Not in this version
 
-- **Patch overlays** (editing a spot in the world and having the change appear whenever the
-  generator draws it). The stable instance IDs are there
-  for when that's wanted.
-- **Persistence across reloads.** Session memory is in-memory only.
+- **Plots** (see *Planned: plots* above), and with them persistence across reloads. Session
+  memory of coins and blocks is in-memory only.
 - **Moving-platform positions** across rebuilds. The current rooms only use static
   platforms.
 - **The standalone engine has no World.** Rooms are packed by the release build, like maps.
