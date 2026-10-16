@@ -1,4 +1,4 @@
-@room kind=plain weight=2
+@room kind=plain weight=2 tags=hills
 @llmario-ascii 3
 @cell 16
 @note Rolling ground: up a step, over the crest, down the other side.

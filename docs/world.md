@@ -16,8 +16,15 @@ release build's map picker. There's no goal: you wander, and home is where you s
 - **Rooms** fill the 40×20 interior above the floor band. They're ASCII v3 sketches in
   `world/rooms/*.llmroom.txt` (see below). A room is picked per chunk by weighted hash, and
   sometimes mirrored.
-- **Biomes by depth.** Sky, ground, caves, castle, with district boundaries that shift every
-  8 chunks. A glance at the ground style tells you roughly how deep you are.
+- **Districts.** Each 8×3-chunk patch gets a character from a short list: Meadow (few holes,
+  lots of hills), Warren (riddled with holes, climbing rooms, wave goombas), Pipeworks (pipe
+  rooms, koopas instead of goombas), Thorns (spikies instead of goombas), Brickyard (block
+  rooms). A district sets the hole chance, multiplies the odds of rooms carrying its favoured
+  tags, and swaps enemies. Home's own enemies are never swapped. The status bar names the
+  district you're in. The list is `WORLD_DISTRICTS` in the engine boundary.
+- **Biomes by depth.** Sky, ground, caves, castle, with boundaries that shift every 8 chunks.
+  A glance at the ground style tells you roughly how deep you are. Biomes nudge room odds too:
+  sky favours `sky` rooms, caves `pipes`, castle `blocks`.
 - **Rolling window.** The engine plays a 3×3-chunk window (`worldWindowMap`, an ordinary
   reference map) and rebuilds it when you're a little way into another chunk, which takes
   about one frame. You, your speed and held buttons, nearby enemies, a held shell and
@@ -32,7 +39,7 @@ release build's map picker. There's no goal: you wander, and home is where you s
 ## Writing a room
 
 ```
-@room kind=ascent weight=2
+@room kind=ascent weight=2 tags=climb
 @llmario-ascii 3
 @cell 16
 @note Zigzag up through one-way shelves to the ledge under the hole above.
@@ -44,7 +51,9 @@ release build's map picker. There's no goal: you wander, and home is where you s
 
 - `kind=plain`: any chunk whose top has no hole. `kind=ascent`: must climb from the floor to a
   one-way ledge at **row 2 spanning cols 15–24** (under the hole above, cols 17–22).
-- `weight=N`: pick frequency. `home`: exactly one room, always at (0,0).
+- `weight=N`: pick frequency. `tags=a,b`: what districts and biomes look for (`hills`,
+  `blocks`, `pipes`, `spiky`, `climb`, `sky`; new tags are fine, they just aren't favoured
+  anywhere until a district names them). `home`: exactly one room, always at (0,0).
 - `solidfloor`: the generator never cuts a hole under this room (for rooms with something
   standing over the middle of the floor). The compiler refuses a room without it that stands
   anything but enemies or pickups on the floor across cols 17–22.
@@ -58,10 +67,26 @@ and there must be no pockets. A room that fails can't ship.
 `node scripts/world_rooms.js` prints the compiled rooms. The release build runs the same
 module.
 
+## Promoting a capture into a room
+
+Found a good screen? Press **Editor**, fix it up, save the map, then:
+
+```
+node scripts/world_room_from_map.js capture.llmmap.txt --header "kind=plain tags=hills" -o world/rooms/my_room.llmroom.txt
+node --test tests/world.test.js
+```
+
+The chunk defaults to the one you were standing in (the map's start marker); `--chunk CX,CY`
+picks another. The floor band is left out because the generator owns it. Anything spilling out
+of the 40×20 interior, or a pipe wired to somewhere outside the chunk, is refused with a
+reason. The room compiler's rules (such as `solidfloor`) are checked before anything is
+written, and the tests then put the room through the reachability checks. Captured enemies
+keep their exact type, so a koopa captured in Pipeworks stays a koopa everywhere.
+
 ## Not in this version
 
 - **Patch overlays** (editing a spot in the world and having the change appear whenever the
-  generator draws it) and promoting captures into rooms. The stable instance IDs are there
+  generator draws it). The stable instance IDs are there
   for when that's wanted.
 - **Persistence across reloads.** Session memory is in-memory only.
 - **Moving-platform positions** across rebuilds. The current rooms only use static

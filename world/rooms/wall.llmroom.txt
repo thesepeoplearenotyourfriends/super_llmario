@@ -1,4 +1,4 @@
-@room kind=plain
+@room kind=plain tags=blocks
 @llmario-ascii 3
 @cell 16
 @note A wall to hop, with a winged koopa keeping time above it.

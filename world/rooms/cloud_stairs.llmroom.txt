@@ -1,4 +1,4 @@
-@room kind=ascent
+@room kind=ascent tags=climb,sky
 @llmario-ascii 3
 @cell 16
 @note A staircase of small clouds, left to right and back again.

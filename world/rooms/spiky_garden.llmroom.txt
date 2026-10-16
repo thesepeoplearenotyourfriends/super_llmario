@@ -1,4 +1,4 @@
-@room kind=plain
+@room kind=plain tags=spiky
 @llmario-ascii 3
 @cell 16
 @note Spikies own the floor; the one-way shelves above are the polite route.

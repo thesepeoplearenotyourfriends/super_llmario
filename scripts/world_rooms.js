@@ -11,13 +11,14 @@ function embedded(file,id){
   if(!match)throw new Error(`${file} has no ${id} script`);const context={globalThis:{}};vm.runInNewContext(match[1],context);return context.globalThis;
 }
 function parseHeader(line,file){
-  const m=line.match(/^@room\s+(.*)$/);if(!m)throw new Error(`${file}: first line must be "@room kind=plain|ascent [weight=N] [home] [solidfloor]"`);
-  const header={kind:null,weight:1,home:false,solidFloor:false};
+  const m=line.match(/^@room\s+(.*)$/);if(!m)throw new Error(`${file}: first line must be "@room kind=plain|ascent [weight=N] [tags=a,b] [home] [solidfloor]"`);
+  const header={kind:null,weight:1,tags:[],home:false,solidFloor:false};
   for(const token of m[1].trim().split(/\s+/)){
     if(token==='home')header.home=true;
     else if(token==='solidfloor')header.solidFloor=true;
     else if(/^kind=(plain|ascent)$/.test(token))header.kind=token.slice(5);
     else if(/^weight=\d+$/.test(token))header.weight=Number(token.slice(7));
+    else if(/^tags=[a-z][a-z0-9]*(,[a-z][a-z0-9]*)*$/.test(token))header.tags=token.slice(5).split(',');
     else throw new Error(`${file}: unknown @room token "${token}"`);
   }
   if(!header.kind)throw new Error(`${file}: @room needs kind=plain or kind=ascent`);return header;

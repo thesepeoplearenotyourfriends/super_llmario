@@ -1,4 +1,4 @@
-@room kind=ascent solidfloor
+@room kind=ascent solidfloor tags=climb
 @llmario-ascii 3
 @cell 16
 @note A stepped tower in the middle of the room; the summit is the way up.
