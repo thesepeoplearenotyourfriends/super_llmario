@@ -26,7 +26,7 @@
 .key-list{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;font-size:12px;color:var(--muted)}.key-list b{color:var(--ink)}
 #creditCard{text-align:left;font-size:12px;color:var(--muted);min-height:70px;overflow-wrap:anywhere}#creditCard b{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
 #touchSystem button{padding:3px 12px;border-radius:999px;border:1px solid #ffffff40;background:#00000059;color:#ffffffb3;font-size:10px;letter-spacing:.12em}
-</style></head><body><main><header><span class="counter">COINS <output id="coinCount">0</output></span><span class="counter">LIVES <output id="livesCount">3</output></span><button id="fullscreenButton" type="button" title="Fullscreen" aria-label="Toggle fullscreen" hidden>⛶</button></header><section id="stage"><canvas id="screen" width="960" height="480" aria-label="Reference engine viewport"></canvas><div id="touchControls" hidden aria-hidden="true"><div class="touch-zone" id="touchStick"></div><div class="touch-zone" id="touchButtons"></div><div class="stick-base" id="stickBase"><div class="stick-knob" id="stickKnob"></div></div><div class="touch-face" data-button="x">X</div><div class="touch-face" data-button="y">Y</div><div class="touch-face" data-button="a">A</div><div class="touch-face" data-button="b">B</div><div id="touchSystem"><button type="button" data-system="select">SELECT</button><button type="button" data-system="start">START</button><button type="button" data-system="fullscreen" aria-label="Toggle fullscreen" hidden>⛶</button></div></div><div id="pauseMenu" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+</style></head><body><main><header><span class="counter">COINS <output id="coinCount">0</output></span><span class="counter">LIVES <output id="livesCount">3</output></span><button id="fullscreenButton" type="button" title="Fullscreen" aria-label="Toggle fullscreen" hidden>⛶</button></header><section id="stage"><canvas id="screen" width="960" height="480" aria-label="Reference engine viewport"></canvas><div id="touchControls" hidden aria-hidden="true"><div class="touch-zone" id="touchStick"></div><div class="touch-zone" id="touchButtons"></div><div class="stick-base" id="stickBase"><div class="stick-knob" id="stickKnob"></div></div><div class="touch-face" data-button="x">X</div><div class="touch-face" data-button="y">Y</div><div class="touch-face" data-button="a">A</div><div class="touch-face" data-button="b">B</div><div id="touchSystem"><button type="button" data-system="select">SELECT</button><button type="button" data-system="start">START</button></div></div><div id="pauseMenu" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
 <section data-view="main"><h2 id="pauseTitle">Paused</h2><div class="pause-list"><button type="button" data-action="resume">Resume</button><button type="button" data-action="restart">Restart</button><button type="button" data-action="newWorld" hidden>New world</button><button type="button" data-action="fullscreen" hidden>Fullscreen</button><button type="button" data-open="controls">Controls</button><button type="button" data-open="credits">Attributions</button></div><p class="pause-hint">Start · P · Esc resume. Tap the status bar to pause.</p></section>
 <section data-view="controls" hidden><h2>Controls</h2><div class="pause-tabs" role="tablist"><button type="button" data-tab="gamepad">Gamepad</button><button type="button" data-tab="touch">Touch</button><button type="button" data-tab="keyboard">Keyboard</button></div>
 <div data-panel="gamepad"><div id="padSeen">No gamepad yet. Press any button on it.</div><div id="padRows"></div><div class="pause-field"><span>Analog stick</span><div class="pause-seg" data-setting="padAnalog"><button type="button" data-value="on">Moves too</button><button type="button" data-value="off">Ignored</button></div></div><div class="pause-row"><button type="button" id="padDefaults">Reset to defaults</button></div><p class="pause-note">Buttons only. Learn waits for the next new press; Esc cancels. Saved in this browser.</p></div>
@@ -543,7 +543,7 @@ root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict
 (()=>{
 'use strict';
 const B=window.ReferencePackBoundary,canvas=document.getElementById('screen'),ctx=canvas.getContext('2d'),stage=document.getElementById('stage'),diagnostics=document.getElementById('diagnostics'),empty=document.getElementById('empty'),coinCount=document.getElementById('coinCount'),livesCount=document.getElementById('livesCount'),DEFAULT_GAME_ZOOM=2;
-const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),world:null,paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:0,tick:0,dpr:1};
+const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),world:null,paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:null,tickDebt:0,tick:0,dpr:1};
 function report(messages,kind='bad'){const list=(Array.isArray(messages)?messages:[messages]).map(x=>x.message||x);diagnostics.textContent=list.join(' · ');diagnostics.className=kind}
 function invalidate(kind,messages){
   state[kind]=null;
@@ -728,7 +728,17 @@ function captureWorld(){
   if(!state.world?.map||!state.behavior)return null;const map=structuredClone(state.world.map),p=state.behavior.player;
   map.markers={start:{x:p.x+p.w/2,y:p.y+p.h},goal:null};return map;
 }
-function frame(time){state.lastTime=time;pollGamepad();if(state.paused){draw();drawPaused();requestAnimationFrame(frame);return}state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);stepWorld();draw();requestAnimationFrame(frame)}
+// The game advances in fixed 1/60 s steps measured by the clock, the rate its physics was tuned at, whatever the display
+// refresh: a 120 Hz phone redraws twice per step, a 30 Hz one takes two steps per redraw. At most 5 steps catch up at once,
+// so returning to a backgrounded tab doesn't fast-forward.
+const TICK_MS=1000/60,MAX_CATCH_UP_STEPS=5;
+function frame(time){
+  const last=state.lastTime;state.lastTime=time;
+  state.tickDebt=Math.min(state.tickDebt+(Number.isFinite(last)?Math.max(0,time-last):TICK_MS),TICK_MS*MAX_CATCH_UP_STEPS);
+  while(state.tickDebt>=TICK_MS-0.01){state.tickDebt-=TICK_MS;stepGame()}
+  draw();if(state.paused)drawPaused();requestAnimationFrame(frame);
+}
+function stepGame(){pollGamepad();if(state.paused)return;state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);stepWorld()}
 const fullscreenTarget=document.documentElement,canFullscreen=!!(fullscreenTarget?.requestFullscreen||fullscreenTarget?.webkitRequestFullscreen);
 function isFullscreen(){return!!(document.fullscreenElement||document.webkitFullscreenElement)}
 async function toggleFullscreen(){
@@ -741,7 +751,7 @@ function syncLayout(){
   const shortLandscapeTouch=typeof matchMedia==='function'&&matchMedia('(pointer: coarse) and (orientation: landscape) and (max-height: 560px)').matches;
   const theater=isFullscreen()||shortLandscapeTouch,playing=!!state.runtime,changed=root.contains('theater')!==theater||root.contains('playing')!==playing;
   root.toggle('theater',theater);root.toggle('playing',playing);
-  for(const el of document.querySelectorAll?.('#fullscreenButton,[data-action="fullscreen"],[data-system="fullscreen"]')||[]){el.hidden=!canFullscreen;if(el.dataset.action)el.textContent=isFullscreen()?'Exit fullscreen':'Fullscreen'}
+  for(const el of document.querySelectorAll?.('#fullscreenButton,[data-action="fullscreen"]')||[]){el.hidden=!canFullscreen;if(el.dataset.action)el.textContent=isFullscreen()?'Exit fullscreen':'Fullscreen'}
   if(changed){resize();touchControls?.layout()}
 }
 document.getElementById('fullscreenButton')?.addEventListener?.('click',e=>{e.stopPropagation();toggleFullscreen()});
@@ -822,7 +832,12 @@ function setupTouchControls(){
   function moveStick(p){const result=B.touchStickActions(p.x-stick.origin.x,p.y-stick.origin.y,geometry.radius);stick.actions=result.actions;stick.knob=result.knob;placeStick(stick.origin,stick.knob);publish()}
   function end(e){if(stick?.id===e.pointerId){stick=null;placeStick(geometry.rest,{x:0,y:0})}pointers.delete(e.pointerId);publish()}
   for(const zone of [buttonZone,stickZone])for(const type of ['pointerup','pointercancel','lostpointercapture'])zone.addEventListener(type,end);
-  for(const button of root.querySelectorAll('[data-system]'))button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(button.dataset.system==='start')togglePause();else if(button.dataset.system==='fullscreen')toggleFullscreen();else restartLevel()});
+  for(const button of root.querySelectorAll('[data-system]'))button.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(button.dataset.system==='start'){togglePause();swallowTapClick()}});
+  // A tap's click arrives after the finger lifts, on whatever is under it by then: the pause menu that Start just opened,
+  // whose backdrop closes it again. Swallow that one click.
+  function swallowTapClick(){const stop=e=>{e.preventDefault();e.stopPropagation()};addEventListener('click',stop,{capture:true,once:true});setTimeout(()=>removeEventListener('click',stop,{capture:true}),700)}
+  // Select is deliberately unassigned: restarting on a stray tap isn't fun, and Restart lives in the bottom bar. Fullscreen is
+  // the top bar's button, so the overlay stays a gamepad.
   root.addEventListener('contextmenu',e=>e.preventDefault());
   addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){touched=true;show()}},{capture:true});
   addEventListener('resize',()=>{if(!root.hidden)layout()});
