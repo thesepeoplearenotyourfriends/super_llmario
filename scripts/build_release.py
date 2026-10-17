@@ -187,6 +187,13 @@ window.ReferencePackPlayFromEditor=playPackedEditorMap;
 window.ReferencePackSimulateReachability=simulatePackedEditorReachability;
 async function bootPackedRelease(){
   if(!PACKED_EXPERIENCES.length){refreshPair();return}
+  // Load map with a world file (one saved from the editor's File ▸ Save world file) opens that world, plots and all.
+  const mapInput=document.getElementById('mapFile'),plainLoad=mapInput?.onchange;
+  if(mapInput&&PACKED_WORLD?.rooms?.length)mapInput.onchange=async()=>{
+    const file=mapInput.files[0];let doc=null;try{doc=file&&JSON.parse(await file.text())}catch(_){}
+    if(doc?.world){mapInput.value='';await startPackedWorld({id:`loaded-${file.name}`,label:file.name,filename:file.name,map:doc});return}
+    await plainLoad?.call(mapInput);
+  };
   document.getElementById('releaseEditorButton')?.addEventListener('click',openPackedEditor);
   const menu=document.getElementById('releaseMenu'),picker=document.getElementById('releaseMapPicker');
   if(menu){
@@ -375,7 +382,7 @@ async function loadPlotMap(map,mapName,plot){
   }
   plotUi.plot=plot;plotUi.mapName=mapName;if(plot){const b=map.worldBounds;plotUi.origin={cx:Math.round(b.x/plot.screen.w),cy:Math.round(b.y/plot.screen.h)};plotUi.originAt=[{...plotUi.origin}]}document.body.classList.toggle('plot-mode',!!plot);
   const name=$('packedMapName');if(name)name.textContent=plot?`${plot.name} · ${mapName}`:mapName;
-  renderPlotUi();focusPackedEditorMap();
+  renderPlotUi();labelSaveButtons();focusPackedEditorMap();
 }
 function plotRect(){const s=plotUi.plot.screen,b=state.worldBounds;return{cx:plotUi.origin.cx,cy:plotUi.origin.cy,w:Math.max(1,Math.round(b.w/s.w)),h:Math.max(1,Math.round(b.h/s.h))}}
 function anchorScreen(i){const s=plotUi.plot.screen,o=plotOffset();return{cx:Math.floor((i.values['transform.x']+o.x)/s.w),cy:Math.floor((i.values['transform.y']+o.y-1)/s.h)}}
@@ -402,11 +409,22 @@ function askPlotSave(count){
   return new Promise(resolve=>{const dialog=$('plotSaveDialog');$('plotSaveText').textContent=`Save changes to ${count} screen${count===1?'':'s'}?`;dialog.onclose=()=>resolve(dialog.returnValue||'cancel');dialog.returnValue='';dialog.showModal()});
 }
 async function settlePlot(){
-  // Before leaving a plot (back to the game, or to another plot): save, discard or stay.
-  if(!plotUi.plot||!state.history?.state().dirty)return true;
+  // Before leaving a plot (back to the game, or to another plot): save, discard or stay. Compared against the world, not
+  // the undo history, so a File ▸ Save in between can't make the editor forget there's something to save.
+  if(!plotUi.plot)return true;
   const rect=plotRect(),instances=toWorld(documentState().instances),count=worldApi()?.changes(rect,instances)||0;
   if(count){const choice=await askPlotSave(count);if(choice==='cancel')return false;if(choice==='save')worldApi()?.save({...rect,id:plotUi.plot.id,name:plotUi.plot.name},instances)}
   state.history.markClean();updateHistoryUi();return true;
+}
+function savePlotNow(){
+  // In a plot, Save (and Ctrl+S) saves into the world; Save as… still writes a standalone copy of the map.
+  const rect=plotRect(),count=worldApi()?.save({...rect,id:plotUi.plot.id,name:plotUi.plot.name},toWorld(documentState().instances))||0;
+  state.history.markClean();updateHistoryUi();renderPlotUi();draw();
+  setStatus(count?`Saved ${count} screen${count===1?'':'s'} into the world.`:'Nothing new to save: every screen already matches the world.');
+}
+function labelSaveButtons(){
+  const label=(id,text)=>{const node=$(id)?.firstChild;if(node?.nodeType===3)node.nodeValue=text};
+  label('saveMapBtn',plotUi.plot?'Save plot to world ':'Save map ');label('saveAsMapBtn',plotUi.plot?'Save as standalone map… ':'Save map as… ');
 }
 (function installPlotUi(){
   const mapArea=$('boundsX')?.closest('details');mapArea?.classList.add('map-area');
@@ -427,6 +445,7 @@ async function settlePlot(){
   $('plotList').addEventListener('click',async event=>{const id=event.target.closest('[data-plot]')?.dataset.plot;if(!id||id===plotUi.plot?.id||!await settlePlot())return;const next=worldApi()?.open(id);if(next)await loadPlotMap(next.map,next.filename,next.plot)});
   $('saveWorldBtn').onclick=()=>{const file=worldApi()?.file();if(!file)return;const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([file.text],{type:'text/plain'}));link.download=file.filename;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);setStatus(`Saved ${file.filename}. Drop it in /maps to make it part of the game.`)};
   const back=$('backToGameBtn');if(back)back.onclick=async()=>{if(await settlePlot())window.parent?.ReferencePackCloseEditor?.()};
+  const saveButton=$('saveMapBtn'),plainSave=saveButton.onclick;saveButton.onclick=event=>{if(plotUi.plot)savePlotNow();else plainSave?.call(saveButton,event)};
   // ASCII sketch for plots: the export carries a screen map and the edge rules as @note lines (the codec ignores them),
   // Apply keeps the plot's exact size, and the reachability checker reports places you can't get back from.
   const screenName=(x,y)=>{let n=x,name='';do{name=String.fromCharCode(65+n%26)+name;n=Math.floor(n/26)-1}while(n>=0);return`${name}${y+1}`};
