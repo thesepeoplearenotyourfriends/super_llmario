@@ -44,6 +44,10 @@ PACKED_EDITOR_HEADER = """
         <button id="undoBtn" role="menuitem" title="Undo (Ctrl/Cmd+Z)" disabled>Undo <span>Ctrl+Z</span></button>
         <button id="redoBtn" role="menuitem" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>Redo <span>Ctrl+Shift+Z</span></button>
         <div class="packed-menu-separator"></div>
+        <button id="cutBtn" role="menuitem" title="Cut the selected object">Cut <span>Ctrl+X</span></button>
+        <button id="copyBtn" role="menuitem" title="Copy the selected object">Copy <span>Ctrl+C</span></button>
+        <button id="pasteBtn" role="menuitem" title="Paste at the pointer" disabled>Paste <span>Ctrl+V</span></button>
+        <div class="packed-menu-separator"></div>
         <button id="clearBtn" role="menuitem" disabled>Clear map</button>
       </div>
     </div>
