@@ -397,12 +397,13 @@ function worldBiome(seed,cx,cy){
   return depth<=-3?{id:'sky',style:'overground',favor:{sky:3}}:depth<=1?{id:'ground',style:'overground',favor:{}}:depth<=4?{id:'caves',style:'underground',favor:{pipes:2}}:{id:'castle',style:'castle',favor:{blocks:2}};
 }
 function worldScreen(world,seed,cx,cy,plots=null){
+  // Climbing rooms go only under an opening (where a climb leads somewhere); every other screen draws from the plain rooms.
   // A saved screen (from a plot file) replaces generation completely, floor band included. Generated neighbours close their
   // doors on any edge they share with a saved screen, so no generated hole drops into a plot and none expects a climb from one.
   const C=WORLD_SCREEN,W=C.cols*C.cell,H=C.rows*C.cell,ox=cx*W,oy=cy*H,rooms=world?.rooms||[],biome=worldBiome(seed,cx,cy),district=worldDistrict(seed,cx,cy),saved=plots?.saved;
   if(saved?.has(`${cx},${cy}`))return{cx,cy,room:null,saved:true,mirror:false,topOpen:false,bottomOpen:false,biome,district,instances:structuredCopy(saved.get(`${cx},${cy}`)),floor:[]};
   const topOpen=worldDoorOpen(seed,cx,cy-1)&&!saved?.has(`${cx},${cy-1}`),bottomOpen=worldDoorOpen(seed,cx,cy)&&!saved?.has(`${cx},${cy+1}`);
-  const home=cx===0&&cy===0?rooms.find(room=>room.home):null,pool=home?[home]:rooms.filter(room=>!room.home&&(!topOpen||room.kind==='ascent')&&!(bottomOpen&&room.solidFloor));
+  const home=cx===0&&cy===0?rooms.find(room=>room.home):null,pool=home?[home]:rooms.filter(room=>!room.home&&(topOpen?room.kind==='ascent':room.kind!=='ascent')&&!(bottomOpen&&room.solidFloor));
   if(!pool.length)return{cx,cy,room:null,mirror:false,topOpen,bottomOpen,biome,district,instances:[],floor:[{left:0,width:C.cols}]};
   const weight=room=>Math.max(1,room.weight||1)*(room.tags||[]).reduce((m,tag)=>m*(district.favor[tag]||1)*(biome.favor?.[tag]||1),1);
   const total=pool.reduce((sum,room)=>sum+weight(room),0);let pick=worldHash(seed,'room',cx,cy)%total,room=pool[0];
