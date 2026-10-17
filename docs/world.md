@@ -95,7 +95,10 @@ In the interface the unit is a **screen** (one 40×24-cell section of the world)
   coordinates, with their objects at true world positions, plus an explicit list of edited
   screen coordinates (an emptied screen must stay empty, not regenerate). A saved screen
   replaces generation there completely, floor band included. An object belongs to the screen
-  its anchor is in.
+  its anchor is in, and every saved screen is complete on its own: terrain and static white
+  platforms that cross a screen seam are cut into one piece per screen when saved (and when a
+  world file loads), and play stitches touching ground pieces of one style back together, so
+  neither tall walls nor seams in the grass give it away.
 - **A plot is a named view**, not a container: a name plus the rectangle of screens you were
   looking at. Plots own nothing and may overlap. **Edit ▸ Plots** lists them and switches the
   editor between them; the editor shows one plot at a time, so unrelated plots never look like
@@ -133,9 +136,12 @@ In the interface the unit is a **screen** (one 40×24-cell section of the world)
   that isn't saved there. The game's **Load map** opens a world file (one with the `world`
   header) as that world, plots and all.
 - **Help.** A *Plots (World)* section in the editor's **?** modal.
+- **Screens vs plots.** Screens are the unit of storage; a plot is the unit of editing. Add
+  screen into a screen that belongs to another plot shows just that screen and says which plot
+  it's part of; Edit ▸ Plots opens that plot whole.
 - **Not yet:** renaming or deleting a plot (new plots are named after where they are, such
-  as *Plot →3 ↓1*); floors keep their end caps where two screens meet, so a seam can show in
-  the grass; Pause ▸ New world starts a fresh seed with that seed's own plots, if any.
+  as *Plot →3 ↓1*); in the editor, terrain still shows its end caps at screen seams; Pause ▸
+  New world starts a fresh seed with that seed's own plots, if any.
 
 ## Not in this version
 

@@ -439,18 +439,53 @@ function worldAreaMap(theme,world,seed,rect,{plots=null,start=null,mergeFloors=t
     }
     flush();
   }
-  return{map:{format:MAP_FORMAT,mapVersion:MAP_VERSION,theme:{id:theme?.id,packVersion:theme?.packVersion},worldBounds:{x:rect.cx*W,y:rect.cy*H,w:rect.w*W,h:rect.h*H},instances,markers:{start:start?{x:start.x,y:start.y}:null,goal:null}},screens};
+  return{map:{format:MAP_FORMAT,mapVersion:MAP_VERSION,theme:{id:theme?.id,packVersion:theme?.packVersion},worldBounds:{x:rect.cx*W,y:rect.cy*H,w:rect.w*W,h:rect.h*H},instances:mergeFloors?worldMergeTerrain(instances):instances,markers:{start:start?{x:start.x,y:start.y}:null,goal:null}},screens};
 }
 // Plots: your edits to the world, stored by screen position. A plot file is an ordinary map whose objects sit at true world
 // positions, plus world:{seed, screens:[[cx,cy],…] (every saved screen, even an emptied one), plots:[{id,name,cx,cy,w,h}]}.
 // A plot is only a named view; it owns nothing. An object belongs to the screen its anchor (bottom centre) is in.
 function worldAnchorScreen(instance){return worldScreenAt(instance.values['transform.x'],instance.values['transform.y']-1)}
+function worldSplitAtSeams(instances){
+  // Every saved screen must be complete on its own: terrain and static white platforms that cross a screen seam are cut
+  // into one piece per screen (a tower wall drawn as one 5-screen rectangle would otherwise belong only to the screen
+  // holding its anchor, and vanish whenever that screen left the window). Play stitches the pieces back together.
+  const C=WORLD_SCREEN,W=C.cols*C.cell,H=C.rows*C.cell,cell=C.cell,out=[],cuts=(a,b,size)=>{const at=[a];for(let k=Math.floor(a/size)+1;k*size<b;k++)at.push(k*size);at.push(b);return at};
+  for(const source of instances){
+    const v=source.values,ground=source.placeable==='ground',platform=source.placeable==='whitePlatform'&&v['movingPlatform.range']===undefined&&v['movingPlatform.path']===undefined;
+    if(!ground&&!platform){out.push(source);continue}
+    const wc=ground?v['terrain.width']:v['extent.width'],hc=ground?v['terrain.height']:1,left=v['transform.x']-wc*cell/2,bottom=v['transform.y'],top=bottom-hc*cell,right=left+wc*cell;
+    if(![left,top,right,bottom].every(n=>Number.isFinite(n)&&n%cell===0)){out.push(source);continue}
+    const xs=cuts(left,right,W),ys=ground?cuts(top,bottom,H):[top,bottom];if(xs.length===2&&ys.length===2){out.push(source);continue}
+    let n=0;for(let a=0;a<ys.length-1;a++)for(let b=0;b<xs.length-1;b++){
+      const values=structuredCopy(v);values['transform.x']=(xs[b]+xs[b+1])/2;values['transform.y']=ys[a+1];
+      if(ground){values['terrain.width']=(xs[b+1]-xs[b])/cell;values['terrain.height']=(ys[a+1]-ys[a])/cell}else values['extent.width']=(xs[b+1]-xs[b])/cell;
+      const piece={placeable:source.placeable,instanceId:source.instanceId?`${source.instanceId}~${n++}`:undefined,values};if(source.sceneLayer)piece.sceneLayer=source.sceneLayer;out.push(piece);
+    }
+  }
+  return out;
+}
+function worldMergeTerrain(instances){
+  // Touching ground rectangles of one style that share a whole edge become one, so screen seams don't show in play.
+  const cell=WORLD_SCREEN.cell,rect=i=>{const v=i.values,w=v['terrain.width']*cell,h=v['terrain.height']*cell;return{l:v['transform.x']-w/2,r:v['transform.x']+w/2,t:v['transform.y']-h,b:v['transform.y']}};
+  const same=(a,b)=>a.placeable==='ground'&&b.placeable==='ground'&&(a.sceneLayer||'')===(b.sceneLayer||'')&&a.values['terrain.style']===b.values['terrain.style'];
+  const list=instances.slice();let merged=true;
+  while(merged){merged=false;
+    for(let i=0;i<list.length&&!merged;i++)for(let j=i+1;j<list.length&&!merged;j++){
+      const a=list[i],b=list[j];if(!same(a,b))continue;const p=rect(a),q=rect(b);
+      const vertical=p.l===q.l&&p.r===q.r&&(p.b===q.t||q.b===p.t),horizontal=p.t===q.t&&p.b===q.b&&(p.r===q.l||q.r===p.l);if(!vertical&&!horizontal)continue;
+      const l=Math.min(p.l,q.l),r=Math.max(p.r,q.r),t=Math.min(p.t,q.t),bt=Math.max(p.b,q.b),values=structuredCopy(a.values);
+      values['transform.x']=(l+r)/2;values['transform.y']=bt;values['terrain.width']=(r-l)/cell;values['terrain.height']=(bt-t)/cell;
+      list[i]={...a,values};list.splice(j,1);merged=true;
+    }
+  }
+  return list;
+}
 function worldPlots(file){
   // A plot file → {seed, saved: Map("cx,cy" → instances with stable ids), plots}. Ids are rewritten per screen (p{cx}_{cy}_{n})
   // so they never collide with generated ones, and pipe destinations follow them.
   const info=file?.world||{},saved=new Map(),ids=new Map(),counts=new Map();
   for(const [cx,cy] of info.screens||[])saved.set(`${cx},${cy}`,[]);
-  for(const source of file?.instances||[]){
+  for(const source of worldSplitAtSeams(file?.instances||[])){
     const {cx,cy}=worldAnchorScreen(source),key=`${cx},${cy}`;if(!saved.has(key))continue;
     const n=counts.get(key)||0;counts.set(key,n+1);const id=`p${cx}_${cy}_${n}`;if(source.instanceId)ids.set(source.instanceId,id);
     const out={placeable:source.placeable,instanceId:id,values:structuredCopy(source.values)};if(source.sceneLayer)out.sceneLayer=source.sceneLayer;saved.get(key).push(out);
@@ -472,9 +507,9 @@ function worldScreenKey(instances){
 function worldSaveScreens(theme,world,seed,plots,rect,instances){
   // Saved means changed: each screen of rect is stored if its edited content differs from what the generator would make
   // there, and dropped back to generation if it doesn't. Returns new plots and the screens whose saved state changed.
-  const next={seed,saved:new Map(plots?.saved||[]),plots:structuredCopy(plots?.plots||[])},changed=[];
+  const next={seed,saved:new Map(plots?.saved||[]),plots:structuredCopy(plots?.plots||[])},changed=[],pieces=worldSplitAtSeams(instances);
   for(let cy=rect.cy;cy<rect.cy+rect.h;cy++)for(let cx=rect.cx;cx<rect.cx+rect.w;cx++){
-    const key=`${cx},${cy}`,mine=instances.filter(i=>{const a=worldAnchorScreen(i);return a.cx===cx&&a.cy===cy});
+    const key=`${cx},${cy}`,mine=pieces.filter(i=>{const a=worldAnchorScreen(i);return a.cx===cx&&a.cy===cy});
     // "What the generator would make" depends on neighbouring saved screens (they close doors), so either version counts.
     const before=next.saved.has(key)?worldScreenKey(next.saved.get(key)):null,others={saved:new Map([...next.saved].filter(([k])=>k!==key))};
     const original=[null,others].map(p=>worldScreenKey(worldAreaMap(theme,world,seed,{cx,cy,w:1,h:1},{plots:p,mergeFloors:false}).map.instances));
@@ -501,7 +536,7 @@ function touchStickActions(dx,dy,radius){
   if(nx<-.3)actions.push('left');if(nx>.3)actions.push('right');if(ny<-.6)actions.push('up');if(ny>.6)actions.push('down');
   return{actions,knob:{x:dx*scale,y:dy*scale}};
 }
-root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldAreaMap,worldAnchorScreen,worldPlots,worldPlotFile,worldScreenKey,worldSaveScreens,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
+root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldAreaMap,worldAnchorScreen,worldSplitAtSeams,worldMergeTerrain,worldPlots,worldPlotFile,worldScreenKey,worldSaveScreens,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
 })(typeof window==='object'?window:globalThis);
 </script>
 <script>

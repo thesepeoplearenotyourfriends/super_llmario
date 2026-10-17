@@ -124,6 +124,8 @@ window.ReferencePackWorld={
   screens(rect){const w=state.world;return w?B.worldAreaMap(state.theme,w.def,w.seed,rect,{plots:w.plots,mergeFloors:false}).map.instances:[]},
   original(cx,cy){const w=state.world;if(!w)return[];const others={saved:new Map([...(w.plots?.saved||[])].filter(([key])=>key!==`${cx},${cy}`))};return B.worldAreaMap(state.theme,w.def,w.seed,{cx,cy,w:1,h:1},{plots:others,mergeFloors:false}).map.instances},
   isSaved(cx,cy){return!!state.world?.plots?.saved?.has(`${cx},${cy}`)},
+  split(instances){return B.worldSplitAtSeams(instances)},
+  plotAt(cx,cy){return structuredClone((state.world?.plots?.plots||[]).find(p=>cx>=p.cx&&cx<p.cx+p.w&&cy>=p.cy&&cy<p.cy+p.h)||null)},
   differs(cx,cy,instances){const mine=instances.filter(i=>{const a=B.worldAnchorScreen(i);return a.cx===cx&&a.cy===cy});return this.isSaved(cx,cy)||B.worldScreenKey(mine)!==B.worldScreenKey(this.original(cx,cy))},
   changes(rect,instances){const w=state.world;return w?B.worldSaveScreens(state.theme,w.def,w.seed,w.plots,rect,instances).changed.length:0},
   save(plot,instances){
@@ -397,11 +399,15 @@ function growPlot(direction){
   const next={cx:Math.min(r.cx,strip.cx),cy:Math.min(r.cy,strip.cy),w:direction==='left'||direction==='right'?r.w+1:r.w,h:direction==='up'||direction==='down'?r.h+1:r.h};
   const doc=documentState(),added=fromWorld(worldApi()?.screens(strip)||[]);
   applyDocument({...doc,worldBounds:{x:(next.cx-r.cx)*s.w,y:(next.cy-r.cy)*s.h,w:next.w*s.w,h:next.h*s.h},instances:[...doc.instances,...added]});
-  plotUi.origin={cx:next.cx,cy:next.cy};commitDocument();renderBounds();recomputeIssues();renderPlotUi();draw();setStatus(`Added a screen ${direction==='up'?'above':direction==='down'?'below':`to the ${direction}`}.`);
+  plotUi.origin={cx:next.cx,cy:next.cy};commitDocument();renderBounds();recomputeIssues();renderPlotUi();draw();
+  const other=[];for(let y=strip.cy;y<strip.cy+strip.h;y++)for(let x=strip.cx;x<strip.cx+strip.w;x++){const p=worldApi()?.plotAt(x,y);if(p&&p.id!==plotUi.plot.id&&!other.some(o=>o.id===p.id))other.push(p)}
+  setStatus(`Added a screen ${direction==='up'?'above':direction==='down'?'below':`to the ${direction}`}.${other.length?` It's part of ${other.map(p=>`"${p.name}" (${p.w} × ${p.h} screens)`).join(', ')}; Edit ▸ Plots opens ${other.length===1?'it':'them'} whole.`:''}`);
 }
 function pointedScreen(){const r=plotRect(),p=plotUi.pointer,s=plotUi.plot.screen,o=plotOffset();const at=p&&{cx:Math.floor((p.x+o.x)/s.w),cy:Math.floor((p.y+o.y)/s.h)};return at&&at.cx>=r.cx&&at.cx<r.cx+r.w&&at.cy>=r.cy&&at.cy<r.cy+r.h?at:r.w*r.h===1?{cx:r.cx,cy:r.cy}:null}
 function restoreScreens(screens){
   const keys=new Set(screens.map(s=>`${s.cx},${s.cy}`)),doc=documentState();
+  // Cut anything crossing a seam first, so restoring one screen never takes a piece of its neighbour with it.
+  doc.instances=fromWorld(worldApi()?.split(toWorld(doc.instances))||toWorld(doc.instances));
   const kept=doc.instances.filter(i=>{const a=anchorScreen(i);return!keys.has(`${a.cx},${a.cy}`)}),original=fromWorld(screens.flatMap(s=>worldApi()?.original(s.cx,s.cy)||[]));
   applyDocument({...doc,instances:[...kept,...original]});commitDocument();state.selected=null;renderParameters();recomputeIssues();draw();
 }

@@ -88,6 +88,22 @@ test('plots: only changed screens are saved, a plot file is a valid map, and sav
   assert.deepEqual(plain(saved.changed),['2,0']);assert.deepEqual([...saved.plots.saved.keys()],['3,0']);
 });
 
+test('plots: terrain crossing screen seams is cut per screen when saved and stitched back together in play',()=>{
+  // A 2-cell-wide wall running from the floor of screen (5,0) up through (5,-1) and (5,-2): 3 screens, one rectangle.
+  const wall={placeable:'ground',instanceId:'wall',values:{'transform.x':5*W+16,'transform.y':FLOOR,'terrain.width':2,'terrain.height':60,'terrain.style':'underground'}};
+  const pieces=api.worldSplitAtSeams([wall]);
+  assert.equal(pieces.length,3,'one piece per screen');assert.equal(pieces.reduce((n,p)=>n+p.values['terrain.height'],0),60,'nothing lost');
+  assert.deepEqual(plain(pieces.map(p=>api.worldAnchorScreen(p).cy)).sort((a,b)=>a-b),[-2,-1,0]);
+  const file={format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:5*W,y:-2*H,w:W,h:3*H},instances:[wall],markers:{start:null,goal:null},world:{seed:1987,screens:[[5,-2],[5,-1],[5,0]],plots:[]}};
+  const plots=api.worldPlots(plain(file));
+  for(const cy of [0,-1,-2,-3]){
+    const win=api.worldWindowMap(theme,world,1987,5,cy,null,1,plots).map,walls=win.instances.filter(i=>i.values['terrain.style']==='underground'&&i.values['terrain.width']===2&&i.values['transform.x']===5*W+16);
+    assert.equal(walls.length,1,`standing in (5,${cy}) the wall is one piece`);assert(walls[0].values['terrain.height']>=16,`and it is there from (5,${cy})`);
+  }
+  const shown=api.worldAreaMap(theme,world,1987,{cx:5,cy:-2,w:1,h:3},{plots,mergeFloors:false}).map.instances;
+  assert.deepEqual(plain(api.worldSaveScreens(theme,world,1987,plots,{cx:5,cy:-2,w:1,h:3},shown).changed),[],'re-saving untouched pieces changes nothing');
+});
+
 test('generated screens close their doors on edges they share with a saved screen',()=>{
   let seed=1;while(!api.worldScreen(world,seed,4,0).bottomOpen)seed++;
   const plots={saved:new Map([['4,1',[]]])},above=api.worldScreen(world,seed,4,0,plots);
