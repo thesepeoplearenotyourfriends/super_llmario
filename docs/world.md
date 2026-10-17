@@ -127,6 +127,11 @@ In the interface the unit is a **screen** (one 40×24-cell section of the world)
   context. Paste the reply over it and **Apply**: the sketch must keep the plot's exact size
   (`@world`), and the status line then reports any place inside the plot you can't get back
   from, checked from where you stood.
+- **Saving.** In a plot, **File ▸ Save plot to world** (Ctrl+S) saves into the world straight
+  away; *Save as standalone map…* writes an ordinary map copy, which plays as a sealed level
+  on its own. Back to game compares against the world, so it still offers to save anything
+  that isn't saved there. The game's **Load map** opens a world file (one with the `world`
+  header) as that world, plots and all.
 - **Help.** A *Plots (World)* section in the editor's **?** modal.
 - **Not yet:** renaming or deleting a plot (new plots are named after where they are, such
   as *Plot →3 ↓1*); floors keep their end caps where two screens meet, so a seam can show in
