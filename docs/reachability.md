@@ -31,7 +31,9 @@ holds (run charge, jump height) that matter. The program search keeps exactly th
 * `spans[]`: `{id, x, y, w, kind, hop, source}`. `hop` is the move count from the start
   (`0` = where you stand, `null` = unreachable). `source` names the instance under the
   span.
-* `edges[]`: `{from, to, kind: walk|jump|flight|pipe, needs: [run, fullJump, flight], landing}`.
+* `edges[]`: `{from, to, kind: walk|jump|flight|pipe|ladder, needs: [run, fullJump, flight], landing}`.
+  Ladder edges come from the real climb: board where a ladder reaches the surface, climb up or down, and get off every
+  few steps by walking or jumping either side.
   For each kind, the cheapest known way between two spans. Pipe edges also carry `pipe`
   and `entry`.
 * `pockets[]`: strongly connected groups of reachable spans with **no edge back out**.

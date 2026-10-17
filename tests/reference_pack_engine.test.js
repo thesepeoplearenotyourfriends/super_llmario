@@ -761,7 +761,7 @@ test('successful load hides the empty-state overlay',async()=>{
   assert(engine.state.behavior,'Mario Start creates the player behavior state');
   assert.deepEqual(plain(engine.state.behavior.player),{
     x:fixture.markers.start.x-12,y:fixture.markers.start.y-24,w:24,h:24,vx:0,vy:0,
-    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',lives:3,coins:0,inv:0,flightFrames:0,fireCooldown:0,dead:false
+    onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',lives:3,coins:0,inv:0,flightFrames:0,fireCooldown:0,dead:false,climbing:false
   });
   const idle=theme.resources[theme.objects['player.small'].visuals.idle];
   assert.deepEqual(plain(engine.currentPlayerVisual()),{atlas:idle.image.atlas,sourceRect:idle.image.rect,offset:{x:0,y:0},display:idle.display});
@@ -1080,4 +1080,19 @@ test('the touch overlay is a gamepad: Start pauses, Select is unassigned, no ful
   const handler=html.match(/root\.querySelectorAll\('\[data-system\]'\)\)button\.addEventListener\('pointerdown',e=>\{([^\n]*)/)[1];
   assert(handler.includes("button.dataset.system==='start'")&&!handler.includes('restartLevel')&&!handler.includes('toggleFullscreen'),'only Start does anything');
   assert(html.includes('function swallowTapClick()'),"Start swallows the tap's trailing click so the pause menu it opened stays open");
+});
+
+test('ladders: up/down boards, climbing reaches the top, a jump lets go, and the checker finds ladder-only ledges',()=>{
+  const ground={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':384,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
+  const ledge={placeable:'whitePlatform',instanceId:'p',values:{'transform.x':120,'transform.y':144,'extent.width':8}};
+  const ladder={placeable:'ladder',instanceId:'l',values:{'transform.x':200,'transform.y':320,'extent.length':12}};
+  const make=instances=>({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:640,h:384},instances,markers:{start:{x:200,y:320},goal:null}});
+  const runtime=api.compileReferenceRuntime(theme,make([ground,ledge,ladder])).runtime,b=api.createPlayerBehavior(runtime),p=b.player;
+  for(let i=0;i<30;i++)b.step({});assert.equal(p.onGround,true);
+  b.step({up:true});assert.equal(p.climbing,true,'up at a ladder boards it');
+  const startY=p.y;for(let i=0;i<200;i++)b.step({up:true});assert(p.y<startY-100,'climbing goes up');assert.equal(p.y+p.h,128+8,'and stops with the feet 8px below the top');
+  b.step({jump:true,left:true});assert.equal(p.climbing,false,'a jump lets go');assert(p.vy<0&&p.vx<0,'with a jump toward the held direction');
+  const reach=m=>{const r=api.simulateReachability(theme,make(m),{x:300,y:320});return r.spans.find(s=>s.y===128)?.hop??null};
+  assert.notEqual(reach([ground,ledge,ladder]),null,'the high ledge is reachable by the ladder');
+  assert.equal(reach([ground,ledge]),null,'and not without it');
 });
