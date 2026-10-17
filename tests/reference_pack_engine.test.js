@@ -1073,3 +1073,11 @@ test('the game advances 60 steps per second of clock time whatever the display r
   frames.shift()();const start=engine.state.tick;clock.step=5000;frames.shift()();
   assert.equal(engine.state.tick-start,5,'coming back to a backgrounded tab catches up at most 5 steps, no fast-forward');
 });
+
+test('the touch overlay is a gamepad: Start pauses, Select is unassigned, no fullscreen button',()=>{
+  const system=html.match(/<div id="touchSystem">([\s\S]*?)<\/div>/)[1];
+  assert.deepEqual([...system.matchAll(/data-system="(\w+)"/g)].map(m=>m[1]),['select','start']);
+  const handler=html.match(/root\.querySelectorAll\('\[data-system\]'\)\)button\.addEventListener\('pointerdown',e=>\{([^\n]*)/)[1];
+  assert(handler.includes("button.dataset.system==='start'")&&!handler.includes('restartLevel')&&!handler.includes('toggleFullscreen'),'only Start does anything');
+  assert(html.includes('function swallowTapClick()'),"Start swallows the tap's trailing click so the pause menu it opened stays open");
+});
