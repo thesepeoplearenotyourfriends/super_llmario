@@ -175,6 +175,12 @@ function openPackedEditor(){
 }
 function closePackedEditor(){
   const shell=document.getElementById('releaseEditorShell');if(shell)shell.hidden=true;
+  // Hand the keyboard back to the game. A hidden iframe keeps focus, so every key (and, in Chrome, the gamepad, which only
+  // reports to the focused frame) would go to the editor until something in the game was clicked.
+  const frame=document.getElementById('releaseEditorFrame');
+  try{frame?.contentWindow?.document?.activeElement?.blur?.()}catch(_){}try{frame?.blur()}catch(_){}
+  if(document.activeElement&&document.activeElement!==document.body)try{document.activeElement.blur()}catch(_){}
+  try{window.focus()}catch(_){}
 }
 async function playPackedEditorMap({theme,map,startPoint,profile='standing'}){
   const errors=B.validateReferencePair(theme,map);if(errors.length)throw new Error(errors[0]);
