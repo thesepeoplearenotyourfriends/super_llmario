@@ -49,7 +49,8 @@ release build's map picker. There's no goal: you wander, and home is where you s
 @at …   @place …   @pipe …   (any ASCII v3 directive)
 ```
 
-- `kind=plain`: any screen whose top has no hole. `kind=ascent`: must climb from the floor to a
+- `kind=plain`: any screen whose top has no hole. `kind=ascent`: used only under a hole (so a climb always leads
+  somewhere), and must climb from the floor to a
   one-way ledge at **row 2 spanning cols 15–24** (under the hole above, cols 17–22).
 - `weight=N`: pick frequency. `tags=a,b`: what districts and biomes look for (`hills`,
   `blocks`, `pipes`, `spiky`, `climb`, `sky`; new tags are fine, they just aren't favoured

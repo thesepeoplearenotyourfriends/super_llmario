@@ -143,7 +143,7 @@ test('every room passes the checker in its neighbourhood: floor both ways, with 
 
 test('any screen of a captured window promotes back into a room that regenerates the same screen',()=>{
   const {promoteScreen,checkRoom}=require('../scripts/world_room_from_map.js'),seen=new Set(),key=i=>JSON.stringify([i.placeable,Object.entries(i.values).sort()]).replace(/w-?\d+_-?\d+_pipe/g,'pipe');
-  for(let x=-30;x<30&&seen.size<world.rooms.length;x++){
+  for(let x=-200;x<200&&seen.size<world.rooms.length;x++){
     const screen=api.worldScreen(world,1987,x,1);if(seen.has(screen.room))continue;seen.add(screen.room);
     const capture=plain(api.worldWindowMap(theme,world,1987,x,1,{x:x*W+100,y:H+FLOOR}).map),source=world.rooms.find(room=>room.id===screen.room);
     const text=promoteScreen(capture,theme,{header:`kind=${source.kind}${source.solidFloor?' solidfloor':''}`});
