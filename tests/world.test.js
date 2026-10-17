@@ -154,11 +154,12 @@ test('any screen of a captured window promotes back into a room that regenerates
 });
 
 function harness(){
+  const clock={t:0};
   const ctx={setTransform(){},save(){},restore(){},translate(){},scale(){},rotate(){},fillRect(){},fillText(){},drawImage(){},clearRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},fill(){},arc(){},strokeRect(){},set fillStyle(v){},set strokeStyle(v){},set lineWidth(v){},set font(v){},set textAlign(v){},set textBaseline(v){},set imageSmoothingEnabled(v){},set globalAlpha(v){}};
   const elements={screen:{width:960,height:480,getContext:()=>ctx},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},themeButton:{},mapButton:{},fitButton:{},coinCount:{value:'',textContent:''},livesCount:{value:'',textContent:''},themeFile:{files:[],value:''},mapFile:{files:[],value:''}};
   class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
   const window={ReferencePackBoundary:api},frames=[];
-  vm.runInNewContext(application,{window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(){},Map,Set,Math,Promise,console,structuredClone});
+  vm.runInNewContext(application,{window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(()=>fn(clock.t+=1000/60))},addEventListener(){},Map,Set,Math,Promise,console,structuredClone});
   return{engine:window.ReferenceEngine,frames};
 }
 async function worldEngine(seed){const {engine,frames}=harness();await engine.loadReferenceTheme(theme);assert.deepEqual(plain(engine.startWorld(world,{seed})),[]);let t=0;const run=(n,input=()=>({}))=>{for(let i=0;i<n;i++){const actions=input(engine.state.behavior.player,i);engine.state.input.clear();for(const [k,v] of Object.entries(actions))if(v)engine.state.input.add(k);frames.shift()(t+=16)}};return{engine,run}}

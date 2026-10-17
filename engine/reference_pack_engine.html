@@ -543,7 +543,7 @@ root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict
 (()=>{
 'use strict';
 const B=window.ReferencePackBoundary,canvas=document.getElementById('screen'),ctx=canvas.getContext('2d'),stage=document.getElementById('stage'),diagnostics=document.getElementById('diagnostics'),empty=document.getElementById('empty'),coinCount=document.getElementById('coinCount'),livesCount=document.getElementById('livesCount'),DEFAULT_GAME_ZOOM=2;
-const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),world:null,paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:0,tick:0,dpr:1};
+const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),world:null,paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:null,tickDebt:0,tick:0,dpr:1};
 function report(messages,kind='bad'){const list=(Array.isArray(messages)?messages:[messages]).map(x=>x.message||x);diagnostics.textContent=list.join(' · ');diagnostics.className=kind}
 function invalidate(kind,messages){
   state[kind]=null;
@@ -728,7 +728,17 @@ function captureWorld(){
   if(!state.world?.map||!state.behavior)return null;const map=structuredClone(state.world.map),p=state.behavior.player;
   map.markers={start:{x:p.x+p.w/2,y:p.y+p.h},goal:null};return map;
 }
-function frame(time){state.lastTime=time;pollGamepad();if(state.paused){draw();drawPaused();requestAnimationFrame(frame);return}state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);stepWorld();draw();requestAnimationFrame(frame)}
+// The game advances in fixed 1/60 s steps measured by the clock, the rate its physics was tuned at, whatever the display
+// refresh: a 120 Hz phone redraws twice per step, a 30 Hz one takes two steps per redraw. At most 5 steps catch up at once,
+// so returning to a backgrounded tab doesn't fast-forward.
+const TICK_MS=1000/60,MAX_CATCH_UP_STEPS=5;
+function frame(time){
+  const last=state.lastTime;state.lastTime=time;
+  state.tickDebt=Math.min(state.tickDebt+(Number.isFinite(last)?Math.max(0,time-last):TICK_MS),TICK_MS*MAX_CATCH_UP_STEPS);
+  while(state.tickDebt>=TICK_MS-0.01){state.tickDebt-=TICK_MS;stepGame()}
+  draw();if(state.paused)drawPaused();requestAnimationFrame(frame);
+}
+function stepGame(){pollGamepad();if(state.paused)return;state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);stepWorld()}
 const fullscreenTarget=document.documentElement,canFullscreen=!!(fullscreenTarget?.requestFullscreen||fullscreenTarget?.webkitRequestFullscreen);
 function isFullscreen(){return!!(document.fullscreenElement||document.webkitFullscreenElement)}
 async function toggleFullscreen(){

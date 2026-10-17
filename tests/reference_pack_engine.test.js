@@ -26,9 +26,9 @@ function engineHarness(extra={}){
   };
   class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
   const window={ReferencePackBoundary:api};
-  const domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(fn)},addEventListener(type,fn){events[type]=fn},Map,Set,Math,Promise,console,...extra};
+  const clock={t:0,step:1000/60},domContext={window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(()=>fn(clock.t+=clock.step))},addEventListener(type,fn){events[type]=fn},Map,Set,Math,Promise,console,...extra};
   vm.runInNewContext(applicationSource,domContext);
-  return{engine:window.ReferenceEngine,elements,operations,frames,events};
+  return{engine:window.ReferenceEngine,elements,operations,frames,events,clock};
 }
 
 test('compiles the actual reference theme and representative editor map',()=>{
@@ -1060,4 +1060,16 @@ test('gamepad mappings load from storage, drive actions, and the mapped pause bu
   pressed.clear();engine.pollGamepad();pressed.add(9);engine.pollGamepad();assert.equal(engine.state.paused,true,'pause press edge pauses');
   engine.pollGamepad();assert.equal(engine.state.paused,true,'holding pause does not toggle again');
   pressed.clear();engine.pollGamepad();pressed.add(9);engine.pollGamepad();assert.equal(engine.state.paused,false);
+});
+
+test('the game advances 60 steps per second of clock time whatever the display refresh rate',async()=>{
+  for(const hz of [30,60,90,120,144]){
+    const {engine,frames,clock}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+    clock.step=1000/hz;frames.shift()();const start=engine.state.tick;
+    for(let i=0;i<hz;i++)frames.shift()();
+    assert(Math.abs(engine.state.tick-start-60)<=1,`${hz} Hz: ${engine.state.tick-start} steps in one second`);
+  }
+  const {engine,frames,clock}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
+  frames.shift()();const start=engine.state.tick;clock.step=5000;frames.shift()();
+  assert.equal(engine.state.tick-start,5,'coming back to a backgrounded tab catches up at most 5 steps, no fast-forward');
 });
