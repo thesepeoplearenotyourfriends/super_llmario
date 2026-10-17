@@ -44,6 +44,10 @@ PACKED_EDITOR_HEADER = """
         <button id="undoBtn" role="menuitem" title="Undo (Ctrl/Cmd+Z)" disabled>Undo <span>Ctrl+Z</span></button>
         <button id="redoBtn" role="menuitem" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>Redo <span>Ctrl+Shift+Z</span></button>
         <div class="packed-menu-separator"></div>
+        <button id="cutBtn" role="menuitem" title="Cut the selected object">Cut <span>Ctrl+X</span></button>
+        <button id="copyBtn" role="menuitem" title="Copy the selected object">Copy <span>Ctrl+C</span></button>
+        <button id="pasteBtn" role="menuitem" title="Paste at the pointer" disabled>Paste <span>Ctrl+V</span></button>
+        <div class="packed-menu-separator"></div>
         <button id="clearBtn" role="menuitem" disabled>Clear map</button>
       </div>
     </div>
@@ -175,6 +179,12 @@ function openPackedEditor(){
 }
 function closePackedEditor(){
   const shell=document.getElementById('releaseEditorShell');if(shell)shell.hidden=true;
+  // Hand the keyboard back to the game. A hidden iframe keeps focus, so every key (and, in Chrome, the gamepad, which only
+  // reports to the focused frame) would go to the editor until something in the game was clicked.
+  const frame=document.getElementById('releaseEditorFrame');
+  try{frame?.contentWindow?.document?.activeElement?.blur?.()}catch(_){}try{frame?.blur()}catch(_){}
+  if(document.activeElement&&document.activeElement!==document.body)try{document.activeElement.blur()}catch(_){}
+  try{window.focus()}catch(_){}
 }
 async function playPackedEditorMap({theme,map,startPoint,profile='standing'}){
   const errors=B.validateReferencePair(theme,map);if(errors.length)throw new Error(errors[0]);
