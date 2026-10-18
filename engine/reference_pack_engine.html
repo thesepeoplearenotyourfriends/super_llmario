@@ -416,10 +416,18 @@ function createActorBehavior(runtime,playerBehavior){
   function commandAt(command,tick){const actor=byInstance.get(command.instanceIndex);if(!actor)return commandAtTick(command,tick);if(!actor.active)return null;if(command.attachment){if(!actor.winged||actor.state!=='walking')return null;const animated=commandAtTick(command,actor.tick);return{...animated,worldX:actor.x,worldY:actor.y,worldOffsetX:(actor.mirror?-1:1)*command.rawOffsetX,worldOffsetY:command.rawOffsetY,mirror:actor.mirror!==command.attachmentMirror}}let source=command;if(['shellStopped','shellMoving','shellHeld'].includes(actor.state))source=actor.instance.visualCommands.shell||command;let animated=commandAtTick(source,tick);if(actor.state==='defeated'){const squash=Math.max(.24,actor.flat/18);animated={...animated,h:animated.h*squash}}return{...animated,worldX:actor.x,worldY:actor.y,mirror:actor.mirror}}
   return{actors,byInstance,reset,step,collide,actorBox,commandAt,carry,releaseHeld,hitByProjectile,get carriedActor(){return carriedActor}};
 }
-// Rolling world: a pure function of (seed, screen x, screen y). Rooms are 40×20-cell interiors authored as ASCII and compiled
-// at build time; the generator owns every screen's 4-row floor band, so screens always meet at one floor height. A vertical
-// door is a 6-cell hole in a floor; the screen beneath a hole always gets an ascent room whose top ledge sits under it.
-const WORLD_SCREEN={cols:40,rows:24,interiorRows:20,cell:16,holeLeft:17,holeWidth:6};
+// Rolling world: a pure function of (seed, screen x, screen y), built in layers.
+//  - A region (4 screens wide, one row tall) picks a character: plain (long continuous ground, mostly solid floors), broken
+//    (holes, wide openings, gappy floors bridged by platforms, the odd air screen), open (mostly air screens) or deep (rock
+//    with tunnels, below ground level). Plain is the most common, so long runs of floor stay the norm.
+//  - Each screen is ground (a height profile filled solid to its bottom), air (no ground, only one-way platforms) or rock
+//    (solid with a tunnel through it). Its floor is solid, a hole, a wide opening, gappy, or open air.
+//  - Every edge between side-by-side screens has one ground height (low, mid or high) that both sides meet.
+//  - Flat low ground takes an authored room (40x20 ASCII sketches, compiled at build time); shaped ground (hills, valleys,
+//    ramps) gets simple content.
+// Wherever you can fall through, the screen below gives a way back up: ground under an opening is flat and takes a climbing
+// room whose ledge sits under the opening, air screens climb from bottom to top, and rock has a floor on top.
+const WORLD_SCREEN={cols:40,rows:24,interiorRows:20,cell:16,holeLeft:17,holeWidth:6,levels:{low:20,mid:15,high:10},openings:{hole:[[17,23]],wide:[[11,29]],gappy:[[8,14],[17,23],[26,32]]}};
 function worldHash(seed,...parts){
   let h=(Math.trunc(Number(seed))||0)^0x9e3779b9;
   for(const part of parts){const text=String(part);for(let i=0;i<text.length;i++){h=Math.imul(h^text.charCodeAt(i),0x01000193)}h=Math.imul(h^(h>>>15),0x85ebca6b);h^=h>>>13}
@@ -435,30 +443,109 @@ const WORLD_DISTRICTS=[
   {id:'brickyard',name:'Brickyard',holes:30,favor:{blocks:4},enemies:{}}
 ];
 function worldDistrict(seed,cx,cy){return WORLD_DISTRICTS[worldHash(seed,'flavor',Math.floor(cx/8),Math.floor(cy/3))%WORLD_DISTRICTS.length]}
-function worldDoorOpen(seed,cx,cy){
-  // The floor of screen (cx,cy) has a hole into (cx,cy+1). Home (0,0) is closed above and below.
-  if(cx===0&&(cy===0||cy===-1))return false;
-  return worldHash(seed,'door',cx,cy)%100<worldDistrict(seed,cx,cy).holes;
+const worldHome=(x,y)=>x===0&&(y===0||y===-1);
+function worldRegion(seed,x,y){
+  const g=Math.floor(x/4),plain=75-worldDistrict(seed,x,y).holes/2-(y<=-2?18:0);
+  if(y>=2&&worldHash(seed,'deep',g,y)%100<55)return'deep';
+  const h=worldHash(seed,'region',g,y)%100;return h<plain?'plain':h<plain+28?'broken':'open';
+}
+function worldMass(seed,x,y){
+  if(worldHome(x,y))return'ground';const k=worldRegion(seed,x,y),h=worldHash(seed,'mass',x,y)%100;
+  return k==='broken'?(h<18?'air':'ground'):k==='open'?(h<60?'air':'ground'):k==='deep'?(h<65?'rock':'ground'):'ground';
+}
+function worldFloorType(seed,x,y){
+  // The floor of screen (x,y), between it and (x,y+1). Home (0,0) is closed above and below.
+  if(worldHome(x,y))return'solid';const m=worldMass(seed,x,y);if(m==='air')return'air';if(m==='rock'||worldMass(seed,x,y+1)==='rock')return'solid';
+  const k=worldRegion(seed,x,y),h=worldHash(seed,'door',x,y)%100;if(k==='plain')return h<12?'hole':'solid';
+  return h<35?'solid':h<55?'hole':h<75?'wide':'gappy';
+}
+function worldDoorOpen(seed,cx,cy){return worldFloorType(seed,cx,cy)!=='solid'}
+function worldTopOpen(seed,x,y,saved){return worldMass(seed,x,y)==='ground'&&!saved?.has(`${x},${y-1}`)&&worldFloorType(seed,x,y-1)!=='solid'}
+function worldEdge(seed,x,y,saved){
+  // Ground height (the row of the ground's top) where screen x meets screen x+1. Edges next to a plot, home, or a ground
+  // screen with an opening above or below stay low, so climbing rooms and plots (drawn against the low line) fit.
+  const L=WORLD_SCREEN.levels;if(saved?.has(`${x},${y}`)||saved?.has(`${x+1},${y}`))return L.low;
+  for(const sx of [x,x+1]){if(worldHome(sx,y))return L.low;if(worldMass(seed,sx,y)==='ground'&&(worldTopOpen(seed,sx,y,saved)||worldFloorType(seed,sx,y)!=='solid'))return L.low}
+  const h=worldHash(seed,'edge',x,y)%100;return h<45?L.low:h<72?L.mid:L.high;
 }
 function worldBiome(seed,cx,cy){
   // Depth reads at a glance (sky, ground, caves, castle); districts nudge the band edges every 8 screens.
   const shift=worldHash(seed,'district',Math.floor(cx/8))%3-1,depth=cy+shift;
   return depth<=-3?{id:'sky',style:'overground',favor:{sky:3}}:depth<=1?{id:'ground',style:'overground',favor:{}}:depth<=4?{id:'caves',style:'underground',favor:{pipes:2}}:{id:'castle',style:'castle',favor:{blocks:2}};
 }
+function worldProfile(seed,x,y,hl,hr){
+  // Ground heights per column for a screen with a solid floor: a ramp between different edge heights (steps of at most
+  // 4 rows, 3 columns wide, so it stays walkable), or flat, a hill or a valley between equal ones.
+  const L=WORLD_SCREEN.levels,cols=Array(40).fill(hl),r=worldHash(seed,'shape',x,y);
+  if(hl!==hr){let h=hl,c=6+r%20;while(h!==hr&&c<40){h+=Math.max(-4,Math.min(4,hr-h));for(let k=0;k<3&&c<40;k++,c++)cols[c]=h}for(;c<40;c++)cols[c]=hr;return{cols,shape:'ramp'}}
+  const pick=r%4,shape=pick===1&&hl>L.high?'hill':pick===2&&hl<L.low?'valley':'flat';if(shape==='flat')return{cols,shape};
+  const d=shape==='hill'?-5:5,a=8+r%8,b=a+14+(r>>>4)%8;
+  for(let c=a;c<b;c++)cols[c]=c<a+3||c>=b-3?hl+Math.sign(d)*4:hl+d;return{cols,shape};
+}
+function worldGround(cols,style,ox,oy,id){
+  // Terraces: one slab per height band spanning every column whose ground reaches that band, so a hill is one stepped mass.
+  const out=[],levels=[...new Set(cols.filter(h=>h!=null))].sort((a,b)=>a-b);
+  for(let k=0;k<levels.length;k++){const top=levels[k],bottom=k+1<levels.length?levels[k+1]:WORLD_SCREEN.rows;
+    for(let c=0;c<40;){if(cols[c]==null||cols[c]>top){c++;continue}let e=c;while(e+1<40&&cols[e+1]!=null&&cols[e+1]<=top)e++;
+      out.push({placeable:'ground',instanceId:`${id}g${k}_${c}`,values:{'transform.x':ox+(c+e+1)*8,'transform.y':oy+bottom*16,'terrain.width':e-c+1,'terrain.height':bottom-top,'terrain.style':style}});c=e+1}}
+  return out;
+}
+const worldPlatform=(id,c0,c1,row,ox,oy)=>({placeable:'whitePlatform',instanceId:id,values:{'transform.x':ox+(c0+c1+1)*8,'transform.y':oy+(row+1)*16,'extent.width':c1-c0+1}});
+function worldAirScreen(seed,x,y,hl,hr,ox,oy,id){
+  // No ground: a zigzag of one-way platforms from the bottom middle to a ledge under the top middle (so whatever is above
+  // and below connects, like a climbing room), with stepping platforms out to each side edge's height.
+  const out=[],r=worldHash(seed,'air',x,y),ladder=[];
+  for(let row=20,k=0;row>=4;row-=4,k++){const c0=(k%2===0?10:22)+((r>>>k)%3)-1;ladder.push({row,c0,c1:c0+6});out.push(worldPlatform(`${id}a${k}`,c0,c0+6,row,ox,oy))}
+  out.push(worldPlatform(`${id}top`,15,24,1,ox,oy));
+  for(const [side,h] of [['l',hl],['r',hr]]){const near=ladder.reduce((a,b)=>Math.abs(b.row-h)<Math.abs(a.row-h)?b:a),from=side==='l'?0:35,to=side==='l'?near.c0-2:near.c1+2;
+    out.push(worldPlatform(`${id}${side}0`,from,from+4,h,ox,oy));const a=side==='l'?from+5:to,b=side==='l'?to:from-1;for(let c=a+3,k=1;c+3<b;c+=7,k++)out.push(worldPlatform(`${id}${side}${k}`,c,c+3,h,ox,oy))}
+  for(let k=0;k<2;k++){const p=ladder[(r>>>(k*3))%ladder.length];out.push({placeable:'coin',instanceId:`${id}c${k}`,values:{'transform.x':ox+(p.c0+2+k*2)*16+8,'transform.y':oy+p.row*16}})}
+  return out;
+}
+function worldRockScreen(seed,x,y,hl,hr,style,ox,oy,id){
+  // Solid rock with a tunnel from the left edge's height to the right edge's in climbable steps. The ceiling clears the
+  // highest floor within 3 columns, so where the tunnel steps it gets taller instead of pinching shut.
+  const floor=Array(40).fill(hl);let h=hl,c=8+worldHash(seed,'tunnel',x,y)%20;while(h!==hr&&c<40){h+=Math.max(-4,Math.min(4,hr-h));for(let k=0;k<3&&c<40;k++,c++)floor[c]=h}for(;c<40;c++)floor[c]=hr;
+  const ceil=floor.map((f,i)=>Math.max(0,Math.min(...floor.slice(Math.max(0,i-3),i+4))-4)),out=[];
+  for(let i=0;i<40;){let e=i;while(e+1<40&&floor[e+1]===floor[i]&&ceil[e+1]===ceil[i])e++;const f=floor[i],top=ceil[i];
+    if(top>0)out.push({placeable:'ground',instanceId:`${id}r${i}a`,values:{'transform.x':ox+(i+e+1)*8,'transform.y':oy+top*16,'terrain.width':e-i+1,'terrain.height':top,'terrain.style':style}});
+    out.push({placeable:'ground',instanceId:`${id}r${i}b`,values:{'transform.x':ox+(i+e+1)*8,'transform.y':oy+WORLD_SCREEN.rows*16,'terrain.width':e-i+1,'terrain.height':WORLD_SCREEN.rows-f,'terrain.style':style}});i=e+1}
+  return out;
+}
 function worldScreen(world,seed,cx,cy,plots=null){
-  // Climbing rooms go only under an opening (where a climb leads somewhere); every other screen draws from the plain rooms.
-  // A saved screen (from a plot file) replaces generation completely, floor band included. Generated neighbours close their
-  // doors on any edge they share with a saved screen, so no generated hole drops into a plot and none expects a climb from one.
-  const C=WORLD_SCREEN,W=C.cols*C.cell,H=C.rows*C.cell,ox=cx*W,oy=cy*H,rooms=world?.rooms||[],biome=worldBiome(seed,cx,cy),district=worldDistrict(seed,cx,cy),saved=plots?.saved;
-  if(saved?.has(`${cx},${cy}`))return{cx,cy,room:null,saved:true,mirror:false,topOpen:false,bottomOpen:false,biome,district,instances:structuredCopy(saved.get(`${cx},${cy}`)),floor:[]};
-  const topOpen=worldDoorOpen(seed,cx,cy-1)&&!saved?.has(`${cx},${cy-1}`),bottomOpen=worldDoorOpen(seed,cx,cy)&&!saved?.has(`${cx},${cy+1}`);
-  const home=cx===0&&cy===0?rooms.find(room=>room.home):null,pool=home?[home]:rooms.filter(room=>!room.home&&(topOpen?room.kind==='ascent':room.kind!=='ascent')&&!(bottomOpen&&room.solidFloor));
-  if(!pool.length)return{cx,cy,room:null,mirror:false,topOpen,bottomOpen,biome,district,instances:[],floor:[{left:0,width:C.cols}]};
+  // A saved screen (from a plot file) replaces generation completely. Generated neighbours close their doors on any edge
+  // they share with a saved screen, and meet it at the low line.
+  const C=WORLD_SCREEN,L=C.levels,W=C.cols*C.cell,H=C.rows*C.cell,ox=cx*W,oy=cy*H,rooms=world?.rooms||[],biome=worldBiome(seed,cx,cy),district=worldDistrict(seed,cx,cy),saved=plots?.saved,id=`w${cx}_${cy}_`;
+  if(saved?.has(`${cx},${cy}`))return{cx,cy,room:null,saved:true,mirror:false,topOpen:false,bottomOpen:false,bottom:'solid',mass:'saved',biome,district,instances:structuredCopy(saved.get(`${cx},${cy}`)),floor:[]};
+  const mass=worldMass(seed,cx,cy),region=worldRegion(seed,cx,cy),hl=worldEdge(seed,cx-1,cy,saved),hr=worldEdge(seed,cx,cy,saved),topOpen=worldTopOpen(seed,cx,cy,saved);
+  let bottom=saved?.has(`${cx},${cy+1}`)?'solid':worldFloorType(seed,cx,cy);
+  const done=(room,instances,extra={})=>({cx,cy,room,mirror:false,topOpen,bottomOpen:bottom!=='solid',bottom,mass,region,biome,district,instances,floor:[],...extra});
+  if(mass==='air')return done(null,worldAirScreen(seed,cx,cy,hl,hr,ox,oy,id));
+  if(mass==='rock')return done(null,worldRockScreen(seed,cx,cy,hl,hr,biome.style==='castle'?'castle':'underground',ox,oy,id));
+  const flat=topOpen||bottom!=='solid',{cols,shape}=flat?{cols:Array(40).fill(L.low),shape:'flat'}:worldProfile(seed,cx,cy,hl,hr);
+  if(shape!=='flat'){
+    // Shaped ground: coins on its longest stretch, often an enemy there, sometimes a prize block over the lowest part.
+    const instances=worldGround(cols,biome.style,ox,oy,id),runs=[];for(let c=0;c<40;){let e=c;while(e+1<40&&cols[e+1]===cols[c])e++;runs.push({c,e,h:cols[c]});c=e+1}
+    const r=worldHash(seed,'content',cx,cy),big=runs.reduce((a,b)=>b.e-b.c>a.e-a.c?b:a),low=runs.reduce((a,b)=>b.h>a.h?b:a);
+    for(let k=0;k<3;k++){const c=big.c+1+k*2;if(c<=big.e)instances.push({placeable:'coin',instanceId:`${id}c${k}`,values:{'transform.x':ox+c*16+8,'transform.y':oy+(big.h-1)*16}})}
+    if(r%3!==0&&big.e-big.c>=6)instances.push({placeable:district.enemies.goomba||'goomba',instanceId:`${id}e`,values:{'transform.x':ox+(big.e-2)*16+8,'transform.y':oy+big.h*16,'walker.direction':'left','walker.patrolRange':40}});
+    if(r%2===0&&low.e-low.c>=3){const c=Math.floor((low.c+low.e)/2);instances.push({placeable:'questionBlock',instanceId:`${id}q`,values:{'transform.x':ox+c*16+8,'transform.y':oy+(low.h-4)*16}},{placeable:'brick',instanceId:`${id}k`,values:{'transform.x':ox+(c+1)*16+8,'transform.y':oy+(low.h-4)*16}})}
+    return done(shape,instances);
+  }
+  // Flat low ground takes a room: a climbing room under an opening, a plain room elsewhere, one that tolerates this floor's
+  // opening. A floor whose room can't take a wide or gappy opening gets the plain hole instead (still open, so the screen
+  // below, which already expects a climb, is unaffected).
+  const home=cx===0&&cy===0?rooms.find(room=>room.home):null,fits=(room,type)=>type==='solid'||(type==='hole'?!room.solidFloor:!room.solidFloor&&!!room[type]);
+  let pool=home?[home]:rooms.filter(room=>!room.home&&(topOpen?room.kind==='ascent':room.kind!=='ascent')&&fits(room,bottom));
+  if(!home&&!pool.length&&bottom!=='solid'){bottom='hole';pool=rooms.filter(room=>!room.home&&(topOpen?room.kind==='ascent':room.kind!=='ascent')&&fits(room,'hole'))}
+  const ground=Array(40).fill(L.low);for(const [o0,o1] of C.openings[bottom]||[])for(let c=o0;c<o1;c++)ground[c]=null;
+  const instances=worldGround(ground,biome.style,ox,oy,id);if(bottom==='gappy')C.openings.gappy.forEach(([o0,o1],k)=>instances.push(worldPlatform(`${id}gp${k}`,o0,o1-1,16,ox,oy)));
+  if(!pool.length)return done(null,instances);
   const weight=room=>Math.max(1,room.weight||1)*(room.tags||[]).reduce((m,tag)=>m*(district.favor[tag]||1)*(biome.favor?.[tag]||1),1);
   const total=pool.reduce((sum,room)=>sum+weight(room),0);let pick=worldHash(seed,'room',cx,cy)%total,room=pool[0];
   for(const candidate of pool){pick-=weight(candidate);if(pick<0){room=candidate;break}}
-  const mirror=!home&&worldHash(seed,'mirror',cx,cy)%2===1,id=`w${cx}_${cy}_`,localIds=new Map((room.instances||[]).filter(i=>i.instanceId).map((i,n)=>[i.instanceId,`${id}${i.instanceId}`]));
-  const flipX=x=>mirror?W-x:x,instances=[];
+  const mirror=!home&&worldHash(seed,'mirror',cx,cy)%2===1,localIds=new Map((room.instances||[]).filter(i=>i.instanceId).map((i,n)=>[i.instanceId,`${id}${i.instanceId}`]));
+  const flipX=x=>mirror?W-x:x;
   for(const [n,source] of (room.instances||[]).entries()){
     const values=structuredCopy(source.values),out={placeable:home?source.placeable:district.enemies[source.placeable]||source.placeable,instanceId:localIds.get(source.instanceId)||`${id}${n}`,values};
     values['transform.x']=flipX(values['transform.x'])+ox;values['transform.y']+=oy;
@@ -467,9 +554,7 @@ function worldScreen(world,seed,cx,cy,plots=null){
     const d=values['pipe.destination'];if(d?.kind==='pipe'&&localIds.has(d.instanceId))values['pipe.destination']={kind:'pipe',instanceId:localIds.get(d.instanceId)};else if(d?.kind==='point')values['pipe.destination']={kind:'point',x:flipX(d.x)+ox,y:d.y+oy};
     if(source.sceneLayer)out.sceneLayer=source.sceneLayer;instances.push(out);
   }
-  // Floor band segments (in cells), with the hole when this screen's bottom door is open.
-  const floor=bottomOpen?[{left:0,width:C.holeLeft},{left:C.holeLeft+C.holeWidth,width:C.cols-C.holeLeft-C.holeWidth}]:[{left:0,width:C.cols}];
-  return{cx,cy,room:room.id,mirror,topOpen,bottomOpen,biome,district,instances,floor};
+  return done(room.id,instances,{mirror});
 }
 function worldWindowMap(theme,world,seed,cx,cy,start,radius=1,plots=null){
   // A finite reference map of the screens around (cx,cy); the engine plays it and rebuilds it as the player crosses screens.
@@ -586,7 +671,7 @@ function touchStickActions(dx,dy,radius){
   if(nx<-.3)actions.push('left');if(nx>.3)actions.push('right');if(ny<-.6)actions.push('up');if(ny>.6)actions.push('down');
   return{actions,knob:{x:dx*scale,y:dy*scale}};
 }
-root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldAreaMap,worldAnchorScreen,worldSplitAtSeams,worldMergeTerrain,worldPlots,worldPlotFile,worldScreenKey,worldSaveScreens,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
+root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldRegion,worldMass,worldFloorType,worldEdge,worldAreaMap,worldAnchorScreen,worldSplitAtSeams,worldMergeTerrain,worldPlots,worldPlotFile,worldScreenKey,worldSaveScreens,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,routePoint,createMovingPlatformBehavior};
 })(typeof window==='object'?window:globalThis);
 </script>
 <script>
@@ -625,17 +710,16 @@ async function loadAtlases(){
 function fitScene(){const b=state.runtime?.bounds;if(!b)return;const w=canvas.width/state.dpr,h=canvas.height/state.dpr,pad=24,z=Math.min((w-pad*2)/b.w,(h-pad*2)/b.h,4);state.camera={x:pad-b.x*z+(w-pad*2-b.w*z)/2,y:pad-b.y*z+(h-pad*2-b.h*z)/2,zoom:z}}
 function cameraGoalFor(x,y){const b=state.runtime?.bounds,w=canvas.width/state.dpr,h=canvas.height/state.dpr,z=state.camera.zoom,viewW=w/z,viewH=h/z,minX=b.x,maxX=Math.max(minX,b.x+b.w-viewW),minY=b.y,maxY=Math.max(minY,b.y+b.h-viewH),targetX=Math.max(minX,Math.min(maxX,x-210)),targetY=Math.max(minY,Math.min(maxY,y-viewH*.68));return{x:-targetX*z,y:-targetY*z}}
 function followPlayer(immediate=false){
-  // Horizontal: ease toward the player. Vertical, the classic way: hold still while the player moves around the view,
-  // follow smoothly upward near the top edge, settle back to the standing framing once on the ground (or a ladder), and
-  // when the player falls past the bottom edge start a fall transition (see stepFallPan).
+  // The camera eases toward the player as it always has (standing, walking, jumping, climbing, flying), except while
+  // genuinely falling: then it holds still vertically, and when the player falls past the bottom edge a fall transition
+  // starts (see stepFallPan).
   const behavior=state.behavior;if(!behavior||!state.runtime?.bounds)return;const p=behavior.player,goal=cameraGoalFor(p.x,p.y+p.h);
   if(immediate){state.camera.x=goal.x;state.camera.y=goal.y;state.fallPan=null;return}
   state.camera.x+=(goal.x-state.camera.x)*.08;
+  const falling=!p.dead&&!p.onGround&&!p.climbing&&p.vy>0&&!(p.flightFrames>0);
+  if(!falling){state.camera.y+=(goal.y-state.camera.y)*.08;return}
   const z=state.camera.zoom,b=state.runtime.bounds,viewH=canvas.height/state.dpr/z,top=-state.camera.y/z,maxTop=Math.max(b.y,b.y+b.h-viewH);
-  if(!p.dead&&!p.onGround&&!p.climbing&&p.vy>0&&p.y+p.h>top+viewH-4){const target=Math.max(b.y,Math.min(maxTop,p.y-viewH*.18));if(target>top+1){state.fallPan={y:-target*z,hold:10};return}}
-  const headroom=viewH*.2;
-  if(p.y<top+headroom)state.camera.y+=(-Math.max(b.y,p.y-headroom)*z-state.camera.y)*.12;
-  else if(p.onGround||p.climbing)state.camera.y+=(goal.y-state.camera.y)*.08;
+  if(p.y+p.h>top+viewH-4){const target=Math.max(b.y,Math.min(maxTop,p.y-viewH*.18));if(target>top+1)state.fallPan={y:-target*z,hold:10}}
 }
 function stepFallPan(){
   // The game holds still while the view pans down to put the falling player near the top, waits a beat, and then lets

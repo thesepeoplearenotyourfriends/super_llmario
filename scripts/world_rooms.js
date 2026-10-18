@@ -23,12 +23,13 @@ function parseHeader(line,file){
   }
   if(!header.kind)throw new Error(`${file}: @room needs kind=plain or kind=ascent`);return header;
 }
-function overHole(engine,theme,map){
-  // Anything standing on the floor across the hole columns (enemies and pickups aside: they just drop in) would hang over
-  // the hole the generator may cut there. The hole is symmetric, so mirroring doesn't change the answer.
-  const left=HOLE_LEFT*CELL,right=(HOLE_LEFT+HOLE_WIDTH)*CELL,floor=ROOM_ROWS*CELL,runtime=engine.compileReferenceRuntime(theme,map).runtime;
-  return(runtime?.instances||[]).filter(i=>i.bounds&&i.engineNoun!=='walker'&&i.engineNoun!=='pickup'&&i.bounds.y+i.bounds.h===floor&&i.bounds.x<right&&i.bounds.x+i.bounds.w>left).map(i=>i.placeable);
+function standingOver(engine,theme,map,gaps){
+  // What stands on the floor across these column ranges (enemies and pickups aside: they just drop in), and so would hang
+  // over an opening the generator cuts there. The openings are symmetric, so mirroring doesn't change the answer.
+  const floor=ROOM_ROWS*CELL,runtime=engine.compileReferenceRuntime(theme,map).runtime;
+  return(runtime?.instances||[]).filter(i=>i.bounds&&i.engineNoun!=='walker'&&i.engineNoun!=='pickup'&&i.bounds.y+i.bounds.h===floor&&gaps.some(([l,r])=>i.bounds.x<r*CELL&&i.bounds.x+i.bounds.w>l*CELL)).map(i=>i.placeable);
 }
+const overHole=(engine,theme,map)=>standingOver(engine,theme,map,[[HOLE_LEFT,HOLE_LEFT+HOLE_WIDTH]]);
 function compileRooms(dir=path.join(root,'world/rooms'),theme=JSON.parse(fs.readFileSync(path.join(root,'themes/theme_marioai_reference_pack.llmtheme.txt'),'utf8'))){
   const ascii=embedded('editor/reference_pack_editor.html','llmarioAscii').LLMarioAscii,engine=embedded('engine/reference_pack_engine.html','referencePackBoundary').ReferencePackBoundary;
   const files=fs.readdirSync(dir).filter(name=>name.endsWith('.llmroom.txt')).sort();
@@ -39,7 +40,9 @@ function compileRooms(dir=path.join(root,'world/rooms'),theme=JSON.parse(fs.read
     if(map.markers.start||map.markers.goal)throw new Error(`${name}: rooms have no start or goal markers`);
     const standing=header.solidFloor?[]:overHole(engine,theme,map);
     if(standing.length)throw new Error(`${name}: ${[...new Set(standing)].join(', ')} stands on the floor over the hole (cols ${HOLE_LEFT}–${HOLE_LEFT+HOLE_WIDTH-1}); move it or add solidfloor`);
-    return{id:name.slice(0,-'.llmroom.txt'.length),...header,instances:JSON.parse(JSON.stringify(map.instances))};
+    // Which wider floor openings the generator may cut under this room (see WORLD_SCREEN.openings in the engine).
+    const openings=engine.WORLD_SCREEN.openings,wide=!header.solidFloor&&!standingOver(engine,theme,map,openings.wide).length,gappy=!header.solidFloor&&!standingOver(engine,theme,map,openings.gappy).length;
+    return{id:name.slice(0,-'.llmroom.txt'.length),...header,wide,gappy,instances:JSON.parse(JSON.stringify(map.instances))};
   });
   if(rooms.filter(room=>room.home).length!==1)throw new Error('exactly one room must be marked home');
   if(!rooms.some(room=>room.kind==='ascent'))throw new Error('at least one ascent room is required');
