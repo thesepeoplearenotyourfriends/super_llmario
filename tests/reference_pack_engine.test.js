@@ -1065,13 +1065,13 @@ test('gamepad mappings load from storage, drive actions, and the mapped pause bu
 test('the game advances 60 steps per second of clock time whatever the display refresh rate',async()=>{
   for(const hz of [30,60,90,120,144]){
     const {engine,frames,clock}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
-    clock.step=1000/hz;frames.shift()();const start=engine.state.tick;
+    clock.step=1000/hz;frames.shift()();const start=engine.state.steps;
     for(let i=0;i<hz;i++)frames.shift()();
-    assert(Math.abs(engine.state.tick-start-60)<=1,`${hz} Hz: ${engine.state.tick-start} steps in one second`);
+    assert(Math.abs(engine.state.steps-start-60)<=1,`${hz} Hz: ${engine.state.steps-start} steps in one second`);
   }
   const {engine,frames,clock}=engineHarness();await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
-  frames.shift()();const start=engine.state.tick;clock.step=5000;frames.shift()();
-  assert.equal(engine.state.tick-start,5,'coming back to a backgrounded tab catches up at most 5 steps, no fast-forward');
+  frames.shift()();const start=engine.state.steps;clock.step=5000;frames.shift()();
+  assert.equal(engine.state.steps-start,5,'coming back to a backgrounded tab catches up at most 5 steps, no fast-forward');
 });
 
 test('the touch overlay is a gamepad: Start pauses, Select is unassigned, no fullscreen button',()=>{
@@ -1095,4 +1095,24 @@ test('ladders: up/down boards, climbing reaches the top, a jump lets go, and the
   const reach=m=>{const r=api.simulateReachability(theme,make(m),{x:300,y:320});return r.spans.find(s=>s.y===128)?.hop??null};
   assert.notEqual(reach([ground,ledge,ladder]),null,'the high ledge is reachable by the ladder');
   assert.equal(reach([ground,ledge]),null,'and not without it');
+});
+
+test('falling past the bottom of the view freezes the game, pans down to put the player near the top, then resumes gently',async()=>{
+  const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
+  const ground={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':1600,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
+  const ledge={placeable:'ground',instanceId:'l',values:{'transform.x':64,'transform.y':240,'terrain.width':8,'terrain.height':2,'terrain.style':'overground'}};
+  engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:640,h:1600},instances:[ground,ledge],markers:{start:{x:40,y:208},goal:null}});
+  const s=engine.state,p=()=>s.behavior.player,viewTop=()=>-s.camera.y/s.camera.zoom;
+  for(let i=0;i<20;i++){engine.state.input.clear();frames.shift()()}
+  const pans=[];let tick=null,top=null;
+  for(let i=0;i<600&&p().y<1500;i++){engine.state.input.clear();if(i<40)engine.state.input.add('right');const panning=!!s.fallPan;frames.shift()();
+    if(!panning&&s.fallPan){tick=s.tick;top=viewTop();pans.push({startY:p().y})}
+    if(panning&&!s.fallPan){const pan=pans[pans.length-1];pan.frozen=s.tick===tick;pan.playerFromTop=p().y-viewTop();pan.vy=p().vy;pan.moved=viewTop()-top;pan.atWorldBottom=viewTop()+240>=1600-1}}
+  assert(pans.length>=2,`a long fall makes several transitions (${pans.length})`);
+  for(const pan of pans){
+    assert.equal(pan.frozen,true,'the game holds still during the pan');
+    assert(pan.moved>50,'the view moves down');
+    assert(pan.atWorldBottom||pan.playerFromTop>0&&pan.playerFromTop<80,`and puts the player near the top (${Math.round(pan.playerFromTop)}px from it), unless the view has reached the bottom of the world`);
+    assert(pan.vy>=1.15&&pan.vy<=2.35,`the fall resumes gently (vy ${pan.vy})`);
+  }
 });
