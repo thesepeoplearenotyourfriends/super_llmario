@@ -1097,61 +1097,49 @@ test('ladders: up/down boards, climbing reaches the top, a jump lets go, and the
   assert.equal(reach([ground,ledge]),null,'and not without it');
 });
 
-test('falling past the bottom of the view freezes the game, pans down to put the player near the top, then resumes gently',async()=>{
+function cameraProbe(engine,frames,map,steps,press){
+  // Plays a map and records, every frame, the top of the view, the feet, vertical speed and whether the game advanced.
+  engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},...map});
+  const s=engine.state,p=()=>s.behavior.player,top=()=>-s.camera.y/s.camera.zoom,out=[];
+  for(let i=0;i<30;i++){s.input.clear();frames.shift()()}
+  for(let i=0;i<steps;i++){s.input.clear();for(const k of press(i,p()))s.input.add(k);const tick=s.tick;frames.shift()();out.push({top:top(),feet:p().y+p().h,vy:p().vy,onGround:p().onGround,x:p().x,advanced:s.tick===tick+1})}
+  return out;
+}
+const cameraJerk=run=>{let jerk=0;for(let i=2;i<run.length;i++)jerk=Math.max(jerk,Math.abs(run[i].top-2*run[i-1].top+run[i-2].top));return jerk};
+const groundPiece=(id,x,y,w,h=4)=>({placeable:'ground',instanceId:id,values:{'transform.x':x,'transform.y':y,'terrain.width':w,'terrain.height':h,'terrain.style':'overground'}});
+
+test('a long fall never freezes: the view follows firmly, keeps the feet on screen with room to see below, and settles on landing',async()=>{
   const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
-  const ground={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':1600,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
-  const ledge={placeable:'ground',instanceId:'l',values:{'transform.x':64,'transform.y':240,'terrain.width':8,'terrain.height':2,'terrain.style':'overground'}};
-  engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:640,h:1600},instances:[ground,ledge],markers:{start:{x:40,y:208},goal:null}});
-  const s=engine.state,p=()=>s.behavior.player,viewTop=()=>-s.camera.y/s.camera.zoom;
-  for(let i=0;i<20;i++){engine.state.input.clear();frames.shift()()}
-  const pans=[];let tick=null,top=null;
-  for(let i=0;i<600&&p().y<1500;i++){engine.state.input.clear();if(i<40)engine.state.input.add('right');const panning=!!s.fallPan;frames.shift()();
-    if(!panning&&s.fallPan){tick=s.tick;top=viewTop();pans.push({startY:p().y})}
-    if(panning&&!s.fallPan){const pan=pans[pans.length-1];pan.frozen=s.tick===tick;pan.playerFromTop=p().y-viewTop();pan.vy=p().vy;pan.moved=viewTop()-top;pan.atWorldBottom=viewTop()+240>=1600-1}}
-  assert(pans.length>=2,`a long fall makes several transitions (${pans.length})`);
-  for(const pan of pans){
-    assert.equal(pan.frozen,true,'the game holds still during the pan');
-    assert(pan.moved>50,'the view moves down');
-    assert(pan.atWorldBottom||pan.playerFromTop>0&&pan.playerFromTop<80,`and puts the player near the top (${Math.round(pan.playerFromTop)}px from it), unless the view has reached the bottom of the world`);
-    assert(pan.vy>=1.15&&pan.vy<=2.35,`the fall resumes gently (vy ${pan.vy})`);
-  }
+  const run=cameraProbe(engine,frames,{worldBounds:{x:0,y:0,w:640,h:1600},instances:[groundPiece('g',320,1600,40),groundPiece('l',64,240,8,2)],markers:{start:{x:40,y:208},goal:null}},400,i=>i<40?['right']:[]);
+  assert(run.every(f=>f.advanced),'the game never holds still');
+  assert(cameraJerk(run)<3.5,`the view's speed never changes abruptly (largest change ${cameraJerk(run).toFixed(2)}px per frame)`);
+  assert(run.every(f=>f.feet<=f.top+240),'the feet never leave the bottom of the view');
+  const fast=run.filter(f=>f.vy>10);assert(fast.length>20,'the fall reaches full speed');
+  const room=Math.min(...fast.map(f=>f.top+240-f.feet));assert(room>=60,`a fast fall shows at least 60px below the feet (${room.toFixed(1)})`);
+  const land=run.findIndex(f=>f.onGround&&f.feet>1000);assert(land>0,'the player lands');
+  let settle=0;for(let i=land+1;i<run.length;i++)settle=Math.max(settle,Math.abs(run[i].top-run[i-1].top));
+  assert(settle<4,`the view settles after landing in gentle steps (largest ${settle.toFixed(1)}px)`);
 });
 
-test('a fall frames where the player lands: ground just past the bottom edge is eased toward in one move, without pausing',async()=>{
+test('a running jump barely moves the view, and over a pit back to the same height never pauses or loses the feet',async()=>{
   const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
-  const s=engine.state,p=()=>s.behavior.player,viewTop=()=>-s.camera.y/s.camera.zoom;
-  // A ledge, then a drop whose floor sits a little below the bottom of the view the ledge is framed in.
-  const run=floorY=>{
-    const ledge={placeable:'ground',instanceId:'l',values:{'transform.x':64,'transform.y':240,'terrain.width':8,'terrain.height':2,'terrain.style':'overground'}};
-    const floor={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':floorY,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
-    engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:640,h:1600},instances:[ledge,floor],markers:{start:{x:40,y:208},goal:null}});
-    for(let i=0;i<60;i++){s.input.clear();frames.shift()()}
-    const bottom=viewTop()+240;let paused=false,landedTop=null,afterMove=0;
-    for(let i=0;i<400;i++){s.input.clear();if(i<40)s.input.add('right');frames.shift()();if(s.fallPan)paused=true;
-      if(landedTop===null&&p().onGround&&p().y>200)landedTop=viewTop();else if(landedTop!==null)afterMove=Math.max(afterMove,Math.abs(viewTop()-landedTop))}
-    return{bottom,paused,landedTop,afterMove,floorTop:Math.min(...s.runtime.surfaces.solid.filter(r=>r.y>240).map(r=>r.y))};
-  };
-  const near=run(240+128);
-  assert(near.floorTop>near.bottom-4,`the floor (${near.floorTop}) starts below the view (${Math.round(near.bottom)})`);
-  assert.equal(near.paused,false,'a landing just past the edge does not pause the game');
-  assert.notEqual(near.landedTop,null,'the player lands');
-  assert(near.afterMove<2,`and the view is already framed at landing (moved ${near.afterMove.toFixed(1)}px after)`);
-  const far=run(240+600);
-  assert.equal(far.paused,true,'a drop well past the edge still gets the fall transition');
-  assert(far.afterMove<2,`aimed at the landing, so no second move after it (${far.afterMove.toFixed(1)}px)`);
+  let jumping=false;
+  const run=cameraProbe(engine,frames,{worldBounds:{x:0,y:0,w:1280,h:432},instances:[groundPiece('a',256,432,32,1),groundPiece('b',952,432,32,1)],markers:{start:{x:40,y:392},goal:null}},200,(i,p)=>{if(p.x>472)jumping=true;return jumping&&!(p.onGround&&p.x>512)?['right','run','jump']:['right','run']});
+  const air=run.filter(f=>!f.onGround),landed=run.findLast(f=>f.onGround);
+  assert(air.length>20&&landed.x>700&&landed.feet===416,'the jump clears the pit and lands at the same height');
+  assert(run.every(f=>f.advanced),'the game never holds still');
+  assert(run.every(f=>f.feet<=f.top+240),'the feet never leave the bottom of the view');
+  const rise=run[0].top-Math.min(...air.map(f=>f.top));assert(rise<24,`the view rises only a little with the jump (${rise.toFixed(1)}px)`);
 });
 
-test('a jump never starts a fall transition above the floor it left: a running jump over a pit lands without pausing',async()=>{
+test('dropping to a floor just below the view eases down in one move and never pauses',async()=>{
   const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
-  const ground=(id,x,w)=>({placeable:'ground',instanceId:id,values:{'transform.x':x,'transform.y':432,'terrain.width':w,'terrain.height':1,'terrain.style':'overground'}});
-  engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:1280,h:432},instances:[ground('a',256,32),ground('b',952,32)],markers:{start:{x:40,y:392},goal:null}});
-  const s=engine.state,p=()=>s.behavior.player;for(let i=0;i<30;i++){s.input.clear();frames.shift()()}
-  const ledge=s.runtime.surfaces.solid.find(r=>r.x===0),landY=ledge.y;let paused=false,crossed=false,below=false,lowest=0;
-  for(let i=0;i<240;i++){s.input.clear();s.input.add('right');s.input.add('run');if(p().x>ledge.x+ledge.w-40)crossed=true;if(crossed&&!(p().onGround&&p().x>ledge.x+ledge.w))s.input.add('jump');
-    frames.shift()();if(s.fallPan)paused=true;if(p().y+p().h>landY+1)below=true;lowest=Math.max(lowest,p().y+p().h+s.camera.y/s.camera.zoom);if(p().onGround&&p().x>ledge.x+ledge.w+64)break}
-  assert.equal(below,false,'the jump clears the pit');assert(p().onGround&&p().x>ledge.x+ledge.w+64,`and lands on the far side (${Math.round(p().x)})`);
-  assert.equal(paused,false,'without a fall transition while above the floor it jumped from');
-  assert(lowest<=240,`and the feet stay on screen all the way down (${lowest.toFixed(1)}px from the top of a 240px view)`);
+  const run=cameraProbe(engine,frames,{worldBounds:{x:0,y:0,w:640,h:1600},instances:[groundPiece('l',64,240,8,2),groundPiece('g',320,368,40)],markers:{start:{x:40,y:208},goal:null}},200,i=>i<40?['right']:[]);
+  assert(run.every(f=>f.advanced),'the game never holds still');
+  assert(cameraJerk(run)<3.5,`the view's speed never changes abruptly (largest change ${cameraJerk(run).toFixed(2)}px per frame)`);
+  assert(run.every(f=>f.feet<=f.top+240),'the feet never leave the bottom of the view');
+  let back=0;for(let i=1;i<run.length;i++)back=Math.max(back,run[i-1].top-run[i].top);
+  assert(back<2,`the view never swings back up after following the drop (${back.toFixed(1)}px)`);
 });
 
 test('the camera eases along with jumps and flight instead of jumping or pausing',async()=>{
@@ -1161,6 +1149,6 @@ test('the camera eases along with jumps and flight instead of jumping or pausing
   const s=engine.state,p=()=>s.behavior.player;for(let i=0;i<30;i++){s.input.clear();frames.shift()()}
   // Raccoon flight straight up: the view follows every frame, never by more than a gentle step, and never freezes.
   s.behavior.setForm('raccoon');Object.assign(p(),{runCharge:90,pSpeed:true,flightFrames:150,vy:-4});let last=s.camera.y,maxStep=0,moved=0;
-  for(let i=0;i<120;i++){s.input.clear();s.input.add('jump');frames.shift()();assert.equal(s.fallPan,null,'no fall transition while flying');const step=Math.abs(s.camera.y-last);maxStep=Math.max(maxStep,step);moved+=step;last=s.camera.y}
+  for(let i=0;i<120;i++){s.input.clear();s.input.add('jump');frames.shift()();const step=Math.abs(s.camera.y-last);maxStep=Math.max(maxStep,step);moved+=step;last=s.camera.y}
   assert(moved>100,'the view rises with the flight');assert(maxStep<12,`in gentle steps (largest ${maxStep.toFixed(1)}px)`);
 });
