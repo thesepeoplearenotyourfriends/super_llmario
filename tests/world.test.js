@@ -220,6 +220,50 @@ test('regions have characters: plain runs of ground, broken floors, open sky, de
   assert.equal(roomless,0,'every ground screen got a room or a shape');
 });
 
+test('rock never runs more than two screens, side-by-side rock differs in kind, and every kind is crossable',()=>{
+  const kinds={},runs=[];let run=0,previous=null,pairs=0;
+  for(const seed of [1,1987])for(let y=2;y<8;y++){run=0;previous=null;for(let x=-150;x<150;x++){
+    if(api.worldMass(seed,x,y)!=='rock'){runs.push(run);run=0;previous=null;continue}
+    const s=api.worldScreen(world,seed,x,y);run++;kinds[s.room]=(kinds[s.room]||0)+1;if(previous){pairs++;assert.notEqual(s.room,previous,`rock ${seed}:${x},${y} repeats its neighbour's kind`)}previous=s.room}}
+  assert(Math.max(...runs)<=2&&pairs>50,`at most two rock screens in a row (${pairs} pairs)`);
+  assert.deepEqual(Object.keys(kinds).sort(),['chamber','hops','tunnel']);
+  const chamber=api.worldScreen(world,1987,-36,3);assert.equal(chamber.room,'chamber');
+  assert.equal(chamber.instances.filter(i=>i.placeable==='whitePlatform').length,2,'a chamber has platforms up to its prize');
+  assert(chamber.instances.some(i=>i.placeable==='questionBlock')&&chamber.instances.filter(i=>i.placeable==='coin').length===3);
+  // A runner holding right (and jumping when blocked) gets through every kind, start to end.
+  const tried={};
+  for(let x=-40;x<40&&Object.keys(tried).length<3*4;x++)for(let y=2;y<6;y++){
+    if(api.worldMass(1987,x,y)!=='rock')continue;const kind=api.worldScreen(world,1987,x,y).room;if((tried[kind]||0)>=4)continue;tried[kind]=(tried[kind]||0)+1;
+    const hl=api.worldEdge(1987,x-1,y),hr=api.worldEdge(1987,x,y),{map}=api.worldAreaMap(theme,world,1987,{cx:x,cy:y,w:1,h:1},{});map.worldBounds.w+=64;
+    map.instances.push({placeable:'ground',instanceId:'strip',values:{'transform.x':x*W+W+32,'transform.y':y*H+H,'terrain.width':4,'terrain.height':24-hr,'terrain.style':'underground'}});map.markers.start={x:x*W+16,y:y*H+hl*16};
+    const runtime=api.compileReferenceRuntime(theme,map).runtime,b=api.createPlayerBehavior(runtime),p=b.player;let stuck=0,jump=0,last=p.x;
+    for(let i=0;i<1500&&p.x<x*W+W+10;i++){if(jump>0)jump--;else if(stuck>6){jump=22;stuck=0}b.step({right:true,run:true,jump:jump>0&&jump<21});stuck=Math.abs(p.x-last)<.5?stuck+1:0;last=p.x}
+    assert(p.x>=x*W+W+10,`${kind} at ${x},${y} can be run through (stopped at ${Math.round(p.x-x*W)})`);
+  }
+  assert.deepEqual(Object.keys(tried).sort(),['chamber','hops','tunnel']);
+});
+
+test('in the world, enemies walk only on ground: patrols stop at gaps and walls, and an enemy over a gap moves or goes',()=>{
+  const seen=new Set();let moved=0,dropped=0,active=0;
+  for(let cy=-2;cy<5;cy++)for(let cx=-24;cx<24;cx+=3){
+    const runtime=api.compileReferenceRuntime(theme,api.worldWindowMap(theme,world,1987,cx,cy).map).runtime,behavior=api.createActorBehavior(runtime,null,{grounded:true}),surfaces=[...runtime.surfaces.solid,...runtime.surfaces.solidTop];
+    for(const a of behavior.actors){const id=a.instance.instanceId;if(seen.has(id)||a.flying)continue;seen.add(id);if(!a.active){dropped++;continue}active++;if(a.x!==a.instance.transform.x)moved++;
+      const under=px=>surfaces.some(s=>Math.abs(s.y-a.y)<=1&&s.x<=px&&s.x+s.w>=px);
+      for(let px=a.min;px<=a.max;px+=2)assert(under(px-6)&&under(px+6),`${id} walks on air at ${px}`);
+      for(let i=0;i<400;i++)behavior.step(null,null);if(a.state==='walking')assert(a.x>=a.min&&a.x<=a.max&&under(a.x),`${id} stays on its ground`);}
+  }
+  assert(active>100&&moved>0&&dropped>0,`some enemies were moved (${moved}) or dropped (${dropped}) of ${active}`);
+  // Outside the world nothing changes: an authored map keeps its patrol as written.
+  const map={format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:640,h:384},instances:[{placeable:'goomba',instanceId:'g',values:{'transform.x':200,'transform.y':100,'walker.direction':'left','walker.patrolRange':40}}],markers:{start:null,goal:null}};
+  const authored=api.createActorBehavior(api.compileReferenceRuntime(theme,map).runtime).actors[0];assert.deepEqual([authored.active,authored.min,authored.max],[true,160,240]);
+  // A flying enemy that loses its wings falls to the real ground below and walks only there.
+  map.instances=[{placeable:'koopaRed',instanceId:'k',values:{'transform.x':200,'transform.y':100,'walker.direction':'left','walker.patrolRange':48,'flight.hasWings':true,'flight.flying':true}},{placeable:'ground',instanceId:'f',values:{'transform.x':216,'transform.y':384,'terrain.width':4,'terrain.height':4,'terrain.style':'overground'}}];
+  const runtime=api.compileReferenceRuntime(theme,map).runtime,behavior=api.createActorBehavior(runtime,null,{grounded:true}),k=behavior.actors[0],floor=runtime.surfaces.solid[0];
+  assert.equal(k.active,true,'flying enemies are placed in the air');
+  Object.assign(k,{winged:false,flying:false,wingFalling:true,wingVy:0});for(let i=0;i<120;i++)behavior.step(null,null);
+  assert.equal(k.y,floor.y,'it lands on the ground below, not back at its old height');assert(k.min>=floor.x+6&&k.max<=floor.x+floor.w-6,'and patrols only that ground');
+});
+
 test('every generated screen can be crossed both ways, directly or down and back up through its floor',()=>{
   const side=(x,y,h,tag)=>({placeable:'ground',instanceId:tag,values:{'transform.x':x*W+W/2,'transform.y':y*H+H,'terrain.width':40,'terrain.height':24-h,'terrain.style':'overground'}});
   const failures=[];let viaBelow=0;
