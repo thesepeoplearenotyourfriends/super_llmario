@@ -1116,3 +1116,14 @@ test('falling past the bottom of the view freezes the game, pans down to put the
     assert(pan.vy>=1.15&&pan.vy<=2.35,`the fall resumes gently (vy ${pan.vy})`);
   }
 });
+
+test('the camera eases along with jumps and flight instead of jumping or pausing',async()=>{
+  const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
+  const ground={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':1600,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
+  engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:640,h:1600},instances:[ground],markers:{start:{x:100,y:1536},goal:null}});
+  const s=engine.state,p=()=>s.behavior.player;for(let i=0;i<30;i++){s.input.clear();frames.shift()()}
+  // Raccoon flight straight up: the view follows every frame, never by more than a gentle step, and never freezes.
+  s.behavior.setForm('raccoon');Object.assign(p(),{runCharge:90,pSpeed:true,flightFrames:150,vy:-4});let last=s.camera.y,maxStep=0,moved=0;
+  for(let i=0;i<120;i++){s.input.clear();s.input.add('jump');frames.shift()();assert.equal(s.fallPan,null,'no fall transition while flying');const step=Math.abs(s.camera.y-last);maxStep=Math.max(maxStep,step);moved+=step;last=s.camera.y}
+  assert(moved>100,'the view rises with the flight');assert(maxStep<12,`in gentle steps (largest ${maxStep.toFixed(1)}px)`);
+});

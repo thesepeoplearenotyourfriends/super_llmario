@@ -625,17 +625,16 @@ async function loadAtlases(){
 function fitScene(){const b=state.runtime?.bounds;if(!b)return;const w=canvas.width/state.dpr,h=canvas.height/state.dpr,pad=24,z=Math.min((w-pad*2)/b.w,(h-pad*2)/b.h,4);state.camera={x:pad-b.x*z+(w-pad*2-b.w*z)/2,y:pad-b.y*z+(h-pad*2-b.h*z)/2,zoom:z}}
 function cameraGoalFor(x,y){const b=state.runtime?.bounds,w=canvas.width/state.dpr,h=canvas.height/state.dpr,z=state.camera.zoom,viewW=w/z,viewH=h/z,minX=b.x,maxX=Math.max(minX,b.x+b.w-viewW),minY=b.y,maxY=Math.max(minY,b.y+b.h-viewH),targetX=Math.max(minX,Math.min(maxX,x-210)),targetY=Math.max(minY,Math.min(maxY,y-viewH*.68));return{x:-targetX*z,y:-targetY*z}}
 function followPlayer(immediate=false){
-  // Horizontal: ease toward the player. Vertical, the classic way: hold still while the player moves around the view,
-  // follow smoothly upward near the top edge, settle back to the standing framing once on the ground (or a ladder), and
-  // when the player falls past the bottom edge start a fall transition (see stepFallPan).
+  // The camera eases toward the player as it always has (standing, walking, jumping, climbing, flying), except while
+  // genuinely falling: then it holds still vertically, and when the player falls past the bottom edge a fall transition
+  // starts (see stepFallPan).
   const behavior=state.behavior;if(!behavior||!state.runtime?.bounds)return;const p=behavior.player,goal=cameraGoalFor(p.x,p.y+p.h);
   if(immediate){state.camera.x=goal.x;state.camera.y=goal.y;state.fallPan=null;return}
   state.camera.x+=(goal.x-state.camera.x)*.08;
+  const falling=!p.dead&&!p.onGround&&!p.climbing&&p.vy>0&&!(p.flightFrames>0);
+  if(!falling){state.camera.y+=(goal.y-state.camera.y)*.08;return}
   const z=state.camera.zoom,b=state.runtime.bounds,viewH=canvas.height/state.dpr/z,top=-state.camera.y/z,maxTop=Math.max(b.y,b.y+b.h-viewH);
-  if(!p.dead&&!p.onGround&&!p.climbing&&p.vy>0&&p.y+p.h>top+viewH-4){const target=Math.max(b.y,Math.min(maxTop,p.y-viewH*.18));if(target>top+1){state.fallPan={y:-target*z,hold:10};return}}
-  const headroom=viewH*.2;
-  if(p.y<top+headroom)state.camera.y+=(-Math.max(b.y,p.y-headroom)*z-state.camera.y)*.12;
-  else if(p.onGround||p.climbing)state.camera.y+=(goal.y-state.camera.y)*.08;
+  if(p.y+p.h>top+viewH-4){const target=Math.max(b.y,Math.min(maxTop,p.y-viewH*.18));if(target>top+1)state.fallPan={y:-target*z,hold:10}}
 }
 function stepFallPan(){
   // The game holds still while the view pans down to put the falling player near the top, waits a beat, and then lets
