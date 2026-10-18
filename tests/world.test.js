@@ -36,12 +36,12 @@ test('the generator is a pure function of seed and screen coordinates',()=>{
   assert(a.instances.every(i=>i.instanceId.startsWith('w3_-2_')),'ids are stable and screen-scoped');
 });
 
-test('doors are shared, holes always land in ascent rooms, and solid-floor rooms never get holes',()=>{
+test('openings are shared: ground under an opening is a climbing room, and solid-floor rooms never get openings',()=>{
   const solid=new Set(world.rooms.filter(room=>room.solidFloor).map(room=>room.id)),ascent=new Set(world.rooms.filter(room=>room.kind==='ascent').map(room=>room.id));
   for(let x=-15;x<15;x++)for(let y=-6;y<8;y++){
     const screen=api.worldScreen(world,4417,x,y),below=api.worldScreen(world,4417,x,y+1);
-    assert.equal(screen.bottomOpen,below.topOpen);
-    if(screen.topOpen)assert(ascent.has(screen.room),`(${x},${y}) under a hole is an ascent room`);
+    assert.equal(screen.bottomOpen&&below.mass==='ground',below.topOpen,`(${x},${y}) and the screen below agree on the opening`);
+    if(screen.topOpen)assert(ascent.has(screen.room),`(${x},${y}) under an opening is an ascent room`);
     if(screen.bottomOpen)assert(!solid.has(screen.room),`(${x},${y}) has a hole under a solid-floor room`);
   }
   const home=api.worldScreen(world,4417,0,0);assert.equal(world.rooms.find(room=>room.id===home.room).home,true);assert.equal(home.topOpen,false);assert.equal(home.bottomOpen,false);
@@ -49,14 +49,14 @@ test('doors are shared, holes always land in ascent rooms, and solid-floor rooms
 
 test('districts give regions a character: hole density, favoured rooms and swapped enemies',()=>{
   const tally={};
-  for(let x=-200;x<200;x++)for(let y=-3;y<9;y++){
+  for(let x=-200;x<200;x++)for(let y=-1;y<2;y++){
     const screen=api.worldScreen(world,77,x,y),t=tally[screen.district.id]??={screens:0,holes:0,rooms:{},walkers:{}};
     assert.equal(screen.district.id,api.worldDistrict(77,x,y).id);t.screens++;if(screen.bottomOpen)t.holes++;t.rooms[screen.room]=(t.rooms[screen.room]||0)+1;
     for(const i of screen.instances)if(theme.objects[theme.placeables[i.placeable].object].engineNoun==='walker')t.walkers[i.placeable]=(t.walkers[i.placeable]||0)+1;
   }
   assert.deepEqual(Object.keys(tally).sort(),plain(api.WORLD_DISTRICTS.map(d=>d.id).sort()),'every district shows up');
   const rate=id=>tally[id].holes/tally[id].screens,share=(id,room)=>(tally[id].rooms[room]||0)/tally[id].screens;
-  assert(rate('warren')>rate('meadow')+0.3,'warrens are riddled with holes, meadows mostly are not');
+  assert(rate('warren')>rate('meadow')+0.1,'warrens are riddled with openings, meadows less so');
   assert(share('pipeworks','pipes')>2*share('meadow','pipes'),'pipeworks favour pipe rooms');
   assert(share('meadow','hills')>2*share('pipeworks','hills'),'meadows favour hills');
   assert(!tally.thorns.walkers.goomba&&tally.thorns.walkers.spiky,'thorns swap goombas for spikies');
@@ -117,9 +117,9 @@ test('a window is an ordinary valid reference map with seamless floors',()=>{
   const {map,screens}=api.worldWindowMap(theme,world,1987,4,2);
   assert.equal(screens.length,9);assert.deepEqual(plain(api.validateReferenceEditorMap(map,theme)),[]);
   assert.equal(api.compileReferenceRuntime(theme,map).ok,true);
-  const floors=map.instances.filter(i=>i.instanceId.includes('floor'));
-  for(const floor of floors)assert.equal(floor.values['transform.y']%H,0,'floors sit on screen bottoms');
-  assert(floors.some(floor=>floor.values['terrain.width']>C.cols),'touching floors merge across screen edges');
+  const ground=map.instances.filter(i=>i.placeable==='ground'&&i.values['transform.y']%H===0);
+  assert(ground.length,'ground stands on screen bottoms');
+  assert(ground.some(g=>g.values['terrain.width']>C.cols),'touching ground of one style merges across screen edges');
 });
 
 test('every room passes the checker in its neighbourhood: floor both ways, with and without a hole, and up through the hole above',()=>{
@@ -142,12 +142,12 @@ test('every room passes the checker in its neighbourhood: floor both ways, with 
 });
 
 test('any screen of a captured window promotes back into a room that regenerates the same screen',()=>{
-  const {promoteScreen,checkRoom}=require('../scripts/world_room_from_map.js'),seen=new Set(),key=i=>JSON.stringify([i.placeable,Object.entries(i.values).sort()]).replace(/w-?\d+_-?\d+_pipe/g,'pipe');
+  const {promoteScreen,checkRoom}=require('../scripts/world_room_from_map.js'),seen=new Set(),key=i=>JSON.stringify([i.placeable,Object.entries(i.values).sort()]).replace(/w-?\d+_-?\d+_pipe/g,'pipe').replace(/pipe-[A-Z]+/g,'pipe-X'); // two pipes wired to each other: the letters may swap, the wiring can't
   for(let x=-200;x<200&&seen.size<world.rooms.length;x++){
-    const screen=api.worldScreen(world,1987,x,1);if(seen.has(screen.room))continue;seen.add(screen.room);
+    const screen=api.worldScreen(world,1987,x,1);if(!world.rooms.some(room=>room.id===screen.room)||seen.has(screen.room))continue;seen.add(screen.room);
     const capture=plain(api.worldWindowMap(theme,world,1987,x,1,{x:x*W+100,y:H+FLOOR}).map),source=world.rooms.find(room=>room.id===screen.room);
     const text=promoteScreen(capture,theme,{header:`kind=${source.kind}${source.solidFloor?' solidfloor':''}`});
-    const room=checkRoom(text,theme),expected=screen.instances.map(i=>({placeable:i.placeable,values:{...i.values,'transform.x':i.values['transform.x']-x*W,'transform.y':i.values['transform.y']-H}}));
+    const room=checkRoom(text,theme),expected=screen.instances.filter(i=>!(i.placeable==='ground'&&i.values['transform.y']-i.values['terrain.height']*C.cell>=H+FLOOR)).map(i=>({placeable:i.placeable,values:{...i.values,'transform.x':i.values['transform.x']-x*W,'transform.y':i.values['transform.y']-H}}));
     assert.deepEqual(plain(room.instances.map(key).sort()),plain(expected.map(key).sort()),`${screen.room}${screen.mirror?' (mirrored)':''} survives the round trip`);
   }
   assert(seen.size>=world.rooms.length-1,'covered every room but home');
@@ -193,9 +193,9 @@ test('coins taken stay taken after their screen leaves the window and comes back
 });
 
 test('drop through a hole, then jump back up through it from the ascent room below',async()=>{
-  // A seed where screen (1,0) has a hole into (1,1) and neither screen has an enemy to get in the way of the test.
+  // A seed where screen (1,0) has a plain hole into ground at (1,1), and neither screen has an enemy in the way.
   const calm=(seed,cx,cy)=>api.worldScreen(world,seed,cx,cy).instances.every(i=>theme.objects[theme.placeables[i.placeable].object].engineNoun!=='walker');
-  let seed=1;while(!api.worldScreen(world,seed,1,0).bottomOpen||!calm(seed,1,0)||!calm(seed,1,1))seed++;
+  let seed=1;while(api.worldScreen(world,seed,1,0).bottom!=='hole'||api.worldMass(seed,1,1)!=='ground'||!calm(seed,1,0)||!calm(seed,1,1))seed++;
   const {engine,run}=await worldEngine(seed),s=engine.state,p=()=>s.behavior.player;
   Object.assign(p(),{x:W+(C.holeLeft+C.holeWidth/2)*C.cell-12,y:FLOOR-40,vx:0,vy:0});run(120);
   assert.deepEqual(plain(s.world.center),{cx:1,cy:1},'fell into the screen below');assert.equal(p().onGround,true);
@@ -204,4 +204,44 @@ test('drop through a hole, then jump back up through it from the ascent room bel
   Object.assign(p(),{x:W+(C.holeLeft+C.holeWidth)*C.cell-26,vx:0});run(2);
   run(90,(player,i)=>({jump:i<24,right:i>4&&player.vy>=-1}));
   assert.deepEqual(plain(s.world.center),{cx:1,cy:0},'back in the screen above');assert.equal(p().onGround,true);assert.equal(p().y+p().h,FLOOR);
+});
+
+test('regions have characters: plain runs of ground, broken floors, open sky, deep rock; flat ground always gets a room',()=>{
+  const tally={};let roomless=0;
+  for(let x=-120;x<120;x++)for(let y=-4;y<6;y++){
+    const s=api.worldScreen(world,31,x,y),t=tally[s.region]??={n:0,solid:0,air:0,rock:0};t.n++;if(s.bottom==='solid')t.solid++;if(s.mass==='air')t.air++;if(s.mass==='rock')t.rock++;
+    if(s.mass==='ground'&&!s.room)roomless++;
+  }
+  const share=(k,f)=>tally[k][f]/tally[k].n;
+  assert(share('plain','solid')>.8&&share('plain','air')===0,'plain regions are long runs of solid ground');
+  assert(share('broken','solid')<.6,'broken regions open up often');
+  assert(share('open','air')>.4,'open regions are mostly sky');
+  assert(share('deep','rock')>.4,'deep regions are mostly rock');
+  assert.equal(roomless,0,'every ground screen got a room or a shape');
+});
+
+test('every generated screen can be crossed both ways, directly or down and back up through its floor',()=>{
+  const side=(x,y,h,tag)=>({placeable:'ground',instanceId:tag,values:{'transform.x':x*W+W/2,'transform.y':y*H+H,'terrain.width':40,'terrain.height':24-h,'terrain.style':'overground'}});
+  const failures=[];let viaBelow=0;
+  for(let x=-6;x<6;x++)for(let y=-2;y<3;y++){
+    const s=api.worldScreen(world,7,x,y),hl=api.worldEdge(7,x-1,y),hr=api.worldEdge(7,x,y);
+    const map={format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:(x-1)*W,y:(y-1)*H,w:3*W,h:3*H},instances:[...s.instances,side(x-1,y,hl,'L'),side(x+1,y,hr,'R')],markers:{start:null,goal:null}};
+    const go=(fx,fh,tx,th)=>{const r=plain(api.simulateReachability(theme,map,{x:fx,y:y*H+fh*16},{maxSteps:2e6}));return r.spans.some(sp=>sp.hop!=null&&sp.y===y*H+th*16&&tx>=sp.x&&tx<=sp.x+sp.w)};
+    const both=()=>go((x-1)*W+64,hl,(x+1)*W+560,hr)&&go((x+1)*W+560,hr,(x-1)*W+64,hl);
+    if(both())continue;
+    if(s.bottomOpen){map.instances.push(...api.worldScreen(world,7,x,y+1).instances);if(both()){viaBelow++;continue}}
+    failures.push(`${x},${y} ${s.mass}/${s.room}`);
+  }
+  assert.deepEqual(failures,[],'screens that cannot be crossed');
+});
+
+test('windows across regions have no one-way pockets',()=>{
+  for(const [seed,cx,cy] of [[7,5,1],[1987,3,0],[4417,-5,2],[31,9,-2]]){
+    const {map}=api.worldWindowMap(theme,world,seed,cx,cy),start={x:cx*W+40,y:cy*H+api.worldEdge(seed,cx-1,cy)*16};
+    const r=plain(api.simulateReachability(theme,map,start,{maxSteps:5e6}));
+    assert.equal(r.stats.truncated,false);
+    // A pocket touching the window's edge may lead on outside it; only enclosed ones are traps.
+    const enclosed=r.pockets.filter(p=>p.spans.every(id=>{const sp=r.spans[id];return sp.x>map.worldBounds.x+16&&sp.x+sp.w<map.worldBounds.x+map.worldBounds.w-16&&sp.y>map.worldBounds.y+64}));
+    assert.deepEqual(enclosed.map(p=>p.spans.map(id=>`${r.spans[id].x},${r.spans[id].y}`).join(' ')),[],`seed ${seed} window at ${cx},${cy}`);
+  }
 });

@@ -8,19 +8,28 @@ release build's map picker. There's no goal: you wander, and home is where you s
 - **Screens.** The world is a grid of 40×24-cell screens (640×384 px). Each screen is a pure
   function of `(seed, screen x, screen y)` (`worldScreen` in the engine boundary). Nothing is
   stored: come back to a screen and it's rebuilt identically.
-- **Floors and doors.** The generator owns every screen's bottom 4 rows, the floor band, so
-  screens always meet at the same floor height and run on sideways forever. A vertical door
-  is a 6-cell hole in a floor, decided by hashing that edge's coordinates. The screen below a
-  hole always gets an **ascent room** whose top ledge sits right under the hole, so every
-  hole goes both ways. Home (0,0) has no holes.
-- **Rooms** fill the 40×20 interior above the floor band. They're ASCII v3 sketches in
-  `world/rooms/*.llmroom.txt` (see below). A room is picked per screen by weighted hash, and
-  sometimes mirrored.
+- **Regions.** Each run of 4 screens in a row picks a character: **plain** (long continuous ground, mostly solid
+  floors: the breather), **broken** (holes, wide openings, gappy floors bridged by one-way platforms, the odd air screen),
+  **open** (mostly air screens) or **deep** (rock with tunnels, from 2 rows below home down). Plain is the most common;
+  districts shift the mix (Meadow plainer, Warren more broken and open), and so does height (more open sky up high).
+- **Screens** are **ground** (a height profile filled solid to the screen bottom, drawn as terraces), **air** (no ground,
+  just one-way platforms: a zigzag from the bottom middle to a ledge under the top middle, plus steps out to each side) or
+  **rock** (solid, with a 4-row tunnel from side to side that grows taller where it steps). A floor is **solid**, a
+  **hole** (cols 17–22), **wide** (cols 11–28), **gappy** (three gaps, each bridged) or open **air**.
+- **Edges.** Where two screens meet side by side, the ground is at one shared height (low row 20, mid 15 or high 10).
+  Between different heights ground ramps in steps of at most 4 rows; between equal ones it may be flat, a hill or a
+  valley. Edges next to an opening, home or a plot stay low.
+- **Ways back up.** Ground under an opening is flat and takes a climbing room whose ledge sits under the opening; air
+  screens climb bottom to top; rock has a floor on top. Home (0,0) has no openings.
+- **Rooms** fill flat low ground: ASCII sketches of the 40×20 space above the floor in `world/rooms/*.llmroom.txt` (see
+  below), picked by weighted hash and sometimes mirrored. Climbing rooms go only under openings. The room compiler records
+  which openings a room tolerates (nothing standing on the floor across them). Shaped ground gets simple content: coins,
+  an enemy, a prize block.
 - **Districts.** Each 8×3-screen patch gets a character from a short list: Meadow (few holes,
   lots of hills), Warren (riddled with holes, climbing rooms, wave goombas), Pipeworks (pipe
   rooms, koopas instead of goombas), Thorns (spikies instead of goombas), Brickyard (block
-  rooms). A district sets the hole chance, multiplies the odds of rooms carrying its favoured
-  tags, and swaps enemies. Home's own enemies are never swapped. The status bar names the
+  rooms). A district shifts the region mix, multiplies the odds of rooms carrying its
+  favoured tags, and swaps enemies. Home's own enemies are never swapped. The status bar names the
   district you're in. The list is `WORLD_DISTRICTS` in the engine boundary.
 - **Biomes by depth.** Sky, ground, caves, castle, with boundaries that shift every 8 screens.
   A glance at the ground style tells you roughly how deep you are. Biomes nudge room odds too:
