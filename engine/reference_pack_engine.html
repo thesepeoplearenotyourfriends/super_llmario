@@ -593,7 +593,7 @@ root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict
 (()=>{
 'use strict';
 const B=window.ReferencePackBoundary,canvas=document.getElementById('screen'),ctx=canvas.getContext('2d'),stage=document.getElementById('stage'),diagnostics=document.getElementById('diagnostics'),empty=document.getElementById('empty'),coinCount=document.getElementById('coinCount'),livesCount=document.getElementById('livesCount'),DEFAULT_GAME_ZOOM=2;
-const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),world:null,paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:null,tickDebt:0,tick:0,dpr:1};
+const state={theme:null,map:null,runtime:null,behavior:null,pipeBehavior:null,actorBehavior:null,blockBehavior:null,powerupBehavior:null,projectileBehavior:null,platformBehavior:null,atlases:new Map(),atlasIssues:[],camera:{x:0,y:0,zoom:1},input:new Set(),padInput:new Set(),touchInput:new Set(),world:null,paused:false,padPrevious:new Set(),padRaw:[],padId:'',lastTime:null,tickDebt:0,steps:0,fallPan:null,tick:0,dpr:1};
 function report(messages,kind='bad'){const list=(Array.isArray(messages)?messages:[messages]).map(x=>x.message||x);diagnostics.textContent=list.join(' · ');diagnostics.className=kind}
 function invalidate(kind,messages){
   state[kind]=null;
@@ -624,7 +624,27 @@ async function loadAtlases(){
 }
 function fitScene(){const b=state.runtime?.bounds;if(!b)return;const w=canvas.width/state.dpr,h=canvas.height/state.dpr,pad=24,z=Math.min((w-pad*2)/b.w,(h-pad*2)/b.h,4);state.camera={x:pad-b.x*z+(w-pad*2-b.w*z)/2,y:pad-b.y*z+(h-pad*2-b.h*z)/2,zoom:z}}
 function cameraGoalFor(x,y){const b=state.runtime?.bounds,w=canvas.width/state.dpr,h=canvas.height/state.dpr,z=state.camera.zoom,viewW=w/z,viewH=h/z,minX=b.x,maxX=Math.max(minX,b.x+b.w-viewW),minY=b.y,maxY=Math.max(minY,b.y+b.h-viewH),targetX=Math.max(minX,Math.min(maxX,x-210)),targetY=Math.max(minY,Math.min(maxY,y-viewH*.68));return{x:-targetX*z,y:-targetY*z}}
-function followPlayer(immediate=false){const behavior=state.behavior;if(!behavior||!state.runtime?.bounds)return;const goal=cameraGoalFor(behavior.player.x,behavior.player.y+behavior.player.h);if(immediate){state.camera.x=goal.x;state.camera.y=goal.y}else{state.camera.x+=(goal.x-state.camera.x)*.08;state.camera.y+=(goal.y-state.camera.y)*.08}}
+function followPlayer(immediate=false){
+  // Horizontal: ease toward the player. Vertical, the classic way: hold still while the player moves around the view,
+  // follow smoothly upward near the top edge, settle back to the standing framing once on the ground (or a ladder), and
+  // when the player falls past the bottom edge start a fall transition (see stepFallPan).
+  const behavior=state.behavior;if(!behavior||!state.runtime?.bounds)return;const p=behavior.player,goal=cameraGoalFor(p.x,p.y+p.h);
+  if(immediate){state.camera.x=goal.x;state.camera.y=goal.y;state.fallPan=null;return}
+  state.camera.x+=(goal.x-state.camera.x)*.08;
+  const z=state.camera.zoom,b=state.runtime.bounds,viewH=canvas.height/state.dpr/z,top=-state.camera.y/z,maxTop=Math.max(b.y,b.y+b.h-viewH);
+  if(!p.dead&&!p.onGround&&!p.climbing&&p.vy>0&&p.y+p.h>top+viewH-4){const target=Math.max(b.y,Math.min(maxTop,p.y-viewH*.18));if(target>top+1){state.fallPan={y:-target*z,hold:10};return}}
+  const headroom=viewH*.2;
+  if(p.y<top+headroom)state.camera.y+=(-Math.max(b.y,p.y-headroom)*z-state.camera.y)*.12;
+  else if(p.onGround||p.climbing)state.camera.y+=(goal.y-state.camera.y)*.08;
+}
+function stepFallPan(){
+  // The game holds still while the view pans down to put the falling player near the top, waits a beat, and then lets
+  // the fall resume gently (the legacy row camera's release: 1.15 to 2.35 px per frame), so the next edge isn't instant.
+  const pan=state.fallPan,diff=pan.y-state.camera.y;
+  if(Math.abs(diff)>.7){state.camera.y+=diff*.18;return}
+  state.camera.y=pan.y;if(pan.hold-->0)return;
+  const p=state.behavior?.player;if(p)p.vy=Math.max(1.15,Math.min(2.35,p.vy));state.fallPan=null;
+}
 function pipeCamera(){const z=state.camera.zoom;return{viewport:{w:canvas.width/state.dpr/z,h:canvas.height/state.dpr/z},current:{x:state.camera.x,y:state.camera.y},targetFor:place=>cameraGoalFor(place.x,place.y+state.behavior.player.h),set:(x,y)=>{state.camera.x=x;state.camera.y=y}}}
 function playerVisual(){const behavior=state.behavior,theme=state.theme;if(!behavior||!theme)return null;const form=String(behavior.player.form||'small'),object=theme.objects?.[`player.${form}`]||(form==='raccoon'?theme.objects?.['player.carrying']:null)||theme.objects?.['player.small'],target=object?.visuals?.[behavior.player.animationState]||object?.visuals?.idle;let resourceId=target,offset={x:0,y:0};const animation=theme.animations?.[target];if(animation?.frames?.length){const moving=behavior.player.animationState==='walk',cadence=behavior.player.animationState==='run'||moving&&behavior.input.run?5:7,frame=animation.frames[Math.floor(behavior.player.tick/cadence)%animation.frames.length];resourceId=frame.resource;offset=frame.offset||offset}const resource=theme.resources?.[resourceId],rect=resource?.image?.rect,display=resource?.display;if(!resource||!rect||!display)return null;return{atlas:resource.image.atlas,sourceRect:rect,offset,display:{w:display.w,h:display.h,anchor:{x:display.anchor?.x??.5,y:display.anchor?.y??1}}}}
 function fitPlayerVisual(player,visual,presentationY=0){if(!player||!visual)return null;const d=visual.display||{},w=Math.max(1,Number(d.w)||visual.sourceRect.w),h=Math.max(1,Number(d.h)||visual.sourceRect.h),anchorX=Number(d.anchor?.x??.5),anchorY=Number(d.anchor?.y??1);return{originX:player.x+player.w/2+(Number(visual.offset.x)||0),originY:player.y+player.h+(Number(visual.offset.y)||0)+presentationY,dx:-anchorX*w,dy:-anchorY*h,w,h}}
@@ -788,7 +808,7 @@ function frame(time){
   while(state.tickDebt>=TICK_MS-0.01){state.tickDebt-=TICK_MS;stepGame()}
   draw();if(state.paused)drawPaused();requestAnimationFrame(frame);
 }
-function stepGame(){pollGamepad();if(state.paused)return;state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);stepWorld()}
+function stepGame(){state.steps++;pollGamepad();if(state.paused)return;if(state.fallPan){stepFallPan();return}state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);stepWorld()}
 const fullscreenTarget=document.documentElement,canFullscreen=!!(fullscreenTarget?.requestFullscreen||fullscreenTarget?.webkitRequestFullscreen);
 function isFullscreen(){return!!(document.fullscreenElement||document.webkitFullscreenElement)}
 async function toggleFullscreen(){
