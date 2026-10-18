@@ -1141,6 +1141,19 @@ test('a fall frames where the player lands: ground just past the bottom edge is 
   assert(far.afterMove<2,`aimed at the landing, so no second move after it (${far.afterMove.toFixed(1)}px)`);
 });
 
+test('a jump never starts a fall transition above the floor it left: a running jump over a pit lands without pausing',async()=>{
+  const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
+  const ground=(id,x,w)=>({placeable:'ground',instanceId:id,values:{'transform.x':x,'transform.y':432,'terrain.width':w,'terrain.height':1,'terrain.style':'overground'}});
+  engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:1280,h:432},instances:[ground('a',256,32),ground('b',952,32)],markers:{start:{x:40,y:392},goal:null}});
+  const s=engine.state,p=()=>s.behavior.player;for(let i=0;i<30;i++){s.input.clear();frames.shift()()}
+  const ledge=s.runtime.surfaces.solid.find(r=>r.x===0),landY=ledge.y;let paused=false,crossed=false,below=false,lowest=0;
+  for(let i=0;i<240;i++){s.input.clear();s.input.add('right');s.input.add('run');if(p().x>ledge.x+ledge.w-40)crossed=true;if(crossed&&!(p().onGround&&p().x>ledge.x+ledge.w))s.input.add('jump');
+    frames.shift()();if(s.fallPan)paused=true;if(p().y+p().h>landY+1)below=true;lowest=Math.max(lowest,p().y+p().h+s.camera.y/s.camera.zoom);if(p().onGround&&p().x>ledge.x+ledge.w+64)break}
+  assert.equal(below,false,'the jump clears the pit');assert(p().onGround&&p().x>ledge.x+ledge.w+64,`and lands on the far side (${Math.round(p().x)})`);
+  assert.equal(paused,false,'without a fall transition while above the floor it jumped from');
+  assert(lowest<=240,`and the feet stay on screen all the way down (${lowest.toFixed(1)}px from the top of a 240px view)`);
+});
+
 test('the camera eases along with jumps and flight instead of jumping or pausing',async()=>{
   const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
   const ground={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':1600,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
