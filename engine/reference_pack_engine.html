@@ -709,17 +709,28 @@ async function loadAtlases(){
 }
 function fitScene(){const b=state.runtime?.bounds;if(!b)return;const w=canvas.width/state.dpr,h=canvas.height/state.dpr,pad=24,z=Math.min((w-pad*2)/b.w,(h-pad*2)/b.h,4);state.camera={x:pad-b.x*z+(w-pad*2-b.w*z)/2,y:pad-b.y*z+(h-pad*2-b.h*z)/2,zoom:z}}
 function cameraGoalFor(x,y){const b=state.runtime?.bounds,w=canvas.width/state.dpr,h=canvas.height/state.dpr,z=state.camera.zoom,viewW=w/z,viewH=h/z,minX=b.x,maxX=Math.max(minX,b.x+b.w-viewW),minY=b.y,maxY=Math.max(minY,b.y+b.h-viewH),targetX=Math.max(minX,Math.min(maxX,x-210)),targetY=Math.max(minY,Math.min(maxY,y-viewH*.68));return{x:-targetX*z,y:-targetY*z}}
+function landingBelow(p){
+  // Where a falling player will next stand: the nearest surface top straight below the feet, or null over a pit.
+  const feet=p.y+p.h,s=state.runtime?.surfaces||{};let best=null;
+  for(const r of [...(s.solid||[]),...(s.solidTop||[])])if(!r.disabled&&r.x<p.x+p.w&&r.x+r.w>p.x&&r.y>=feet-1&&(best===null||r.y<best))best=r.y;
+  return best;
+}
 function followPlayer(immediate=false){
-  // The camera eases toward the player as it always has (standing, walking, jumping, climbing, flying), except while
-  // genuinely falling: then it holds still vertically, and when the player falls past the bottom edge a fall transition
-  // starts (see stepFallPan).
+  // The camera eases toward the player as it always has (standing, walking, jumping, climbing, flying). While genuinely
+  // falling it frames where the player will land rather than where they are, so a fall ends in one camera move: a landing
+  // in view or just past the bottom edge is eased toward as the player falls (arriving with them, never losing them off
+  // the bottom), and a drop with nothing near below gets the fall transition (see stepFallPan), aimed at the landing's
+  // framing when that still shows the player, otherwise at the player near the top.
   const behavior=state.behavior;if(!behavior||!state.runtime?.bounds)return;const p=behavior.player,goal=cameraGoalFor(p.x,p.y+p.h);
   if(immediate){state.camera.x=goal.x;state.camera.y=goal.y;state.fallPan=null;return}
   state.camera.x+=(goal.x-state.camera.x)*.08;
   const falling=!p.dead&&!p.onGround&&!p.climbing&&p.vy>0&&!(p.flightFrames>0);
   if(!falling){state.camera.y+=(goal.y-state.camera.y)*.08;return}
-  const z=state.camera.zoom,b=state.runtime.bounds,viewH=canvas.height/state.dpr/z,top=-state.camera.y/z,maxTop=Math.max(b.y,b.y+b.h-viewH);
-  if(p.y+p.h>top+viewH-4){const target=Math.max(b.y,Math.min(maxTop,p.y-viewH*.18));if(target>top+1)state.fallPan={y:-target*z,hold:10}}
+  const z=state.camera.zoom,viewH=canvas.height/state.dpr/z,top=-state.camera.y/z,bottom=top+viewH,land=landingBelow(p);
+  const landTop=land===null?null:-cameraGoalFor(p.x,land).y/z;
+  if(land!==null&&land<=bottom+viewH*.25&&landTop>top&&p.y>=landTop+8){
+    const eased=top+(landTop-top)*Math.min(1,Math.max(.18,p.vy/Math.max(1,land-p.y-p.h))),next=Math.max(eased,p.y+p.h+Math.max(0,p.vy)-viewH+4);state.camera.y=-Math.min(next,landTop)*z;return}
+  if(p.y+p.h>bottom-4){const b=state.runtime.bounds,maxTop=Math.max(b.y,b.y+b.h-viewH),target=landTop!==null&&landTop>top+1&&p.y>=landTop+8?landTop:Math.max(b.y,Math.min(maxTop,p.y-viewH*.18));if(target>top+1)state.fallPan={y:-target*z,hold:10}}
 }
 function stepFallPan(){
   // The game holds still while the view pans down to put the falling player near the top, waits a beat, and then lets
