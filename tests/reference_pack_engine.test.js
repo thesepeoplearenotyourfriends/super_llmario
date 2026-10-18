@@ -1117,6 +1117,30 @@ test('falling past the bottom of the view freezes the game, pans down to put the
   }
 });
 
+test('a fall frames where the player lands: ground just past the bottom edge is eased toward in one move, without pausing',async()=>{
+  const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
+  const s=engine.state,p=()=>s.behavior.player,viewTop=()=>-s.camera.y/s.camera.zoom;
+  // A ledge, then a drop whose floor sits a little below the bottom of the view the ledge is framed in.
+  const run=floorY=>{
+    const ledge={placeable:'ground',instanceId:'l',values:{'transform.x':64,'transform.y':240,'terrain.width':8,'terrain.height':2,'terrain.style':'overground'}};
+    const floor={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':floorY,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
+    engine.loadReferenceEditorMap({format:api.REFERENCE_MAP_FORMAT,mapVersion:1,theme:{id:theme.id,packVersion:theme.packVersion},worldBounds:{x:0,y:0,w:640,h:1600},instances:[ledge,floor],markers:{start:{x:40,y:208},goal:null}});
+    for(let i=0;i<60;i++){s.input.clear();frames.shift()()}
+    const bottom=viewTop()+240;let paused=false,landedTop=null,afterMove=0;
+    for(let i=0;i<400;i++){s.input.clear();if(i<40)s.input.add('right');frames.shift()();if(s.fallPan)paused=true;
+      if(landedTop===null&&p().onGround&&p().y>200)landedTop=viewTop();else if(landedTop!==null)afterMove=Math.max(afterMove,Math.abs(viewTop()-landedTop))}
+    return{bottom,paused,landedTop,afterMove,floorTop:Math.min(...s.runtime.surfaces.solid.filter(r=>r.y>240).map(r=>r.y))};
+  };
+  const near=run(240+128);
+  assert(near.floorTop>near.bottom-4,`the floor (${near.floorTop}) starts below the view (${Math.round(near.bottom)})`);
+  assert.equal(near.paused,false,'a landing just past the edge does not pause the game');
+  assert.notEqual(near.landedTop,null,'the player lands');
+  assert(near.afterMove<2,`and the view is already framed at landing (moved ${near.afterMove.toFixed(1)}px after)`);
+  const far=run(240+600);
+  assert.equal(far.paused,true,'a drop well past the edge still gets the fall transition');
+  assert(far.afterMove<2,`aimed at the landing, so no second move after it (${far.afterMove.toFixed(1)}px)`);
+});
+
 test('the camera eases along with jumps and flight instead of jumping or pausing',async()=>{
   const {engine,frames}=engineHarness();await engine.loadReferenceTheme(theme);
   const ground={placeable:'ground',instanceId:'g',values:{'transform.x':320,'transform.y':1600,'terrain.width':40,'terrain.height':4,'terrain.style':'overground'}};
