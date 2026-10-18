@@ -391,15 +391,37 @@ function createProjectileBehavior(runtime,playerBehavior,actorBehavior){
   function commands(){return projectiles.filter(projectile=>projectile.alive).map(projectile=>({...commandAtTick(template,projectile.tick),worldX:projectile.x+projectile.w/2,worldY:projectile.y+projectile.h/2,w:projectile.w,h:projectile.h,anchorX:.5,anchorY:.5}))}
   return{projectiles,reset,launch,step,commands};
 }
-function createActorBehavior(runtime,playerBehavior){
+function createActorBehavior(runtime,playerBehavior,{grounded=false}={}){
   const actorInstances=(runtime?.instances||[]).filter(instance=>instance.capabilities.some(capability=>['patrol','stompable','stompHazard'].includes(capability))||instance.drawCommands.some(command=>command.attachment));
   const actors=actorInstances.map(instance=>{const range=Number(instance.values['walker.patrolRange'])||0,direction=instance.values['walker.direction']==='right'?1:-1,speed=Number.isFinite(instance.values['walker.speed'])?instance.values['walker.speed']:DEFAULT_WALKER_SPEED,winged=instance.values['flight.hasWings']===true,flying=instance.values['flight.flying']===true;return{instanceIndex:instance.index,instance,originX:instance.transform.x,originY:instance.transform.y,x:instance.transform.x,y:instance.transform.y,min:instance.transform.x-range,max:instance.transform.x+range,range,initialDirection:direction,direction,speed,mirror:direction<0,initialWinged:winged,initialFlying:flying,winged,flying,wingPhase:0,wingFalling:false,wingVy:0,state:'walking',pickupLock:false,shellVx:0,shellVy:0,shellOnGround:true,knockVx:0,knockVy:0,flat:0,active:true,collisionEligible:true,tick:0}}),byInstance=new Map(actors.map(actor=>[actor.instanceIndex,actor])),solids=runtime?.surfaces?.solid||[],solidTops=runtime?.surfaces?.solidTop||[];
   let carriedActor=null;
-  function reset(){carriedActor=null;for(const actor of actors)Object.assign(actor,{x:actor.originX,y:actor.originY,direction:actor.initialDirection,mirror:actor.initialDirection<0,winged:actor.initialWinged,flying:actor.initialFlying,wingPhase:0,wingFalling:false,wingVy:0,state:'walking',pickupLock:false,shellVx:0,shellVy:0,shellOnGround:true,knockVx:0,knockVy:0,flat:0,active:true,collisionEligible:true,tick:0});return actors}
+  // Generated worlds (grounded): an enemy walks on ground. Its patrol is cut to the ground under it, never out over a gap
+  // or into a wall; one standing over a gap moves to the nearest ground within its patrol, or isn't placed at all. A flying
+  // one is checked where it lands once it loses its wings.
+  function standsAt(x,line,g){
+    const under=px=>solids.some(s=>!s.disabled&&Math.abs(s.y-line)<=1&&s.x<=px&&s.x+s.w>=px)||solidTops.some(s=>!s.disabled&&Math.abs(s.y-line)<=1&&s.x<=px&&s.x+s.w>=px);
+    return under(x-g.w/2+2)&&under(x+g.w/2-2)&&!solids.some(s=>!s.disabled&&s.x<x+g.w/2&&s.x+s.w>x-g.w/2&&s.y<line-1&&s.y+s.h>line-g.h+1);
+  }
+  function settle(actor,x,line){
+    const g=geometry(actor),reach=Math.max(actor.range,16);let at=null;
+    for(let d=0;d<=reach&&at===null;d+=2)for(const c of d?[x-d,x+d]:[x])if(at===null&&standsAt(c,line,g))at=c;
+    if(at===null)return false;let lo=at,hi=at;
+    while(lo-2>=at-actor.range&&standsAt(lo-2,line,g))lo-=2;while(hi+2<=at+actor.range&&standsAt(hi+2,line,g))hi+=2;
+    Object.assign(actor,{x:at,y:line,min:lo,max:hi});return true;
+  }
+  function landWings(actor,previousY){
+    const g=geometry(actor),floor=[...solids,...solidTops].filter(s=>!s.disabled&&s.x<actor.x+g.w/2&&s.x+s.w>actor.x-g.w/2&&s.y>=previousY-1&&s.y<=actor.y).sort((a,b)=>a.y-b.y)[0];
+    if(floor){actor.y=floor.y;actor.wingVy=0;actor.wingFalling=false;if(!settle(actor,actor.x,floor.y))actor.min=actor.max=actor.x}
+    else if(runtime?.bounds&&actor.y-g.h>runtime.bounds.y+runtime.bounds.h)actor.active=false;
+  }
+  for(const actor of actors){actor.spawnActive=!grounded||actor.flying||settle(actor,actor.x,actor.y);Object.assign(actor,{originX:actor.x,originY:actor.y,spawnMin:actor.min,spawnMax:actor.max,active:actor.spawnActive})}
+  function reset(){carriedActor=null;for(const actor of actors)Object.assign(actor,{x:actor.originX,y:actor.originY,min:actor.spawnMin,max:actor.spawnMax,direction:actor.initialDirection,mirror:actor.initialDirection<0,winged:actor.initialWinged,flying:actor.initialFlying,wingPhase:0,wingFalling:false,wingVy:0,state:'walking',pickupLock:false,shellVx:0,shellVy:0,shellOnGround:true,knockVx:0,knockVy:0,flat:0,active:actor.spawnActive,collisionEligible:true,tick:0});return actors}
   function geometry(actor){const set=actor.instance.interactionGeometry||{},key=['shellStopped','shellMoving','shellHeld'].includes(actor.state)?'shell':'walking',g=set[key]||set.walking;return g&&Number.isFinite(g.w)&&Number.isFinite(g.h)?g:{w:28,h:24,anchor:{x:.5,y:1}}}
   function actorBox(actor,previous=false){const g=geometry(actor),x=previous?(actor.previousX??actor.x):actor.x,y=previous?(actor.previousY??actor.y):actor.y,ax=Number(g.anchor?.x??.5),ay=Number(g.anchor?.y??1);return{x:x-ax*g.w,y:y-ay*g.h,w:g.w,h:g.h}}
   function aabb(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-  function stompContact(player,previousPlayer,actor){const box=actorBox(actor),oldBox=actorBox(actor,true),playerDy=player.y-previousPlayer.y,actorDy=box.y-oldBox.y;return playerDy-actorDy>0&&previousPlayer.y+player.h<=oldBox.y+4}
+  // A stomp is any contact made coming down with the feet still in the enemy's top half: landing on one from a jump up to
+  // its ledge, or arriving at an angle, counts without having to be squarely above it first.
+  function stompContact(player,previousPlayer,actor){const box=actorBox(actor),oldBox=actorBox(actor,true),playerDy=player.y-previousPlayer.y,actorDy=box.y-oldBox.y;return playerDy-actorDy>0&&previousPlayer.y+player.h<=oldBox.y+Math.max(4,oldBox.h*.5)}
   function enterShell(actor,pickupLock=false){actor.state='shellStopped';actor.pickupLock=pickupLock;actor.shellVx=0;actor.shellVy=0;actor.shellOnGround=true;actor.winged=false;actor.flying=false;actor.collisionEligible=true}
   function defeat(actor){if(actor.winged){actor.winged=false;actor.flying=false;actor.wingPhase=0;actor.wingFalling=true;actor.wingVy=0;return}if(actor.instance.capabilities.includes('shell')){enterShell(actor);return}actor.state='defeated';actor.flat=18;actor.collisionEligible=false}
   function kick(actor,player,previousPlayer){const box=actorBox(actor),playerCenter=player.x+player.w/2,actorCenter=box.x+box.w/2,relative=(player.x-(previousPlayer?.x??player.x));actor.direction=playerCenter<actorCenter?1:playerCenter>actorCenter?-1:(relative>=0?1:-1);actor.shellVx=actor.direction*SHELL_SPEED;actor.mirror=actor.direction<0;actor.state='shellMoving';return{type:'shellKick',actor}}
@@ -412,7 +434,7 @@ function createActorBehavior(runtime,playerBehavior){
   function moveShell(actor){verticalShell(actor);const oldX=actor.x;actor.x+=actor.shellVx;const box=actorBox(actor),b=runtime?.bounds,blocked=(b&&(box.x<b.x||box.x+box.w>b.x+b.w))||solids.some(s=>!s.disabled&&aabb(box,s));if(blocked){actor.x=oldX;actor.shellVx*=-1;actor.direction=Math.sign(actor.shellVx)||1}actor.mirror=actor.direction<0}
   function hitByProjectile(projectile){for(const actor of actors){if(!actor.active||!actor.collisionEligible||actor.state==='shellHeld'||!aabb(projectile,actorBox(actor)))continue;if(!actor.instance.capabilities.includes('stompHazard'))knockOut(actor,{shellVx:projectile.vx});return actor}return null}
   function shellImpacts(){for(const shell of actors){if(!shell.active||shell.state!=='shellMoving')continue;for(const target of actors){if(target===shell||!target.active||!target.collisionEligible||target.state==='knockedOut'||target.state==='shellHeld'||!aabb(actorBox(shell),actorBox(target)))continue;knockOut(target,shell)}}}
-  function step(player,previousPlayer){let releasedActor=null;if(carriedActor&&playerBehavior?.consumeRunRelease()){releasedActor=carriedActor;releaseHeld(player,true)}for(const actor of actors){actor.previousX=actor.x;actor.previousY=actor.y;if(actor===releasedActor||actor.state==='shellHeld'){actor.tick++;continue}if(actor.state==='defeated'){actor.flat--;if(actor.flat<=0)actor.active=false;actor.tick++;continue}if(actor.state==='knockedOut'){actor.knockVy=Math.min(11.2,actor.knockVy+.52);actor.x+=actor.knockVx;actor.y+=actor.knockVy;if(runtime?.bounds&&actorBox(actor).y>runtime.bounds.y+runtime.bounds.h)actor.active=false;actor.tick++;continue}if(actor.state==='shellMoving'){moveShell(actor);actor.tick++;continue}if(actor.state==='shellStopped'){verticalShell(actor);actor.tick++;continue}if(actor.range>0){actor.x+=actor.direction*actor.speed;if(actor.x<=actor.min){actor.x=actor.min;actor.direction=1}else if(actor.x>=actor.max){actor.x=actor.max;actor.direction=-1}actor.mirror=actor.direction<0}if(actor.flying){actor.wingPhase++;actor.y=actor.originY-Math.abs(Math.sin(actor.wingPhase*.045))*72}else if(actor.wingFalling){actor.wingVy=Math.min(8,actor.wingVy+.45);actor.y+=actor.wingVy;if(actor.y>=actor.originY){actor.y=actor.originY;actor.wingVy=0;actor.wingFalling=false}}actor.tick++}if(carriedActor)positionHeld(player);for(const actor of actors)if(actor.pickupLock&&actor.state==='shellStopped'&&!aabb(player,actorBox(actor)))actor.pickupLock=false;shellImpacts();return collide(player,previousPlayer)}
+  function step(player,previousPlayer){let releasedActor=null;if(carriedActor&&playerBehavior?.consumeRunRelease()){releasedActor=carriedActor;releaseHeld(player,true)}for(const actor of actors){actor.previousX=actor.x;actor.previousY=actor.y;if(actor===releasedActor||actor.state==='shellHeld'){actor.tick++;continue}if(actor.state==='defeated'){actor.flat--;if(actor.flat<=0)actor.active=false;actor.tick++;continue}if(actor.state==='knockedOut'){actor.knockVy=Math.min(11.2,actor.knockVy+.52);actor.x+=actor.knockVx;actor.y+=actor.knockVy;if(runtime?.bounds&&actorBox(actor).y>runtime.bounds.y+runtime.bounds.h)actor.active=false;actor.tick++;continue}if(actor.state==='shellMoving'){moveShell(actor);actor.tick++;continue}if(actor.state==='shellStopped'){verticalShell(actor);actor.tick++;continue}if(actor.range>0){actor.x+=actor.direction*actor.speed;if(actor.x<=actor.min){actor.x=actor.min;actor.direction=1}else if(actor.x>=actor.max){actor.x=actor.max;actor.direction=-1}actor.mirror=actor.direction<0}if(actor.flying){actor.wingPhase++;actor.y=actor.originY-Math.abs(Math.sin(actor.wingPhase*.045))*72}else if(actor.wingFalling){const previousY=actor.y;actor.wingVy=Math.min(8,actor.wingVy+.45);actor.y+=actor.wingVy;if(grounded)landWings(actor,previousY);else if(actor.y>=actor.originY){actor.y=actor.originY;actor.wingVy=0;actor.wingFalling=false}}actor.tick++}if(carriedActor)positionHeld(player);for(const actor of actors)if(actor.pickupLock&&actor.state==='shellStopped'&&!aabb(player,actorBox(actor)))actor.pickupLock=false;shellImpacts();return collide(player,previousPlayer)}
   function commandAt(command,tick){const actor=byInstance.get(command.instanceIndex);if(!actor)return commandAtTick(command,tick);if(!actor.active)return null;if(command.attachment){if(!actor.winged||actor.state!=='walking')return null;const animated=commandAtTick(command,actor.tick);return{...animated,worldX:actor.x,worldY:actor.y,worldOffsetX:(actor.mirror?-1:1)*command.rawOffsetX,worldOffsetY:command.rawOffsetY,mirror:actor.mirror!==command.attachmentMirror}}let source=command;if(['shellStopped','shellMoving','shellHeld'].includes(actor.state))source=actor.instance.visualCommands.shell||command;let animated=commandAtTick(source,tick);if(actor.state==='defeated'){const squash=Math.max(.24,actor.flat/18);animated={...animated,h:animated.h*squash}}return{...animated,worldX:actor.x,worldY:actor.y,mirror:actor.mirror}}
   return{actors,byInstance,reset,step,collide,actorBox,commandAt,carry,releaseHeld,hitByProjectile,get carriedActor(){return carriedActor}};
 }
@@ -449,9 +471,18 @@ function worldRegion(seed,x,y){
   if(y>=2&&worldHash(seed,'deep',g,y)%100<55)return'deep';
   const h=worldHash(seed,'region',g,y)%100;return h<plain?'plain':h<plain+28?'broken':'open';
 }
+const worldRockRoll=(seed,x,y)=>!worldHome(x,y)&&worldRegion(seed,x,y)==='deep'&&worldHash(seed,'mass',x,y)%100<65;
 function worldMass(seed,x,y){
+  // Rock never runs more than two screens: a third rolled in a row becomes ground, which brings openings and rooms back.
   if(worldHome(x,y))return'ground';const k=worldRegion(seed,x,y),h=worldHash(seed,'mass',x,y)%100;
-  return k==='broken'?(h<18?'air':'ground'):k==='open'?(h<60?'air':'ground'):k==='deep'?(h<65?'rock':'ground'):'ground';
+  if(k==='deep')return worldRockRoll(seed,x,y)&&!(worldRockRoll(seed,x-1,y)&&worldRockRoll(seed,x-2,y))?'rock':'ground';
+  return k==='broken'?(h<18?'air':'ground'):k==='open'?(h<60?'air':'ground'):'ground';
+}
+const WORLD_ROCK_KINDS=['tunnel','chamber','hops'];
+function worldRockKind(seed,x,y){
+  // Two rock screens side by side never take the same kind (the one on the left never has rock to its own left).
+  const roll=(cx)=>worldHash(seed,'rockKind',cx,y)%WORLD_ROCK_KINDS.length,k=roll(x);
+  return WORLD_ROCK_KINDS[worldMass(seed,x-1,y)==='rock'&&roll(x-1)===k?(k+1)%WORLD_ROCK_KINDS.length:k];
 }
 function worldFloorType(seed,x,y){
   // The floor of screen (x,y), between it and (x,y+1). Home (0,0) is closed above and below.
@@ -502,14 +533,26 @@ function worldAirScreen(seed,x,y,hl,hr,ox,oy,id){
   for(let k=0;k<2;k++){const p=ladder[(r>>>(k*3))%ladder.length];out.push({placeable:'coin',instanceId:`${id}c${k}`,values:{'transform.x':ox+(p.c0+2+k*2)*16+8,'transform.y':oy+p.row*16}})}
   return out;
 }
-function worldRockScreen(seed,x,y,hl,hr,style,ox,oy,id){
-  // Solid rock with a tunnel from the left edge's height to the right edge's in climbable steps. The ceiling clears the
-  // highest floor within 3 columns, so where the tunnel steps it gets taller instead of pinching shut.
-  const floor=Array(40).fill(hl);let h=hl,c=8+worldHash(seed,'tunnel',x,y)%20;while(h!==hr&&c<40){h+=Math.max(-4,Math.min(4,hr-h));for(let k=0;k<3&&c<40;k++,c++)floor[c]=h}for(;c<40;c++)floor[c]=hr;
-  const ceil=floor.map((f,i)=>Math.max(0,Math.min(...floor.slice(Math.max(0,i-3),i+4))-4)),out=[];
+function worldRockScreen(seed,x,y,hl,hr,style,enemy,ox,oy,id){
+  // Solid rock with a passage from the left edge's height to the right edge's in climbable steps. The ceiling clears the
+  // highest floor within 3 columns, so where the floor steps or bumps the passage gets taller instead of pinching shut.
+  // Kinds: a tunnel (coins and a walker along the way), a chamber (a tall cave with platforms up to a prize) or hops
+  // (bumps in the floor to jump, coins over them).
+  const kind=worldRockKind(seed,x,y),r=worldHash(seed,'tunnel',x,y),floor=Array(40).fill(hl);
+  let h=hl,c=8+r%20;while(h!==hr&&c<40){h+=Math.max(-4,Math.min(4,hr-h));for(let k=0;k<3&&c<40;k++,c++)floor[c]=h}for(;c<40;c++)floor[c]=hr;
+  const level=(a,b)=>floor.slice(a,b).every(f=>f===floor[a]),out=[],coin=(c,row,k)=>out.push({placeable:'coin',instanceId:`${id}c${k}`,values:{'transform.x':ox+c*16+8,'transform.y':oy+row*16}});
+  const bumps=[];if(kind==='hops')for(let c=5+r%4;c+2<36;c+=7+(r>>>c)%3)if(c>0&&level(c-1,c+3)){floor[c]-=2;floor[c+1]-=2;bumps.push(c)}
+  const ceil=floor.map((f,i)=>Math.max(0,Math.min(...floor.slice(Math.max(0,i-3),i+4))-4));
+  let room=null;if(kind==='chamber'){for(let a=10+r%8,tries=0;tries<12&&!room;tries++,a=4+(a+5)%22)if(level(a,a+14))room={a,b:a+14,f:floor[a]}
+    if(room)for(let i=room.a;i<room.b;i++)ceil[i]=Math.min(ceil[i],Math.max(2,room.f-12))}
   for(let i=0;i<40;){let e=i;while(e+1<40&&floor[e+1]===floor[i]&&ceil[e+1]===ceil[i])e++;const f=floor[i],top=ceil[i];
     if(top>0)out.push({placeable:'ground',instanceId:`${id}r${i}a`,values:{'transform.x':ox+(i+e+1)*8,'transform.y':oy+top*16,'terrain.width':e-i+1,'terrain.height':top,'terrain.style':style}});
     out.push({placeable:'ground',instanceId:`${id}r${i}b`,values:{'transform.x':ox+(i+e+1)*8,'transform.y':oy+WORLD_SCREEN.rows*16,'terrain.width':e-i+1,'terrain.height':WORLD_SCREEN.rows-f,'terrain.style':style}});i=e+1}
+  if(room){const {a,f}=room,span=f-Math.max(2,f-12),p0=f-Math.round(span*.35),p1=f-Math.round(span*.65);out.push(worldPlatform(`${id}p0`,a+2,a+5,p0,ox,oy),worldPlatform(`${id}p1`,a+8,a+11,p1,ox,oy));
+    for(let k=0;k<3;k++)coin(a+8+k,p1-1,k);out.push({placeable:'questionBlock',instanceId:`${id}q`,values:{'transform.x':ox+(a+1)*16+8,'transform.y':oy+(f-4)*16}})}
+  else if(kind==='hops')bumps.forEach((b,k)=>coin(b,floor[b]-2,k));
+  else for(let k=0;k<3;k++){const c=4+((r>>>(k*5))%32);coin(c,floor[c]-1,k)}
+  if(kind!=='chamber'&&r%3!==0){const c=bumps.length>1?bumps[0]+4:20;out.push({placeable:enemy,instanceId:`${id}e`,values:{'transform.x':ox+c*16+8,'transform.y':oy+floor[c]*16,'walker.direction':'left','walker.patrolRange':40}})}
   return out;
 }
 function worldScreen(world,seed,cx,cy,plots=null){
@@ -521,7 +564,7 @@ function worldScreen(world,seed,cx,cy,plots=null){
   let bottom=saved?.has(`${cx},${cy+1}`)?'solid':worldFloorType(seed,cx,cy);
   const done=(room,instances,extra={})=>({cx,cy,room,mirror:false,topOpen,bottomOpen:bottom!=='solid',bottom,mass,region,biome,district,instances,floor:[],...extra});
   if(mass==='air')return done(null,worldAirScreen(seed,cx,cy,hl,hr,ox,oy,id));
-  if(mass==='rock')return done(null,worldRockScreen(seed,cx,cy,hl,hr,biome.style==='castle'?'castle':'underground',ox,oy,id));
+  if(mass==='rock')return done(worldRockKind(seed,cx,cy),worldRockScreen(seed,cx,cy,hl,hr,biome.style==='castle'?'castle':'underground',district.enemies.goomba||'goomba',ox,oy,id));
   const flat=topOpen||bottom!=='solid',{cols,shape}=flat?{cols:Array(40).fill(L.low),shape:'flat'}:worldProfile(seed,cx,cy,hl,hr);
   if(shape!=='flat'){
     // Shaped ground: coins on its longest stretch, often an enemy there, sometimes a prize block over the lowest part.
@@ -755,7 +798,7 @@ function draw(){
 }
 function resize(){const r=stage.getBoundingClientRect();state.dpr=Math.max(1,devicePixelRatio||1);canvas.width=Math.round(r.width*state.dpr);canvas.height=Math.round(r.height*state.dpr);if(state.runtime){if(state.behavior)followPlayer(true);else fitScene()}draw()}
 function installRuntime(result,{keepCamera=false}={}){
-  state.runtime=result.runtime;state.behavior=result.runtime.playerSpawn?B.createPlayerBehavior(result.runtime):null;state.pipeBehavior=B.createPipeTravelBehavior(result.runtime,state.behavior);state.actorBehavior=B.createActorBehavior(result.runtime,state.behavior);state.blockBehavior=B.createBlockBehavior(result.runtime,state.behavior);state.powerupBehavior=B.createPowerupBehavior(result.runtime);state.projectileBehavior=B.createProjectileBehavior(result.runtime,state.behavior,state.actorBehavior);state.platformBehavior=B.createMovingPlatformBehavior(result.runtime,state.behavior);if(state.behavior&&!keepCamera){state.camera.zoom=DEFAULT_GAME_ZOOM;followPlayer(true)}else if(!state.behavior)fitScene();empty.hidden=true;syncLayout();
+  state.runtime=result.runtime;state.behavior=result.runtime.playerSpawn?B.createPlayerBehavior(result.runtime):null;state.pipeBehavior=B.createPipeTravelBehavior(result.runtime,state.behavior);state.actorBehavior=B.createActorBehavior(result.runtime,state.behavior,{grounded:!!state.world});state.blockBehavior=B.createBlockBehavior(result.runtime,state.behavior);state.powerupBehavior=B.createPowerupBehavior(result.runtime);state.projectileBehavior=B.createProjectileBehavior(result.runtime,state.behavior,state.actorBehavior);state.platformBehavior=B.createMovingPlatformBehavior(result.runtime,state.behavior);if(state.behavior&&!keepCamera){state.camera.zoom=DEFAULT_GAME_ZOOM;followPlayer(true)}else if(!state.behavior)fitScene();empty.hidden=true;syncLayout();
 }
 function refreshPair(){
   state.world=null;updateWorldReadout();
@@ -815,7 +858,7 @@ function stepPlayer(next){if(!state.behavior)return null;const controls=next||{l
 // Rolling world: the engine plays a 3×3-screen window around the player and rebuilds it when they cross into another screen,
 // carrying the player, nearby enemies and in-flight pickups across. Coins and blocks the player changed are remembered by
 // stable instance id for the whole session, even after their screen leaves the window.
-const WORLD_CARRY_ACTOR=['x','y','direction','mirror','winged','flying','wingPhase','wingFalling','wingVy','state','pickupLock','shellVx','shellVy','shellOnGround','knockVx','knockVy','flat','active','collisionEligible','tick','previousX','previousY'];
+const WORLD_CARRY_ACTOR=['x','y','min','max','direction','mirror','winged','flying','wingPhase','wingFalling','wingVy','state','pickupLock','shellVx','shellVy','shellOnGround','knockVx','knockVy','flat','active','collisionEligible','tick','previousX','previousY'];
 function startWorld(world,options={}){
   if(!state.theme)return['Load the reference theme before starting a world.'];
   if(!Array.isArray(world?.rooms)||!world.rooms.length)return['A world needs compiled rooms.'];

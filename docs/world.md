@@ -14,7 +14,10 @@ release build's map picker. There's no goal: you wander, and home is where you s
   districts shift the mix (Meadow plainer, Warren more broken and open), and so does height (more open sky up high).
 - **Screens** are **ground** (a height profile filled solid to the screen bottom, drawn as terraces), **air** (no ground,
   just one-way platforms: a zigzag from the bottom middle to a ledge under the top middle, plus steps out to each side) or
-  **rock** (solid, with a 4-row tunnel from side to side that grows taller where it steps). A floor is **solid**, a
+  **rock** (solid, with a passage from side to side that grows taller where it steps). Rock comes in three kinds: a
+  **tunnel** (coins and a walker along the way), a **chamber** (a tall cave with platforms up to coins and a prize block)
+  and **hops** (2-row bumps in the floor with coins over them). Rock never runs more than two screens in a row (a third
+  becomes ground, with its openings and room), and two side by side are never the same kind. A floor is **solid**, a
   **hole** (cols 17–22), **wide** (cols 11–28), **gappy** (three gaps, each bridged) or open **air**.
 - **Edges.** Where two screens meet side by side, the ground is at one shared height (low row 20, mid 15 or high 10).
   Between different heights ground ramps in steps of at most 4 rows; between equal ones it may be flat, a hill or a
@@ -25,6 +28,9 @@ release build's map picker. There's no goal: you wander, and home is where you s
   below), picked by weighted hash and sometimes mirrored. Climbing rooms go only under openings. The room compiler records
   which openings a room tolerates (nothing standing on the floor across them). Shaped ground gets simple content: coins,
   an enemy, a prize block.
+- **Enemies walk on ground.** In the world (not in authored maps), each walker's patrol is cut to the ground under it,
+  stopping at gaps and walls. One standing over an opening moves to the nearest ground within its patrol, or isn't
+  placed. A flying one that loses its wings falls to the real ground below and patrols only that.
 - **Districts.** Each 8×3-screen patch gets a character from a short list: Meadow (few holes,
   lots of hills), Warren (riddled with holes, climbing rooms, wave goombas), Pipeworks (pipe
   rooms, koopas instead of goombas), Thorns (spikies instead of goombas), Brickyard (block

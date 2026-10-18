@@ -234,6 +234,15 @@ test('relative stomp contacts defeat stompables and route harmful contacts throu
   assert.equal(sidePlayers.player.dead,true,'ordinary side contact enters the shared death transition');
 });
 
+test('a stomp only needs the feet in the enemy\'s top half coming down, not squarely above it',()=>{
+  const map={...validMap,instances:[{placeable:'goomba',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]},runtime=api.compileReferenceRuntime(theme,map).runtime;
+  const contact=(prevFeet,feet)=>{const players=api.createPlayerBehavior({playerSpawn:{x:7,y:9},bounds:null,surfaces:{solid:[],solidTop:[]}}),actors=api.createActorBehavior(runtime,players),box=actors.actorBox(actors.actors[0]);
+    Object.assign(players.player,{x:box.x-10,y:box.y+feet-24,vy:4});return actors.collide(players.player,{x:box.x-16,y:box.y+prevFeet-24}).type};
+  assert.equal(contact(-2,3),'stomp','from just above, as before');
+  assert.equal(contact(6,10),'stomp','arriving at an angle with the feet already a little below its top');
+  assert.equal(contact(10,14),'hurt','but not once the feet are in its lower half');
+});
+
 test('inactive defeated actors contribute no authored command and the frame loop continues',async()=>{
   const {engine,frames}=engineHarness();
   await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
