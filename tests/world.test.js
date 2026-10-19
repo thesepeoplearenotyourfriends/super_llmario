@@ -250,7 +250,7 @@ test('in the world, enemies walk only on ground: patrols stop at gaps and walls,
     for(const a of behavior.actors){const id=a.instance.instanceId;if(seen.has(id)||a.flying)continue;seen.add(id);if(!a.active){dropped++;continue}active++;if(a.x!==a.instance.transform.x)moved++;
       const under=px=>surfaces.some(s=>Math.abs(s.y-a.y)<=1&&s.x<=px&&s.x+s.w>=px);
       for(let px=a.min;px<=a.max;px+=2)assert(under(px-6)&&under(px+6),`${id} walks on air at ${px}`);
-      for(let i=0;i<400;i++)behavior.step(null,null);if(a.state==='walking')assert(a.x>=a.min&&a.x<=a.max&&under(a.x),`${id} stays on its ground`);}
+      for(let i=0;i<400;i++)behavior.step(null,null);if(a.mode==='walking')assert(a.x>=a.min&&a.x<=a.max&&under(a.x),`${id} stays on its ground`);}
   }
   assert(active>100&&moved>0&&dropped>0,`some enemies were moved (${moved}) or dropped (${dropped}) of ${active}`);
   // Outside the world nothing changes: an authored map keeps its patrol as written.
@@ -260,7 +260,7 @@ test('in the world, enemies walk only on ground: patrols stop at gaps and walls,
   map.instances=[{placeable:'koopaRed',instanceId:'k',values:{'transform.x':200,'transform.y':100,'walker.direction':'left','walker.patrolRange':48,'flight.hasWings':true,'flight.flying':true}},{placeable:'ground',instanceId:'f',values:{'transform.x':216,'transform.y':384,'terrain.width':4,'terrain.height':4,'terrain.style':'overground'}}];
   const runtime=api.compileReferenceRuntime(theme,map).runtime,behavior=api.createActorBehavior(runtime,null,{grounded:true}),k=behavior.actors[0],floor=runtime.surfaces.solid[0];
   assert.equal(k.active,true,'flying enemies are placed in the air');
-  Object.assign(k,{winged:false,flying:false,wingFalling:true,wingVy:0});for(let i=0;i<120;i++)behavior.step(null,null);
+  Object.assign(k,{flying:false,falling:true,vy:0});k.state.winged=false;for(let i=0;i<120;i++)behavior.step(null,null);
   assert.equal(k.y,floor.y,'it lands on the ground below, not back at its old height');assert(k.min>=floor.x+6&&k.max<=floor.x+floor.w-6,'and patrols only that ground');
 });
 

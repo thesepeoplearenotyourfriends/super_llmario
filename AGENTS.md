@@ -207,9 +207,21 @@ that operation rather than allowing the PR to become blocked.
 
 The repository is editable source/workshop form. The GitHub Release HTML is the self-contained/to-go build produced by `scripts/build_release.py`. Nothing should be embedded into editable engine source merely for distribution convenience; distribution packing belongs to the release build.
 
-Do not introduce runtime fetch(), XMLHttpRequest, dynamic import(), script/link
-dependencies, or any other runtime loading of sibling repository files unless
-the task explicitly requests it.
+Runtime code has exactly two sources: the standalone engine/editor files
+themselves, and capability source text inside a theme pack the user loaded.
+A pack's `capabilities` section, evaluated by the engine's capability
+registry, is the one sanctioned form of runtime-evaluated code. Nothing else
+is evaluated at runtime: no eval of map, theme, or user text outside that
+registry, and no code assembled from strings for any other purpose.
+
+Capability source follows the contract in the comment block at the top of
+`engine/reference_pack_engine.html`: hooks close over nothing, take
+everything through their arguments, and keep runtime state in `self.state`.
+Built-in and pack capabilities register the same way.
+
+Neither engine, editor, nor capability source may use runtime fetch(),
+XMLHttpRequest, dynamic import(), script/link dependencies, or any other
+loading of sibling repository files.
 
 Bundled/default content required for startup must remain embedded in the
 standalone artifact, or be loaded explicitly by the user through the existing
