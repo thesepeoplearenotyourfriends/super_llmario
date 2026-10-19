@@ -168,8 +168,8 @@ test('authored patrol actors retain their range, move at legacy speed, reverse, 
   const runtime=api.compileReferenceRuntime(theme,map).runtime,koopa=runtime.instances[0];
   assert.equal(koopa.values['walker.patrolRange'],1.2,'authored world-unit range survives compilation');
   const behavior=api.createActorBehavior(runtime),actor=behavior.actors[0],command=runtime.drawCommands.find(item=>item.instanceIndex===0);
-  assert.equal(behavior.actors.filter(item=>item.range>0).length,1,'only actors with a positive authored range move');
-  assert.equal(actor.speed,.4,'walker uses the established old-engine speed');
+  assert.equal(behavior.actors.filter(item=>item.state.range>0).length,1,'only actors with a positive authored range move');
+  assert.equal(actor.state.speed,.4,'walker uses the established old-engine speed');
   behavior.step();assert.equal(actor.x,100.4);assert.equal(actor.direction,1);assert.equal(actor.mirror,false);
   behavior.step();behavior.step();assert.equal(actor.x,101.2);assert.equal(actor.direction,-1);assert.equal(actor.mirror,true,'right endpoint reverses and faces left');
   const frameBefore=behavior.commandAt(command,0),frameAfter=behavior.commandAt(command,8);
@@ -206,7 +206,7 @@ test('wing attachments honor enablement, authored offsets, mirroring, animation,
   assert.notEqual(left.resource,right.resource,'wing animation advances at its declared cadence');
   behavior.reset();
   assert.equal(behavior.commandAt(attachments[0],99).resource,theme.animations['enemy.wing.flap'].frames[0].resource,'reset restarts wing animation');
-  assert.deepEqual({x:actor.x,y:actor.y,direction:actor.direction,winged:actor.winged,flying:actor.flying,phase:actor.wingPhase,state:actor.state},
+  assert.deepEqual({x:actor.x,y:actor.y,direction:actor.direction,winged:actor.state.winged,flying:actor.flying,phase:actor.state.wingPhase,state:actor.mode},
     {x:100,y:120,direction:1,winged:true,flying:true,phase:0,state:'walking'});
 });
 
@@ -216,7 +216,7 @@ test('relative stomp contacts defeat stompables and route harmful contacts throu
   const playerBehavior=api.createPlayerBehavior({playerSpawn:{x:7,y:9},bounds:null,surfaces:{solid:[],solidTop:[]}}),goombas=api.createActorBehavior(goombaRuntime,playerBehavior),goomba=goombas.actors[0],box=goombas.actorBox(goomba);
   Object.assign(playerBehavior.player,{x:box.x,y:box.y-12,vy:5});
   const stomp=goombas.collide(playerBehavior.player,{x:box.x,y:box.y-24});
-  assert.equal(stomp.type,'stomp');assert.equal(goomba.state,'defeated');assert.equal(goomba.collisionEligible,false);
+  assert.equal(stomp.type,'stomp');assert.equal(goomba.mode,'defeated');assert.equal(goomba.collisionEligible,false);
   const stoppedX=goomba.x;goombas.step();assert.equal(goomba.x,stoppedX,'defeated actors stop ordinary patrol');
   for(let i=0;i<17;i++)goombas.step();
   assert.equal(goomba.active,false,'squash presentation completes and removes the actor');
@@ -225,7 +225,7 @@ test('relative stomp contacts defeat stompables and route harmful contacts throu
   const spikyRuntime=api.compileReferenceRuntime(theme,enemyMap('spiky')).runtime,spikies=api.createActorBehavior(spikyRuntime,playerBehavior),spiky=spikies.actors[0],spikyBox=spikies.actorBox(spiky);
   Object.assign(playerBehavior.player,{x:spikyBox.x,y:spikyBox.y-12,vy:5});
   const hazard=spikies.collide(playerBehavior.player,{x:spikyBox.x,y:spikyBox.y-24});
-  assert.equal(hazard.type,'hurt');assert.equal(spiky.state,'walking','stomp hazards are never defeated');
+  assert.equal(hazard.type,'hurt');assert.equal(spiky.mode,'walking','stomp hazards are never defeated');
   assert.equal(playerBehavior.player.dead,true,'stomp hazards enter the shared death transition');
 
   const sidePlayers=api.createPlayerBehavior({playerSpawn:{x:3,y:4},bounds:null,surfaces:{solid:[],solidTop:[]}}),sides=api.createActorBehavior(goombaRuntime,sidePlayers),sideBox=sides.actorBox(sides.actors[0]);
@@ -248,7 +248,7 @@ test('inactive defeated actors contribute no authored command and the frame loop
   await engine.loadReferenceTheme(theme);engine.loadReferenceEditorMap(fixture);
   const actor=engine.state.actorBehavior.actors.find(item=>item.instance.placeable==='goomba');
   assert(actor,'fixture supplies a stompable actor');
-  actor.state='defeated';actor.flat=1;actor.collisionEligible=false;
+  actor.mode='defeated';actor.flat=1;actor.collisionEligible=false;
   const platformInputs=[],originalCommandAt=engine.state.platformBehavior.commandAt;
   engine.state.platformBehavior.commandAt=command=>{assert(command,'inactive actor commands must short-circuit before platform behavior');platformInputs.push(command);return originalCommandAt(command)};
 
@@ -263,13 +263,13 @@ test('inactive defeated actors contribute no authored command and the frame loop
 test('winged Koopas lose wings first, then enter the declared shell state',()=>{
   const map={...validMap,instances:[{placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'right','walker.patrolRange':16,'flight.hasWings':true,'flight.flying':true}}]},runtime=api.compileReferenceRuntime(theme,map).runtime,behavior=api.createActorBehavior(runtime),actor=behavior.actors[0],body=runtime.drawCommands.find(command=>!command.attachment);
   const stomp=()=>{const box=behavior.actorBox(actor),player={x:box.x,y:box.y-12,w:24,h:24,vy:5,onGround:false};return behavior.collide(player,{x:box.x,y:box.y-24})};
-  assert.equal(stomp().type,'stomp');assert.equal(actor.winged,false);assert.equal(actor.flying,false);assert.equal(actor.state,'walking');
+  assert.equal(stomp().type,'stomp');assert.equal(actor.state.winged,false);assert.equal(actor.flying,false);assert.equal(actor.mode,'walking');
   assert.equal(runtime.drawCommands.filter(command=>command.attachment).map(command=>behavior.commandAt(command,0)).filter(Boolean).length,0,'lost wings stop rendering');
-  assert.equal(stomp().type,'stomp');assert.equal(actor.state,'shellStopped');assert.equal(actor.collisionEligible,true);
+  assert.equal(stomp().type,'stomp');assert.equal(actor.mode,'shellStopped');assert.equal(actor.collisionEligible,true);
   const shell=behavior.commandAt(body,0);
   assert.equal(shell.resource,theme.animations['enemy.red_koopa.shell'].frames[0].resource,'shell capability selects the declared shell visual');
   const x=actor.x;behavior.step();assert.equal(actor.x,x,'transformed shell no longer patrols as a walker');
-  behavior.reset();assert.equal(actor.state,'walking');assert.equal(actor.winged,true);assert.equal(actor.flying,true);assert.equal(actor.collisionEligible,true);
+  behavior.reset();assert.equal(actor.mode,'walking');assert.equal(actor.state.winged,true);assert.equal(actor.flying,true);assert.equal(actor.collisionEligible,true);
 });
 
 test('authored interaction geometry follows actor feet without changing native presentation',()=>{
@@ -293,22 +293,22 @@ test('Koopa shells stop, kick, travel, mirror, stop on stomp, and knock out enem
     {placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}},
     {placeable:'goomba',values:{'transform.x':130,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}
   ]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),shell=behavior.actors[0],target=behavior.actors[1];
-  shell.winged=false;const walkingBox=behavior.actorBox(shell);
+  shell.state.winged=false;const walkingBox=behavior.actorBox(shell);
   Object.assign(players.player,{x:walkingBox.x,y:walkingBox.y-12,vy:5});
   assert.equal(behavior.collide(players.player,{x:walkingBox.x,y:walkingBox.y-24}).type,'stomp');
-  assert.equal(shell.state,'shellStopped');
+  assert.equal(shell.mode,'shellStopped');
   const stopped=behavior.actorBox(shell);Object.assign(players.player,{x:stopped.x-22,y:stopped.y,vy:0,dead:false});
   const kick=behavior.collide(players.player,{x:players.player.x-1,y:players.player.y});
   assert.equal(kick.type,'shellKick');assert.equal(shell.shellVx,api.SHELL_SPEED);assert.equal(shell.mirror,false);
   const start=shell.x;players.player.x=300;behavior.step();assert.equal(shell.x,start+api.SHELL_SPEED,'moving shell uses the oracle speed');
-  while(target.state==='walking')behavior.step();
-  assert.equal(target.state,'knockedOut','moving-shell overlap applies the established knockout state');
+  while(target.mode==='walking')behavior.step();
+  assert.equal(target.mode,'knockedOut','moving-shell overlap applies the established knockout state');
   assert.equal(target.collisionEligible,false);
-  shell.state='shellMoving';shell.shellVx=-api.SHELL_SPEED;shell.direction=-1;shell.mirror=true;shell.x=200;
+  shell.mode='shellMoving';shell.shellVx=-api.SHELL_SPEED;shell.direction=-1;shell.mirror=true;shell.x=200;
   behavior.step();assert.equal(shell.x,200-api.SHELL_SPEED);assert.equal(shell.mirror,true,'leftward shell travel mirrors the shell visual');
   const movingBox=behavior.actorBox(shell);Object.assign(players.player,{x:movingBox.x,y:movingBox.y-12,vy:5,dead:false});
   assert.equal(behavior.collide(players.player,{x:movingBox.x,y:movingBox.y-24}).type,'stomp');
-  assert.equal(shell.state,'shellStopped');assert.equal(shell.shellVx,0);
+  assert.equal(shell.mode,'shellStopped');assert.equal(shell.shellVx,0);
 });
 
 test('Run-held stopped shells carry, follow both facing sides, stay inert, and render as shells',()=>{
@@ -316,10 +316,10 @@ test('Run-held stopped shells carry, follow both facing sides, stay inert, and r
     {placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':20}},
     {placeable:'goomba',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}
   ]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),shell=behavior.actors[0],target=behavior.actors[1],body=runtime.drawCommands.find(command=>command.instanceIndex===shell.instanceIndex&&!command.attachment);
-  shell.state='shellStopped';shell.winged=false;players.step({run:true});
+  shell.mode='shellStopped';shell.state.winged=false;players.step({run:true});
   const box=behavior.actorBox(shell);Object.assign(players.player,{x:box.x-8,y:box.y,face:1,vy:0});
   assert.equal(behavior.collide(players.player,{x:players.player.x-1,y:players.player.y}).type,'shellCarry');
-  assert.equal(shell.state,'shellHeld');assert.strictEqual(behavior.carriedActor,shell);
+  assert.equal(shell.mode,'shellHeld');assert.strictEqual(behavior.carriedActor,shell);
   assert.equal(behavior.commandAt(body,0).resource,theme.animations['enemy.red_koopa.shell'].frames[0].resource);
 
   const heldStart={x:shell.x,y:shell.y};Object.assign(players.player,{x:180,y:70,face:1});behavior.step(players.player,{x:170,y:70});
@@ -327,27 +327,27 @@ test('Run-held stopped shells carry, follow both facing sides, stay inert, and r
   Object.assign(players.player,{x:150,y:50,face:-1});behavior.step(players.player,{x:180,y:70});
   const leftBox=behavior.actorBox(shell);assert.equal(leftBox.x,players.player.x-leftBox.w+7);assert.equal(shell.mirror,true);
   assert.notDeepEqual({x:shell.x,y:shell.y},heldStart,'held shell follows player movement and jumping');
-  assert.equal(target.state,'walking','held overlap never knocks out another actor');
-  target.state='shellMoving';target.shellVx=0;target.x=shell.x;target.y=shell.y;behavior.step(null,null);assert.equal(shell.state,'shellHeld','other moving shells also ignore the held shell');
-  assert.equal(shell.shellVy,0,'held shell does not fall');assert.equal(shell.state,'shellHeld','held shell does not patrol or collide with its carrier');
+  assert.equal(target.mode,'walking','held overlap never knocks out another actor');
+  target.mode='shellMoving';target.shellVx=0;target.x=shell.x;target.y=shell.y;behavior.step(null,null);assert.equal(shell.mode,'shellHeld','other moving shells also ignore the held shell');
+  assert.equal(shell.shellVy,0,'held shell does not fall');assert.equal(shell.mode,'shellHeld','held shell does not patrol or collide with its carrier');
 });
 
 test('Run falling edge releases a carried shell on the current facing side with oracle impulses',()=>{
   for(const face of [1,-1]){
     const runtime=api.compileReferenceRuntime(theme,{...validMap,worldBounds:{x:0,y:0,w:500,h:240},markers:{start:{x:60,y:120},goal:null},instances:[{placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]}).runtime;
-    const players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),shell=behavior.actors[0];shell.state='shellStopped';shell.winged=false;
+    const players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),shell=behavior.actors[0];shell.mode='shellStopped';shell.state.winged=false;
     players.step({run:true});const box=behavior.actorBox(shell);Object.assign(players.player,{x:box.x-8,y:box.y,face});assert.equal(behavior.collide(players.player,{x:players.player.x,y:players.player.y}).type,'shellCarry');
     Object.assign(players.player,{x:200,y:80,face});behavior.step(players.player,{x:190,y:80});players.step({run:false});behavior.step(players.player,{x:200,y:80});
-    const released=behavior.actorBox(shell);assert.equal(shell.state,'shellMoving');assert.equal(shell.shellVx,face*api.SHELL_SPEED);assert.equal(shell.shellVy,-1.2);assert.equal(shell.mirror,face<0);assert.equal(behavior.carriedActor,null);
+    const released=behavior.actorBox(shell);assert.equal(shell.mode,'shellMoving');assert.equal(shell.shellVx,face*api.SHELL_SPEED);assert.equal(shell.shellVy,-1.2);assert.equal(shell.mirror,face<0);assert.equal(behavior.carriedActor,null);
     assert.equal(face>0?released.x:released.x+released.w,face>0?players.player.x+players.player.w+2:players.player.x-2,'release begins just beyond the current facing side');
   }
 });
 
 test('shell pickup lock survives moving-shell stomp until player separation',()=>{
   const runtime=api.compileReferenceRuntime(theme,{...validMap,instances:[{placeable:'koopaRed',values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]}).runtime,players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),shell=behavior.actors[0];
-  shell.state='shellMoving';shell.shellVx=api.SHELL_SPEED;const moving=behavior.actorBox(shell);players.step({run:true});Object.assign(players.player,{x:moving.x,y:moving.y-12,vy:5});
+  shell.mode='shellMoving';shell.shellVx=api.SHELL_SPEED;const moving=behavior.actorBox(shell);players.step({run:true});Object.assign(players.player,{x:moving.x,y:moving.y-12,vy:5});
   assert.equal(behavior.collide(players.player,{x:moving.x,y:moving.y-24}).type,'stomp');assert.equal(shell.pickupLock,true);
-  players.player.y=behavior.actorBox(shell).y;assert.equal(behavior.collide(players.player,{x:players.player.x,y:players.player.y}),null);assert.equal(shell.state,'shellStopped');
+  players.player.y=behavior.actorBox(shell).y;assert.equal(behavior.collide(players.player,{x:players.player.x,y:players.player.y}),null);assert.equal(shell.mode,'shellStopped');
   players.player.x=300;behavior.step(players.player,{x:290,y:players.player.y});assert.equal(shell.pickupLock,false);
   const stopped=behavior.actorBox(shell);Object.assign(players.player,{x:stopped.x-8,y:stopped.y});assert.equal(behavior.collide(players.player,{x:players.player.x-1,y:players.player.y}).type,'shellCarry');
 });
@@ -357,19 +357,19 @@ test('death and reset clear carried shells without throwing or stale carry state
     {placeable:'koopaRed',values:{'transform.x':100,'transform.y':100,'walker.direction':'right','walker.patrolRange':10}},
     {placeable:'spiky',values:{'transform.x':180,'transform.y':100,'walker.direction':'left','walker.patrolRange':0}}
   ]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),shell=behavior.actors[0],hazard=behavior.actors[1];
-  shell.state='shellStopped';shell.winged=false;players.step({run:true});const shellBox=behavior.actorBox(shell);Object.assign(players.player,{x:shellBox.x-8,y:shellBox.y});behavior.collide(players.player,{x:players.player.x-1,y:players.player.y});
+  shell.mode='shellStopped';shell.state.winged=false;players.step({run:true});const shellBox=behavior.actorBox(shell);Object.assign(players.player,{x:shellBox.x-8,y:shellBox.y});behavior.collide(players.player,{x:players.player.x-1,y:players.player.y});
   const hazardBox=behavior.actorBox(hazard);Object.assign(players.player,{x:hazardBox.x,y:hazardBox.y});assert.equal(behavior.collide(players.player,{x:hazardBox.x-1,y:hazardBox.y}).type,'hurt');
-  assert.equal(players.player.dead,true);assert.equal(behavior.carriedActor,null);assert.equal(shell.state,'shellStopped');assert.equal(shell.shellVx,0,'death releases without throwing');
+  assert.equal(players.player.dead,true);assert.equal(behavior.carriedActor,null);assert.equal(shell.mode,'shellStopped');assert.equal(shell.shellVx,0,'death releases without throwing');
   while(players.player.dead)players.step();assert.equal(players.consumeRestart(),true);behavior.reset();
-  assert.equal(behavior.carriedActor,null);assert.deepEqual({state:shell.state,x:shell.x,y:shell.y,direction:shell.direction,lock:shell.pickupLock},{state:'walking',x:100,y:100,direction:1,lock:false});
-  shell.state='shellHeld';behavior.reset();assert.equal(shell.state,'walking','manual actor reset cannot leave a stale held state');
+  assert.equal(behavior.carriedActor,null);assert.deepEqual({state:shell.mode,x:shell.x,y:shell.y,direction:shell.direction,lock:shell.pickupLock},{state:'walking',x:100,y:100,direction:1,lock:false});
+  shell.mode='shellHeld';behavior.reset();assert.equal(shell.mode,'walking','manual actor reset cannot leave a stale held state');
 });
 
 test('moving shells and every harmful actor share the dead-player transition',()=>{
   for(const placeable of ['goomba','spiky','koopaRed']){
     const runtime=api.compileReferenceRuntime(theme,{...validMap,instances:[{placeable,values:{'transform.x':100,'transform.y':120,'walker.direction':'left','walker.patrolRange':0}}]}).runtime;
     const players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),actor=behavior.actors[0];
-    if(placeable==='koopaRed'){actor.state='shellMoving';actor.shellVx=api.SHELL_SPEED}
+    if(placeable==='koopaRed'){actor.mode='shellMoving';actor.shellVx=api.SHELL_SPEED}
     const box=behavior.actorBox(actor);Object.assign(players.player,{x:box.x,y:box.y,vy:0});
     assert.equal(behavior.collide(players.player,{x:box.x-1,y:box.y}).type,'hurt');
     assert.equal(players.player.dead,true,`${placeable} uses the dead state`);assert.equal(players.player.vy,-4);
@@ -381,13 +381,13 @@ test('dead motion ignores terrain and finite-envelope restart restores player an
     {placeable:'ground',values:{'transform.x':160,'transform.y':100,'terrain.width':8,'terrain.height':1,'terrain.style':'overground'}},
     {placeable:'koopaRed',values:{'transform.x':100,'transform.y':80,'walker.direction':'right','walker.patrolRange':20,'flight.hasWings':true,'flight.flying':true}}
   ]},runtime=api.compileReferenceRuntime(theme,map).runtime,players=api.createPlayerBehavior(runtime),behavior=api.createActorBehavior(runtime,players),actor=behavior.actors[0];
-  players.player.y=60;players.beginDeath();actor.state='shellMoving';actor.shellVx=api.SHELL_SPEED;actor.winged=false;actor.x=140;actor.tick=17;
+  players.player.y=60;players.beginDeath();actor.mode='shellMoving';actor.shellVx=api.SHELL_SPEED;actor.state.winged=false;actor.x=140;actor.tick=17;
   let crossedSolid=false;
   for(let i=0;i<100&&!players.consumeRestart();i++){players.step({left:true,jump:true});if(players.player.dead&&players.player.y>100)crossedSolid=true}
   assert.equal(crossedSolid,true,'dead fall passes through solid and one-way collision without input control');
   if(!players.player.dead)behavior.reset();
   assert.equal(players.player.dead,false);assert.deepEqual({x:players.player.x,y:players.player.y},plain(runtime.playerSpawn));
-  assert.deepEqual({x:actor.x,y:actor.y,state:actor.state,direction:actor.direction,winged:actor.winged,flying:actor.flying,tick:actor.tick,eligible:actor.collisionEligible},
+  assert.deepEqual({x:actor.x,y:actor.y,state:actor.mode,direction:actor.direction,winged:actor.state.winged,flying:actor.flying,tick:actor.tick,eligible:actor.collisionEligible},
     {x:100,y:80,state:'walking',direction:1,winged:true,flying:true,tick:0,eligible:true});
 });
 
@@ -558,7 +558,7 @@ test('fire form throws at most two theme-backed bouncing fireballs and hits vuln
   const first=shots.launch();assert(first);assert.equal(player.fireCooldown,18);
   player.fireCooldown=0;assert(shots.launch());player.fireCooldown=0;assert.equal(shots.launch(),null,'only two live fireballs are allowed');
   for(let i=0;i<8;i++)shots.step();
-  assert.equal(actors.actors[0].state,'knockedOut');
+  assert.equal(actors.actors[0].mode,'knockedOut');
   assert(shots.projectiles.some(projectile=>!projectile.alive),'impact retires its fireball');
   const command=shots.commands()[0],frame=theme.resources[theme.animations['projectile.fireball'].frames[command.animationFrame].resource];
   assert.deepEqual(plain(command.sourceRect),frame.image.rect,'fireballs use the authored theme animation');
@@ -570,7 +570,7 @@ test('fireballs use three-tick cadence and disappear on Spiky without harming it
   assert.equal(shots.commands()[0].animationFrame,0);shots.step();shots.step();assert.equal(shots.commands()[0].animationFrame,0);shots.step();assert.equal(shots.commands()[0].animationFrame,1,'fireball advances every three ticks');
   for(let i=0;i<10&&shot.alive;i++)shots.step();
   assert.equal(shot.alive,false,'Spiky contact consumes the fireball');
-  assert.equal(actors.actors[0].state,'walking');assert.equal(actors.actors[0].active,true);assert.equal(actors.actors[0].collisionEligible,true);
+  assert.equal(actors.actors[0].mode,'walking');assert.equal(actors.actors[0].active,true);assert.equal(actors.actors[0].collisionEligible,true);
 });
 
 test('authored and block-dispensed coins collect once while full and death resets differ',()=>{
@@ -698,7 +698,7 @@ test('moving-platform capability moves drawing and collision, carries riders, st
   Object.assign(players.player,{x:white.surface.x+4,y:white.surface.y+4,vy:-8,onGround:false});players.step();assert(players.player.y<white.surface.y+4,'Mario passes upward through the white platform');
   Object.assign(players.player,{x:white.surface.x-players.player.w,y:white.surface.y-40,vy:10,onGround:false});for(let i=0;i<6;i++)players.step();assert.equal(players.player.onGround,false,'touching the left endpoint without overlap does not land');
   Object.assign(players.player,{x:white.surface.x+white.surface.w,y:white.surface.y-40,vy:10,onGround:false});for(let i=0;i<6;i++)players.step();assert.equal(players.player.onGround,false,'touching the right endpoint without overlap does not land');
-  moving.reset();assert.deepEqual({x:white.x,y:white.y,phase:white.phase,direction:white.direction},{x:white.originX,y:white.originY,phase:0,direction:1});assert.deepEqual({x:white.surface.x,y:white.surface.y,w:white.surface.w},{x:startSurface.x,y:startSurface.y,w:startSurface.w},'reset restores the exact authored collision top');assert.equal(mushroom.y,mushroom.originY);assert.equal(still.x,still.originX);assert.notEqual(startPlayerX,undefined);
+  moving.reset();assert.deepEqual({x:white.x,y:white.y,phase:white.state.phase,direction:white.state.direction},{x:white.originX,y:white.originY,phase:0,direction:1});assert.deepEqual({x:white.surface.x,y:white.surface.y,w:white.surface.w},{x:startSurface.x,y:startSurface.y,w:startSurface.w},'reset restores the exact authored collision top');assert.equal(mushroom.y,mushroom.originY);assert.equal(still.x,still.originX);assert.notEqual(startPlayerX,undefined);
 });
 
 test('canonical white platforms preserve editor movement values and move drawing with collision',()=>{
@@ -731,9 +731,9 @@ test('moving-platform defaults, explicit zero, fallback routes, and editor-shape
     {placeable:'whitePlatform',values:{'transform.x':80,'transform.y':160,'extent.width':3,'movingPlatform.range':42,'movingPlatform.speed':0}},
     {placeable:'whitePlatform',values:{'transform.x':180,'transform.y':160,'extent.width':3,'movingPlatform.path':[{x:-10,y:4},{x:22,y:4}],'movingPlatform.range':32,'movingPlatform.speed':32}},
   ],markers:{start:{x:0,y:0},goal:null}},runtime=api.compileReferenceRuntime(theme,map).runtime,moving=api.createMovingPlatformBehavior(runtime),[fallback,zero,authored]=moving.platforms;
-  assert.equal(fallback.speed,1,'omitted speed uses the intended engine default');
-  assert.deepEqual(plain(fallback.route.points),[{x:0,y:0},{x:42,y:0}],'range-only records receive the fallback route');
-  assert.equal(zero.speed,0,'explicit zero is not replaced by the default');
+  assert.equal(fallback.state.speed,1,'omitted speed uses the intended engine default');
+  assert.deepEqual(plain(fallback.state.route.points),[{x:0,y:0},{x:42,y:0}],'range-only records receive the fallback route');
+  assert.equal(zero.state.speed,0,'explicit zero is not replaced by the default');
   moving.step();
   assert.equal(fallback.x,-47,'negative editor coordinates move by the default speed');
   assert.equal(fallback.surface.x,fallback.initialSurface.x+1,'fallback collision follows its rendering position without losing authored insets');
@@ -994,7 +994,7 @@ test('authored bottom boundary triggers death and restart resets actors and movi
   ]};
   const h=engineHarness();await h.engine.loadReferenceTheme(theme);h.engine.loadReferenceEditorMap(map);
   const {behavior,actorBehavior,platformBehavior}=h.engine.state,actor=actorBehavior.actors[0],platform=platformBehavior.platforms[0];
-  actor.x+=17;actor.tick=9;platformBehavior.step();assert(platform.phase>0);
+  actor.x+=17;actor.tick=9;platformBehavior.step();assert(platform.state.phase>0);
   const lives=behavior.player.lives;behavior.player.y=map.worldBounds.y+map.worldBounds.h-behavior.player.h+1;
   h.engine.stepPlayer({});
   assert.equal(behavior.player.dead,true,'crossing the finite bottom enters the existing death state');
@@ -1003,7 +1003,7 @@ test('authored bottom boundary triggers death and restart resets actors and movi
   assert.equal(behavior.player.dead,false,'death fall reaches the finite envelope and restarts');
   assert.deepEqual({x:behavior.player.x,y:behavior.player.y},plain(h.engine.state.runtime.playerSpawn));
   assert.equal(actor.x,actor.originX,'actor resets after fall death');assert.equal(actor.tick,0);
-  assert.equal(platform.x,platform.originX,'moving platform resets after fall death');assert.equal(platform.phase,0);
+  assert.equal(platform.x,platform.originX,'moving platform resets after fall death');assert.equal(platform.state.phase,0);
 });
 
 test('authored and compatibility-derived runtime bounds stay finite and diagnostic',()=>{

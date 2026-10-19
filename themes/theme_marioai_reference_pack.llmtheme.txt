@@ -56,7 +56,8 @@
         "stompable",
         "transport",
         "walker",
-        "waveFlight"
+        "waveFlight",
+        "winged"
       ]
     },
     "bumpTriggerTypes": {
@@ -11504,6 +11505,7 @@
       "engineNoun": "walker",
       "capabilities": [
         "patrol",
+        "winged",
         "stompable",
         "armored",
         "shell"
@@ -11560,6 +11562,7 @@
       "engineNoun": "walker",
       "capabilities": [
         "patrol",
+        "winged",
         "stompable",
         "armored",
         "shell"
