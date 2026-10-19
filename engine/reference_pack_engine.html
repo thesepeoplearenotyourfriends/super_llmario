@@ -148,11 +148,11 @@ function compileCapabilitySource(source){
 }
 const packRegistries=new WeakMap;
 function capabilityRegistryFor(theme){
-  // The built-ins plus the theme's own capabilities, made once per theme document.
-  if(!record(theme?.capabilities))return{registry:BUILTIN_CAPABILITIES,diagnostics:[]};
+  // The built-ins plus the theme's own capabilities, made once per theme document and kept, so live edits land in it.
+  if(!record(theme))return{registry:BUILTIN_CAPABILITIES,diagnostics:[]};
   if(packRegistries.has(theme))return packRegistries.get(theme);
   const registry=createCapabilityRegistry({base:BUILTIN_CAPABILITIES}),diagnostics=[];
-  for(const [name,entry] of Object.entries(theme.capabilities)){
+  for(const [name,entry] of Object.entries(record(theme.capabilities)?theme.capabilities:{})){
     const context={capability:name};
     if(BUILTIN_CAPABILITIES.get(name)){diagnostics.push(diagnostic('pack-capability-shadows-builtin',`Pack capability ${name} has the name of a built-in capability; the built-in stays.`,'error',context));continue}
     const compiled=compileCapabilitySource(entry?.source);
@@ -160,6 +160,23 @@ function capabilityRegistryFor(theme){
     if(!result.ok)diagnostics.push(diagnostic('pack-capability-invalid',`Pack capability ${name} is not registered: ${result.errors.join('; ')}.`,'error',context));
   }
   const made={registry,diagnostics};packRegistries.set(theme,made);return made;
+}
+function reloadPackCapability(runtime,name,entry,units=[]){
+  // Live edit: swap one pack capability's code in the running registry. Units keep their state and are not respawned;
+  // hooks are looked up on every call, so the next frame runs the new code. A unit frozen by this capability thaws, and a
+  // unit that gains it (it was unregistered) or whose init threw gets that capability's init now.
+  const registry=runtime?.capabilities;
+  if(!registry||registry===BUILTIN_CAPABILITIES||!registry.base)return{ok:false,errors:['no running pack registry to reload into']};
+  if(BUILTIN_CAPABILITIES.get(name))return{ok:false,errors:[`${name} is built in; built-in capabilities have no source to edit`]};
+  const compiled=compileCapabilitySource(entry?.source);if(!compiled.definition)return{ok:false,errors:compiled.errors};
+  const added=!registry.get(name),result=registry.register({name,description:entry.description,source:entry.source,...compiled.definition});if(!result.ok)return{ok:false,errors:result.errors};
+  const errors=capabilityErrorsOf(runtime);let reached=0,thawed=0;
+  for(const unit of units){
+    if(!registry.has(unit,name))continue;reached++;const initAgain=added||(unit.error?.capability===name&&unit.error.hook==='init');
+    if(unit.error?.capability===name){unit.error=null;thawed++}
+    if(initAgain&&result.definition.init){unit.state||={};runCapabilityHook(unit,result.definition,'init',[unit,unit.values||{}],errors)}
+  }
+  return{ok:true,errors:[],added,units:reached,thawed};
 }
 const capabilitiesOf=runtime=>runtime?.capabilities||BUILTIN_CAPABILITIES;
 const capabilityErrorsOf=runtime=>runtime?(runtime.capabilityErrors||(runtime.capabilityErrors=[])):[];
@@ -898,7 +915,7 @@ function touchStickActions(dx,dy,radius){
   if(nx<-.3)actions.push('left');if(nx>.3)actions.push('right');if(ny<-.6)actions.push('up');if(ny>.6)actions.push('down');
   return{actions,knob:{x:dx*scale,y:dy*scale}};
 }
-root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldRegion,worldMass,worldFloorType,worldEdge,worldAreaMap,worldAnchorScreen,worldSplitAtSeams,worldMergeTerrain,worldPlots,worldPlotFile,worldScreenKey,worldSaveScreens,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_PACK_FORMAT:PACK_FORMAT,splitReferencePack,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,CAPABILITY_VERDICTS,BUILTIN_CAPABILITIES,createCapabilityRegistry,compileCapabilitySource,capabilityRegistryFor,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,createMovingPlatformBehavior};
+root.ReferencePackBoundary={WORLD_SCREEN,WORLD_DISTRICTS,worldHash,worldDistrict,worldRegion,worldMass,worldFloorType,worldEdge,worldAreaMap,worldAnchorScreen,worldSplitAtSeams,worldMergeTerrain,worldPlots,worldPlotFile,worldScreenKey,worldSaveScreens,worldDoorOpen,worldBiome,worldScreen,worldWindowMap,worldScreenAt,touchFaceButtons,touchStickActions,REFERENCE_THEME_FORMAT:THEME_FORMAT,REFERENCE_THEME_VERSION:THEME_VERSION,REFERENCE_MAP_FORMAT:MAP_FORMAT,REFERENCE_PACK_FORMAT:PACK_FORMAT,splitReferencePack,REFERENCE_MAP_VERSION:MAP_VERSION,LAYERS,PLAYER_WIDTH,PLAYER_HEIGHT,DEFAULT_WALKER_SPEED,SHELL_SPEED,CAPABILITY_VERDICTS,BUILTIN_CAPABILITIES,createCapabilityRegistry,compileCapabilitySource,capabilityRegistryFor,reloadPackCapability,validateReferenceTheme,validateReferenceEditorMap,validateReferencePair,parseReferenceDocument,rectangleAutotiles,constructionLayout,compileReferenceRuntime,prepareReferenceRuntime:compileReferenceRuntime,commandAtTick,createPlayerBehavior,simulateReachability,createPipeTravelBehavior,normalizePipeDestination,pipeMouth,createBlockBehavior,createPowerupBehavior,createProjectileBehavior,createActorBehavior,movingPlatformRoute,createMovingPlatformBehavior};
 })(typeof window==='object'?window:globalThis);
 </script>
 <script>
@@ -1127,6 +1144,13 @@ function frame(time){
   draw();if(state.paused)drawPaused();requestAnimationFrame(frame);
 }
 function stepGame(){state.steps++;pollGamepad();if(state.paused)return;state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);reportCapabilityErrors();stepWorld()}
+function reloadCapability(name,entry){
+  // Called by an editor that shares this page (the release build): new capability code reaches live units at once.
+  if(!state.runtime)return{ok:false,errors:['no level is running']};
+  const units=[...(state.actorBehavior?.actors||[]),...(state.platformBehavior?.platforms||[]),...(state.powerupBehavior?.powerups||[])],result=B.reloadPackCapability(state.runtime,name,entry,units);
+  if(result.ok){if(state.theme)state.theme.capabilities={...(state.theme.capabilities||{}),[name]:{description:entry.description,source:entry.source}};report(`Capability ${name} reloaded live: ${result.units} unit${result.units===1?'':'s'}${result.thawed?`, ${result.thawed} unfrozen`:''}.`,'good')}
+  return result;
+}
 function reportCapabilityErrors(){
   // A capability that threw has frozen its unit (drawn with a red outline); say which, once per failure.
   const errors=state.runtime?.capabilityErrors;if(!errors||errors.length<=(state.reportedCapabilityErrors||0))return;
@@ -1246,7 +1270,8 @@ window.ReferenceEngine={
   state,fitScene,followPlayer,stepPlayer,togglePause,setPaused,restartLevel,startWorld,captureWorld,setWorldPlots,pollGamepad,padMap:()=>({...padMap}),controlOptions:()=>({...controlOptions}),currentPlayerVisual:playerVisual,currentPlayerFit:()=>fitPlayerVisual(state.behavior?.player,playerVisual()),
   loadReferenceTheme:async document=>{const errors=B.validateReferenceTheme(document);if(errors.length){invalidate('theme',errors);return errors}state.theme=document;await loadAtlases();refreshPair();return[]},
   loadReferenceEditorMap:document=>{const errors=B.validateReferenceEditorMap(document,state.theme);if(errors.length){invalidate('map',errors);return errors}state.map=document;refreshPair();return[]},
-  validateAndPrepare:B.compileReferenceRuntime
+  validateAndPrepare:B.compileReferenceRuntime,
+  reloadCapability
 };
 })();
 </script></body></html>

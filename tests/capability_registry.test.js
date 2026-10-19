@@ -205,3 +205,44 @@ test('the editor flags capability names nothing registers',()=>{
   assert.deepEqual(plain(semantics.unregisteredCapabilities(odd)),[{object:'goomba',capability:'teleport'},{object:'orbitPlatform',capability:'orbit'}]);
   assert(editor.includes('semantics.unregisteredCapabilities(theme)'),'theme load reports them as contract issues');
 });
+
+function playing(themeDocument,map){
+  const frames=[],noop=()=>{},elements={screen:{width:960,height:480,getContext:()=>new Proxy({},{get:()=>noop})},stage:{getBoundingClientRect:()=>({width:960,height:480})},diagnostics:{textContent:'',className:''},empty:{hidden:false},themeButton:{},mapButton:{},fitButton:{},coinCount:{value:'',textContent:''},livesCount:{value:'',textContent:''},themeFile:{files:[],value:''},mapFile:{files:[],value:''}};
+  class FakeImage{set src(value){this._src=value;this.onload?.()}get src(){return this._src}}
+  const window={ReferencePackBoundary:api},clock={t:0};
+  vm.runInNewContext(html.match(/<script>\s*([\s\S]*?)<\/script><\/body>/)[1],{window,document:{getElementById:id=>elements[id]},Image:FakeImage,devicePixelRatio:1,requestAnimationFrame(fn){frames.push(()=>fn(clock.t+=1000/60))},addEventListener:noop,Map,Set,Math,Promise,console:{...console,error:noop}});
+  const engine=window.ReferenceEngine;return{engine,elements,run:async n=>{await engine.loadReferenceTheme(themeDocument);engine.loadReferenceEditorMap(map)},step:n=>{for(let i=0;i<n;i++)frames.shift()()}};
+}
+const orbitSource=theme.capabilities.orbit.source;
+
+test('live edit: new capability code reaches running units without respawning them',async()=>{
+  const t=plain(theme),game=playing(t,orbitMap({'orbit.radius':40,'orbit.speed':1}));await game.run();game.step(20);
+  const orbit=()=>game.engine.state.platformBehavior.platforms[0],before={angle:orbit().state.angle,x:orbit().x,state:orbit().state};
+  const faster=orbitSource.replace('s.angle += s.rate','s.angle += 3 * s.rate'),result=game.engine.reloadCapability('orbit',{description:'faster',source:faster});
+  assert.equal(result.ok,true);assert.equal(result.units,1);
+  assert.strictEqual(orbit().state,before.state,'the same unit and the same state: nothing respawned');assert.equal(orbit().state.angle,before.angle);
+  game.step(10);assert(Math.abs(orbit().state.angle-(before.angle+30/40))<1e-9,'the next frames run the new code');
+  assert.equal(game.engine.state.theme.capabilities.orbit.source,faster,'restart keeps the edit');assert.match(game.elements.diagnostics.textContent,/reloaded live: 1 unit/);
+  game.engine.restartLevel();game.step(10);assert(Math.abs(orbit().state.angle-(-Math.PI/2+30/40))<1e-9,'and so does a restart, from a fresh init');
+});
+
+test('live edit: a refused edit changes nothing, a fix thaws the units it froze, and a new capability gets its init',async()=>{
+  const t=plain(theme);t.objects.goomba.capabilities=['bob',...t.objects.goomba.capabilities];t.capabilities.broken={source:'({ step(self) { self.x += self.state.missing.value } })'};t.objects['koopa.red'].capabilities=['broken',...t.objects['koopa.red'].capabilities];
+  const game=playing(t,mapOf([goomba(200,'g'),koopa(400,'k')]));await game.run();game.step(5);
+  const [g,k]=game.engine.state.actorBehavior.actors;assert.equal(k.error.capability,'broken','the koopa froze on its broken capability');const frozenX=k.x;
+  assert.equal(game.engine.reloadCapability('orbit',{source:'({ step( })'}).ok,false);assert.equal(game.engine.state.runtime.capabilities.get('orbit').source,orbitSource,'a source that does not compile leaves the old code running');
+  assert.match(game.engine.reloadCapability('patrol',{source:'({ step() {} })'}).errors[0],/built in/);
+  const fixed=game.engine.reloadCapability('broken',{source:'({ step(self) { self.state.fixed = (self.state.fixed || 0) + 1 } })'});
+  assert.deepEqual({ok:fixed.ok,thawed:fixed.thawed},{ok:true,thawed:1});game.step(5);assert.equal(k.error,null);assert.notEqual(k.x,frozenX,'the unfrozen koopa walks again');assert.equal(k.state.fixed,5);
+  const bob=game.engine.reloadCapability('bob',{source:'({ init(self) { self.state.base = self.y }, step(self) { self.state.bobs = (self.state.bobs || 0) + 1 } })'});
+  assert.equal(bob.added,true);assert.equal(g.state.base,g.y,'a capability that arrives live runs its init on the units that name it');game.step(3);assert.equal(g.state.bobs,3);
+});
+
+test('the editor keeps capability source as text in the theme and refuses built-in names',()=>{
+  const editor=fs.readFileSync('editor/reference_pack_editor.html','utf8'),context={globalThis:{},structuredClone};vm.runInNewContext(editor.match(/<script id="unitPacks">([\s\S]*?)<\/script>/)[1],context);const units=context.globalThis.ReferencePackUnits;
+  const next=units.setCapabilitySource(theme,'drift',{description:'d',source:'({ step(self) { self.x += 1 } })'},{builtIns:theme.contract.engineVocabulary.capabilities});
+  assert.deepEqual(plain(next.capabilities.drift),{description:'d',source:'({ step(self) { self.x += 1 } })'});assert.equal(theme.capabilities.drift,undefined,'the original theme is untouched');
+  assert.throws(()=>units.setCapabilitySource(theme,'patrol',{source:'({})'},{builtIns:theme.contract.engineVocabulary.capabilities}),/built in/);
+  assert.throws(()=>units.setCapabilitySource(theme,'drift',{source:'  '}),/source text/);
+  assert(editor.includes('engine.reloadCapability(name,entry)'),'Apply hands the text to a game sharing the page');
+});
