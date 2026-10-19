@@ -388,6 +388,17 @@
         "transform.y": 224,
         "rewardBlock.contents": "raccoonFeather"
       }
+    },
+    {
+      "placeable": "orbitPlatform",
+      "values": {
+        "transform.x": 136,
+        "transform.y": 86,
+        "extent.width": 3,
+        "orbit.radius": 40,
+        "orbit.speed": 1,
+        "orbit.direction": "clockwise"
+      }
     }
   ],
   "markers": {

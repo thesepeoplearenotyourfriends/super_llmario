@@ -13,7 +13,7 @@
       "effect"
     ],
     "coordinates": "world pixels; anchors normalized from top-left (0,0) to bottom-right (1,1)",
-    "policy": "The engine owns behavior; this pack binds engine nouns, capabilities, and states to presentation.",
+    "policy": "The engine owns physics, collision, and the capability registry; capabilities own behavior. Built-in and pack capabilities register the same way. This pack binds engine nouns, capabilities, and states to presentation.",
     "engineVocabulary": {
       "nouns": [
         "actor",
@@ -31,6 +31,7 @@
       "capabilities": [
         "armored",
         "autotile",
+        "breakable",
         "carry",
         "climbable",
         "coin",
@@ -38,6 +39,7 @@
         "duck",
         "emerge",
         "extraLife",
+        "flightPower",
         "goalPresentation",
         "grow",
         "horizontalFlight",
@@ -11987,6 +11989,25 @@
       "visuals": {
         "idle": "pickup.powerup.flight"
       }
+    },
+    "orbitPlatform": {
+      "defaultSceneLayer": "world",
+      "kind": "ground",
+      "engineNoun": "platform",
+      "capabilities": [
+        "orbit"
+      ],
+      "collisionMode": "oneWay",
+      "collisionGeometry": {
+        "solidTop": {
+          "leftInset": 8,
+          "rightInset": 8,
+          "topInset": 0
+        }
+      },
+      "visuals": {
+        "idle": "construction.white-platform"
+      }
     }
   },
   "parameterSchemas": {
@@ -12219,6 +12240,27 @@
           "small"
         ],
         "default": "large"
+      }
+    },
+    "orbit": {
+      "radius": {
+        "type": "number",
+        "minimum": 0,
+        "unit": "world",
+        "default": 48
+      },
+      "speed": {
+        "type": "number",
+        "minimum": 0,
+        "default": 1
+      },
+      "direction": {
+        "type": "enum",
+        "values": [
+          "clockwise",
+          "counterclockwise"
+        ],
+        "default": "clockwise"
       }
     }
   },
@@ -12688,6 +12730,28 @@
         "transform.x",
         "transform.y"
       ]
+    },
+    "orbitPlatform": {
+      "authoringGroup": "World",
+      "label": "Orbit Platform",
+      "object": "orbitPlatform",
+      "parameters": [
+        "transform.x",
+        "transform.y",
+        "extent.width",
+        "orbit.radius",
+        "orbit.speed",
+        "orbit.direction"
+      ],
+      "initialValues": {
+        "extent.width": 3
+      }
+    }
+  },
+  "capabilities": {
+    "orbit": {
+      "description": "Goes around a circle of orbit.radius at orbit.speed (world pixels per frame) in orbit.direction, starting at the top where it is placed; carries whoever stands on it.",
+      "source": "({\n  // Starts where it is placed, at the top of its circle, and goes around a center orbit.radius below that.\n  init(self, p) {\n    const radius = Math.max(0, Number(p['orbit.radius']) || 0);\n    const speed = p['orbit.speed'] === undefined ? 1 : Math.max(0, Number(p['orbit.speed']) || 0);\n    const turn = p['orbit.direction'] === 'counterclockwise' ? -1 : 1;\n    // orbit.speed is world pixels along the circle per frame, like movingPlatform.speed.\n    Object.assign(self.state, {radius, angle: -Math.PI / 2, rate: radius > 0 ? turn * speed / radius : 0, centerX: self.originX, centerY: self.originY + radius});\n  },\n  step(self) {\n    const s = self.state;\n    s.angle += s.rate;\n    self.x = s.centerX + Math.cos(s.angle) * s.radius;\n    self.y = s.centerY + Math.sin(s.angle) * s.radius;\n  }\n})"
     }
   },
   "coverage": {

@@ -15,15 +15,21 @@ const mapOf=(instances,extra={})=>({format:api.REFERENCE_MAP_FORMAT,mapVersion:1
 const goomba=(x,id)=>({placeable:'goomba',instanceId:id,values:{'transform.x':x,'transform.y':200,'walker.direction':'right','walker.patrolRange':40}});
 const koopa=(x,id,flight={})=>({placeable:'koopaRed',instanceId:id,values:{'transform.x':x,'transform.y':200,'walker.direction':'right','walker.patrolRange':40,...flight}});
 
-test('every capability a theme object names is registered, and the registry is the one door',()=>{
+test('registration is the vocabulary: the contract lists exactly the built-ins, and the pack registers the rest',()=>{
+  assert.deepEqual([...theme.contract.engineVocabulary.capabilities].sort(),plain(api.BUILTIN_CAPABILITIES.names()),'the theme vocabulary mirrors the engine built-ins, no more and no less');
+  const {registry,diagnostics}=api.capabilityRegistryFor(theme);
+  assert.deepEqual(plain(diagnostics),[]);
   const named=new Set(Object.values(theme.objects).flatMap(object=>object.capabilities||[]));
-  assert.deepEqual(plain(api.BUILTIN_CAPABILITIES.unregistered([...named])),[],'nothing the theme names is left unimplemented or undeclared');
-  const kinds=Object.fromEntries(api.BUILTIN_CAPABILITIES.names().map(name=>[name,api.BUILTIN_CAPABILITIES.get(name).kind]));
-  for(const [name,kind] of Object.entries({patrol:'tick',winged:'tick',movingPlatform:'tick',walker:'tick',stompable:'contact',stompHazard:'contact',coin:'pickup',grow:'pickup',extraLife:'pickup',projectilePower:'pickup',flightPower:'pickup',solid:'flag',solidTop:'flag',shell:'flag',armored:'flag',climbable:'flag'}))
+  assert.deepEqual(plain(registry.unregistered([...named])),[],'nothing a theme object names is left unimplemented');
+  const kinds=Object.fromEntries(registry.names().map(name=>[name,registry.get(name).kind]));
+  for(const [name,kind] of Object.entries({patrol:'tick',winged:'tick',movingPlatform:'tick',walker:'tick',orbit:'tick',stompable:'contact',stompHazard:'contact',coin:'pickup',grow:'pickup',extraLife:'pickup',projectilePower:'pickup',flightPower:'pickup',solid:'flag',solidTop:'flag',shell:'flag',armored:'flag',climbable:'flag',breakable:'flag'}))
     assert.equal(kinds[name],kind,`${name} is a ${kind}`);
-  assert.equal(typeof api.BUILTIN_CAPABILITIES.get('winged').contact,'function','a tick capability may also answer contacts');
-  assert(api.BUILTIN_CAPABILITIES.get('patrol').builtIn);
+  assert.equal(typeof registry.get('winged').contact,'function','a tick capability may also answer contacts');
+  assert(registry.get('patrol').builtIn);
+  assert.equal(api.BUILTIN_CAPABILITIES.get('orbit'),null,'orbit exists only as pack source');
+  assert.equal(registry.get('orbit').builtIn,false);assert.equal(registry.get('orbit').source,theme.capabilities.orbit.source,'the registry keeps the source text it was made from');
   assert.equal(api.BUILTIN_CAPABILITIES.get('raccoon'),null,'no Mario-flavored capability name is built in');
+  assert.strictEqual(api.capabilityRegistryFor(theme),api.capabilityRegistryFor(theme),'one registry per theme document');
 });
 
 test('built-in hooks close over nothing: recompiled alone, they behave the same',()=>{
@@ -130,4 +136,72 @@ test('a frozen unit is reported in the diagnostics and outlined, and the frame l
   assert.match(elements.diagnostics.textContent,/goomba g froze: patrol\.step threw/);
   assert(operations.strokeRect>0,'the frozen unit is outlined');
   const tick=engine.state.tick;frames.shift()();assert.equal(engine.state.tick,tick+1,'the game keeps running');
+});
+
+const orbitMap=(values,extra={})=>mapOf([{placeable:'orbitPlatform',instanceId:'o',values:{'transform.x':200,'transform.y':120,'extent.width':3,...values}}],{markers:{start:{x:40,y:300},goal:null},...extra});
+
+test('the orbit platform goes around its circle at its speed, either way, and restarts where it was placed',()=>{
+  for(const direction of ['clockwise','counterclockwise']){
+    const runtime=api.compileReferenceRuntime(theme,orbitMap({'orbit.radius':40,'orbit.speed':2,'orbit.direction':direction})).runtime,moving=api.createMovingPlatformBehavior(runtime),[orbit]=moving.platforms;
+    assert(orbit,'the pack capability makes an ordinary carrier');assert.deepEqual({x:orbit.x,y:orbit.y},{x:200,y:120},'it starts where it was placed');
+    const start={...orbit.surface},center={x:200,y:160};
+    moving.step();
+    assert(direction==='clockwise'?orbit.x>200:orbit.x<200,`${direction} sets off the right way from the top`);assert(orbit.y>120);
+    let far=0;for(let i=0;i<200;i++){moving.step();far=Math.max(far,Math.abs(Math.hypot(orbit.x-center.x,orbit.y-center.y)-40))}
+    assert(far<1e-9,'it stays on its circle');
+    assert.deepEqual({x:orbit.surface.x-start.x,y:orbit.surface.y-start.y},{x:orbit.x-200,y:orbit.y-120},'collision follows it');
+    const lap=Math.ceil(2*Math.PI*40/2);moving.reset();for(let i=0;i<lap;i++)moving.step();
+    assert(Math.hypot(orbit.x-200,orbit.y-120)<2,'one lap at speed 2 takes circumference/2 frames');
+    moving.reset();assert.deepEqual({x:orbit.x,y:orbit.y,angle:orbit.state.angle},{x:200,y:120,angle:-Math.PI/2});assert.deepEqual(plain(orbit.surface),plain(start));
+  }
+  const holding=api.createMovingPlatformBehavior(api.compileReferenceRuntime(theme,orbitMap({'orbit.radius':0})).runtime),still=holding.platforms[0];
+  for(let i=0;i<10;i++)holding.step();assert.deepEqual({x:still.x,y:still.y},{x:200,y:120},'zero radius holds still');
+});
+
+test('the orbit platform carries a player standing on it like the moving platforms do',()=>{
+  const runtime=api.compileReferenceRuntime(theme,orbitMap({'orbit.radius':40,'orbit.speed':1.5})).runtime,players=api.createPlayerBehavior(runtime),moving=api.createMovingPlatformBehavior(runtime,players),[orbit]=moving.platforms,p=players.player;
+  Object.assign(p,{x:orbit.surface.x+orbit.surface.w/2-p.w/2,y:orbit.surface.y-p.h,vy:0,onGround:true});
+  for(let i=0;i<120;i++){moving.step();players.step({})}
+  assert.equal(p.onGround,true,'still riding after most of a lap');assert.equal(p.y+p.h,orbit.surface.y,'feet on the platform');
+  assert(Math.abs(p.x+p.w/2-(orbit.surface.x+orbit.surface.w/2))<1,'carried sideways with it');
+});
+
+test('pack capability source sees its arguments and plain JavaScript, not the page',()=>{
+  const odd=plain(theme);odd.capabilities.peek={source:"({ step(self) { self.state.saw = [typeof window, typeof document, typeof fetch, typeof globalThis, typeof localStorage, typeof Function, typeof Math, typeof JSON] } })"};
+  odd.objects.goomba.capabilities=['peek',...odd.objects.goomba.capabilities];
+  const behavior=api.createActorBehavior(api.compileReferenceRuntime(odd,mapOf([goomba(200,'g')])).runtime);behavior.step(null,null);
+  assert.deepEqual(plain(behavior.actors[0].state.saw),['undefined','undefined','undefined','undefined','undefined','undefined','object','object']);
+});
+
+test('broken or impostor pack capabilities are reported, left unregistered, and the level still runs',()=>{
+  const odd=plain(theme);
+  odd.capabilities.broken={source:'({ step(self) { self.x += })'};
+  odd.capabilities.extra={source:'({ step(self) {}, draw() {} })'};
+  odd.capabilities.patrol={source:'({ step(self) { self.x += 100 } })'};
+  odd.objects.goomba.capabilities=['broken',...odd.objects.goomba.capabilities];
+  const result=api.compileReferenceRuntime(odd,mapOf([goomba(200,'g')]));
+  assert.equal(result.ok,true);
+  const codes=result.diagnostics.map(item=>`${item.code}:${item.capability}`);
+  assert(codes.includes('pack-capability-invalid:broken'));assert(codes.includes('pack-capability-invalid:extra'));
+  assert(codes.includes('pack-capability-shadows-builtin:patrol'),'a pack cannot replace a built-in');
+  assert(codes.includes('unregistered-capability:broken'),'the object that names it is told nothing implements it');
+  const behavior=api.createActorBehavior(result.runtime);behavior.step(null,null);assert.equal(behavior.actors[0].x,200.4,'the built-in patrol still walks it');
+  assert.match(api.validateReferenceTheme({...theme,capabilities:[]}).join(' '),/capabilities must be an object/);
+});
+
+test('the demo map places an orbit platform',()=>{
+  const demo=JSON.parse(fs.readFileSync('maps/demo.llmmap.txt','utf8')),result=api.compileReferenceRuntime(theme,demo);
+  assert.equal(result.ok,true);assert.deepEqual(plain(result.diagnostics.filter(item=>item.severity==='error')),[]);
+  const moving=api.createMovingPlatformBehavior(result.runtime),orbit=moving.platforms.find(platform=>platform.instance.placeable==='orbitPlatform');
+  assert(orbit);const before={x:orbit.x,y:orbit.y};for(let i=0;i<30;i++)moving.step();assert.notDeepEqual({x:orbit.x,y:orbit.y},before);
+});
+
+test('the editor flags capability names nothing registers',()=>{
+  const editor=fs.readFileSync('editor/reference_pack_editor.html','utf8'),semanticsContext={structuredClone,globalThis:{}};
+  vm.runInNewContext(editor.match(/<script id="contractSemantics">([\s\S]*?)<\/script>/)[1],semanticsContext);const semantics=semanticsContext.globalThis.ReferencePackSemantics;
+  assert.deepEqual(plain(semantics.unregisteredCapabilities(theme)),[],'the shipped theme names only registered capabilities');
+  assert(semantics.registeredCapabilities(theme).has('orbit'),'pack capabilities count as registered');
+  const odd=plain(theme);odd.objects.goomba.capabilities.push('teleport');delete odd.capabilities;
+  assert.deepEqual(plain(semantics.unregisteredCapabilities(odd)),[{object:'goomba',capability:'teleport'},{object:'orbitPlatform',capability:'orbit'}]);
+  assert(editor.includes('semantics.unregisteredCapabilities(theme)'),'theme load reports them as contract issues');
 });
