@@ -8,9 +8,9 @@
 
 **Want to play?** Download [`super_llmario.html` from the latest GitHub Release](https://github.com/thesepeoplearenotyourfriends/super_llmario/releases/latest/download/super_llmario.html) and open that one file. The Release HTML is the self-contained, to-go build and starts with the MarioAI semantic reference experience.
 
-**Want to edit or mess around?** Clone this repository. The active authoring pair is `editor/reference_pack_editor.html` plus `themes/theme_marioai_reference_pack.llmtheme.txt`, with `engine/reference_pack_engine.html` as its runtime. Run `python3 scripts/build_release.py` only when you need the packed `dist/super_llmario.html` release artifact.
+**Want to edit or mess around?** Clone this repository. The release build, `dist/super_llmario.html` from `python3 scripts/build_release.py`, is the canonical product: game, map picker, world, and the editor with its menus and world plot tools in one file, and the one UI checks and screenshots target. Its build inputs are `engine/reference_pack_engine.html`, `editor/reference_pack_editor.html`, `themes/theme_marioai_reference_pack.llmtheme.txt` and the maps; the engine and editor also open on their own, but as build inputs they may lag the release UI.
 
-Reference maps persist an explicit finite `worldBounds` rectangle. The canonical editor keeps complete object and marker geometry inside that area, clamps navigation to it, and the runtime uses the same bounds for its camera and fall deaths. Older boundless maps receive a finite derived compatibility envelope and diagnostic; saving persists that envelope. Rows are not part of the current canonical map/runtime contract.
+Reference maps persist an explicit finite `worldBounds` rectangle. The editor keeps complete object and marker geometry inside that area, clamps navigation to it, and the runtime uses the same bounds for its camera and fall deaths. Older boundless maps receive a finite derived compatibility envelope and diagnostic; saving persists that envelope. Rows are not part of the current canonical map/runtime contract.
 
 **World (explore).** The release build's map picker also offers an endless world in every direction, generated from a seed as you arrive and rebuilt identically when you return. Regions have characters (Meadow, Warren, Pipeworks, Thorns, Brickyard). The Editor button captures the area around you as an ordinary map, and `scripts/world_room_from_map.js` promotes a good screen of it back into a room. Edits you save there become plots: saved screens that stay put while the world generates around them, kept in your browser and downloadable as a world file you can drop in `/maps`. Rooms are ASCII sketches in `world/rooms/`, each one checked by the reachability tool before it ships. See [`docs/world.md`](docs/world.md).
 
@@ -57,7 +57,7 @@ Default gamepad mapping:
 * Jump: Button 1
 * Pause/Start: Button 9
 
-Touchscreen (canonical engine; appears on coarse pointers or the first touch):
+Touchscreen (release build and engine; appears on coarse pointers or the first touch):
 
 * Left half: floating virtual stick. Horizontal engages early; up/down need a deliberate push, and up never jumps.
 * Right half: SNES diamond. B and Y run, A and X jump. One touch surface hit-tests each pointer against invisible regions larger than the buttons: thumbs glide between buttons, the B/A overlap presses both, and rolling B → A keeps B latched while A is held, so the run continues through the jump.

@@ -29,7 +29,7 @@
 </main>
 <dialog id="asciiDialog" class="ascii-dialog"><form method="dialog"><button value="close" style="float:right" aria-label="Close ASCII sketch">Close</button><h2>ASCII sketch</h2><p id="asciiInfo" class="mini"></p><textarea id="asciiText" spellcheck="false" wrap="off" aria-label="LLMario ASCII v3 map text"></textarea><div class="row"><button type="button" id="asciiCopyBtn">Copy text</button><button type="button" id="asciiApplyBtn">Replace map with this sketch</button></div><p class="mini">Grid glyphs: <code>X/C/U</code> ground · <code>#/%/&amp;</code> solid block · <code>B</code> brick · <code>?/M/F/L/1</code> question block coin/mushroom/flower/feather/1-up · <code>r</code> rotating · <code>h</code> hidden · <code>=</code> white platform · <code>m</code> mushroom platform · <code>H</code> ladder · <code>PP</code>+<code>pp</code> pipe mouth+body · <code>V</code> cannon · <code>o</code> coin · <code>g/w/k/K/s</code> enemies at their feet · <code>S/G</code> start/goal. Directives: <code>@pipe A -&gt; B</code>, <code>@pipe A &lt;-&gt; B</code>, <code>@pipe A -&gt; COL,ROW</code> (pipes are lettered by mouth column, then row); <code>@at COL,ROW key=value…</code> sets parameters on the object covering that cell; <code>@place PLACEABLE COL ROW key=value…</code> adds anything else at its anchor; <code>@start</code>/<code>@goal COL ROW</code>; <code>@world X Y W H</code>.</p></form></dialog>
 <dialog id="sheetDialog" class="ascii-dialog sheet-dialog"><form method="dialog"><button value="close" style="float:right" aria-label="Close spritesheet">Close</button><h2>Spritesheet</h2><div class="row"><button type="button" id="sheetLoadBtn">Load image…</button><span id="sheetName" class="mini">No image yet.</span></div><div class="row mini">cell <input id="gridW" type="number" min="1" value="16" aria-label="cell width">×<input id="gridH" type="number" min="1" value="16" aria-label="cell height"> offset <input id="gridX" type="number" min="0" value="0" aria-label="offset x"><input id="gridY" type="number" min="0" value="0" aria-label="offset y"> gutter <input id="gridGX" type="number" min="0" value="0" aria-label="gutter x"><input id="gridGY" type="number" min="0" value="0" aria-label="gutter y"> zoom <input id="sheetZoom" type="number" min="1" max="8" value="3" aria-label="zoom"></div><div class="sheet-view"><canvas id="sheetCanvas"></canvas></div><p id="sheetSelection" class="mini"></p><div class="row">unit <select id="sheetUnit" aria-label="unit to author"></select> or copy it as <input id="newUnitId" placeholder="new unit id" aria-label="new unit id"><button type="button" id="cloneUnitBtn">Copy as new unit</button></div><div class="row">visual state <input id="visualState" list="visualStates" value="idle" aria-label="visual state"><datalist id="visualStates"></datalist><button type="button" id="pointVisualBtn">Point state at marked cells</button></div><details><summary class="mini">Capabilities and parameter groups</summary><div class="checks" id="capChecks"></div><div class="checks" id="groupChecks"></div><button type="button" id="applyCapsBtn">Apply to unit</button></details></form></dialog>
-<dialog id="capabilityDialog" class="ascii-dialog"><form method="dialog"><button value="close" style="float:right" aria-label="Close capability source">Close</button><h2>Capability source</h2><div class="row"><select id="capabilityPick" aria-label="pack capability"></select><input id="capabilityName" placeholder="name" aria-label="capability name"><span id="capabilityUsers" class="mini"></span></div><div class="field"><label>description</label><input id="capabilityDescription" aria-label="capability description"></div><textarea id="capabilitySource" spellcheck="false" wrap="off" aria-label="capability source"></textarea><p id="capabilityStatus" class="mini"></p><div class="row"><button type="button" id="capabilityApplyBtn">Apply</button></div><p class="mini">One object expression of hooks: <code>({ init(self, p) {…}, step(self, world, p) {…}, contact(self, other, side, world) {…} })</code> or <code>({ collect(player, world, p) {…} })</code>. The contract is the comment block at the top of the engine. In the release build, Apply also reloads it into the running game: live units keep their state and run the new code from the next frame.</p></form></dialog>
+<dialog id="capabilityDialog" class="ascii-dialog"><form method="dialog"><button value="close" style="float:right" aria-label="Close capability source">Close</button><h2>Capability source</h2><div class="row"><select id="capabilityPick" aria-label="pack capability"></select><input id="capabilityName" placeholder="name" aria-label="capability name"><span id="capabilityUsers" class="mini"></span></div><div class="field"><label>description</label><input id="capabilityDescription" aria-label="capability description"></div><textarea id="capabilitySource" spellcheck="false" wrap="off" aria-label="capability source"></textarea><p id="capabilityStatus" class="mini"></p><div class="row"><button type="button" id="capabilityApplyBtn">Apply</button><label id="capabilityReinitLabel" class="mini" title="Run init again on units using this capability, for edits that change the shape of its state"><input type="checkbox" id="capabilityReinit"> re-init live units</label><button type="button" id="capabilityCopyBtn" hidden>Copy as new capability</button></div><p class="mini">One object expression of hooks: <code>({ init(self, p) {…}, step(self, world, p) {…}, contact(self, other, side, world) {…} })</code> or <code>({ collect(player, world, p) {…} })</code>. The contract is the comment block at the top of the engine. Apply checks the source with the engine's compiler first. In the release build it also reloads it into the running game: live units keep their state and run the new code from the next frame (or run init again, if asked). Built-ins are read-only; copy one to start a capability of your own.</p></form></dialog>
 <dialog id="importDialog" class="ascii-dialog"><form method="dialog"><h2 id="importTitle">Import unit</h2><div id="importArt"></div><p id="importSummary" class="mini"></p><div id="importItems"></div><div class="row"><button type="button" id="importConfirmBtn">Import</button><button type="button" id="importCancelBtn">Cancel</button></div></form></dialog>
 <dialog id="helpDialog"><form method="dialog"><button value="close" style="float:right" aria-label="Close help">Close</button><h2>Editor help</h2><ul><li>Choose a palette card to place it; click an active multi-form card again to cycle its authored forms.</li><li><b>Stamp:</b> drag an active Block or Brick brush across snapped cells; occupied cells are skipped.</li><li><b>Eraser:</b> removes objects only while you drag and locks each drag to the layer of the first object erased.</li><li>Click an object or marker to select it and leave placement mode. Click empty canvas to select none.</li><li><b>Copy / paste:</b> Ctrl/Cmd+C copies the selected object, Ctrl/Cmd+X cuts it, Ctrl/Cmd+V pastes it with its anchor at the pointer (again on the same spot steps one cell along). The copy is selected, ready to drag.</li><li>Drag a selected object or marker to move it. Drag an object's gold resize handle to resize it.</li><li>With no brush active, drag empty canvas to pan. Use the wheel to zoom around the pointer.</li><li><b>Palette</b> and <b>Details</b> independently show or hide their sidebars.</li><li><b>Open</b> and <b>Save</b> use standalone map files. <kbd>Ctrl/Cmd+Z</kbd> undoes; <kbd>Ctrl/Cmd+Shift+Z</kbd> or <kbd>Ctrl/Cmd+Y</kbd> redoes.</li><li><kbd>Delete</kbd>/<kbd>Backspace</kbd> removes the selected instance or marker.</li><li>Start and Goal cards place grid-snapped singleton markers; placing another replaces the existing marker.</li><li><b>Units</b> (Details): <b>Spritesheet…</b> loads any image, marks cells in click order, copies a unit as a new one and points a visual state at the cells. <b>Export unit…</b> writes one unit file with only the art it draws; <b>Import unit…</b> lists every incoming id as new or overwriting, with renames, and changes nothing until you press Import. <b>Save pack…</b> keeps the theme and map together; <b>Open…</b> reads packs.</li><li><b>Capability source…</b> edits a theme's own capabilities as text. In the release build, Apply also reloads the code into the running game: live units keep their state, frozen ones thaw, and a refused edit changes nothing.</li></ul><p class="mini">This editor authors one current map. It does not simulate gameplay.</p></form></dialog>
 <script id="contractSemantics">
@@ -100,7 +100,7 @@ function registeredCapabilities(theme){
   const pack=theme?.capabilities&&typeof theme.capabilities==='object'&&!Array.isArray(theme.capabilities)?Object.keys(theme.capabilities):[];
   return new Set([...(theme?.contract?.engineVocabulary?.capabilities||[]),...pack]);
 }
-function unregisteredCapabilities(theme){const known=registeredCapabilities(theme),out=[];for(const [object,definition] of Object.entries(theme?.objects||{}))for(const capability of definition?.capabilities||[])if(!known.has(capability))out.push({object,capability});return out}
+function unregisteredCapabilities(theme){const known=registeredCapabilities(theme),out=[];for(const [object,definition] of Object.entries(theme?.objects||{}))for(const capability of [...(definition?.capabilities||[]),...(definition?.bumpTriggers||[]).map(trigger=>trigger?.type)])if(!known.has(capability))out.push({object,capability});return out}
 function blockSemantics(object={}){return{bumpable:object.bumpable===true,bumpTriggers:Array.isArray(object.bumpTriggers)?object.bumpTriggers:[],breakable:object.breakable===true,collisionMode:object.collisionMode??null}}
 function composedAabb(body,presentation,origin,attachments,values,resolveBounds){const local=[{x:-body.anchorX*body.w,y:-body.anchorY*body.h,w:body.w,h:body.h}];for(const attachment of attachments||[]){if(!values[attachment.enabledBy])continue;const bounds=resolveBounds(attachment.target);if(!bounds)continue;for(const instance of attachment.instances||[{}]){const offset=instance.offsetByBody||{},at=transformedAabb(bounds,{quarterTurns:0,mirror:!!instance.mirror},{x:Number(offset.x||0)*body.w,y:Number(offset.y||0)*body.h});local.push(at)}}const x=Math.min(...local.map(r=>r.x)),y=Math.min(...local.map(r=>r.y)),right=Math.max(...local.map(r=>r.x+r.w)),bottom=Math.max(...local.map(r=>r.y+r.h)),bounds={w:right-x,h:bottom-y,anchorX:-x/(right-x),anchorY:-y/(bottom-y)};return transformedAabb(bounds,presentation,origin)}
 function sceneLayerFor(theme,instance){return instance.sceneLayer||instance.item.object.defaultSceneLayer}
@@ -430,12 +430,30 @@ const ImportCore={
   serialize(theme){return JSON.stringify(theme,null,2)+'\n'}
 };
 /* IMPORT_CORE_END */
+// The engine's capability compiler, copied verbatim (a test keeps the copies identical): Apply checks source with it and
+// never calls a hook.
+/* CAPABILITY_COMPILER_START: the one compiler for capability source. The editor carries a verbatim copy to check source
+   before Apply, never calling a hook; a test keeps the two identical. */
+const CAPABILITY_SOURCE_GLOBALS=new Set(['Math','JSON','Number','String','Boolean','Array','Object','Map','Set','WeakMap','WeakSet','Symbol','Error','TypeError','RangeError','Infinity','NaN','undefined','isFinite','isNaN','parseFloat','parseInt']);
+function compileCapabilitySource(source){
+  if(typeof source!=='string'||!source.trim())return{definition:null,errors:['source must be non-empty text']};
+  const realm=Function('return this')(),hidden=Object.getOwnPropertyNames(realm).filter(name=>/^[A-Za-z_$][\w$]*$/.test(name)&&!CAPABILITY_SOURCE_GLOBALS.has(name)&&name!=='eval'&&name!=='arguments');
+  let made;try{made=Function(...hidden,`'use strict';return(${source}\n)`)()}catch(error){return{definition:null,errors:[`source does not evaluate: ${error.message}`]}}
+  if(!made||typeof made!=='object'||Array.isArray(made))return{definition:null,errors:['source must evaluate to an object of hooks']};
+  const unknown=Object.keys(made).filter(key=>!['init','step','contact','collect'].includes(key));
+  if(unknown.length)return{definition:null,errors:[`unknown hook ${unknown.join(', ')}; hooks are init, step, contact and collect`]};
+  const notFunctions=Object.keys(made).filter(key=>typeof made[key]!=='function');if(notFunctions.length)return{definition:null,errors:[`${notFunctions.join(', ')} must be a function`]};
+  if(made.collect&&(made.init||made.step||made.contact))return{definition:null,errors:['a pickup capability carries only collect']};
+  return{definition:{init:made.init,step:made.step,contact:made.contact,collect:made.collect},errors:[]};
+}
+/* CAPABILITY_COMPILER_END */
 const UNIT_FORMAT='llmario-unit',PACK_FORMAT='llmario-pack';
 const UNIT_SECTIONS=['atlases','resources','animations','frameGroups','constructions','parameterSchemas','capabilities','objects','placeables'];
 const ID=/^[A-Za-z0-9_][A-Za-z0-9_.:-]*$/,GROUP_ID=/^[A-Za-z_][A-Za-z0-9_]*$/,CAPABILITY_ID=/^[A-Za-z][A-Za-z0-9]*$/;
 const isRecord=value=>!!value&&typeof value==='object'&&!Array.isArray(value),copy=value=>JSON.parse(JSON.stringify(value)),own=(object,key)=>Object.prototype.hasOwnProperty.call(object||{},key);
 // Capability source reads parameters by quoted path ('orbit.radius'); renaming a group renames those paths too.
 const groupPathPattern=group=>new RegExp("(['\"`])"+group+'\\.','g');
+const engineGroups=theme=>new Set(theme?.contract?.engineVocabulary?.parameterGroups||[]);
 const validId=(section,id)=>typeof id==='string'&&(section==='parameterSchemas'?GROUP_ID:section==='capabilities'?CAPABILITY_ID:ID).test(id);
 // Parameter paths an object or placeable reads; their groups travel with the unit.
 function parameterPaths(object,placeables){
@@ -464,7 +482,8 @@ function exportUnitPlan(theme,objectId,{builtIns=[]}={}){
   const object=theme.objects?.[objectId];if(!object)throw new Error(`Unknown object ${objectId}.`);
   const placeables=Object.entries(theme.placeables||{}).filter(([,p])=>p.object===objectId),art=unitArt(theme,object);
   if(art.missing.length)throw new Error(`${objectId} draws ${art.missing.join(', ')}, which the theme does not define.`);
-  const groups=[...new Set([...parameterPaths(object,placeables.map(([,p])=>p))].map(path=>String(path).split('.')[0]))].filter(group=>theme.parameterSchemas?.[group]).sort();
+  // Groups the engine reads belong to every theme; only the unit's own groups travel.
+  const engine=engineGroups(theme),groups=[...new Set([...parameterPaths(object,placeables.map(([,p])=>p))].map(path=>String(path).split('.')[0]))].filter(group=>theme.parameterSchemas?.[group]&&!engine.has(group)).sort();
   const pack=new Set(Object.keys(theme.capabilities||{})),capabilities=(object.capabilities||[]).filter(name=>pack.has(name)&&!builtIns.includes(name));
   const atlasId=`unit.${objectId}`,unit={format:UNIT_FORMAT,unit:objectId,atlases:{},resources:{},animations:{},frameGroups:{},constructions:{},parameterSchemas:{},capabilities:{},objects:{[objectId]:copy(object)},placeables:Object.fromEntries(placeables.map(([id,p])=>[id,copy(p)]))};
   for(const group of groups)unit.parameterSchemas[group]=copy(theme.parameterSchemas[group]);for(const name of capabilities)unit.capabilities[name]=copy(theme.capabilities[name]);
@@ -490,7 +509,9 @@ function planUnitImport(theme,unit,{builtIns=[],renames={}}={}){
   const items=[],taken={},drawn={};for(const section of UNIT_SECTIONS)taken[section]=new Map;
   // Art already in the theme counts the units that draw it, so overwriting shared cells says who else changes.
   for(const object of Object.values(theme.objects||{})){const art=unitArt(theme,object);for(const section of ['resources','animations','frameGroups','constructions'])for(const id of art[section])drawn[`${section}:${id}`]=(drawn[`${section}:${id}`]||0)+1}
+  const engine=engineGroups(theme);
   for(const section of UNIT_SECTIONS)for(const [id,value] of Object.entries(unit[section]||{})){
+    if(section==='parameterSchemas'&&engine.has(id))continue;
     const key=`${section}:${id}`,name=own(renames,key)?String(renames[key]).trim():id,existing=theme[section]?.[name],item={key,section,id,name,action:existing===undefined?'new':JSON.stringify(existing)===JSON.stringify(value)?'same':'overwrite'};
     if(!validId(section,name))item.problem='not a valid id';
     else if(section==='capabilities'&&builtIns.includes(name))item.problem='a built-in capability has this name; rename it';
@@ -517,7 +538,7 @@ function applyUnitImport(theme,unit,{builtIns=[],renames={}}={}){
   for(const [id,value] of Object.entries(unit.animations||{})){const a=copy(value);for(const frame of a.frames||[])if(frame?.resource)frame.resource=name('resources',frame.resource);(next.animations||={})[name('animations',id)]=a}
   for(const [id,value] of Object.entries(unit.frameGroups||{})){const g=copy(value);g.resources=(g.resources||[]).map(r=>name('resources',r));(next.frameGroups||={})[name('frameGroups',id)]=g}
   for(const [id,value] of Object.entries(unit.constructions||{})){const c=copy(value);for(const part of Object.keys(c.components||{}))c.components[part]=name('resources',c.components[part]);for(const mask of Object.keys(c.autotile?.variants||{}))if(c.autotile.variants[mask])c.autotile.variants[mask]=name('resources',c.autotile.variants[mask]);(next.constructions||={})[name('constructions',id)]=c}
-  for(const [id,value] of Object.entries(unit.parameterSchemas||{}))(next.parameterSchemas||={})[name('parameterSchemas',id)]=copy(value);
+  for(const [id,value] of Object.entries(unit.parameterSchemas||{}))if(!engineGroups(theme).has(id))(next.parameterSchemas||={})[name('parameterSchemas',id)]=copy(value);
   for(const [id,value] of Object.entries(unit.capabilities||{})){const c=copy(value);for(const [group,renamed] of to.parameterSchemas)if(renamed!==group)c.source=String(c.source).replace(groupPathPattern(group),`$1${renamed}.`);(next.capabilities||={})[name('capabilities',id)]=c}
   for(const [id,value] of Object.entries(unit.objects||{})){
     const o=copy(value);for(const state of Object.keys(o.visuals||{}))o.visuals[state]=target(o.visuals[state]);
@@ -556,17 +577,18 @@ function setUnitCapabilities(theme,objectId,capabilities,groups){
   if(groups)for(const placeable of Object.values(next.placeables||{}))if(placeable.object===objectId){const keep=(placeable.parameters||[]).filter(path=>path.startsWith('transform.')||groups.includes(path.split('.')[0])),have=new Set(keep);for(const group of groups)for(const key of Object.keys(theme.parameterSchemas?.[group]||{}))if(!have.has(`${group}.${key}`))keep.push(`${group}.${key}`);placeable.parameters=keep}
   return next;
 }
+function checkCapabilitySource(source){return compileCapabilitySource(source).errors}
 function setCapabilitySource(theme,name,entry,{builtIns=[]}={}){
   // A pack capability is text in the theme; the engine evaluates it, never the editor.
   if(!validId('capabilities',name))throw new Error('A capability needs a name of letters and digits, starting with a letter.');if(builtIns.includes(name))throw new Error(`${name} is built in; pick another name.`);
-  if(typeof entry?.source!=='string'||!entry.source.trim())throw new Error('A capability needs source text.');
+  if(typeof entry?.source!=='string'||!entry.source.trim())throw new Error('A capability needs source text.');const problems=checkCapabilitySource(entry.source);if(problems.length)throw new Error(problems.join('; '));
   const next=copy(theme);next.capabilities={...(next.capabilities||{}),[name]:{...(entry.description?{description:String(entry.description)}:{}),source:entry.source}};return next;
 }
 // A pack is a theme and a map in one file; it splits back into exactly the two documents it was made from.
 function makePack(theme,map){return{format:PACK_FORMAT,theme:copy(theme),map:copy(map)}}
 function splitPack(pack){if(!isRecord(pack)||pack.format!==PACK_FORMAT)return{theme:null,map:null,errors:[`not a ${PACK_FORMAT} document`]};const errors=[];if(!isRecord(pack.theme))errors.push('pack theme must be an object');if(!isRecord(pack.map))errors.push('pack map must be an object');return{theme:errors.length?null:pack.theme,map:errors.length?null:pack.map,errors}}
 const serialize=document=>JSON.stringify(document,null,2)+'\n';
-root.ReferencePackUnits={ImportCore,UNIT_FORMAT,PACK_FORMAT,UNIT_SECTIONS,unitArt,exportUnitPlan,validateUnit,planUnitImport,applyUnitImport,cloneUnit,pointVisual,setUnitCapabilities,setCapabilitySource,makePack,splitPack,serialize};
+root.ReferencePackUnits={ImportCore,UNIT_FORMAT,PACK_FORMAT,UNIT_SECTIONS,unitArt,exportUnitPlan,validateUnit,planUnitImport,applyUnitImport,cloneUnit,pointVisual,setUnitCapabilities,setCapabilitySource,checkCapabilitySource,makePack,splitPack,serialize};
 })(typeof window==='object'?window:globalThis);
 </script>
 <script>
@@ -822,20 +844,40 @@ $('cloneUnitBtn').onclick=async()=>{const from=$('sheetUnit').value,id=$('newUni
 $('applyCapsBtn').onclick=async()=>{const unit=$('sheetUnit').value,checked=host=>[...$(host).querySelectorAll('input:checked')].map(x=>x.value);try{await replaceTheme(units.setUnitCapabilities(state.theme,unit,checked('capChecks'),checked('groupChecks')),`${unit}: capabilities and parameters updated.`);fillUnitSelect($('sheetUnit'),unit);renderSheet()}catch(error){setStatus(error.message||String(error),true)}};
 $('sheetBtn').onclick=openSheet;$('sheetLoadBtn').onclick=()=>$('sheetFile').click();$('sheetFile').onchange=e=>{const file=e.target.files[0];e.target.value='';if(file)loadSheetImage(file).catch(error=>setStatus(`Spritesheet rejected: ${error.message}`,true))};
 $('exportUnitBtn').onclick=exportUnit;$('importUnitBtn').onclick=()=>$('unitFile').click();$('unitFile').onchange=e=>{const file=e.target.files[0];e.target.value='';if(file)readUnitFile(file)};$('savePackBtn').onclick=savePack;
-// Capability source: edited as text. When this editor shares a page with a running game (the release build), Apply also
-// hands the text to that game, which compiles it and swaps it into its live registry; a compile error leaves both as they were.
+// Capability source: edited as text and checked with the engine's own compiler at Apply (no hook runs). When this editor
+// shares a page with a running game (the release build), Apply also hands the text to that game, which swaps it into its
+// live registry; anything refused leaves both as they were. Built-ins are read-only, and can be copied as new capabilities
+// where their source is at hand: in the release build, from the game's registry.
 function liveEngine(){try{return window.parent!==window?window.parent.ReferenceEngine||null:null}catch(_){return null}}
-function capabilityUsers(name){const n=Object.values(state.theme?.objects||{}).filter(object=>(object.capabilities||[]).includes(name)).length;return`used by ${n} unit${n===1?'':'s'}`}
-function showCapability(name){const entry=state.theme?.capabilities?.[name];$('capabilityName').value=name||'';$('capabilityDescription').value=entry?.description||'';$('capabilitySource').value=entry?.source||"({\n  init(self, p) {\n  },\n  step(self, world, p) {\n  }\n})";$('capabilityUsers').textContent=name?capabilityUsers(name):'';$('capabilityStatus').textContent=''}
-function openCapabilities(){if(!state.theme)return;const names=Object.keys(state.theme.capabilities||{}).sort();$('capabilityPick').innerHTML=[...names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`),'<option value="">(new capability)</option>'].join('');showCapability(names[0]||'');$('capabilityPick').value=names[0]||'';$('capabilityDialog').showModal()}
-$('capabilityPick').onchange=()=>showCapability($('capabilityPick').value);$('capabilityName').oninput=()=>{$('capabilityUsers').textContent=capabilityUsers($('capabilityName').value.trim())};
+function builtInSource(name){try{const boundary=window.parent!==window?window.parent.ReferencePackBoundary:window.ReferencePackBoundary;return boundary?.BUILTIN_CAPABILITIES?.get(name)||null}catch(_){return null}}
+function capabilityUsers(name){const n=Object.values(state.theme?.objects||{}).filter(object=>[...(object.capabilities||[]),...(object.bumpTriggers||[]).map(t=>t?.type)].includes(name)).length;return`used by ${n} unit${n===1?'':'s'}`}
+const NEW_CAPABILITY="({\n  init(self, p) {\n  },\n  step(self, world, p) {\n  }\n})";
+function showCapability(pick){
+  const builtIn=pick.startsWith('builtin:'),name=builtIn?pick.slice(8):pick,entry=builtIn?builtInSource(name):state.theme?.capabilities?.[name];
+  $('capabilityName').value=builtIn?'':name;$('capabilityName').placeholder=builtIn?`name for a copy of ${name}`:'name';$('capabilityDescription').value=entry?.description||'';
+  $('capabilitySource').value=builtIn?(entry?.source||(entry?`// ${name} is a flag: it has no hooks to copy.`:`// ${name} is built in. Its source is at hand when this editor runs inside the release build.`)):(entry?.source||NEW_CAPABILITY);
+  $('capabilitySource').readOnly=builtIn;$('capabilityDescription').readOnly=builtIn;$('capabilityApplyBtn').hidden=builtIn;$('capabilityReinitLabel').hidden=builtIn;$('capabilityCopyBtn').hidden=!builtIn;$('capabilityCopyBtn').disabled=!entry?.source;
+  $('capabilityUsers').textContent=`${builtIn?'built in, read-only · ':''}${capabilityUsers(name)}`;$('capabilityStatus').textContent='';$('capabilityPick').value=pick;
+}
+function openCapabilities(){
+  if(!state.theme)return;const names=Object.keys(state.theme.capabilities||{}).sort(),builtIns=[...builtInCapabilities()].sort(),option=(value,label)=>`<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+  $('capabilityPick').innerHTML=`<optgroup label="This theme">${[...names.map(n=>option(n,n)),option('','(new capability)')].join('')}</optgroup><optgroup label="Built in (read-only)">${builtIns.map(n=>option(`builtin:${n}`,n)).join('')}</optgroup>`;
+  showCapability(names[0]||'');$('capabilityDialog').showModal();
+}
+$('capabilityPick').onchange=()=>showCapability($('capabilityPick').value);$('capabilityName').oninput=()=>{if(!$('capabilityPick').value.startsWith('builtin:'))$('capabilityUsers').textContent=capabilityUsers($('capabilityName').value.trim())};
+$('capabilityCopyBtn').onclick=()=>{
+  // Fork a built-in: its source becomes a new, editable capability under the name typed (nothing changes until Apply).
+  const from=$('capabilityPick').value.slice(8),name=$('capabilityName').value.trim()||`${from}Copy`,entry=builtInSource(from);if(!entry?.source)return;
+  showCapability('');$('capabilityName').value=name;$('capabilityDescription').value=`Copy of the built-in ${from}. ${entry.description||''}`.trim();$('capabilitySource').value=entry.source;
+  $('capabilityStatus').textContent=`Copied ${from}. Apply registers it as ${name}; give a unit the name ${name} to use it.`;$('capabilityStatus').className='mini';$('capabilityUsers').textContent=capabilityUsers(name);
+};
 $('capabilityApplyBtn').onclick=async()=>{
-  const name=$('capabilityName').value.trim(),entry={description:$('capabilityDescription').value.trim(),source:$('capabilitySource').value};
+  const name=$('capabilityName').value.trim(),entry={description:$('capabilityDescription').value.trim(),source:$('capabilitySource').value},reinit=$('capabilityReinit').checked;
   try{
-    const theme=units.setCapabilitySource(state.theme,name,entry,{builtIns:builtInCapabilities()}),engine=liveEngine();let note='Saved in the theme. No running game shares this page: Save pack and load it in the engine, which checks the source then.';
-    if(engine?.reloadCapability){const live=engine.reloadCapability(name,entry);if(!live.ok){$('capabilityStatus').textContent=`The game refused it, nothing changed: ${live.errors.join('; ')}`;$('capabilityStatus').className='mini error';return}note=`Reloaded live into the running game: ${live.units} unit${live.units===1?' runs':'s run'} it from the next frame, keeping ${live.units===1?'its':'their'} state${live.thawed?`; ${live.thawed} unfrozen`:''}.`}
-    await replaceTheme(theme,`Capability ${name} applied.`);$('capabilityStatus').textContent=note;$('capabilityStatus').className='mini';$('capabilityUsers').textContent=capabilityUsers(name);
-    if(![...$('capabilityPick').options].some(o=>o.value===name)){$('capabilityPick').insertAdjacentHTML('afterbegin',`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)}$('capabilityPick').value=name;
+    const theme=units.setCapabilitySource(state.theme,name,entry,{builtIns:builtInCapabilities()}),engine=liveEngine();let note='Source checked and saved in the theme. No running game shares this page: Save pack and load it to play it.';
+    if(engine?.reloadCapability){const live=engine.reloadCapability(name,entry,{reinit});if(!live.ok){$('capabilityStatus').textContent=`The game refused it, nothing changed: ${live.errors.join('; ')}`;$('capabilityStatus').className='mini error';return}note=`Reloaded live into the running game: ${live.units} unit${live.units===1?' runs':'s run'} it from the next frame, ${reinit?`with init run again`:`keeping ${live.units===1?'its':'their'} state`}${live.thawed?`; ${live.thawed} unfrozen`:''}.`}
+    await replaceTheme(theme,`Capability ${name} applied.`);$('capabilityStatus').textContent=note;$('capabilityStatus').className='mini';
+    if(![...$('capabilityPick').options].some(o=>o.value===name))$('capabilityPick').querySelector('optgroup').insertAdjacentHTML('afterbegin',`<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`);$('capabilityPick').value=name;$('capabilityUsers').textContent=capabilityUsers(name);
   }catch(error){$('capabilityStatus').textContent=error.message||String(error);$('capabilityStatus').className='mini error'}
 };
 $('capabilityBtn').onclick=openCapabilities;

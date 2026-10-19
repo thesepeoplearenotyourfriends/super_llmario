@@ -79,7 +79,7 @@ Default gamepad mapping:
 * Jump: Button 1
 * Pause/Start: Button 9
 
-Touchscreen (canonical engine; appears on coarse pointers or the first touch):
+Touchscreen (release build and engine; appears on coarse pointers or the first touch):
 
 * Left half: floating virtual stick. Horizontal engages early; up/down need a deliberate push, and up never jumps.
 * Right half: SNES diamond. B and Y run, A and X jump. One touch surface hit-tests each pointer against invisible regions larger than the buttons: thumbs glide between buttons, the B/A overlap presses both, and rolling B → A keeps B latched while A is held, so the run continues through the jump.
@@ -203,16 +203,19 @@ that operation rather than allowing the PR to become blocked.
 
 ## Standalone runtime invariant
 
-`editor/reference_pack_editor.html` and `engine/reference_pack_engine.html` are the canonical standalone applications. `archived/engine/legacy_engine.html` is a historical behavioral oracle only; no archived editor, theme, tool, test, or fixture is an active runtime input.
+The release build, `dist/super_llmario.html` produced by `scripts/build_release.py`, is the canonical product. UI checks and screenshots target it: its editor has the menu header, toolbar and world plot tools that the build adds. `editor/reference_pack_editor.html`, `engine/reference_pack_engine.html`, the theme and the maps are its build inputs. They still run on their own, but their UI may lag the release build's. `archived/engine/legacy_engine.html` is a historical behavioral oracle only; no archived editor, theme, tool, test, or fixture is an active runtime input.
 
-The repository is editable source/workshop form. The GitHub Release HTML is the self-contained/to-go build produced by `scripts/build_release.py`. Nothing should be embedded into editable engine source merely for distribution convenience; distribution packing belongs to the release build.
+The repository is editable source/workshop form. Nothing should be embedded into editable engine source merely for distribution convenience; distribution packing belongs to the release build.
 
 Runtime code has exactly two sources: the standalone engine/editor files
 themselves, and capability source text inside a theme pack the user loaded.
 A pack's `capabilities` section, evaluated by the engine's capability
-registry, is the one sanctioned form of runtime-evaluated code. Nothing else
-is evaluated at runtime: no eval of map, theme, or user text outside that
-registry, and no code assembled from strings for any other purpose.
+registry, is the one sanctioned form of runtime-evaluated code. The editor
+checks capability source at Apply with a verbatim copy of the engine's
+compiler (a test keeps the copies identical) and never calls a hook. Nothing
+else is evaluated at runtime: no eval of map, theme, or user text outside that
+registry, and no code assembled from strings for any other purpose. Built-in
+capabilities are source text too, compiled through the same door.
 
 Capability source follows the contract in the comment block at the top of
 `engine/reference_pack_engine.html`: hooks close over nothing, take
