@@ -54,10 +54,13 @@ const diagnostic=(code,message,severity='error',details={})=>({code,message,seve
 //              'stomped'     self is defeated from above; other bounces     'bounce'  other bounces off self, unharmed
 //              'hurtOther'   other takes damage                             'knockedOut'  self is knocked out
 //              'solid'       other is stopped (a projectile fizzles)        'ignore'  nothing happens
+//              'spin'        (blocks) self spins as its bump trigger says   'dispense'  (blocks) self gives up one of its contents
 //            other is {kind: 'player'|'projectile'|'shell', x, y, w, h, vx, vy} (a player also has form); side is where
 //            other met self: 'top', 'bottom', 'left' or 'right'. The engine applies the verdict, so lives,
 //            invulnerability and sounds stay in one place. With no verdict a player is hurt and a projectile or shell
-//            knocks self out. A tick capability may also carry contact (wings fly, and a stomp clips them).
+//            knocks self out. A tick capability may also carry contact (wings fly, and a stomp clips them). A block's
+//            bumpTriggers entries each name a contact capability, asked when the player bumps the block from below; the
+//            entry's other fields configure the effect the engine applies.
 //   pickup   collect(player, world, p) when the player takes the pickup: the only kind that touches the player, and
 //            only through player.grow(), setForm(form), addCoins(n), addLife(n) and player.form (here world.player is
 //            that same API).
@@ -77,7 +80,7 @@ const diagnostic=(code,message,severity='error',details={})=>({code,message,seve
 //   originX, originY, tick, error, mode ('walking', 'defeated', 'knockedOut', 'shellStopped', 'shellMoving', 'shellHeld')
 // world: {tick, bounds: {x, y, w, h} or null, player: read-only {x, y, w, h, vx, vy, face, form, dead} or null}
 // p: the unit's resolved parameter values keyed by schema path, e.g. p['walker.speed'].
-const CAPABILITY_VERDICTS=Object.freeze(['stomped','bounce','hurtOther','knockedOut','solid','ignore']);
+const CAPABILITY_VERDICTS=Object.freeze(['stomped','bounce','hurtOther','knockedOut','solid','ignore','spin','dispense']);
 function createCapabilityRegistry({base=null,builtIn=false}={}){
   const own=new Map(),get=name=>own.get(name)||base?.get(name)||null,list=subject=>Array.isArray(subject?.capabilities)?[...new Set(subject.capabilities)]:[];
   function register(definition){
@@ -97,54 +100,150 @@ function createCapabilityRegistry({base=null,builtIn=false}={}){
     hooks:(subject,hook)=>list(subject).map(get).filter(definition=>typeof definition?.[hook]==='function'),
     unregistered:names=>[...new Set((names||[]).filter(name=>!get(name)))]});
 }
-// Built-in capabilities, written the way a pack capability has to be: nothing from outside, everything from arguments.
-const BUILTIN_CAPABILITIES=createCapabilityRegistry({builtIn:true});
-for(const definition of [
-  ...['solid','solidTop','autotile','climbable','transport','armored','shell','breakable','collectible','move','jump','run','duck','carry','shoot','goalPresentation'].map(name=>({name})),
-  // Declared by theme objects, with no behavior yet.
-  ...['emerge','retract','waveFlight','horizontalFlight'].map(name=>({name,description:'Reserved: no behavior yet.'})),
-  {name:'patrol',description:'Walks back and forth walker.patrolRange either side of its spawn at walker.speed, starting toward walker.direction.',
-    init(self,p){const range=Number(p['walker.patrolRange'])||0;self.state.range=range;self.state.speed=Number.isFinite(p['walker.speed'])?p['walker.speed']:.4;self.direction=p['walker.direction']==='right'?1:-1;self.mirror=self.direction<0;self.min=self.x-range;self.max=self.x+range},
-    step(self){if(!(self.state.range>0))return;self.x+=self.direction*self.state.speed;if(self.x<=self.min){self.x=self.min;self.direction=1}else if(self.x>=self.max){self.x=self.max;self.direction=-1}self.mirror=self.direction<0}},
-  {name:'winged',description:'flight.hasWings wears wings, and a stomp clips them before anything else; flight.flying bobs in the air until then. Clipped wings drop the unit to the ground.',
-    init(self,p){self.state.winged=p['flight.hasWings']===true;self.state.wingPhase=0;self.flying=p['flight.flying']===true;self.attachmentsVisible=self.state.winged},
-    step(self){if(!self.flying)return;self.state.wingPhase++;self.y=self.originY-Math.abs(Math.sin(self.state.wingPhase*.045))*72},
-    contact(self,other,side){if(other.kind!=='player'||side!=='top'||self.mode!=='walking'||!self.state.winged)return;Object.assign(self.state,{winged:false,wingPhase:0});Object.assign(self,{flying:false,falling:true,vy:0,attachmentsVisible:false});return'bounce'}},
-  {name:'stompable',description:'Coming down on it from above defeats it.',contact(self,other,side){if(other.kind==='player'&&side==='top')return'stomped'}},
-  {name:'stompHazard',description:'Hurts the player from any side, even from above; projectiles fizzle on it.',contact(self,other){if(other.kind==='player')return'hurtOther';if(other.kind==='projectile')return'solid'}},
-  {name:'movingPlatform',description:'Travels movingPlatform.path (or movingPlatform.range to the right) and back at movingPlatform.speed, carrying whoever stands on it.',
-    init(self,p){
-      const range=Math.max(0,Number(p['movingPlatform.range'])||0),authored=p['movingPlatform.path'],valid=Array.isArray(authored)?authored.filter(point=>!!point&&typeof point==='object'&&!Array.isArray(point)&&Number.isFinite(point.x)&&Number.isFinite(point.y)):[];
-      let points;if(valid.length>=2){const first=valid[0];points=valid.map(point=>({x:point.x-first.x,y:point.y-first.y}))}else points=[{x:0,y:0},{x:range,y:0}];
-      const segments=[],lengths=[0];let length=0;for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],segment=Math.hypot(b.x-a.x,b.y-a.y);segments.push(segment);length+=segment;lengths.push(length)}
-      const route={points,segments,lengths,length,range,travel:Math.min(range,length),authored:valid.length>=2},speed=p['movingPlatform.speed']===undefined?1:Math.max(0,Number(p['movingPlatform.speed'])||0);
-      Object.assign(self.state,{route,range,speed,travel:route.travel,phase:0,direction:1})},
-    step(self){
-      const s=self.state,route=s.route;if(!(s.travel>0&&s.speed>0))return;
-      s.phase+=s.direction*s.speed;if(s.phase>=s.travel){s.phase=s.travel;s.direction=-1}else if(s.phase<=0){s.phase=0;s.direction=1}
-      let x=0,y=0;if(route.length){const at=Math.max(0,Math.min(s.phase,route.length));let index=0;while(index<route.segments.length-1&&at>route.lengths[index+1])index++;const a=route.points[index],b=route.points[index+1],length=route.segments[index],mix=length?(at-route.lengths[index])/length:0;x=a.x+(b.x-a.x)*mix;y=a.y+(b.y-a.y)*mix}
-      self.x=self.originX+x;self.y=self.originY+y}},
-  {name:'walker',description:'Once free, walks at a steady pace; walls turn it around.',step(self){if(!self.vx)self.vx=.85}},
-  {name:'coin',description:'Adds a coin.',collect(player){player.addCoins(1)}},
-  {name:'extraLife',description:'Adds a life.',collect(player){player.addLife(1)}},
-  {name:'grow',description:'Grows the smallest form; a bigger form keeps what it has.',collect(player){player.grow()}},
-  {name:'projectilePower',description:'Gives the projectile-throwing form.',collect(player){player.setForm('fire')}},
-  {name:'flightPower',description:'Gives the flying form.',collect(player){player.setForm('raccoon')}}
-]){const result=BUILTIN_CAPABILITIES.register(definition);if(!result.ok)throw new Error(result.errors.join('; '))}
 // Pack capabilities: a theme's `capabilities` section maps a name to {description, source}. The source is the text of one
 // object expression carrying hooks, e.g. "({ init(self, p) {...}, step(self, world, p) {...} })", and it registers
 // exactly like a built-in. This is the one kind of code the engine evaluates at runtime. Every global except plain
 // JavaScript built-ins is hidden from it, so a hook works from its arguments; that keeps honest code honest and is not a
 // security boundary.
+/* CAPABILITY_COMPILER_START: the one compiler for capability source. The editor carries a verbatim copy to check source
+   before Apply, never calling a hook; a test keeps the two identical. */
 const CAPABILITY_SOURCE_GLOBALS=new Set(['Math','JSON','Number','String','Boolean','Array','Object','Map','Set','WeakMap','WeakSet','Symbol','Error','TypeError','RangeError','Infinity','NaN','undefined','isFinite','isNaN','parseFloat','parseInt']);
 function compileCapabilitySource(source){
   if(typeof source!=='string'||!source.trim())return{definition:null,errors:['source must be non-empty text']};
   const realm=Function('return this')(),hidden=Object.getOwnPropertyNames(realm).filter(name=>/^[A-Za-z_$][\w$]*$/.test(name)&&!CAPABILITY_SOURCE_GLOBALS.has(name)&&name!=='eval'&&name!=='arguments');
   let made;try{made=Function(...hidden,`'use strict';return(${source}\n)`)()}catch(error){return{definition:null,errors:[`source does not evaluate: ${error.message}`]}}
-  if(!record(made))return{definition:null,errors:['source must evaluate to an object of hooks']};
+  if(!made||typeof made!=='object'||Array.isArray(made))return{definition:null,errors:['source must evaluate to an object of hooks']};
   const unknown=Object.keys(made).filter(key=>!['init','step','contact','collect'].includes(key));
   if(unknown.length)return{definition:null,errors:[`unknown hook ${unknown.join(', ')}; hooks are init, step, contact and collect`]};
+  const notFunctions=Object.keys(made).filter(key=>typeof made[key]!=='function');if(notFunctions.length)return{definition:null,errors:[`${notFunctions.join(', ')} must be a function`]};
+  if(made.collect&&(made.init||made.step||made.contact))return{definition:null,errors:['a pickup capability carries only collect']};
   return{definition:{init:made.init,step:made.step,contact:made.contact,collect:made.collect},errors:[]};
+}
+/* CAPABILITY_COMPILER_END */
+// Built-in capabilities are source text compiled through the same door as a pack's, so any of them can be read, and
+// forked into a pack capability, without ever turning a live function back into text.
+const BUILTIN_CAPABILITY_SOURCES={
+  // Flags: plain data, read by whatever cares.
+  ...Object.fromEntries(['solid','solidTop','autotile','climbable','transport','armored','shell','breakable','collectible','move','jump','run','duck','carry','shoot','goalPresentation'].map(name=>[name,{}])),
+  // Declared by theme objects, with no behavior yet.
+  ...Object.fromEntries(['emerge','retract','waveFlight','horizontalFlight'].map(name=>[name,{description:'Reserved: no behavior yet.'}])),
+  patrol:{description:'Walks back and forth walker.patrolRange either side of its spawn at walker.speed, starting toward walker.direction.',source:`({
+  init(self, p) {
+    const range = Number(p['walker.patrolRange']) || 0;
+    self.state.range = range;
+    self.state.speed = Number.isFinite(p['walker.speed']) ? p['walker.speed'] : .4;
+    self.direction = p['walker.direction'] === 'right' ? 1 : -1;
+    self.mirror = self.direction < 0;
+    self.min = self.x - range;
+    self.max = self.x + range;
+  },
+  step(self) {
+    if (!(self.state.range > 0)) return;
+    self.x += self.direction * self.state.speed;
+    if (self.x <= self.min) { self.x = self.min; self.direction = 1 }
+    else if (self.x >= self.max) { self.x = self.max; self.direction = -1 }
+    self.mirror = self.direction < 0;
+  }
+})`},
+  winged:{description:'flight.hasWings wears wings, and a stomp clips them before anything else; flight.flying bobs in the air until then. Clipped wings drop the unit to the ground.',source:`({
+  init(self, p) {
+    self.state.winged = p['flight.hasWings'] === true;
+    self.state.wingPhase = 0;
+    self.flying = p['flight.flying'] === true;
+    self.attachmentsVisible = self.state.winged;
+  },
+  step(self) {
+    if (!self.flying) return;
+    self.state.wingPhase++;
+    self.y = self.originY - Math.abs(Math.sin(self.state.wingPhase * .045)) * 72;
+  },
+  contact(self, other, side) {
+    if (other.kind !== 'player' || side !== 'top' || self.mode !== 'walking' || !self.state.winged) return;
+    Object.assign(self.state, {winged: false, wingPhase: 0});
+    Object.assign(self, {flying: false, falling: true, vy: 0, attachmentsVisible: false});
+    return 'bounce';
+  }
+})`},
+  stompable:{description:'Coming down on it from above defeats it.',source:`({
+  contact(self, other, side) {
+    if (other.kind === 'player' && side === 'top') return 'stomped';
+  }
+})`},
+  stompHazard:{description:'Hurts the player from any side, even from above; projectiles fizzle on it.',source:`({
+  contact(self, other) {
+    if (other.kind === 'player') return 'hurtOther';
+    if (other.kind === 'projectile') return 'solid';
+  }
+})`},
+  movingPlatform:{description:'Travels movingPlatform.path (or movingPlatform.range to the right) and back at movingPlatform.speed, carrying whoever stands on it.',source:`({
+  init(self, p) {
+    const range = Math.max(0, Number(p['movingPlatform.range']) || 0), authored = p['movingPlatform.path'];
+    const valid = Array.isArray(authored) ? authored.filter(point => !!point && typeof point === 'object' && !Array.isArray(point) && Number.isFinite(point.x) && Number.isFinite(point.y)) : [];
+    let points;
+    if (valid.length >= 2) { const first = valid[0]; points = valid.map(point => ({x: point.x - first.x, y: point.y - first.y})) }
+    else points = [{x: 0, y: 0}, {x: range, y: 0}];
+    const segments = [], lengths = [0];
+    let length = 0;
+    for (let i = 1; i < points.length; i++) { const a = points[i - 1], b = points[i], segment = Math.hypot(b.x - a.x, b.y - a.y); segments.push(segment); length += segment; lengths.push(length) }
+    const route = {points, segments, lengths, length, range, travel: Math.min(range, length), authored: valid.length >= 2};
+    const speed = p['movingPlatform.speed'] === undefined ? 1 : Math.max(0, Number(p['movingPlatform.speed']) || 0);
+    Object.assign(self.state, {route, range, speed, travel: route.travel, phase: 0, direction: 1});
+  },
+  step(self) {
+    const s = self.state, route = s.route;
+    if (!(s.travel > 0 && s.speed > 0)) return;
+    s.phase += s.direction * s.speed;
+    if (s.phase >= s.travel) { s.phase = s.travel; s.direction = -1 }
+    else if (s.phase <= 0) { s.phase = 0; s.direction = 1 }
+    let x = 0, y = 0;
+    if (route.length) {
+      const at = Math.max(0, Math.min(s.phase, route.length));
+      let index = 0;
+      while (index < route.segments.length - 1 && at > route.lengths[index + 1]) index++;
+      const a = route.points[index], b = route.points[index + 1], length = route.segments[index], mix = length ? (at - route.lengths[index]) / length : 0;
+      x = a.x + (b.x - a.x) * mix;
+      y = a.y + (b.y - a.y) * mix;
+    }
+    self.x = self.originX + x;
+    self.y = self.originY + y;
+  }
+})`},
+  walker:{description:'Once free, walks at a steady pace; walls turn it around.',source:`({
+  step(self) {
+    if (!self.vx) self.vx = .85;
+  }
+})`},
+  // Bump triggers: a block's bumpTriggers entries name these, and the entry's other fields configure the effect.
+  temporarySpin:{description:'Bumped from below, the block spins for its configured duration and, with collisionWhileActive "none", can be passed through until it stops.',source:`({
+  contact(self, other, side) {
+    if (other.kind === 'player' && side === 'bottom') return 'spin';
+  }
+})`},
+  dispenseContents:{description:'Bumped from below, the block gives up one use and dispenses the object named by its contentsParameter.',source:`({
+  contact(self, other, side) {
+    if (other.kind === 'player' && side === 'bottom') return 'dispense';
+  }
+})`},
+  coin:{description:'Adds a coin.',source:`({
+  collect(player) { player.addCoins(1) }
+})`},
+  extraLife:{description:'Adds a life.',source:`({
+  collect(player) { player.addLife(1) }
+})`},
+  grow:{description:'Grows the smallest form; a bigger form keeps what it has.',source:`({
+  collect(player) { player.grow() }
+})`},
+  projectilePower:{description:'Gives the projectile-throwing form.',source:`({
+  collect(player) { player.setForm('fire') }
+})`},
+  flightPower:{description:'Gives the flying form.',source:`({
+  collect(player) { player.setForm('raccoon') }
+})`}
+};
+const BUILTIN_CAPABILITIES=createCapabilityRegistry({builtIn:true});
+for(const [name,entry] of Object.entries(BUILTIN_CAPABILITY_SOURCES)){
+  const compiled=entry.source?compileCapabilitySource(entry.source):{definition:{},errors:[]};
+  const result=compiled.definition?BUILTIN_CAPABILITIES.register({name,...entry,...compiled.definition}):compiled;if(!result.ok&&result.errors?.length)throw new Error(`built-in ${name}: ${result.errors.join('; ')}`);
 }
 const packRegistries=new WeakMap;
 function capabilityRegistryFor(theme){
@@ -161,10 +260,11 @@ function capabilityRegistryFor(theme){
   }
   const made={registry,diagnostics};packRegistries.set(theme,made);return made;
 }
-function reloadPackCapability(runtime,name,entry,units=[]){
+function reloadPackCapability(runtime,name,entry,units=[],{reinit=false}={}){
   // Live edit: swap one pack capability's code in the running registry. Units keep their state and are not respawned;
   // hooks are looked up on every call, so the next frame runs the new code. A unit frozen by this capability thaws, and a
-  // unit that gains it (it was unregistered) or whose init threw gets that capability's init now.
+  // unit that gains it (it was unregistered) or whose init threw gets that capability's init now; with reinit, every unit
+  // using it does, for edits that change the shape of its state.
   const registry=runtime?.capabilities;
   if(!registry||registry===BUILTIN_CAPABILITIES||!registry.base)return{ok:false,errors:['no running pack registry to reload into']};
   if(BUILTIN_CAPABILITIES.get(name))return{ok:false,errors:[`${name} is built in; built-in capabilities have no source to edit`]};
@@ -172,13 +272,19 @@ function reloadPackCapability(runtime,name,entry,units=[]){
   const added=!registry.get(name),result=registry.register({name,description:entry.description,source:entry.source,...compiled.definition});if(!result.ok)return{ok:false,errors:result.errors};
   const errors=capabilityErrorsOf(runtime);let reached=0,thawed=0;
   for(const unit of units){
-    if(!registry.has(unit,name))continue;reached++;const initAgain=added||(unit.error?.capability===name&&unit.error.hook==='init');
+    if(!registry.has(unit,name))continue;reached++;const initAgain=reinit||added||(unit.error?.capability===name&&unit.error.hook==='init');
     if(unit.error?.capability===name){unit.error=null;thawed++}
     if(initAgain&&result.definition.init){unit.state||={};runCapabilityHook(unit,result.definition,'init',[unit,unit.values||{}],errors)}
   }
   return{ok:true,errors:[],added,units:reached,thawed};
 }
 const capabilitiesOf=runtime=>runtime?.capabilities||BUILTIN_CAPABILITIES;
+function bumpTriggerVerdict(capabilities,block,trigger,other,world,errors){
+  // A bump trigger names a contact capability; a bump from below asks it what happens. Unregistered types do nothing.
+  const definition=capabilities.get(trigger?.type);if(!definition?.contact||block.error)return undefined;
+  const verdict=runCapabilityHook(block,definition,'contact',[block,other,'bottom',world],errors);return CAPABILITY_VERDICTS.includes(verdict)&&verdict!=='ignore'?verdict:undefined;
+}
+const bumpingPlayer=player=>({kind:'player',x:player?.x,y:player?.y,w:player?.w,h:player?.h,vx:player?.vx,vy:player?.vy,form:player?.form});
 const capabilityErrorsOf=runtime=>runtime?(runtime.capabilityErrors||(runtime.capabilityErrors=[])):[];
 function freezeUnit(unit,definition,hook,message,errors){unit.error={capability:definition.name,hook,message};errors?.push({...unit.error,instanceIndex:unit.instanceIndex??null})}
 function runCapabilityHook(unit,definition,hook,args,errors){
@@ -221,7 +327,7 @@ function attachmentCommands(theme,compiled,object,diagnostics){const out=[],body
 function visualCommands(theme,compiled,object,diagnostics){const variants={};for(const[state,id]of Object.entries(object.visuals||{})){const target=resolveTarget(theme,id,compiled.values,diagnostics,{instanceIndex:compiled.index,visualState:state});if(target)variants[state]=commandsFor({...compiled,target})[0]}return variants}
 function commandAtTick(command,tick){const animation=command.animation;if(!animation?.frames?.length)return command;const raw=Math.floor(Math.max(0,Number(tick)||0)/animation.ticksPerFrame),index=animation.loop?raw%animation.frames.length:Math.min(raw,animation.frames.length-1),frame=animation.frames[index],r=frame.resource,o=frame.offset||{x:0,y:0};return{...command,resource:r.id,atlas:r.atlas,sourceRect:r.sourceRect,x:Number(o.x)||0,y:Number(o.y)||0,animationFrame:index}}
 function compileReferenceRuntime(theme,map,options={}){const fatal=validateReferencePair(theme,map);if(fatal.length)return{ok:false,errors:fatal,diagnostics:fatal.map(x=>diagnostic('invalid-document',x)),runtime:null};const diagnostics=[],instances=[],commands=[];for(const[index,source]of map.instances.entries()){if(!record(source)||typeof source.placeable!=='string'){diagnostics.push(diagnostic('unknown-placeable',`Instance ${index} references an unknown placeable.`,'error',{instanceIndex:index}));continue}const placeable=theme.placeables[source.placeable];if(!placeable){diagnostics.push(diagnostic('unknown-placeable',`Instance ${index} references unknown placeable ${source.placeable}.`,'error',{instanceIndex:index}));continue}const object=theme.objects[placeable.object];if(!object){diagnostics.push(diagnostic('unknown-object',`${source.placeable} references unknown object ${placeable.object}.`,'error',{instanceIndex:index}));continue}const values=resolvedValues(theme,placeable,source.values,index,diagnostics),x=values['transform.x'],y=values['transform.y'];if(!Number.isFinite(x)||!Number.isFinite(y)){diagnostics.push(diagnostic('malformed-transform',`Instance ${index} has a malformed world transform.`,'error',{instanceIndex:index}));continue}let layer=object.defaultSceneLayer;if(source.sceneLayer!==undefined){if(!theme.sceneLayers.includes(source.sceneLayer)){diagnostics.push(diagnostic('invalid-layer',`Instance ${index} has invalid scene-layer override ${source.sceneLayer}.`,'error',{instanceIndex:index}));continue}layer=source.sceneLayer}if(!theme.sceneLayers.includes(layer)){diagnostics.push(diagnostic('invalid-layer',`Instance ${index} object has invalid default scene layer ${layer}.`,'error',{instanceIndex:index}));continue}const visual=visualTarget(object,values,placeable.previewVisual);if(visual.error){diagnostics.push(diagnostic('unresolved-visual',`${source.placeable}: ${visual.error}.`,'error',{instanceIndex:index}));continue}const target=resolveTarget(theme,visual.target,values,diagnostics,{instanceIndex:index});if(!target)continue;const p=presentation(placeable.object,object,values),bounds=transformedAabb(target.bounds,p,{x,y}),compiled={index,instanceId:typeof source.instanceId==='string'?source.instanceId:null,placeable:source.placeable,objectId:placeable.object,engineNoun:object.engineNoun||null,capabilities:[...(object.capabilities||[])],visuals:{...(object.visuals||{})},interactionGeometry:structuredCopy(object.interactionGeometry),collisionGeometry:structuredCopy(object.collisionGeometry),bumpable:object.bumpable===true,breakable:object.breakable===true,bumpTriggers:structuredCopy(object.bumpTriggers||[]),collisionMode:object.collisionMode||null,visualId:visual.target,visualIdentity:visual.identity,values,layer,transform:{x,y,presentation:p},bounds,target};compiled.visualCommands=visualCommands(theme,compiled,object,diagnostics);compiled.drawCommands=[...attachmentCommands(theme,compiled,object,diagnostics),...commandsFor(compiled)];instances.push(compiled);commands.push(...compiled.drawCommands.map(c=>({...c,worldX:x,worldY:y})))}
-  commands.sort((a,b)=>theme.sceneLayers.indexOf(a.layer)-theme.sceneLayers.indexOf(b.layer)||a.instanceIndex-b.instanceIndex||a.order-b.order);const markers={start:validMarker(map.markers?.start,'start'),goal:validMarker(map.markers?.goal,'goal')};function validMarker(marker,kind){if(marker==null)return null;if(Number.isFinite(marker.x)&&Number.isFinite(marker.y))return{x:marker.x,y:marker.y};diagnostics.push(diagnostic('malformed-marker',`${kind} marker is malformed.`));return null}const authored=record(map.worldBounds)&&[map.worldBounds.x,map.worldBounds.y,map.worldBounds.w,map.worldBounds.h].every(Number.isFinite)&&map.worldBounds.w>0&&map.worldBounds.h>0?{...map.worldBounds}:null;let bounds=authored,boundsSource='authored';if(!bounds){const boxes=[...instances.map(x=>x.bounds),...Object.values(markers).filter(Boolean).map(m=>({x:m.x-16,y:m.y-32,w:32,h:36}))],margin=Number.isFinite(options.previewMargin)?options.previewMargin:64;if(boxes.length){const left=Math.min(...boxes.map(b=>b.x)),top=Math.min(...boxes.map(b=>b.y)),right=Math.max(...boxes.map(b=>b.x+b.w)),bottom=Math.max(...boxes.map(b=>b.y+b.h));bounds={x:Math.floor(left-margin),y:Math.floor(top-margin),w:Math.ceil(right-left+2*margin),h:Math.ceil(bottom-top+2*margin)}}else bounds={x:-margin,y:-margin,w:margin*2,h:margin*2};boundsSource='derived-preview';diagnostics.push(diagnostic('derived-bounds','Map has no authoritative world bounds; using a finite derived preview envelope.','warning'))}if(authored){const contained=box=>box.x>=bounds.x&&box.y>=bounds.y&&box.x+box.w<=bounds.x+bounds.w&&box.y+box.h<=bounds.y+bounds.h;for(const instance of instances)if(!contained(instance.bounds))diagnostics.push(diagnostic('outside-world-bounds',`Instance ${instance.index} is not fully contained by authored worldBounds.`,'error',{instanceIndex:instance.index}));for(const [kind,marker]of Object.entries(markers))if(marker&&!contained({x:marker.x-16,y:marker.y-32,w:32,h:36}))diagnostics.push(diagnostic('outside-world-bounds',`${kind} marker is not fully contained by authored worldBounds.`,'error',{marker:kind}))}const pack=options.capabilities?{registry:options.capabilities,diagnostics:[]}:capabilityRegistryFor(theme),capabilities=pack.registry,unregistered=new Set;diagnostics.push(...pack.diagnostics);for(const instance of instances)for(const name of capabilities.unregistered(instance.capabilities))if(!unregistered.has(`${instance.objectId}:${name}`)){unregistered.add(`${instance.objectId}:${name}`);diagnostics.push(diagnostic('unregistered-capability',`${instance.objectId}: capability ${name} is not registered, so nothing implements it.`,'warning',{instanceIndex:instance.index,capability:name}))}const surfaces={solid:[],solidTop:[]};for(const instance of instances){if(capabilities.has(instance,'solid')||instance.collisionMode==='solid')surfaces.solid.push({...instance.bounds,instanceIndex:instance.index});if(capabilities.has(instance,'solidTop')||instance.collisionMode==='oneWay'){const geometry=instance.collisionGeometry?.solidTop||{},left=Math.max(0,Number(geometry.leftInset)||0),right=Math.max(0,Number(geometry.rightInset)||0),top=Number(geometry.topInset)||0;surfaces.solidTop.push({x:instance.bounds.x+left,y:instance.bounds.y+top,w:Math.max(0,instance.bounds.w-left-right),h:Math.max(1,instance.bounds.h-top),instanceIndex:instance.index})}}const pickupTemplates={};for(const[id,object]of Object.entries(theme.objects)){if(object.engineNoun!=='pickup')continue;const visual=object.visuals?.idle,target=visual&&resolveTarget(theme,visual,{},diagnostics,{pickupTemplate:id});if(!target)continue;const command=commandsFor({index:-1,placeable:id,objectId:id,layer:object.defaultSceneLayer||'actors',transform:{presentation:{rotation:0,mirror:false}},target})[0];pickupTemplates[id]={id,capabilities:[...(object.capabilities||[])],command}}const projectileTarget=resolveTarget(theme,'projectile.fireball',{},diagnostics,{projectileTemplate:'fireball'}),projectileTemplate=projectileTarget?commandsFor({index:-2,placeable:'fireball',objectId:'fireball',layer:'actors',transform:{presentation:{rotation:0,mirror:false}},target:projectileTarget})[0]:null;if(projectileTemplate?.animation)projectileTemplate.animation.ticksPerFrame=3;const playerSpawn=markers.start?{x:markers.start.x-PLAYER_WIDTH/2,y:markers.start.y-PLAYER_HEIGHT}:null;return{ok:true,errors:[],diagnostics,runtime:{format:'llmario-reference-static-runtime',runtimeVersion:1,themeId:theme.id,packVersion:theme.packVersion,layers:[...theme.sceneLayers],instances,drawCommands:commands,markers,bounds,boundsSource,surfaces,pickupTemplates,projectileTemplate,playerSpawn,capabilities,capabilityErrors:[]}}}
+  commands.sort((a,b)=>theme.sceneLayers.indexOf(a.layer)-theme.sceneLayers.indexOf(b.layer)||a.instanceIndex-b.instanceIndex||a.order-b.order);const markers={start:validMarker(map.markers?.start,'start'),goal:validMarker(map.markers?.goal,'goal')};function validMarker(marker,kind){if(marker==null)return null;if(Number.isFinite(marker.x)&&Number.isFinite(marker.y))return{x:marker.x,y:marker.y};diagnostics.push(diagnostic('malformed-marker',`${kind} marker is malformed.`));return null}const authored=record(map.worldBounds)&&[map.worldBounds.x,map.worldBounds.y,map.worldBounds.w,map.worldBounds.h].every(Number.isFinite)&&map.worldBounds.w>0&&map.worldBounds.h>0?{...map.worldBounds}:null;let bounds=authored,boundsSource='authored';if(!bounds){const boxes=[...instances.map(x=>x.bounds),...Object.values(markers).filter(Boolean).map(m=>({x:m.x-16,y:m.y-32,w:32,h:36}))],margin=Number.isFinite(options.previewMargin)?options.previewMargin:64;if(boxes.length){const left=Math.min(...boxes.map(b=>b.x)),top=Math.min(...boxes.map(b=>b.y)),right=Math.max(...boxes.map(b=>b.x+b.w)),bottom=Math.max(...boxes.map(b=>b.y+b.h));bounds={x:Math.floor(left-margin),y:Math.floor(top-margin),w:Math.ceil(right-left+2*margin),h:Math.ceil(bottom-top+2*margin)}}else bounds={x:-margin,y:-margin,w:margin*2,h:margin*2};boundsSource='derived-preview';diagnostics.push(diagnostic('derived-bounds','Map has no authoritative world bounds; using a finite derived preview envelope.','warning'))}if(authored){const contained=box=>box.x>=bounds.x&&box.y>=bounds.y&&box.x+box.w<=bounds.x+bounds.w&&box.y+box.h<=bounds.y+bounds.h;for(const instance of instances)if(!contained(instance.bounds))diagnostics.push(diagnostic('outside-world-bounds',`Instance ${instance.index} is not fully contained by authored worldBounds.`,'error',{instanceIndex:instance.index}));for(const [kind,marker]of Object.entries(markers))if(marker&&!contained({x:marker.x-16,y:marker.y-32,w:32,h:36}))diagnostics.push(diagnostic('outside-world-bounds',`${kind} marker is not fully contained by authored worldBounds.`,'error',{marker:kind}))}const pack=options.capabilities?{registry:options.capabilities,diagnostics:[]}:capabilityRegistryFor(theme),capabilities=pack.registry,unregistered=new Set;diagnostics.push(...pack.diagnostics);for(const instance of instances)for(const name of capabilities.unregistered(instance.capabilities))if(!unregistered.has(`${instance.objectId}:${name}`)){unregistered.add(`${instance.objectId}:${name}`);diagnostics.push(diagnostic('unregistered-capability',`${instance.objectId}: capability ${name} is not registered, so nothing implements it.`,'warning',{instanceIndex:instance.index,capability:name}))}for(const instance of instances)for(const name of capabilities.unregistered((instance.bumpTriggers||[]).map(trigger=>trigger?.type)))if(!unregistered.has(`${instance.objectId}:${name}`)){unregistered.add(`${instance.objectId}:${name}`);diagnostics.push(diagnostic('unregistered-capability',`${instance.objectId}: bump trigger ${name} is not a registered capability, so nothing implements it.`,'warning',{instanceIndex:instance.index,capability:name}))}const surfaces={solid:[],solidTop:[]};for(const instance of instances){if(capabilities.has(instance,'solid')||instance.collisionMode==='solid')surfaces.solid.push({...instance.bounds,instanceIndex:instance.index});if(capabilities.has(instance,'solidTop')||instance.collisionMode==='oneWay'){const geometry=instance.collisionGeometry?.solidTop||{},left=Math.max(0,Number(geometry.leftInset)||0),right=Math.max(0,Number(geometry.rightInset)||0),top=Number(geometry.topInset)||0;surfaces.solidTop.push({x:instance.bounds.x+left,y:instance.bounds.y+top,w:Math.max(0,instance.bounds.w-left-right),h:Math.max(1,instance.bounds.h-top),instanceIndex:instance.index})}}const pickupTemplates={};for(const[id,object]of Object.entries(theme.objects)){if(object.engineNoun!=='pickup')continue;const visual=object.visuals?.idle,target=visual&&resolveTarget(theme,visual,{},diagnostics,{pickupTemplate:id});if(!target)continue;const command=commandsFor({index:-1,placeable:id,objectId:id,layer:object.defaultSceneLayer||'actors',transform:{presentation:{rotation:0,mirror:false}},target})[0];pickupTemplates[id]={id,capabilities:[...(object.capabilities||[])],command}}const projectileTarget=resolveTarget(theme,'projectile.fireball',{},diagnostics,{projectileTemplate:'fireball'}),projectileTemplate=projectileTarget?commandsFor({index:-2,placeable:'fireball',objectId:'fireball',layer:'actors',transform:{presentation:{rotation:0,mirror:false}},target:projectileTarget})[0]:null;if(projectileTemplate?.animation)projectileTemplate.animation.ticksPerFrame=3;const playerSpawn=markers.start?{x:markers.start.x-PLAYER_WIDTH/2,y:markers.start.y-PLAYER_HEIGHT}:null;return{ok:true,errors:[],diagnostics,runtime:{format:'llmario-reference-static-runtime',runtimeVersion:1,themeId:theme.id,packVersion:theme.packVersion,layers:[...theme.sceneLayers],instances,drawCommands:commands,markers,bounds,boundsSource,surfaces,pickupTemplates,projectileTemplate,playerSpawn,capabilities,capabilityErrors:[]}}}
 function createPlayerBehavior(runtime){
   const spawn=runtime?.playerSpawn,player={x:0,y:0,w:PLAYER_WIDTH,h:PLAYER_HEIGHT,vx:0,vy:0,onGround:false,face:1,runCharge:0,pSpeed:false,tick:0,animationState:'idle',form:'small',lives:3,coins:0,inv:0,flightFrames:0,fireCooldown:0,dead:false,climbing:false};
   const input={left:false,right:false,up:false,down:false,jump:false,jumpTap:false,run:false,runTap:false,runRelease:false};
@@ -291,7 +397,7 @@ function simulateReachability(theme,map,startPoint,options={}){
   function traversalRuntime(source){
     // Spin blocks with open space beneath can be bumped into spinning and passed through from below, and they are solid
     // underfoot: for traversal that is a one-way platform. Spin blocks you cannot get under stay solid walls.
-    const solid=source.surfaces?.solid||[],spin=new Set((source.instances||[]).filter(i=>(i.bumpTriggers||[]).some(t=>t.type==='temporarySpin'&&t.collisionWhileActive==='none')).map(i=>i.index));
+    const solid=source.surfaces?.solid||[],capabilities=capabilitiesOf(source),spin=new Set((source.instances||[]).filter(i=>(i.bumpTriggers||[]).some(t=>t.collisionWhileActive==='none'&&bumpTriggerVerdict(capabilities,{instanceIndex:i.index,instance:i,values:i.values,state:{},error:null},t,{kind:'player'},null,[])==='spin')).map(i=>i.index));
     const reachableBelow=s=>!solid.some(o=>o!==s&&!o.disabled&&o.x<s.x+s.w&&o.x+o.w>s.x&&o.y<s.y+s.h+H&&o.y+o.h>s.y+s.h);
     const opens=solid.filter(s=>spin.has(s.instanceIndex)&&reachableBelow(s));if(!opens.length)return source;
     return{...source,surfaces:{...source.surfaces,solid:solid.filter(s=>!opens.includes(s)),solidTop:[...(source.surfaces?.solidTop||[]),...opens]}};
@@ -522,7 +628,7 @@ function createBlockBehavior(runtime,playerBehavior){
   function triggerDuration(trigger){const authored=trigger?.duration,explicit=Number(authored?.ticks??authored);if(Number.isFinite(explicit)&&explicit>0)return Math.floor(explicit);return DEFAULT_SPIN_TICKS}
   function spawnBrickBurst(block){const source=block.instance.visualCommands.normal||block.instance.drawCommands[0],bounds=block.instance.bounds;if(!source)return;const cx=bounds.x+bounds.w/2,cy=bounds.y+bounds.h/2;for(let i=0;i<6;i++){const side=i%2?1:-1,row=Math.floor(i/2);fragments.push({block,source,x:cx+side*(5+row*2),y:cy-6+row*5,w:Math.max(6,Math.min(14,bounds.w*(.18+(i%3)*.035))),h:Math.max(5,Math.min(12,bounds.h*(.14+(row%3)*.035))),vx:side*(1.25+row*.22+Math.random()*.9),vy:-3.8-Math.random()*1.7+row*.45,rotation:(Math.random()-.5)*.9,rotationSpeed:side*(.1+Math.random()*.12),life:34+Math.floor(Math.random()*16)})}}
   function stepFragments(){for(let i=fragments.length-1;i>=0;i--){const fragment=fragments[i];fragment.life--;fragment.x+=fragment.vx;fragment.y+=fragment.vy;fragment.vy+=.24;fragment.rotation+=fragment.rotationSpeed;if(fragment.life<=0)fragments.splice(i,1)}}
-  function step(){stepFragments();for(const block of blocks){if(block.bump>0)block.bump--;if(block.spinTicks>0&&--block.spinTicks===0){for(const surface of surfacesFor(block))surface.disabled=false;block.spinTrigger=null}}const hit=playerBehavior?.consumeHeadHit?.();if(!hit)return null;const block=byInstance.get(hit.instanceIndex);if(!block||block.broken||block.bump>0||block.spinTicks>0)return null;const object=block.instance,breakable=object.breakable===true||capabilitiesOf(runtime).has(object,'breakable');if(breakable&&playerBehavior.player.form!=='small'){hit.disabled=true;block.broken=true;spawnBrickBurst(block);return{type:'blockBreak',block,fragments:fragments.filter(fragment=>fragment.block===block)}}if(object.bumpable!==false){const triggers=block.used?[]:object.bumpTriggers||[],spin=triggers.find(trigger=>trigger.type==='temporarySpin');if(spin){block.spinTrigger=spin;block.spinDuration=triggerDuration(spin,block);block.spinTicks=block.spinDuration;if(spin.collisionWhileActive==='none')for(const surface of surfacesFor(block))surface.disabled=true}else block.bump=10;if(triggers.some(trigger=>trigger.type==='dispenseContents')){block.remainingUses--;block.used=block.remainingUses<=0}return{type:'blockBump',block,triggers}}return null}
+  function step(){stepFragments();for(const block of blocks){if(block.bump>0)block.bump--;if(block.spinTicks>0&&--block.spinTicks===0){for(const surface of surfacesFor(block))surface.disabled=false;block.spinTrigger=null}}const hit=playerBehavior?.consumeHeadHit?.();if(!hit)return null;const block=byInstance.get(hit.instanceIndex);if(!block||block.broken||block.bump>0||block.spinTicks>0)return null;const object=block.instance,breakable=object.breakable===true||capabilitiesOf(runtime).has(object,'breakable');if(breakable&&playerBehavior.player.form!=='small'){hit.disabled=true;block.broken=true;spawnBrickBurst(block);return{type:'blockBreak',block,fragments:fragments.filter(fragment=>fragment.block===block)}}if(object.bumpable!==false){const player=playerBehavior?.player,world=capabilityWorld(runtime,player,0),answered=(block.used?[]:object.bumpTriggers||[]).map(trigger=>({...trigger,verdict:bumpTriggerVerdict(capabilitiesOf(runtime),block,trigger,bumpingPlayer(player),world,capabilityErrorsOf(runtime))})).filter(trigger=>trigger.verdict),triggers=answered,spin=triggers.find(trigger=>trigger.verdict==='spin');if(spin){block.spinTrigger=spin;block.spinDuration=triggerDuration(spin,block);block.spinTicks=block.spinDuration;if(spin.collisionWhileActive==='none')for(const surface of surfacesFor(block))surface.disabled=true}else block.bump=10;if(triggers.some(trigger=>trigger.verdict==='dispense')){block.remainingUses--;block.used=block.remainingUses<=0}return{type:'blockBump',block,triggers}}return null}
   function commandAt(command,tick=0){const block=byInstance.get(command.instanceIndex);if(!block)return command;if(block.broken)return null;if(block.spinTicks>0){const source=block.instance.visualCommands[block.spinTrigger?.enterState||'spinning']||command;return{...commandAtTick(source,block.spinDuration-block.spinTicks),worldX:command.worldX,worldY:command.worldY}}const source=block.used?(block.instance.visualCommands.used||command):block.instance.visualCommands.idle||block.instance.visualCommands.normal||command,phase=block.bump>0?(11-block.bump)/11:0,offset=block.bump>0?-Math.sin(phase*Math.PI)*6:0,visual=commandAtTick(source,block.bump>0?10-block.bump:tick);return{...visual,worldX:command.worldX,worldY:command.worldY+offset}}
   function commands(){return fragments.map((fragment,index)=>({instanceIndex:fragment.block.instanceIndex,object:'brickBurst',layer:fragment.source.layer,order:100+index,brickFragment:true,worldX:fragment.x,worldY:fragment.y,w:fragment.w,h:fragment.h,rotation:fragment.rotation,color:index%3===0?'#d7a06a':'#b67d4c',edge:'#5e3317',alpha:Math.max(0,Math.min(1,fragment.life/22))}))}
   return{blocks,byInstance,fragments,reset,step,commandAt,commands};
@@ -549,7 +655,7 @@ function createPowerupBehavior(runtime){
   function spawn(block,objectId){const template=runtime?.pickupTemplates?.[objectId];if(!template)return null;const source=block.instance.bounds,w=template.command.w,h=template.command.h,targetY=source.y,powerup={id:objectId,template,capabilities:template.capabilities,values:{},sourceInstance:block.instanceIndex,x:source.x+source.w/2-w/2,y:source.y-6,w,h,vx:0,vy:0,emergeFrames:16,emergeTargetY:targetY-h,ignoreSourceFrames:30,onGround:false,taken:false,tick:0,state:{},error:null};for(const definition of capabilities.hooks(powerup,'init'))runCapabilityHook(powerup,definition,'init',[powerup,powerup.values],errors);powerups.push(powerup);return powerup}
   function reset(full=true){if(!full)return powerups;frame=0;for(let i=powerups.length-1;i>=0;i--)if(powerups[i].authoredInstance===undefined)powerups.splice(i,1);else powerups[i].taken=false;return powerups}
   function collect(powerup,player){if(powerup.taken||!player||player.dead||!aabb(powerup,player))return null;powerup.taken=true;return{type:'powerupCollect',powerup,capabilities:[...powerup.template.capabilities]}}
-  function step(blockEvent,player){frame++;const events=[];if(blockEvent?.type==='blockBump')for(const trigger of blockEvent.triggers||[])if(trigger.type==='dispenseContents'){const objectId=blockEvent.block.instance.values[trigger.contentsParameter];const powerup=spawn(blockEvent.block,objectId);if(powerup)events.push({type:'powerupSpawn',powerup})}const world=capabilityWorld(runtime,player,frame),stepCapabilities=powerup=>{for(const definition of capabilities.hooks(powerup,'step')){runCapabilityHook(powerup,definition,'step',[powerup,world,powerup.values],errors);if(powerup.error)break}};for(const powerup of powerups){if(powerup.taken)continue;if(powerup.authoredInstance!==undefined||powerup.error){const event=collect(powerup,player);if(event)events.push(event);continue}if(powerup.emergeFrames>0){powerup.emergeFrames--;powerup.y+=(powerup.emergeTargetY-powerup.y)*.36;if(powerup.emergeFrames===0||Math.abs(powerup.y-powerup.emergeTargetY)<.6){powerup.y=powerup.emergeTargetY;powerup.emergeFrames=0;stepCapabilities(powerup)}const event=collect(powerup,player);if(event)events.push(event);continue}const oldX=powerup.x;stepCapabilities(powerup);if(powerup.error){powerup.x=oldX;continue}powerup.tick++;powerup.x+=powerup.vx;const walls=solids.filter(surface=>!surface.disabled&&(powerup.ignoreSourceFrames<=0||surface.instanceIndex!==powerup.sourceInstance)&&aabb(powerup,surface));if(walls.length){powerup.x=oldX;powerup.vx*=-1}const oldY=powerup.y;powerup.vy=Math.min(8,powerup.vy+.36);powerup.y+=powerup.vy;powerup.onGround=false;const floors=[...solids,...solidTops].filter(surface=>!surface.disabled&&(powerup.ignoreSourceFrames<=0||surface.instanceIndex!==powerup.sourceInstance)&&powerup.x+powerup.w>surface.x&&powerup.x<surface.x+surface.w&&powerup.vy>=0&&oldY+powerup.h<=surface.y+4&&powerup.y+powerup.h>=surface.y).sort((a,b)=>a.y-b.y);if(floors[0]){powerup.y=floors[0].y-powerup.h;powerup.vy=0;powerup.onGround=true}if(powerup.ignoreSourceFrames>0)powerup.ignoreSourceFrames--;const bounds=runtime?.bounds;if(bounds&&powerup.y>bounds.y+bounds.h+powerup.h){powerup.taken=true;continue}const event=collect(powerup,player);if(event)events.push(event)}return events}
+  function step(blockEvent,player){frame++;const events=[];if(blockEvent?.type==='blockBump')for(const trigger of blockEvent.triggers||[])if((trigger.verdict??bumpTriggerVerdict(capabilities,blockEvent.block,trigger,bumpingPlayer(player),capabilityWorld(runtime,player,frame),errors))==='dispense'){const objectId=blockEvent.block.instance.values[trigger.contentsParameter];const powerup=spawn(blockEvent.block,objectId);if(powerup)events.push({type:'powerupSpawn',powerup})}const world=capabilityWorld(runtime,player,frame),stepCapabilities=powerup=>{for(const definition of capabilities.hooks(powerup,'step')){runCapabilityHook(powerup,definition,'step',[powerup,world,powerup.values],errors);if(powerup.error)break}};for(const powerup of powerups){if(powerup.taken)continue;if(powerup.authoredInstance!==undefined||powerup.error){const event=collect(powerup,player);if(event)events.push(event);continue}if(powerup.emergeFrames>0){powerup.emergeFrames--;powerup.y+=(powerup.emergeTargetY-powerup.y)*.36;if(powerup.emergeFrames===0||Math.abs(powerup.y-powerup.emergeTargetY)<.6){powerup.y=powerup.emergeTargetY;powerup.emergeFrames=0;stepCapabilities(powerup)}const event=collect(powerup,player);if(event)events.push(event);continue}const oldX=powerup.x;stepCapabilities(powerup);if(powerup.error){powerup.x=oldX;continue}powerup.tick++;powerup.x+=powerup.vx;const walls=solids.filter(surface=>!surface.disabled&&(powerup.ignoreSourceFrames<=0||surface.instanceIndex!==powerup.sourceInstance)&&aabb(powerup,surface));if(walls.length){powerup.x=oldX;powerup.vx*=-1}const oldY=powerup.y;powerup.vy=Math.min(8,powerup.vy+.36);powerup.y+=powerup.vy;powerup.onGround=false;const floors=[...solids,...solidTops].filter(surface=>!surface.disabled&&(powerup.ignoreSourceFrames<=0||surface.instanceIndex!==powerup.sourceInstance)&&powerup.x+powerup.w>surface.x&&powerup.x<surface.x+surface.w&&powerup.vy>=0&&oldY+powerup.h<=surface.y+4&&powerup.y+powerup.h>=surface.y).sort((a,b)=>a.y-b.y);if(floors[0]){powerup.y=floors[0].y-powerup.h;powerup.vy=0;powerup.onGround=true}if(powerup.ignoreSourceFrames>0)powerup.ignoreSourceFrames--;const bounds=runtime?.bounds;if(bounds&&powerup.y>bounds.y+bounds.h+powerup.h){powerup.taken=true;continue}const event=collect(powerup,player);if(event)events.push(event)}return events}
   function commandAt(command){const pickup=powerups.find(powerup=>powerup.authoredInstance===command.instanceIndex);return pickup?.taken?null:pickup?.error?{...command,frozen:pickup.error}:command}
   function commands(){return powerups.filter(powerup=>!powerup.taken&&powerup.authoredInstance===undefined).map(powerup=>({...commandAtTick(powerup.template.command,0),worldX:powerup.x+powerup.w/2,worldY:powerup.y+powerup.h,...(powerup.error?{frozen:powerup.error}:{})}))}
   return{powerups,spawn,reset,collect,step,commandAt,commands};
@@ -623,7 +729,7 @@ function createActorBehavior(runtime,playerBehavior,{grounded=false}={}){
   function releaseHeld(player,throwIt){const actor=carriedActor;if(!actor)return false;carriedActor=null;actor.mode=throwIt?'shellMoving':'shellStopped';actor.pickupLock=!throwIt;actor.direction=player?.face<0?-1:1;actor.mirror=actor.direction<0;actor.shellVx=throwIt?actor.direction*SHELL_SPEED:0;actor.shellVy=throwIt?-1.2:0;const g=geometry(actor),ax=Number(g.anchor?.x??.5);if(player){const left=actor.direction>0?player.x+player.w+2:player.x-g.w-2;actor.x=left+ax*g.w}return true}
   function knockOut(actor,source){Object.assign(actor,{mode:'knockedOut',flying:false,falling:false,attachmentsVisible:false,collisionEligible:false,knockVy:-4.6,knockVx:Math.sign(source.shellVx||source.direction||1)*1.35})}
   function collide(player,previousPlayer){if(!player||!previousPlayer||player.dead)return null;const world=capabilityWorld(runtime,player,frame),other={kind:'player',x:player.x,y:player.y,w:player.w,h:player.h,vx:player.vx,vy:player.vy,form:player.form};for(const actor of actors){if(!touching(actor))continue;const box=actorBox(actor);if(!aabb(player,box))continue;const side=playerSide(player,previousPlayer,actor),verdict=verdictFor(actor,other,side,world)??'hurtOther';
-    if(verdict==='ignore'||verdict==='solid')continue;
+    if(verdict==='ignore'||verdict==='solid'||verdict==='spin'||verdict==='dispense')continue;
     if(verdict==='stomped'){if(actor.mode==='shellMoving')enterShell(actor,true);else defeat(actor);bounce(player,box.y);return{type:'stomp',actor}}
     if(verdict==='bounce'){bounce(player,box.y);return{type:side==='top'?'stomp':'bounce',actor}}
     if(verdict==='knockedOut'){knockOut(actor,{direction:player.face});return{type:'knockOut',actor}}
@@ -1144,10 +1250,10 @@ function frame(time){
   draw();if(state.paused)drawPaused();requestAnimationFrame(frame);
 }
 function stepGame(){state.steps++;pollGamepad();if(state.paused)return;state.tick++;const previousPlayer=state.behavior?{x:state.behavior.player.x,y:state.behavior.player.y}:null;state.platformBehavior?.step();const player=stepPlayer(),scripted=state.pipeBehavior?.active||state.suppressSimulationThisFrame,blockContact=scripted?null:state.blockBehavior?.step();for(const event of scripted?[]:state.powerupBehavior?.step(blockContact,player)||[])state.behavior?.applyPowerup(event);const contact=scripted?null:state.actorBehavior?.step(player,previousPlayer);if(!scripted)state.projectileBehavior?.step();if(contact?.type==='hurt'&&state.behavior)followPlayer(true);reportCapabilityErrors();stepWorld()}
-function reloadCapability(name,entry){
+function reloadCapability(name,entry,options={}){
   // Called by an editor that shares this page (the release build): new capability code reaches live units at once.
   if(!state.runtime)return{ok:false,errors:['no level is running']};
-  const units=[...(state.actorBehavior?.actors||[]),...(state.platformBehavior?.platforms||[]),...(state.powerupBehavior?.powerups||[])],result=B.reloadPackCapability(state.runtime,name,entry,units);
+  const units=[...(state.actorBehavior?.actors||[]),...(state.platformBehavior?.platforms||[]),...(state.powerupBehavior?.powerups||[])],result=B.reloadPackCapability(state.runtime,name,entry,units,{reinit:!!options.reinit});
   if(result.ok){if(state.theme)state.theme.capabilities={...(state.theme.capabilities||{}),[name]:{description:entry.description,source:entry.source}};report(`Capability ${name} reloaded live: ${result.units} unit${result.units===1?'':'s'}${result.thawed?`, ${result.thawed} unfrozen`:''}.`,'good')}
   return result;
 }

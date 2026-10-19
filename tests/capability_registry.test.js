@@ -244,5 +244,5 @@ test('the editor keeps capability source as text in the theme and refuses built-
   assert.deepEqual(plain(next.capabilities.drift),{description:'d',source:'({ step(self) { self.x += 1 } })'});assert.equal(theme.capabilities.drift,undefined,'the original theme is untouched');
   assert.throws(()=>units.setCapabilitySource(theme,'patrol',{source:'({})'},{builtIns:theme.contract.engineVocabulary.capabilities}),/built in/);
   assert.throws(()=>units.setCapabilitySource(theme,'drift',{source:'  '}),/source text/);
-  assert(editor.includes('engine.reloadCapability(name,entry)'),'Apply hands the text to a game sharing the page');
+  assert(editor.includes('engine.reloadCapability(name,entry,{reinit})'),'Apply hands the text to a game sharing the page');
 });

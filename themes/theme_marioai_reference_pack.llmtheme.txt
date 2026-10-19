@@ -36,6 +36,7 @@
         "climbable",
         "coin",
         "collectible",
+        "dispenseContents",
         "duck",
         "emerge",
         "extraLife",
@@ -56,18 +57,31 @@
         "solidTop",
         "stompHazard",
         "stompable",
+        "temporarySpin",
         "transport",
         "walker",
         "waveFlight",
         "winged"
+      ],
+      "parameterGroups": [
+        "extent",
+        "flight",
+        "movingPlatform",
+        "pipe",
+        "rewardBlock",
+        "terrain",
+        "transform",
+        "walker"
       ]
     },
     "bumpTriggerTypes": {
       "dispenseContents": {
-        "effect": "dispense the explicitly configured reward object"
+        "effect": "dispense the explicitly configured reward object",
+        "capability": "dispenseContents: a built-in contact capability; this entry's contentsParameter names the parameter holding the object to dispense"
       },
       "temporarySpin": {
-        "effect": "run an explicitly configured temporary non-colliding spin phase"
+        "effect": "run an explicitly configured temporary non-colliding spin phase",
+        "capability": "temporarySpin: a built-in contact capability; this entry's duration, collisionWhileActive and enterState configure the spin"
       }
     }
   },

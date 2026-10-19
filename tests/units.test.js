@@ -42,11 +42,11 @@ test('every unit in the theme exports with exactly the art, groups and pack capa
     assert.equal(plan.crops.length,sourceCells.size,`${id} crops each referenced cell once`);
     const cell=Math.max(...plan.crops.map(c=>c.draw.w))*Math.max(...plan.crops.map(c=>c.draw.h));assert(plan.size.w*plan.size.h<=cell*(plan.crops.length+Math.ceil(Math.sqrt(plan.crops.length))),`${id} atlas holds only its own cells`);
     const placeables=Object.entries(theme.placeables).filter(([,p])=>p.object===id).map(([pid])=>pid).sort();assert.deepEqual(Object.keys(unit.placeables).sort(),placeables);
-    for(const placeable of Object.values(unit.placeables))for(const p of placeable.parameters)assert(unit.parameterSchemas[p.split('.')[0]],`${id} carries the ${p.split('.')[0]} group`);
+    const engineGroups=theme.contract.engineVocabulary.parameterGroups;for(const placeable of Object.values(unit.placeables))for(const p of placeable.parameters)assert(unit.parameterSchemas[p.split('.')[0]]||engineGroups.includes(p.split('.')[0]),`${id} carries the ${p.split('.')[0]} group, or the engine owns it`);
     for(const name of Object.keys(unit.capabilities))assert(!builtIns.includes(name),'built-ins never travel as source');
   }
   const koopaPlan=units.exportUnitPlan(theme,'koopa.red',{builtIns}),koopa=koopaPlan.unit;assert(koopaPlan.size.w*koopaPlan.size.h<=64*128,'an enemy fits in a few cells');
-  assert.deepEqual(Object.keys(koopa.parameterSchemas).sort(),['flight','transform','walker']);assert(koopa.animations['enemy.wing.flap'],'attachment art travels');assert.deepEqual(plain(koopa.capabilities),{});
+  assert.deepEqual(Object.keys(koopa.parameterSchemas).sort(),[]);assert(koopa.animations['enemy.wing.flap'],'attachment art travels');assert.deepEqual(plain(koopa.capabilities),{});
   const orbit=units.exportUnitPlan(theme,'orbitPlatform',{builtIns}).unit;
   assert.deepEqual(Object.keys(orbit.capabilities),['orbit']);assert.equal(orbit.capabilities.orbit.source,theme.capabilities.orbit.source,'pack capability source travels as text');
   assert(orbit.constructions['construction.white-platform'],'construction art travels with its components');assert(orbit.parameterSchemas.orbit);
@@ -69,7 +69,7 @@ test('import lists every incoming id as new or overwriting and changes nothing u
   const total=units.UNIT_SECTIONS.reduce((n,section)=>n+Object.keys(unit[section]||{}).length,0);assert.equal(plan.items.length,total,'every incoming id is listed');
   const by=key=>plan.items.find(item=>item.key===key);
   assert.equal(by('objects:orbitPlatform').action,'new');assert.equal(by('capabilities:orbit').action,'new');assert.equal(by('capabilities:orbit').source,unit.capabilities.orbit.source,'capability source is shown before import');
-  assert.equal(by('parameterSchemas:transform').action,'same','an identical group is still listed');assert(by('parameterSchemas:transform').users>10);
+  assert.equal(by('parameterSchemas:transform'),undefined,'an engine-owned group is not listed');assert.equal(by('parameterSchemas:orbit').action,'same','an identical unit-owned group is still listed');
   assert.equal(by('resources:bar.white.left_cap').action,'overwrite','shared art that now points at the unit atlas overwrites');
   assert.deepEqual(plain(target),before,'planning touches nothing');
   const {theme:next}=units.applyUnitImport(target,unit,{builtIns});assert.deepEqual(plain(target),before,'the original theme object is never mutated');
@@ -89,7 +89,8 @@ test('overwriting a capability says how many units use it, and renames rewrite e
   const renames={'capabilities:orbit':'swirl','parameterSchemas:orbit':'swirl','objects:orbitPlatform':'swirlPlatform','placeables:orbitPlatform':'swirlPlatform','constructions:construction.white-platform':'swirl.platform','atlases:unit.orbitPlatform':'swirl.atlas','resources:bar.white.left_cap':'swirl.cap','resources:ladder.body':'swirl.body'};
   const renamed=units.planUnitImport(theme,changed,{builtIns,renames});assert.equal(renamed.ok,true);
   assert.equal(renamed.items.find(item=>item.key==='parameterSchemas:orbit').note,"rewrites 4 'orbit.' paths in orbit to 'swirl.'",'a group rename says what it rewrites in capability source');
-  const koopa=fakeData(units.exportUnitPlan(theme,'koopa.red',{builtIns}));assert.match(units.planUnitImport(theme,koopa,{builtIns,renames:{'parameterSchemas:walker':'stroll'}}).items.find(item=>item.key==='parameterSchemas:walker').note,/built-in capabilities \(patrol, winged, stompable, armored, shell\) read their own group names/,'and warns when built-ins will not follow');
+  const koopa=fakeData(units.exportUnitPlan(theme,'koopa.red',{builtIns}));assert.equal(units.planUnitImport(theme,koopa,{builtIns}).items.find(item=>item.key==='parameterSchemas:walker'),undefined,'walker belongs to the engine and never travels');
+  koopa.parameterSchemas.kick={power:{type:'number'}};assert.match(units.planUnitImport(theme,koopa,{builtIns,renames:{'parameterSchemas:kick':'boot'}}).items.find(item=>item.key==='parameterSchemas:kick').note,/built-in capabilities \(patrol, winged, stompable, armored, shell\) read their own group names/,'and warns when built-ins will not follow a renamed group');
   for(const key of Object.keys(renames))assert.equal(renamed.items.find(item=>item.key===key).action,'new',`${key} renamed to a free id is new`);
   const next=units.applyUnitImport(theme,changed,{builtIns,renames}).theme;
   assert.deepEqual(plain(next.objects.orbitPlatform),theme.objects.orbitPlatform,'the existing unit is untouched');assert.equal(next.capabilities.orbit.source,theme.capabilities.orbit.source);
